@@ -101,15 +101,73 @@
     .alert { color: #ff6b6b; background: rgba(255,107,107,.15); border:1px solid rgba(255,107,107,.3); }
     .warn { color: #ffbf69; background: rgba(255,191,105,.15); border:1px solid rgba(255,191,105,.3); }
     .disclaimer { color: var(--muted); font-size: 12px; }
+    
+    /* Toast Notification Styles */
+    .toast {
+      position: fixed !important;
+      top: 20px !important;
+      right: 20px !important;
+      background: var(--card) !important;
+      border: 1px solid var(--border) !important;
+      border-radius: 12px !important;
+      padding: 16px !important;
+      max-width: 300px !important;
+      box-shadow: 0 10px 30px rgba(0,0,0,.3) !important;
+      z-index: 99999 !important;
+      opacity: 0 !important;
+      transform: translateY(-10px) !important;
+      transition: opacity 0.3s ease, transform 0.3s ease !important;
+      overflow: visible !important;
+      pointer-events: auto !important;
+      display: block !important;
+      visibility: visible !important;
+      width: auto !important;
+      height: auto !important;
+    }
+    .toast.show {
+      opacity: 1 !important;
+      transform: translateY(0) !important;
+      visibility: visible !important;
+    }
+    .toast .toast-title {
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+    .toast .toast-body {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.4;
+    }
+    .toast .progress-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      height: 3px;
+      background: var(--accent);
+      transition: width linear;
+      border-radius: 0 0 12px 12px;
+      width: 0%;
+    }
+    .help-icon {
+      cursor: pointer;
+      transition: opacity 0.2s ease;
+    }
+    .help-icon:hover {
+      opacity: 0.7;
+    }
   </style>
 </head>
 <body>
   <header>
     <div class="title">
       <div style="font-size:20px">Retirement Calculator</div>
-      <small>Pre‑tax vs Roth vs Taxable • Social Security • Pension • Inflation • Employer match</small>
+      <small>Pre‑tax vs Roth vs Taxable • Social Security • Pension • Spouse benefits • Declining spending • Employer match</small>
     </div>
     <div>
+      <button id="saveBtn" title="Save current inputs">Save Scenario</button>
+      <button id="loadBtn" title="Load saved inputs">Load Scenario</button>
       <button id="demoBtn" title="Load example inputs">Load Example</button>
       <button id="clearBtn">Reset</button>
       <button id="calcBtn" class="primary">Calculate ▶</button>
@@ -130,7 +188,19 @@
             </summary>
             <div class="content grid">
               <div>
-                <label for="currentAge">Current age</label>
+                <label for="currentAge">Current age 
+                  <svg xmlns="http://www.w3.org/2000/svg" 
+                       viewBox="0 0 24 24" 
+                       width="1em" height="1em" 
+                       fill="white" 
+                       class="help-icon"
+                       onclick="showHelpToast(event, 'currentAge')"
+                       style="vertical-align: middle;">
+                    <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none"/>
+                    <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
+                    <circle cx="12" cy="17" r="1" fill="white"/>
+                  </svg>
+                </label>
                 <input id="currentAge" type="number" min="18" max="80" step="1" value="45" />
               </div>
               <div>
@@ -149,6 +219,70 @@
                 <label for="spendingToday">Retirement spending (today's $ / yr)</label>
                 <input id="spendingToday" type="number" step="1000" value="80000" />
                 <div class="hint">We'll inflate this to retirement, then apply COLA annually.</div>
+              </div>
+              <div>
+                <label for="spendingDecline">Annual spending decline in retirement (%)</label>
+                <input id="spendingDecline" type="number" step="0.1" value="0" />
+                <div class="hint">Spending reduction each year (e.g., 2% = spending drops to 98%, then 96%, etc.)</div>
+              </div>
+            </div>
+          </details>
+
+          <!-- Spouse Information -->
+          <details>
+            <summary>
+              <span>Spouse Information</span>
+              <span class="chev">▶</span>
+            </summary>
+            <div class="content">
+              <div class="grid">
+                <div>
+                  <label for="spouseAge">Spouse current age</label>
+                  <input id="spouseAge" type="number" min="18" max="80" step="1" value="0" />
+                  <div class="hint">Set to 0 if no spouse</div>
+                </div>
+                <div>
+                  <label for="spouseRetireAge">Spouse retirement age</label>
+                  <input id="spouseRetireAge" type="number" min="40" max="80" step="1" value="67" />
+                </div>
+              </div>
+              <div class="grid-3">
+                <div>
+                  <label for="spouseSsMonthly">Spouse Social Security ($/mo, first year)</label>
+                  <input id="spouseSsMonthly" type="number" step="50" value="0" />
+                </div>
+                <div>
+                  <label for="spouseSsStart">Spouse SS start age</label>
+                  <input id="spouseSsStart" type="number" step="1" value="67" />
+                </div>
+                <div>
+                  <label for="spouseSsCola">Spouse SS COLA (%/yr)</label>
+                  <input id="spouseSsCola" type="number" step="0.1" value="2.0" />
+                </div>
+              </div>
+              <div class="grid-3">
+                <div>
+                  <label for="spousePenMonthly">Spouse Pension ($/mo, first year)</label>
+                  <input id="spousePenMonthly" type="number" step="50" value="0" />
+                </div>
+                <div>
+                  <label for="spousePenStart">Spouse Pension start age</label>
+                  <input id="spousePenStart" type="number" step="1" value="65" />
+                </div>
+                <div>
+                  <label for="spousePenCola">Spouse Pension COLA (%/yr)</label>
+                  <input id="spousePenCola" type="number" step="0.1" value="0" />
+                </div>
+              </div>
+              <div class="grid">
+                <div>
+                  <label for="spouseTaxSS">Effective tax on Spouse SS (%)</label>
+                  <input id="spouseTaxSS" type="number" step="0.5" value="10" />
+                </div>
+                <div>
+                  <label for="spouseTaxPension">Effective tax on Spouse Pension (%)</label>
+                  <input id="spouseTaxPension" type="number" step="0.5" value="20" />
+                </div>
               </div>
             </div>
           </details>
@@ -342,6 +476,8 @@
                 <th>Contrib (Tot)</th>
                 <th>SS (Net)</th>
                 <th>Pension (Net)</th>
+                <th>Spouse SS (Net)</th>
+                <th>Spouse Pen (Net)</th>
                 <th>Spend (Net)</th>
                 <th>Withdraw Net</th>
                 <th>Withdraw Gross</th>
@@ -367,13 +503,183 @@
     const fmt = (n) => n.toLocaleString(undefined, { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
     const pow1p = (r, n) => Math.pow(1 + r, n);
 
+    // Help toast functionality
+    let currentToast = null;
+    let toastTimer = null;
+    let progressTimer = null;
+
+    function showHelpToast(event, fieldId) {
+      // Prevent the click from bubbling up to document
+      event.stopPropagation();
+      
+      const helpTexts = {
+        currentAge: {
+          title: "Current Age",
+          body: "Enter your current age in years. This is used as the starting point for all retirement calculations and determines how many years you have until retirement."
+        }
+        // Add more help texts for other fields as needed
+      };
+
+      const helpData = helpTexts[fieldId];
+      if (!helpData) {
+        return;
+      }
+
+      // Remove existing toast if any
+      if (currentToast) {
+        hideToast();
+      }
+
+      // Create toast element
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.innerHTML = `
+        <div class="toast-title">${helpData.title}</div>
+        <div class="toast-body">${helpData.body}</div>
+        <div class="progress-bar"></div>
+      `;
+
+      document.body.appendChild(toast);
+      currentToast = toast;
+      
+      const progressBar = toast.querySelector('.progress-bar');
+
+      // Show toast with animation
+      setTimeout(() => {
+        toast.classList.add('show');
+        
+        // Initialize progress bar to full width without transition
+        progressBar.style.transition = 'none';
+        progressBar.style.width = '100%';
+        
+        // After a brief moment, enable transition and start countdown
+        setTimeout(() => {
+          progressBar.style.transition = 'width 10000ms linear';
+          progressBar.style.width = '0%';
+        }, 50);
+      }, 10);
+
+      // Auto-hide after 5 seconds
+      toastTimer = setTimeout(() => hideToast(), 10000);
+    }
+
+    function hideToast() {
+      if (!currentToast) return;
+      
+      // Clear any existing timers
+      if (toastTimer) {
+        clearTimeout(toastTimer);
+        toastTimer = null;
+      }
+      
+      currentToast.classList.remove('show');
+      setTimeout(() => {
+        if (currentToast && currentToast.parentNode) {
+          currentToast.parentNode.removeChild(currentToast);
+        }
+        currentToast = null;
+      }, 10000);
+    }
+
+    // Event listeners for dismissing toast
+    document.addEventListener('click', (e) => {
+      if (currentToast && !currentToast.contains(e.target) && !e.target.closest('.help-icon')) {
+        hideToast();
+      }
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && currentToast) {
+        hideToast();
+      }
+    });
+
+    function saveScenario(){
+      const inputs = {};
+      // Collect all input values
+      document.querySelectorAll('input, select').forEach(input => {
+        if(input.id) {
+          inputs[input.id] = input.value;
+        }
+      });
+      
+      const scenarioName = prompt('Enter a name for this scenario:', 'My Retirement Scenario');
+      if(!scenarioName) return;
+      
+      const savedScenarios = JSON.parse(localStorage.getItem('retirementScenarios') || '{}');
+      savedScenarios[scenarioName] = {
+        data: inputs,
+        savedDate: new Date().toISOString(),
+        description: `Saved on ${new Date().toLocaleDateString()}`
+      };
+      
+      localStorage.setItem('retirementScenarios', JSON.stringify(savedScenarios));
+      alert(`Scenario "${scenarioName}" saved successfully!`);
+    }
+
+    function loadScenario(){
+      const savedScenarios = JSON.parse(localStorage.getItem('retirementScenarios') || '{}');
+      const scenarioNames = Object.keys(savedScenarios);
+      
+      if(scenarioNames.length === 0) {
+        alert('No saved scenarios found.');
+        return;
+      }
+      
+      let options = scenarioNames.map((name, index) => 
+        `${index + 1}. ${name} (${savedScenarios[name].description})`
+      ).join('\n');
+      
+      const choice = prompt(`Select a scenario to load:\n\n${options}\n\nEnter the number (1-${scenarioNames.length}) or 'D' + number to delete (e.g., D1):`);
+      if(!choice) return;
+      
+      // Check if user wants to delete a scenario
+      if(choice.toUpperCase().startsWith('D')) {
+        const deleteIndex = parseInt(choice.substring(1)) - 1;
+        if(deleteIndex < 0 || deleteIndex >= scenarioNames.length) {
+          alert('Invalid selection.');
+          return;
+        }
+        
+        const scenarioToDelete = scenarioNames[deleteIndex];
+        if(confirm(`Are you sure you want to delete "${scenarioToDelete}"?`)) {
+          delete savedScenarios[scenarioToDelete];
+          localStorage.setItem('retirementScenarios', JSON.stringify(savedScenarios));
+          alert(`Scenario "${scenarioToDelete}" deleted successfully!`);
+        }
+        return;
+      }
+      
+      const index = parseInt(choice) - 1;
+      if(index < 0 || index >= scenarioNames.length) {
+        alert('Invalid selection.');
+        return;
+      }
+      
+      const selectedScenario = scenarioNames[index];
+      const scenarioData = savedScenarios[selectedScenario].data;
+      
+      // Load all input values
+      Object.entries(scenarioData).forEach(([id, value]) => {
+        const element = document.getElementById(id);
+        if(element) {
+          element.value = value;
+        }
+      });
+      
+      alert(`Scenario "${selectedScenario}" loaded successfully!`);
+      calc(); // Automatically recalculate
+    }
+
     function loadExample(){
       const ex = {
-        currentAge:45, retireAge:67, endAge:95, inflation:2.5, spendingToday:80000,
-        salary:150000, salaryGrowth:3.0, pretaxPct:10, rothPct:5, taxablePct:2,
-        matchCap:4, matchRate:50, balPre:400000, balRoth:100000, balTax:80000,
+        currentAge:60, retireAge:63, endAge:85, inflation:2.5, spendingToday:80000, spendingDecline:1.0,
+        spouseAge:56, spouseRetireAge:62, spouseSsMonthly:1200, spouseSsStart:62, spouseSsCola:2.0,
+        spousePenMonthly:535, spousePenStart:65, spousePenCola:0, spouseTaxSS:10, spouseTaxPension:20,
+        salary:170000, salaryGrowth:2.0, pretaxPct:0, rothPct:0, postTaxSavingsPct:40,
+        matchCap:4, matchRate:50, balPre:600000, balRoth:0, balTax:500000,
         retPre:6.0, retRoth:6.0, retTax:5.5, ssMonthly:2800, ssStart:67, ssCola:2.0,
-        penMonthly:0, penStart:65, penCola:0, taxPre:22, taxTaxable:10, taxRoth:0,
+        penMonthly:3000, penStart:65, penCola:0, taxPre:22, taxTaxable:10, taxRoth:0,
         taxSS:10, taxPension:20, order:'taxable,pretax,roth'
       };
       for(const [k,v] of Object.entries(ex)){ if($(k)) $(k).value = v; }
@@ -396,6 +702,20 @@
       const endAge     = num('endAge');
       const inflation  = pct(num('inflation'));
       const spendingToday = num('spendingToday');
+      const spendingDecline = pct(num('spendingDecline'));
+
+      // Spouse information
+      const spouseAge = num('spouseAge');
+      const spouseRetireAge = num('spouseRetireAge');
+      const spouseSsMonthly = num('spouseSsMonthly');
+      const spouseSsStart = num('spouseSsStart');
+      const spouseSsCola = pct(num('spouseSsCola'));
+      const spousePenMonthly = num('spousePenMonthly');
+      const spousePenStart = num('spousePenStart');
+      const spousePenCola = pct(num('spousePenCola'));
+      const spouseTaxSS = pct(num('spouseTaxSS'));
+      const spouseTaxPension = pct(num('spouseTaxPension'));
+      const hasSpouse = spouseAge > 0;
 
       const salary0 = num('salary');
       const salaryGrowth = pct(num('salaryGrowth'));
@@ -460,7 +780,7 @@
           age,
           salary,
           contrib: cPre + cRoth + cTax + match,
-          ss: 0, pen: 0, spend: 0,
+          ss: 0, pen: 0, spouseSs: 0, spousePen: 0, spend: 0,
           wNet: 0, wGross: 0, taxes: 0,
           balTax, balPre, balRoth,
           total: balTax + balPre + balRoth
@@ -472,6 +792,20 @@
       // Retirement years
       let ssAnnual = ssMonthly * 12 * (retireAge >= ssStart ? pow1p(ssCola, retireAge - ssStart) : 1);
       let penAnnual = penMonthly * 12 * (retireAge >= penStart ? pow1p(penCola, retireAge - penStart) : 1);
+      
+      // Spouse benefit calculations
+      let spouseSsAnnual = 0;
+      let spousePenAnnual = 0;
+      if (hasSpouse) {
+        const spouseCurrentYear = retireAge - currentAge; // Years from now when primary person retires
+        const spouseAgeAtPrimaryRetirement = spouseAge + spouseCurrentYear;
+        
+        spouseSsAnnual = spouseSsMonthly * 12 * (spouseAgeAtPrimaryRetirement >= spouseSsStart ? 
+          pow1p(spouseSsCola, spouseAgeAtPrimaryRetirement - spouseSsStart) : 1);
+        spousePenAnnual = spousePenMonthly * 12 * (spouseAgeAtPrimaryRetirement >= spousePenStart ? 
+          pow1p(spousePenCola, spouseAgeAtPrimaryRetirement - spousePenStart) : 1);
+      }
+      
       let spend = spendAtRetire;
 
       for(let y = yearsToRetire; y < yearsTotal; y++){
@@ -486,8 +820,25 @@
         const ssNet = ssGross * (1 - taxSS);
         const penNet = penGross * (1 - taxPension);
 
-        // Net spending need after other net incomes
-        let needNet = Math.max(0, spend - (ssNet + penNet));
+        // Spouse income sources
+        let spouseSsGross = 0;
+        let spousePenGross = 0;
+        let spouseSsNet = 0;
+        let spousePenNet = 0;
+        
+        if (hasSpouse) {
+          const spouseCurrentAge = spouseAge + (age - currentAge);
+          const hasSpouseSS = spouseCurrentAge >= spouseSsStart;
+          const hasSpousePen = spouseCurrentAge >= spousePenStart && spousePenMonthly > 0;
+          
+          spouseSsGross = hasSpouseSS ? spouseSsAnnual : 0;
+          spousePenGross = hasSpousePen ? spousePenAnnual : 0;
+          spouseSsNet = spouseSsGross * (1 - spouseTaxSS);
+          spousePenNet = spousePenGross * (1 - spouseTaxPension);
+        }
+
+        // Net spending need after all net incomes
+        let needNet = Math.max(0, spend - (ssNet + penNet + spouseSsNet + spousePenNet));
         let needGross = 0; // track gross withdrawals
         let taxesThisYear = 0;
 
@@ -527,7 +878,7 @@
 
         rows.push({
           year, age, salary: 0, contrib: 0,
-          ss: ssNet, pen: penNet, spend,
+          ss: ssNet, pen: penNet, spouseSs: spouseSsNet, spousePen: spousePenNet, spend,
           wNet, wGross, taxes: taxesThisYear,
           balTax, balPre, balRoth, total: totalBal
         });
@@ -535,7 +886,12 @@
         // Step next year: COLAs
         if(hasSS) ssAnnual *= (1 + ssCola);
         if(hasPen) penAnnual *= (1 + penCola);
-        spend *= (1 + inflation);
+        if(hasSpouse) {
+          const spouseCurrentAge = spouseAge + (age - currentAge);
+          if(spouseCurrentAge >= spouseSsStart) spouseSsAnnual *= (1 + spouseSsCola);
+          if(spouseCurrentAge >= spousePenStart && spousePenMonthly > 0) spousePenAnnual *= (1 + spousePenCola);
+        }
+        spend *= (1 + inflation) * (1 - spendingDecline);
       }
 
       // Write table
@@ -548,6 +904,8 @@
           <td>${r.contrib? fmt(r.contrib): ''}</td>
           <td>${r.ss? fmt(r.ss): ''}</td>
           <td>${r.pen? fmt(r.pen): ''}</td>
+          <td>${r.spouseSs? fmt(r.spouseSs): ''}</td>
+          <td>${r.spousePen? fmt(r.spousePen): ''}</td>
           <td>${r.spend? fmt(r.spend): ''}</td>
           <td>${r.wNet? fmt(r.wNet): ''}</td>
           <td>${r.wGross? fmt(r.wGross): ''}</td>
@@ -625,10 +983,10 @@
     function exportCSV(){
       const rows = window.__rows || [];
       if(!rows.length){ alert('Run a calculation first.'); return; }
-      const headers = ['Year','Age','Salary','Contrib','SS_Net','Pension_Net','Spend','Withdraw_Net','Withdraw_Gross','Taxes','Taxable_Bal','Pretax_Bal','Roth_Bal','Total_Bal'];
+      const headers = ['Year','Age','Salary','Contrib','SS_Net','Pension_Net','Spouse_SS_Net','Spouse_Pension_Net','Spend','Withdraw_Net','Withdraw_Gross','Taxes','Taxable_Bal','Pretax_Bal','Roth_Bal','Total_Bal'];
       const csv = [headers.join(',')]
         .concat(rows.map(r=>[
-          r.year, r.age, r.salary, r.contrib, r.ss, r.pen, r.spend, r.wNet, r.wGross, r.taxes, r.balTax, r.balPre, r.balRoth, r.total
+          r.year, r.age, r.salary, r.contrib, r.ss, r.pen, r.spouseSs||0, r.spousePen||0, r.spend, r.wNet, r.wGross, r.taxes, r.balTax, r.balPre, r.balRoth, r.total
         ].map(v => typeof v === 'number' ? Math.round(v*100)/100 : v).join(',')))
         .join('\n');
       const blob = new Blob([csv], {type:'text/csv'});
@@ -641,6 +999,8 @@
     // Events
     $('calcBtn').addEventListener('click', calc);
     $('csvBtn').addEventListener('click', exportCSV);
+    $('saveBtn').addEventListener('click', saveScenario);
+    $('loadBtn').addEventListener('click', loadScenario);
     $('demoBtn').addEventListener('click', loadExample);
     $('clearBtn').addEventListener('click', resetAll);
 
