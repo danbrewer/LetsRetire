@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>One‑Page Retirement Calculator</title>
+  <style>
+    :root {
+      --bg: #0b1220;
+      --card: #121a2b;
+      --muted: #7c8db5;
+      --text: #e6eefc;
+      --accent: #6ea8fe;
+      --good: #45d483;
+      --bad: #ff6b6b;
+      --warn: #ffbf69;
+      --border: #22304d;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, "Helvetica Neue", Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      margin: 0;
+      color: var(--text);
+      background: radial-gradient(1200px 900px at 15% -10%, #1a2440, #0b1220 50%);
+    }
+    header {
+      padding: 20px clamp(16px, 3vw, 40px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      position: sticky; top: 0; backdrop-filter: blur(6px);
+      background: linear-gradient(180deg, rgba(11,18,32,.85), rgba(11,18,32,.55));
+      border-bottom: 1px solid var(--border);
+      z-index: 10;
+    }
+    .title { font-weight: 700; letter-spacing:.2px; }
+    .title small{ color: var(--muted); font-weight: 500; }
+    .wrap {
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      gap: 18px;
+      padding: clamp(16px, 3vw, 40px);
+      align-items: start;
+    }
+    @media (max-width: 980px){ .wrap{ grid-template-columns: 1fr; } }
+
+    .card {
+      background: linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.00));
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.2);
+    }
+    .panel { padding: 18px; }
+    .panel h3 { margin: 0 0 8px; font-size: 14px; color: var(--muted); font-weight: 600; letter-spacing:.4px; text-transform: uppercase; }
+
+    .sections { display: grid; gap: 12px; }
+    details { border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+    details[open] summary { background: #0d172b; }
+    summary { padding: 14px 14px; cursor: pointer; list-style: none; user-select: none; display:flex; align-items:center; justify-content:space-between; gap:8px; }
+    summary::-webkit-details-marker{ display:none; }
+    .chev { transition: transform .2s; }
+    details[open] .chev{ transform: rotate(90deg); }
+    .content { padding: 14px; border-top: 1px dashed var(--border); background: rgba(255,255,255,.02); display:grid; gap:10px; }
+
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    @media (max-width: 520px){ .grid, .grid-3 { grid-template-columns: 1fr; } }
+
+    label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+    input, select { width: 100%; padding: 10px 11px; background: #0b1426; color: var(--text); border: 1px solid var(--border); border-radius: 10px; outline: none; }
+    input:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(110,168,254,.15); }
+    .hint { font-size: 12px; color: var(--muted); }
+
+    .actions { display:flex; gap:10px; padding: 14px; border-top: 1px solid var(--border); background: #0c1323; justify-content:flex-end; border-radius: 0 0 16px 16px; }
+    button {
+      appearance: none; border: 1px solid var(--border); background: #0f1930; color: var(--text);
+      padding: 10px 14px; border-radius: 10px; font-weight: 600; cursor: pointer; transition: .2s;
+    }
+    .primary { background: linear-gradient(180deg, #2b63ff, #2349d2); border-color: #1f3fb8; }
+    button:hover { transform: translateY(-1px); filter: brightness(1.07); }
+
+    .results { padding: 18px; display: grid; gap: 12px; }
+    .summary { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 10px; }
+    @media (max-width: 900px){ .summary{ grid-template-columns: repeat(2, minmax(0,1fr)); } }
+    .kpi { background: #0b1426; border: 1px solid var(--border); border-radius: 12px; padding: 12px; }
+    .kpi .label { color: var(--muted); font-size: 12px; }
+    .kpi .value { font-size: 20px; font-weight: 700; margin-top: 2px; }
+
+    canvas { width: 100%; height: 260px; background: #0b1426; border: 1px solid var(--border); border-radius: 12px; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { border-bottom: 1px solid var(--border); padding: 8px; text-align: right; white-space: nowrap; }
+    th:first-child, td:first-child, th:nth-child(2), td:nth-child(2) { text-align: left; }
+    thead th { position: sticky; top: 0; background: #0d172b; z-index: 1; }
+    tbody tr:hover { background: rgba(255,255,255,.03); }
+
+    .pill { padding:.2rem .5rem; border-radius: 999px; font-size: 12px; font-weight:600; display:inline-block; }
+    .ok { color: #0b5; background: rgba(69,212,131,.15); border: 1px solid rgba(69,212,131,.3); }
+    .alert { color: #ff6b6b; background: rgba(255,107,107,.15); border:1px solid rgba(255,107,107,.3); }
+    .warn { color: #ffbf69; background: rgba(255,191,105,.15); border:1px solid rgba(255,191,105,.3); }
+    .disclaimer { color: var(--muted); font-size: 12px; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="title">
+      <div style="font-size:20px">Retirement Calculator</div>
+      <small>Pre‑tax vs Roth vs Taxable • Social Security • Pension • Inflation • Employer match</small>
+    </div>
+    <div>
+      <button id="demoBtn" title="Load example inputs">Load Example</button>
+      <button id="clearBtn">Reset</button>
+      <button id="calcBtn" class="primary">Calculate ▶</button>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <!-- Inputs -->
+    <section class="card">
+      <div class="panel">
+        <h3>Inputs</h3>
+        <div class="sections">
+          <!-- Personal -->
+          <details open>
+            <summary>
+              <span>Personal & Timeline</span>
+              <span class="chev">▶</span>
+            </summary>
+            <div class="content grid">
+              <div>
+                <label for="currentAge">Current age</label>
+                <input id="currentAge" type="number" min="18" max="80" step="1" value="45" />
+              </div>
+              <div>
+                <label for="retireAge">Retirement age</label>
+                <input id="retireAge" type="number" min="40" max="80" step="1" value="67" />
+              </div>
+              <div>
+                <label for="endAge">Plan to age</label>
+                <input id="endAge" type="number" min="70" max="110" step="1" value="95" />
+              </div>
+              <div>
+                <label for="inflation">Inflation (%)</label>
+                <input id="inflation" type="number" step="0.1" value="2.5" />
+              </div>
+              <div>
+                <label for="spendingToday">Retirement spending (today's $ / yr)</label>
+                <input id="spendingToday" type="number" step="1000" value="80000" />
+                <div class="hint">We'll inflate this to retirement, then apply COLA annually.</div>
+              </div>
+            </div>
+          </details>
+
+          <!-- Work & Contributions -->
+          <details open>
+            <summary>
+              <span>Work & Contributions</span>
+              <span class="chev">▶</span>
+            </summary>
+            <div class="content">
+              <div class="grid">
+                <div>
+                  <label for="salary">Current salary ($/yr)</label>
+                  <input id="salary" type="number" step="1000" value="150000" />
+                </div>
+                <div>
+                  <label for="salaryGrowth">Salary growth (%)</label>
+                  <input id="salaryGrowth" type="number" step="0.1" value="3.0" />
+                </div>
+              </div>
+              <div class="grid-3">
+                <div>
+                  <label for="pretaxPct">Pre‑tax 401k/IRA contribution (% of salary)</label>
+                  <input id="pretaxPct" type="number" step="0.1" value="10" />
+                </div>
+                <div>
+                  <label for="rothPct">Roth contribution (% of salary)</label>
+                  <input id="rothPct" type="number" step="0.1" value="5" />
+                </div>
+                <div>
+                  <label for="taxablePct">Taxable savings (% of salary)</label>
+                  <input id="taxablePct" type="number" step="0.1" value="2" />
+                </div>
+              </div>
+              <div class="grid">
+                <div>
+                  <label for="matchCap">Employer match up to (% of salary)</label>
+                  <input id="matchCap" type="number" step="0.1" value="4" />
+                </div>
+                <div>
+                  <label for="matchRate">Employer match rate (%)</label>
+                  <input id="matchRate" type="number" step="1" value="50" />
+                </div>
+              </div>
+            </div>
+          </details>
+
+          <!-- Balances & Returns -->
+          <details open>
+            <summary>
+              <span>Balances & Returns</span>
+              <span class="chev">▶</span>
+            </summary>
+            <div class="content">
+              <div class="grid-3">
+                <div>
+                  <label for="balPre">Pre‑tax (401k/Trad IRA) balance</label>
+                  <input id="balPre" type="number" step="1000" value="400000" />
+                </div>
+                <div>
+                  <label for="balRoth">Roth balance</label>
+                  <input id="balRoth" type="number" step="1000" value="100000" />
+                </div>
+                <div>
+                  <label for="balTax">Taxable (brokerage) balance</label>
+                  <input id="balTax" type="number" step="1000" value="80000" />
+                </div>
+              </div>
+              <div class="grid-3">
+                <div>
+                  <label for="retPre">Pre‑tax return (%/yr)</label>
+                  <input id="retPre" type="number" step="0.1" value="6.0" />
+                </div>
+                <div>
+                  <label for="retRoth">Roth return (%/yr)</label>
+                  <input id="retRoth" type="number" step="0.1" value="6.0" />
+                </div>
+                <div>
+                  <label for="retTax">Taxable return (%/yr)</label>
+                  <input id="retTax" type="number" step="0.1" value="5.5" />
+                </div>
+              </div>
+            </div>
+          </details>
+
+          <!-- Income Sources -->
+          <details>
+            <summary>
+              <span>Social Security & Pension</span>
+              <span class="chev">▶</span>
+            </summary>
+            <div class="content">
+              <div class="grid-3">
+                <div>
+                  <label for="ssMonthly">Social Security ($/mo, first year)</label>
+                  <input id="ssMonthly" type="number" step="50" value="2800" />
+                </div>
+                <div>
+                  <label for="ssStart">SS start age</label>
+                  <input id="ssStart" type="number" step="1" value="67" />
+                </div>
+                <div>
+                  <label for="ssCola">SS COLA (%/yr)</label>
+                  <input id="ssCola" type="number" step="0.1" value="2.0" />
+                </div>
+              </div>
+              <div class="grid-3">
+                <div>
+                  <label for="penMonthly">Pension ($/mo, first year)</label>
+                  <input id="penMonthly" type="number" step="50" value="0" />
+                </div>
+                <div>
+                  <label for="penStart">Pension start age</label>
+                  <input id="penStart" type="number" step="1" value="65" />
+                </div>
+                <div>
+                  <label for="penCola">Pension COLA (%/yr)</label>
+                  <input id="penCola" type="number" step="0.1" value="0" />
+                </div>
+              </div>
+            </div>
+          </details>
+
+          <!-- Taxes & Strategy -->
+          <details>
+            <summary>
+              <span>Taxes & Withdrawal Strategy</span>
+              <span class="chev">▶</span>
+            </summary>
+            <div class="content">
+              <div class="grid-3">
+                <div>
+                  <label for="taxPre">Effective tax on pre‑tax withdrawals (%)</label>
+                  <input id="taxPre" type="number" step="0.5" value="22" />
+                </div>
+                <div>
+                  <label for="taxTaxable">Effective tax on taxable withdrawals (%)</label>
+                  <input id="taxTaxable" type="number" step="0.5" value="10" />
+                </div>
+                <div>
+                  <label for="taxRoth">Effective tax on Roth withdrawals (%)</label>
+                  <input id="taxRoth" type="number" step="0.5" value="0" />
+                </div>
+              </div>
+              <div class="grid-3">
+                <div>
+                  <label for="taxSS">Effective tax on Social Security (%)</label>
+                  <input id="taxSS" type="number" step="0.5" value="10" />
+                </div>
+                <div>
+                  <label for="taxPension">Effective tax on Pension (%)</label>
+                  <input id="taxPension" type="number" step="0.5" value="20" />
+                </div>
+                <div>
+                  <label for="order">Withdrawal order</label>
+                  <select id="order">
+                    <option value="taxable,pretax,roth">Taxable → Pre‑tax → Roth (default)</option>
+                    <option value="pretax,taxable,roth">Pre‑tax → Taxable → Roth</option>
+                    <option value="roth,pretax,taxable">Roth → Pre‑tax → Taxable</option>
+                  </select>
+                </div>
+              </div>
+              <div class="hint">These are simplified, all‑in effective rates to keep the model understandable (not tax advice).</div>
+            </div>
+          </details>
+        </div>
+      </div>
+      <div class="actions">
+        <button id="csvBtn" title="Export yearly table">Export CSV</button>
+      </div>
+    </section>
+
+    <!-- Results -->
+    <section class="card">
+      <div class="results">
+        <div class="summary">
+          <div class="kpi"><div class="label">Funded to Age</div><div id="kpiAge" class="value">—</div></div>
+          <div class="kpi"><div class="label">Ending Balance</div><div id="kpiEndBal" class="value">—</div></div>
+          <div class="kpi"><div class="label">Max Drawdown Year</div><div id="kpiDraw" class="value">—</div></div>
+          <div class="kpi"><div class="label">Total Taxes (retirement)</div><div id="kpiTax" class="value">—</div></div>
+        </div>
+        <canvas id="chart" height="260"></canvas>
+        <div class="card" style="padding:0; overflow:auto; max-height: 50vh;">
+          <table>
+            <thead>
+              <tr>
+                <th>Year</th>
+                <th>Age</th>
+                <th>Salary</th>
+                <th>Contrib (Tot)</th>
+                <th>SS (Net)</th>
+                <th>Pension (Net)</th>
+                <th>Spend (Net)</th>
+                <th>Withdraw Net</th>
+                <th>Withdraw Gross</th>
+                <th>Taxes</th>
+                <th>Taxable Bal</th>
+                <th>Pre‑tax Bal</th>
+                <th>Roth Bal</th>
+                <th>Total Bal</th>
+              </tr>
+            </thead>
+            <tbody id="rows"></tbody>
+          </table>
+        </div>
+        <div class="disclaimer">This is an educational, simplified model. It ignores many realities (RMDs, detailed SS taxability, brackets/credits, healthcare, sequence risk, etc.). Consult a fiduciary advisor and a tax professional for personalized guidance.</div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const pct = (v) => (isNaN(v) ? 0 : Number(v)/100);
+    const num = (id) => Number($(id).value || 0);
+    const fmt = (n) => n.toLocaleString(undefined, { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+    const pow1p = (r, n) => Math.pow(1 + r, n);
+
+    function loadExample(){
+      const ex = {
+        currentAge:45, retireAge:67, endAge:95, inflation:2.5, spendingToday:80000,
+        salary:150000, salaryGrowth:3.0, pretaxPct:10, rothPct:5, taxablePct:2,
+        matchCap:4, matchRate:50, balPre:400000, balRoth:100000, balTax:80000,
+        retPre:6.0, retRoth:6.0, retTax:5.5, ssMonthly:2800, ssStart:67, ssCola:2.0,
+        penMonthly:0, penStart:65, penCola:0, taxPre:22, taxTaxable:10, taxRoth:0,
+        taxSS:10, taxPension:20, order:'taxable,pretax,roth'
+      };
+      for(const [k,v] of Object.entries(ex)){ if($(k)) $(k).value = v; }
+    }
+
+    function resetAll(){
+      document.querySelectorAll('input').forEach(i=> i.value = i.defaultValue ?? '');
+      $('order').value = 'taxable,pretax,roth';
+      $('rows').innerHTML = '';
+      $('kpiAge').textContent = '—';
+      $('kpiEndBal').textContent = '—';
+      $('kpiDraw').textContent = '—';
+      $('kpiTax').textContent = '—';
+      drawChart([]);
+    }
+
+    function calc(){
+      const currentAge = num('currentAge');
+      const retireAge  = num('retireAge');
+      const endAge     = num('endAge');
+      const inflation  = pct(num('inflation'));
+      const spendingToday = num('spendingToday');
+
+      const salary0 = num('salary');
+      const salaryGrowth = pct(num('salaryGrowth'));
+      const pretaxPct = pct(num('pretaxPct'));
+      const rothPct   = pct(num('rothPct'));
+      const taxablePct= pct(num('taxablePct'));
+      const matchCap  = pct(num('matchCap'));
+      const matchRate = pct(num('matchRate'));
+
+      let balPre  = num('balPre');
+      let balRoth = num('balRoth');
+      let balTax  = num('balTax');
+      const retPre  = pct(num('retPre'));
+      const retRoth = pct(num('retRoth'));
+      const retTax  = pct(num('retTax'));
+
+      const ssMonthly = num('ssMonthly');
+      const ssStart   = num('ssStart');
+      const ssCola    = pct(num('ssCola'));
+      const penMonthly = num('penMonthly');
+      const penStart   = num('penStart');
+      const penCola    = pct(num('penCola'));
+
+      const taxPre   = pct(num('taxPre'));
+      const taxTaxable = pct(num('taxTaxable'));
+      const taxRoth = pct(num('taxRoth'));
+      const taxSS   = pct(num('taxSS'));
+      const taxPension = pct(num('taxPension'));
+      const order = $('order').value.split(',');
+
+      if(retireAge <= currentAge || endAge <= retireAge){
+        alert('Please ensure: current age < retirement age < plan age.');
+        return;
+      }
+
+      const yearsToRetire = retireAge - currentAge;
+      const yearsTotal = endAge - currentAge;
+      let salary = salary0;
+
+      const rows = [];
+      let totalTaxes = 0;
+      let maxDrawdown = { year: null, value: Infinity };
+
+      // Inflate spending to retirement year (nominal first-year)
+      const spendAtRetire = spendingToday * pow1p(inflation, yearsToRetire);
+
+      // Accumulation years
+      for(let y = 0; y < yearsToRetire; y++){
+        const age = currentAge + y;
+        // Contributions this year
+        const cPre   = salary * pretaxPct;
+        const cRoth  = salary * rothPct;
+        const cTax   = salary * taxablePct;
+        const match  = Math.min(pretaxPct, matchCap) * salary * matchRate;
+
+        balPre  = (balPre  + cPre + match) * (1 + retPre);
+        balRoth = (balRoth + cRoth) * (1 + retRoth);
+        balTax  = (balTax  + cTax) * (1 + retTax);
+
+        rows.push({
+          year: new Date().getFullYear() + y,
+          age,
+          salary,
+          contrib: cPre + cRoth + cTax + match,
+          ss: 0, pen: 0, spend: 0,
+          wNet: 0, wGross: 0, taxes: 0,
+          balTax, balPre, balRoth,
+          total: balTax + balPre + balRoth
+        });
+
+        salary *= (1 + salaryGrowth);
+      }
+
+      // Retirement years
+      let ssAnnual = ssMonthly * 12 * (retireAge >= ssStart ? pow1p(ssCola, retireAge - ssStart) : 1);
+      let penAnnual = penMonthly * 12 * (retireAge >= penStart ? pow1p(penCola, retireAge - penStart) : 1);
+      let spend = spendAtRetire;
+
+      for(let y = yearsToRetire; y < yearsTotal; y++){
+        const age = currentAge + y;
+        const year = new Date().getFullYear() + y;
+
+        // Income sources (apply start ages and COLA each year)
+        const hasSS = age >= ssStart;
+        const hasPen = age >= penStart && penMonthly > 0;
+        const ssGross = hasSS ? ssAnnual : 0;
+        const penGross = hasPen ? penAnnual : 0;
+        const ssNet = ssGross * (1 - taxSS);
+        const penNet = penGross * (1 - taxPension);
+
+        // Net spending need after other net incomes
+        let needNet = Math.max(0, spend - (ssNet + penNet));
+        let needGross = 0; // track gross withdrawals
+        let taxesThisYear = 0;
+
+        function withdrawFrom(kind, netAmount){
+          if(netAmount <= 0) return 0;
+          let taxRate = 0, balRef = 0, setBal;
+          if(kind === 'taxable'){ taxRate = taxTaxable; balRef = balTax; setBal = v=> balTax = v; }
+          if(kind === 'pretax'){ taxRate = taxPre; balRef = balPre; setBal = v=> balPre = v; }
+          if(kind === 'roth'){   taxRate = taxRoth; balRef = balRoth; setBal = v=> balRoth = v; }
+
+          const grossNeeded = netAmount / (1 - taxRate);
+          const grossTake = Math.min(grossNeeded, balRef);
+          const netReceived = grossTake * (1 - taxRate);
+          const taxPaid = grossTake - netReceived;
+          setBal(balRef - grossTake);
+          taxesThisYear += taxPaid;
+          return { gross: grossTake, net: netReceived };
+        }
+
+        // Withdraw following order until need met
+        let wGross = 0, wNet = 0;
+        for(const k of order){
+          if(needNet <= 0) break;
+          const {gross=0, net=0} = withdrawFrom(k, needNet) || {};
+          needNet = Math.max(0, needNet - net);
+          wGross += gross; wNet += net;
+        }
+
+        // Grow remaining balances
+        balTax  *= (1 + retTax);
+        balPre  *= (1 + retPre);
+        balRoth *= (1 + retRoth);
+
+        const totalBal = balTax + balPre + balRoth;
+        totalTaxes += taxesThisYear;
+        if(totalBal < maxDrawdown.value){ maxDrawdown = { year, value: totalBal }; }
+
+        rows.push({
+          year, age, salary: 0, contrib: 0,
+          ss: ssNet, pen: penNet, spend,
+          wNet, wGross, taxes: taxesThisYear,
+          balTax, balPre, balRoth, total: totalBal
+        });
+
+        // Step next year: COLAs
+        if(hasSS) ssAnnual *= (1 + ssCola);
+        if(hasPen) penAnnual *= (1 + penCola);
+        spend *= (1 + inflation);
+      }
+
+      // Write table
+      const tbody = $('rows');
+      tbody.innerHTML = rows.map(r => `
+        <tr>
+          <td>${r.year}</td>
+          <td>${r.age}</td>
+          <td>${r.salary? fmt(r.salary): ''}</td>
+          <td>${r.contrib? fmt(r.contrib): ''}</td>
+          <td>${r.ss? fmt(r.ss): ''}</td>
+          <td>${r.pen? fmt(r.pen): ''}</td>
+          <td>${r.spend? fmt(r.spend): ''}</td>
+          <td>${r.wNet? fmt(r.wNet): ''}</td>
+          <td>${r.wGross? fmt(r.wGross): ''}</td>
+          <td>${r.taxes? fmt(r.taxes): ''}</td>
+          <td>${fmt(r.balTax)}</td>
+          <td>${fmt(r.balPre)}</td>
+          <td>${fmt(r.balRoth)}</td>
+          <td>${fmt(r.total)}</td>
+        </tr>`).join('');
+
+      // KPIs
+      const last = rows[rows.length - 1];
+      // Find the last age where there's still money, or endAge if money lasts throughout
+      const fundedTo = last.total > 0 ? endAge : rows.reduce((lastGoodAge, r) => r.total > 0 ? r.age : lastGoodAge, currentAge);
+      $('kpiAge').innerHTML = `${fundedTo} <span class="pill ${fundedTo >= endAge ? 'ok':'alert'}">${fundedTo >= endAge ? 'Fully funded' : 'Shortfall'}</span>`;
+      $('kpiEndBal').textContent = fmt(Math.max(0, last.total));
+      $('kpiDraw').textContent = `${maxDrawdown.year ?? '—'}`;
+      $('kpiTax').textContent = fmt(totalTaxes);
+
+      // Chart (total balance)
+      drawChart(rows.map(r => ({ x: r.year, y: r.total })));
+
+      // Save rows for export
+      window.__rows = rows;
+    }
+
+    function drawChart(series){
+      const c = $('chart');
+      const ctx = c.getContext('2d');
+      ctx.clearRect(0,0,c.width,c.height);
+      if(!series || !series.length){ return; }
+      // device ratio
+      const dpr = window.devicePixelRatio || 1;
+      const width = c.clientWidth * dpr, height = c.clientHeight * dpr;
+      if(c.width !== width) c.width = width; if(c.height !== height) c.height = height;
+
+      // Padding
+      const pad = { l: 48, r: 12, t: 12, b: 28 };
+      const xs = series.map(p=>p.x);
+      const ys = series.map(p=>p.y);
+      const xmin = Math.min(...xs), xmax = Math.max(...xs);
+      const ymin = 0, ymax = Math.max(...ys) * 1.1;
+      const xTo = x => pad.l + ( (x - xmin) / (xmax - xmin) ) * (width - pad.l - pad.r);
+      const yTo = y => height - pad.b - ( (y - ymin) / (ymax - ymin) ) * (height - pad.t - pad.b);
+
+      // Axes
+      ctx.strokeStyle = '#22304d'; ctx.lineWidth = 1; ctx.beginPath();
+      ctx.moveTo(pad.l, yTo(0)); ctx.lineTo(width - pad.r, yTo(0));
+      ctx.moveTo(pad.l, pad.t); ctx.lineTo(pad.l, height - pad.b); ctx.stroke();
+
+      // Y ticks
+      ctx.fillStyle = '#7c8db5'; ctx.font = `${12*dpr}px system-ui`;
+      const steps = 4;
+      for(let i=0;i<=steps;i++){
+        const v = (ymax/steps)*i; const y = yTo(v);
+        ctx.strokeStyle = 'rgba(34,48,77,.4)'; ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(width - pad.r, y); ctx.stroke();
+        ctx.fillText(fmt(v), 6*dpr, y - 2*dpr);
+      }
+
+      // Line
+      ctx.strokeStyle = '#6ea8fe'; ctx.lineWidth = 2*dpr; ctx.beginPath();
+      series.forEach((p,i)=>{ const X = xTo(p.x), Y = yTo(p.y); if(i===0) ctx.moveTo(X,Y); else ctx.lineTo(X,Y); });
+      ctx.stroke();
+
+      // Points
+      ctx.fillStyle = '#6ea8fe';
+      series.forEach(p=>{ const X=xTo(p.x), Y=yTo(p.y); ctx.beginPath(); ctx.arc(X,Y,2.5*dpr,0,Math.PI*2); ctx.fill(); });
+
+      // X labels
+      ctx.fillStyle = '#7c8db5'; ctx.textAlign='center'; ctx.font = `${11*dpr}px system-ui`;
+      const years = [series[0].x, series[Math.floor(series.length/2)].x, series[series.length-1].x];
+      years.forEach(x => ctx.fillText(String(x), xTo(x), height - 6*dpr));
+    }
+
+    function exportCSV(){
+      const rows = window.__rows || [];
+      if(!rows.length){ alert('Run a calculation first.'); return; }
+      const headers = ['Year','Age','Salary','Contrib','SS_Net','Pension_Net','Spend','Withdraw_Net','Withdraw_Gross','Taxes','Taxable_Bal','Pretax_Bal','Roth_Bal','Total_Bal'];
+      const csv = [headers.join(',')]
+        .concat(rows.map(r=>[
+          r.year, r.age, r.salary, r.contrib, r.ss, r.pen, r.spend, r.wNet, r.wGross, r.taxes, r.balTax, r.balPre, r.balRoth, r.total
+        ].map(v => typeof v === 'number' ? Math.round(v*100)/100 : v).join(',')))
+        .join('\n');
+      const blob = new Blob([csv], {type:'text/csv'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'retirement_results.csv';
+      document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+    }
+
+    // Events
+    $('calcBtn').addEventListener('click', calc);
+    $('csvBtn').addEventListener('click', exportCSV);
+    $('demoBtn').addEventListener('click', loadExample);
+    $('clearBtn').addEventListener('click', resetAll);
+
+    // First render
+    loadExample();
+    calc();
+  </script>
+</body>
+</html>
