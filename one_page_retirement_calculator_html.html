@@ -204,24 +204,84 @@
                 <input id="currentAge" type="number" min="18" max="80" step="1" value="45" />
               </div>
               <div>
-                <label for="retireAge">Retirement age</label>
+                <label for="retireAge">Retirement age
+                  <svg xmlns="http://www.w3.org/2000/svg" 
+                       viewBox="0 0 24 24" 
+                       width="1em" height="1em" 
+                       fill="white" 
+                       class="help-icon"
+                       onclick="showHelpToast(event, 'retireAge')"
+                       style="vertical-align: middle;">
+                    <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none"/>
+                    <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
+                    <circle cx="12" cy="17" r="1" fill="white"/>
+                  </svg>
+                </label>
                 <input id="retireAge" type="number" min="40" max="80" step="1" value="67" />
               </div>
               <div>
-                <label for="endAge">Plan to age</label>
+                <label for="endAge">Plan to age
+                  <svg xmlns="http://www.w3.org/2000/svg" 
+                       viewBox="0 0 24 24" 
+                       width="1em" height="1em" 
+                       fill="white" 
+                       class="help-icon"
+                       onclick="showHelpToast(event, 'endAge')"
+                       style="vertical-align: middle;">
+                    <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none"/>
+                    <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
+                    <circle cx="12" cy="17" r="1" fill="white"/>
+                  </svg>
+                </label>
                 <input id="endAge" type="number" min="70" max="110" step="1" value="95" />
               </div>
               <div>
-                <label for="inflation">Inflation (%)</label>
+                <label for="inflation">Inflation (%)
+                  <svg xmlns="http://www.w3.org/2000/svg" 
+                       viewBox="0 0 24 24" 
+                       width="1em" height="1em" 
+                       fill="white" 
+                       class="help-icon"
+                       onclick="showHelpToast(event, 'inflation')"
+                       style="vertical-align: middle;">
+                    <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none"/>
+                    <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
+                    <circle cx="12" cy="17" r="1" fill="white"/>
+                  </svg>
+                </label>
                 <input id="inflation" type="number" step="0.1" value="2.5" />
               </div>
               <div>
-                <label for="spendingToday">Retirement spending (today's $ / yr)</label>
+                <label for="spendingToday">Retirement spending (today's $ / yr)
+                  <svg xmlns="http://www.w3.org/2000/svg" 
+                       viewBox="0 0 24 24" 
+                       width="1em" height="1em" 
+                       fill="white" 
+                       class="help-icon"
+                       onclick="showHelpToast(event, 'spendingToday')"
+                       style="vertical-align: middle;">
+                    <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none"/>
+                    <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
+                    <circle cx="12" cy="17" r="1" fill="white"/>
+                  </svg>
+                </label>
                 <input id="spendingToday" type="number" step="1000" value="80000" />
                 <div class="hint">We'll inflate this to retirement, then apply COLA annually.</div>
               </div>
               <div>
-                <label for="spendingDecline">Annual spending decline in retirement (%)</label>
+                <label for="spendingDecline">Annual spending decline in retirement (%)
+                  <svg xmlns="http://www.w3.org/2000/svg" 
+                       viewBox="0 0 24 24" 
+                       width="1em" height="1em" 
+                       fill="white" 
+                       class="help-icon"
+                       onclick="showHelpToast(event, 'spendingDecline')"
+                       style="vertical-align: middle;">
+                    <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none"/>
+                    <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
+                    <circle cx="12" cy="17" r="1" fill="white"/>
+                  </svg>
+                </label>
                 <input id="spendingDecline" type="number" step="0.1" value="0" />
                 <div class="hint">Spending reduction each year (e.g., 2% = spending drops to 98%, then 96%, etc.)</div>
               </div>
@@ -237,12 +297,36 @@
             <div class="content">
               <div class="grid">
                 <div>
-                  <label for="spouseAge">Spouse current age</label>
+                  <label for="spouseAge">Spouse current age
+                    <svg xmlns="http://www.w3.org/2000/svg" 
+                         viewBox="0 0 24 24" 
+                         width="1em" height="1em" 
+                         fill="white" 
+                         class="help-icon"
+                         onclick="showHelpToast(event, 'spouseAge')"
+                         style="vertical-align: middle;">
+                      <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none"/>
+                      <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
+                      <circle cx="12" cy="17" r="1" fill="white"/>
+                    </svg>
+                  </label>
                   <input id="spouseAge" type="number" min="18" max="80" step="1" value="0" />
                   <div class="hint">Set to 0 if no spouse</div>
                 </div>
                 <div>
-                  <label for="spouseRetireAge">Spouse retirement age</label>
+                  <label for="spouseRetireAge">Spouse retirement age
+                    <svg xmlns="http://www.w3.org/2000/svg" 
+                         viewBox="0 0 24 24" 
+                         width="1em" height="1em" 
+                         fill="white" 
+                         class="help-icon"
+                         onclick="showHelpToast(event, 'spouseRetireAge')"
+                         style="vertical-align: middle;">
+                      <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none"/>
+                      <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
+                      <circle cx="12" cy="17" r="1" fill="white"/>
+                    </svg>
+                  </label>
                   <input id="spouseRetireAge" type="number" min="40" max="80" step="1" value="67" />
                 </div>
               </div>
@@ -296,25 +380,85 @@
             <div class="content">
               <div class="grid">
                 <div>
-                  <label for="salary">Current salary ($/yr)</label>
+                  <label for="salary">Current salary ($/yr)
+                    <svg xmlns="http://www.w3.org/2000/svg" 
+                         viewBox="0 0 24 24" 
+                         width="1em" height="1em" 
+                         fill="white" 
+                         class="help-icon"
+                         onclick="showHelpToast(event, 'salary')"
+                         style="vertical-align: middle;">
+                      <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none"/>
+                      <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
+                      <circle cx="12" cy="17" r="1" fill="white"/>
+                    </svg>
+                  </label>
                   <input id="salary" type="number" step="1000" value="150000" />
                 </div>
                 <div>
-                  <label for="salaryGrowth">Salary growth (%)</label>
+                  <label for="salaryGrowth">Salary growth (%)
+                    <svg xmlns="http://www.w3.org/2000/svg" 
+                         viewBox="0 0 24 24" 
+                         width="1em" height="1em" 
+                         fill="white" 
+                         class="help-icon"
+                         onclick="showHelpToast(event, 'salaryGrowth')"
+                         style="vertical-align: middle;">
+                      <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none"/>
+                      <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
+                      <circle cx="12" cy="17" r="1" fill="white"/>
+                    </svg>
+                  </label>
                   <input id="salaryGrowth" type="number" step="0.1" value="3.0" />
                 </div>
               </div>
               <div class="grid-3">
                 <div>
-                  <label for="pretaxPct">Pre‑tax 401k/IRA contribution (% of salary)</label>
+                  <label for="pretaxPct">Pre‑tax 401k/IRA contribution (% of salary)
+                    <svg xmlns="http://www.w3.org/2000/svg" 
+                         viewBox="0 0 24 24" 
+                         width="1em" height="1em" 
+                         fill="white" 
+                         class="help-icon"
+                         onclick="showHelpToast(event, 'pretaxPct')"
+                         style="vertical-align: middle;">
+                      <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none"/>
+                      <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
+                      <circle cx="12" cy="17" r="1" fill="white"/>
+                    </svg>
+                  </label>
                   <input id="pretaxPct" type="number" step="0.1" value="10" />
                 </div>
                 <div>
-                  <label for="rothPct">Roth contribution (% of salary)</label>
+                  <label for="rothPct">Roth contribution (% of salary)
+                    <svg xmlns="http://www.w3.org/2000/svg" 
+                         viewBox="0 0 24 24" 
+                         width="1em" height="1em" 
+                         fill="white" 
+                         class="help-icon"
+                         onclick="showHelpToast(event, 'rothPct')"
+                         style="vertical-align: middle;">
+                      <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none"/>
+                      <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
+                      <circle cx="12" cy="17" r="1" fill="white"/>
+                    </svg>
+                  </label>
                   <input id="rothPct" type="number" step="0.1" value="5" />
                 </div>
                 <div>
-                  <label for="taxablePct">Taxable savings (% of salary)</label>
+                  <label for="taxablePct">Taxable savings (% of salary)
+                    <svg xmlns="http://www.w3.org/2000/svg" 
+                         viewBox="0 0 24 24" 
+                         width="1em" height="1em" 
+                         fill="white" 
+                         class="help-icon"
+                         onclick="showHelpToast(event, 'taxablePct')"
+                         style="vertical-align: middle;">
+                      <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none"/>
+                      <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
+                      <circle cx="12" cy="17" r="1" fill="white"/>
+                    </svg>
+                  </label>
                   <input id="taxablePct" type="number" step="0.1" value="2" />
                 </div>
               </div>
@@ -340,29 +484,101 @@
             <div class="content">
               <div class="grid-3">
                 <div>
-                  <label for="balPre">Pre‑tax (401k/Trad IRA) balance</label>
+                  <label for="balPre">Pre‑tax (401k/Trad IRA) balance
+                    <svg xmlns="http://www.w3.org/2000/svg" 
+                         viewBox="0 0 24 24" 
+                         width="1em" height="1em" 
+                         fill="white" 
+                         class="help-icon"
+                         onclick="showHelpToast(event, 'balPre')"
+                         style="vertical-align: middle;">
+                      <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none"/>
+                      <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
+                      <circle cx="12" cy="17" r="1" fill="white"/>
+                    </svg>
+                  </label>
                   <input id="balPre" type="number" step="1000" value="400000" />
                 </div>
                 <div>
-                  <label for="balRoth">Roth balance</label>
+                  <label for="balRoth">Roth balance
+                    <svg xmlns="http://www.w3.org/2000/svg" 
+                         viewBox="0 0 24 24" 
+                         width="1em" height="1em" 
+                         fill="white" 
+                         class="help-icon"
+                         onclick="showHelpToast(event, 'balRoth')"
+                         style="vertical-align: middle;">
+                      <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none"/>
+                      <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
+                      <circle cx="12" cy="17" r="1" fill="white"/>
+                    </svg>
+                  </label>
                   <input id="balRoth" type="number" step="1000" value="100000" />
                 </div>
                 <div>
-                  <label for="balTax">Taxable (brokerage) balance</label>
+                  <label for="balTax">Taxable (brokerage) balance
+                    <svg xmlns="http://www.w3.org/2000/svg" 
+                         viewBox="0 0 24 24" 
+                         width="1em" height="1em" 
+                         fill="white" 
+                         class="help-icon"
+                         onclick="showHelpToast(event, 'balTax')"
+                         style="vertical-align: middle;">
+                      <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none"/>
+                      <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
+                      <circle cx="12" cy="17" r="1" fill="white"/>
+                    </svg>
+                  </label>
                   <input id="balTax" type="number" step="1000" value="80000" />
                 </div>
               </div>
               <div class="grid-3">
                 <div>
-                  <label for="retPre">Pre‑tax return (%/yr)</label>
+                  <label for="retPre">Pre‑tax return (%/yr)
+                    <svg xmlns="http://www.w3.org/2000/svg" 
+                         viewBox="0 0 24 24" 
+                         width="1em" height="1em" 
+                         fill="white" 
+                         class="help-icon"
+                         onclick="showHelpToast(event, 'retPre')"
+                         style="vertical-align: middle;">
+                      <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none"/>
+                      <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
+                      <circle cx="12" cy="17" r="1" fill="white"/>
+                    </svg>
+                  </label>
                   <input id="retPre" type="number" step="0.1" value="6.0" />
                 </div>
                 <div>
-                  <label for="retRoth">Roth return (%/yr)</label>
+                  <label for="retRoth">Roth return (%/yr)
+                    <svg xmlns="http://www.w3.org/2000/svg" 
+                         viewBox="0 0 24 24" 
+                         width="1em" height="1em" 
+                         fill="white" 
+                         class="help-icon"
+                         onclick="showHelpToast(event, 'retRoth')"
+                         style="vertical-align: middle;">
+                      <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none"/>
+                      <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
+                      <circle cx="12" cy="17" r="1" fill="white"/>
+                    </svg>
+                  </label>
                   <input id="retRoth" type="number" step="0.1" value="6.0" />
                 </div>
                 <div>
-                  <label for="retTax">Taxable return (%/yr)</label>
+                  <label for="retTax">Taxable return (%/yr)
+                    <svg xmlns="http://www.w3.org/2000/svg" 
+                         viewBox="0 0 24 24" 
+                         width="1em" height="1em" 
+                         fill="white" 
+                         class="help-icon"
+                         onclick="showHelpToast(event, 'retTax')"
+                         style="vertical-align: middle;">
+                      <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none"/>
+                      <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
+                      <circle cx="12" cy="17" r="1" fill="white"/>
+                    </svg>
+                  </label>
                   <input id="retTax" type="number" step="0.1" value="5.5" />
                 </div>
               </div>
@@ -378,29 +594,101 @@
             <div class="content">
               <div class="grid-3">
                 <div>
-                  <label for="ssMonthly">Social Security ($/mo, first year)</label>
+                  <label for="ssMonthly">Social Security ($/mo, first year)
+                    <svg xmlns="http://www.w3.org/2000/svg" 
+                         viewBox="0 0 24 24" 
+                         width="1em" height="1em" 
+                         fill="white" 
+                         class="help-icon"
+                         onclick="showHelpToast(event, 'ssMonthly')"
+                         style="vertical-align: middle;">
+                      <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none"/>
+                      <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
+                      <circle cx="12" cy="17" r="1" fill="white"/>
+                    </svg>
+                  </label>
                   <input id="ssMonthly" type="number" step="50" value="2800" />
                 </div>
                 <div>
-                  <label for="ssStart">SS start age</label>
+                  <label for="ssStart">SS start age
+                    <svg xmlns="http://www.w3.org/2000/svg" 
+                         viewBox="0 0 24 24" 
+                         width="1em" height="1em" 
+                         fill="white" 
+                         class="help-icon"
+                         onclick="showHelpToast(event, 'ssStart')"
+                         style="vertical-align: middle;">
+                      <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none"/>
+                      <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
+                      <circle cx="12" cy="17" r="1" fill="white"/>
+                    </svg>
+                  </label>
                   <input id="ssStart" type="number" step="1" value="67" />
                 </div>
                 <div>
-                  <label for="ssCola">SS COLA (%/yr)</label>
+                  <label for="ssCola">SS COLA (%/yr)
+                    <svg xmlns="http://www.w3.org/2000/svg" 
+                         viewBox="0 0 24 24" 
+                         width="1em" height="1em" 
+                         fill="white" 
+                         class="help-icon"
+                         onclick="showHelpToast(event, 'ssCola')"
+                         style="vertical-align: middle;">
+                      <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none"/>
+                      <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
+                      <circle cx="12" cy="17" r="1" fill="white"/>
+                    </svg>
+                  </label>
                   <input id="ssCola" type="number" step="0.1" value="2.0" />
                 </div>
               </div>
               <div class="grid-3">
                 <div>
-                  <label for="penMonthly">Pension ($/mo, first year)</label>
+                  <label for="penMonthly">Pension ($/mo, first year)
+                    <svg xmlns="http://www.w3.org/2000/svg" 
+                         viewBox="0 0 24 24" 
+                         width="1em" height="1em" 
+                         fill="white" 
+                         class="help-icon"
+                         onclick="showHelpToast(event, 'penMonthly')"
+                         style="vertical-align: middle;">
+                      <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none"/>
+                      <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
+                      <circle cx="12" cy="17" r="1" fill="white"/>
+                    </svg>
+                  </label>
                   <input id="penMonthly" type="number" step="50" value="0" />
                 </div>
                 <div>
-                  <label for="penStart">Pension start age</label>
+                  <label for="penStart">Pension start age
+                    <svg xmlns="http://www.w3.org/2000/svg" 
+                         viewBox="0 0 24 24" 
+                         width="1em" height="1em" 
+                         fill="white" 
+                         class="help-icon"
+                         onclick="showHelpToast(event, 'penStart')"
+                         style="vertical-align: middle;">
+                      <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none"/>
+                      <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
+                      <circle cx="12" cy="17" r="1" fill="white"/>
+                    </svg>
+                  </label>
                   <input id="penStart" type="number" step="1" value="65" />
                 </div>
                 <div>
-                  <label for="penCola">Pension COLA (%/yr)</label>
+                  <label for="penCola">Pension COLA (%/yr)
+                    <svg xmlns="http://www.w3.org/2000/svg" 
+                         viewBox="0 0 24 24" 
+                         width="1em" height="1em" 
+                         fill="white" 
+                         class="help-icon"
+                         onclick="showHelpToast(event, 'penCola')"
+                         style="vertical-align: middle;">
+                      <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none"/>
+                      <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
+                      <circle cx="12" cy="17" r="1" fill="white"/>
+                    </svg>
+                  </label>
                   <input id="penCola" type="number" step="0.1" value="0" />
                 </div>
               </div>
@@ -416,29 +704,101 @@
             <div class="content">
               <div class="grid-3">
                 <div>
-                  <label for="taxPre">Effective tax on pre‑tax withdrawals (%)</label>
+                  <label for="taxPre">Effective tax on pre‑tax withdrawals (%)
+                    <svg xmlns="http://www.w3.org/2000/svg" 
+                         viewBox="0 0 24 24" 
+                         width="1em" height="1em" 
+                         fill="white" 
+                         class="help-icon"
+                         onclick="showHelpToast(event, 'taxPre')"
+                         style="vertical-align: middle;">
+                      <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none"/>
+                      <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
+                      <circle cx="12" cy="17" r="1" fill="white"/>
+                    </svg>
+                  </label>
                   <input id="taxPre" type="number" step="0.5" value="22" />
                 </div>
                 <div>
-                  <label for="taxTaxable">Effective tax on taxable withdrawals (%)</label>
+                  <label for="taxTaxable">Effective tax on taxable withdrawals (%)
+                    <svg xmlns="http://www.w3.org/2000/svg" 
+                         viewBox="0 0 24 24" 
+                         width="1em" height="1em" 
+                         fill="white" 
+                         class="help-icon"
+                         onclick="showHelpToast(event, 'taxTaxable')"
+                         style="vertical-align: middle;">
+                      <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none"/>
+                      <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
+                      <circle cx="12" cy="17" r="1" fill="white"/>
+                    </svg>
+                  </label>
                   <input id="taxTaxable" type="number" step="0.5" value="10" />
                 </div>
                 <div>
-                  <label for="taxRoth">Effective tax on Roth withdrawals (%)</label>
+                  <label for="taxRoth">Effective tax on Roth withdrawals (%)
+                    <svg xmlns="http://www.w3.org/2000/svg" 
+                         viewBox="0 0 24 24" 
+                         width="1em" height="1em" 
+                         fill="white" 
+                         class="help-icon"
+                         onclick="showHelpToast(event, 'taxRoth')"
+                         style="vertical-align: middle;">
+                      <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none"/>
+                      <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
+                      <circle cx="12" cy="17" r="1" fill="white"/>
+                    </svg>
+                  </label>
                   <input id="taxRoth" type="number" step="0.5" value="0" />
                 </div>
               </div>
               <div class="grid-3">
                 <div>
-                  <label for="taxSS">Effective tax on Social Security (%)</label>
+                  <label for="taxSS">Effective tax on Social Security (%)
+                    <svg xmlns="http://www.w3.org/2000/svg" 
+                         viewBox="0 0 24 24" 
+                         width="1em" height="1em" 
+                         fill="white" 
+                         class="help-icon"
+                         onclick="showHelpToast(event, 'taxSS')"
+                         style="vertical-align: middle;">
+                      <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none"/>
+                      <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
+                      <circle cx="12" cy="17" r="1" fill="white"/>
+                    </svg>
+                  </label>
                   <input id="taxSS" type="number" step="0.5" value="10" />
                 </div>
                 <div>
-                  <label for="taxPension">Effective tax on Pension (%)</label>
+                  <label for="taxPension">Effective tax on Pension (%)
+                    <svg xmlns="http://www.w3.org/2000/svg" 
+                         viewBox="0 0 24 24" 
+                         width="1em" height="1em" 
+                         fill="white" 
+                         class="help-icon"
+                         onclick="showHelpToast(event, 'taxPension')"
+                         style="vertical-align: middle;">
+                      <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none"/>
+                      <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
+                      <circle cx="12" cy="17" r="1" fill="white"/>
+                    </svg>
+                  </label>
                   <input id="taxPension" type="number" step="0.5" value="20" />
                 </div>
                 <div>
-                  <label for="order">Withdrawal order</label>
+                  <label for="order">Withdrawal order
+                    <svg xmlns="http://www.w3.org/2000/svg" 
+                         viewBox="0 0 24 24" 
+                         width="1em" height="1em" 
+                         fill="white" 
+                         class="help-icon"
+                         onclick="showHelpToast(event, 'order')"
+                         style="vertical-align: middle;">
+                      <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none"/>
+                      <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
+                      <circle cx="12" cy="17" r="1" fill="white"/>
+                    </svg>
+                  </label>
                   <select id="order">
                     <option value="taxable,pretax,roth">Taxable → Pre‑tax → Roth (default)</option>
                     <option value="pretax,taxable,roth">Pre‑tax → Taxable → Roth</option>
@@ -516,8 +876,135 @@
         currentAge: {
           title: "Current Age",
           body: "Enter your current age in years. This is used as the starting point for all retirement calculations and determines how many years you have until retirement."
+        },
+        retireAge: {
+          title: "Retirement Age",
+          body: "The age at which you plan to retire and stop working. This determines when you'll begin withdrawing from your retirement accounts."
+        },
+        endAge: {
+          title: "Plan to Age",
+          body: "The age until which you want your retirement funds to last. This is typically your expected lifespan or when you want financial security to end."
+        },
+        inflation: {
+          title: "Inflation Rate",
+          body: "The expected annual inflation rate as a percentage. This affects how your spending needs will grow over time and reduces the purchasing power of money."
+        },
+        spendingToday: {
+          title: "Retirement Spending",
+          body: "How much you expect to spend per year in retirement, expressed in today's dollars. This will be adjusted for inflation to your retirement date."
+        },
+        spendingDecline: {
+          title: "Annual Spending Decline",
+          body: "The percentage by which your spending decreases each year in retirement. Many retirees spend less as they age due to reduced activity and travel."
+        },
+        spouseAge: {
+          title: "Spouse Current Age",
+          body: "Your spouse's current age in years. Set to 0 if you don't have a spouse. This affects Social Security and pension benefit calculations."
+        },
+        spouseRetireAge: {
+          title: "Spouse Retirement Age",
+          body: "The age at which your spouse plans to retire. This determines when spouse income sources will begin or end."
+        },
+        salary: {
+          title: "Current Salary",
+          body: "Your current annual gross salary before taxes and deductions. This is used to calculate retirement contributions and employer matching."
+        },
+        salaryGrowth: {
+          title: "Salary Growth Rate",
+          body: "The expected annual percentage increase in your salary. This affects future contribution amounts and employer matching over time."
+        },
+        pretaxPct: {
+          title: "Pre-tax Contribution Rate",
+          body: "The percentage of your salary contributed to pre-tax retirement accounts like traditional 401(k) or IRA. These reduce current taxes but are taxed in retirement."
+        },
+        rothPct: {
+          title: "Roth Contribution Rate",
+          body: "The percentage of your salary contributed to Roth accounts. These are made with after-tax dollars but grow tax-free and are not taxed in retirement."
+        },
+        taxablePct: {
+          title: "Taxable Savings Rate",
+          body: "The percentage of your salary saved in regular taxable investment accounts. These provide flexibility but don't have tax advantages."
+        },
+        matchCap: {
+          title: "Employer Match Cap",
+          body: "The maximum percentage of salary that your employer will match. For example, if your employer matches up to 4% of salary."
+        },
+        matchRate: {
+          title: "Employer Match Rate",
+          body: "The percentage rate at which your employer matches contributions. For example, 50% means they contribute $0.50 for every $1.00 you contribute."
+        },
+        balPre: {
+          title: "Pre-tax Balance",
+          body: "Your current balance in pre-tax retirement accounts like traditional 401(k), 403(b), or traditional IRA."
+        },
+        balRoth: {
+          title: "Roth Balance",
+          body: "Your current balance in Roth retirement accounts like Roth 401(k) or Roth IRA. These grow tax-free."
+        },
+        balTax: {
+          title: "Taxable Balance",
+          body: "Your current balance in regular taxable investment accounts like brokerage accounts, savings, or CDs."
+        },
+        retPre: {
+          title: "Pre-tax Return Rate",
+          body: "The expected annual return on your pre-tax retirement investments, expressed as a percentage. Typically 6-8% for diversified portfolios."
+        },
+        retRoth: {
+          title: "Roth Return Rate",
+          body: "The expected annual return on your Roth retirement investments. Usually similar to pre-tax returns since they're often in similar investments."
+        },
+        retTax: {
+          title: "Taxable Return Rate",
+          body: "The expected annual return on your taxable investments. May be slightly lower due to tax drag from annual taxes on dividends and capital gains."
+        },
+        ssMonthly: {
+          title: "Social Security Benefit",
+          body: "Your estimated monthly Social Security benefit in the first year you claim it, in today's dollars. Check your Social Security statement for estimates."
+        },
+        ssStart: {
+          title: "Social Security Start Age",
+          body: "The age at which you plan to start claiming Social Security benefits. You can claim as early as 62 or delay until 70 for larger benefits."
+        },
+        ssCola: {
+          title: "Social Security COLA",
+          body: "The annual cost-of-living adjustment for Social Security, typically around 2-3% per year to keep pace with inflation."
+        },
+        penMonthly: {
+          title: "Pension Benefit",
+          body: "Your estimated monthly pension benefit in the first year you receive it. Set to 0 if you don't have a pension."
+        },
+        penStart: {
+          title: "Pension Start Age",
+          body: "The age at which you'll begin receiving pension benefits. This varies by employer and plan type."
+        },
+        penCola: {
+          title: "Pension COLA",
+          body: "The annual cost-of-living adjustment for your pension. Many pensions have no COLA (0%), while others may match inflation."
+        },
+        taxPre: {
+          title: "Pre-tax Withdrawal Tax Rate",
+          body: "The effective tax rate you'll pay on withdrawals from pre-tax retirement accounts. This includes federal and state income taxes."
+        },
+        taxTaxable: {
+          title: "Taxable Withdrawal Tax Rate",
+          body: "The effective tax rate on withdrawals from taxable accounts. Usually lower than income tax due to capital gains treatment."
+        },
+        taxRoth: {
+          title: "Roth Withdrawal Tax Rate",
+          body: "The effective tax rate on Roth withdrawals. Typically 0% since Roth withdrawals are tax-free in retirement."
+        },
+        taxSS: {
+          title: "Social Security Tax Rate",
+          body: "The effective tax rate on Social Security benefits. Varies based on total income, typically 0-18.5% of benefits."
+        },
+        taxPension: {
+          title: "Pension Tax Rate",
+          body: "The effective tax rate on pension benefits. Usually taxed as ordinary income at your marginal tax rate."
+        },
+        order: {
+          title: "Withdrawal Order Strategy",
+          body: "The order in which you'll withdraw from different account types. The default strategy withdraws from taxable first, then pre-tax, then Roth to optimize taxes."
         }
-        // Add more help texts for other fields as needed
       };
 
       const helpData = helpTexts[fieldId];
