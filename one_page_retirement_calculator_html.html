@@ -527,7 +527,7 @@
 
       // Remove existing toast if any
       if (currentToast) {
-        hideToast();
+        hideToast(true); // Immediate cleanup when replacing
       }
 
       // Create toast element
@@ -559,11 +559,11 @@
         }, 50);
       }, 10);
 
-      // Auto-hide after 5 seconds
+      // Auto-hide after 10 seconds
       toastTimer = setTimeout(() => hideToast(), 10000);
     }
 
-    function hideToast() {
+    function hideToast(immediate = false) {
       if (!currentToast) return;
       
       // Clear any existing timers
@@ -573,12 +573,22 @@
       }
       
       currentToast.classList.remove('show');
-      setTimeout(() => {
+      
+      if (immediate) {
+        // Remove immediately for toast replacement
         if (currentToast && currentToast.parentNode) {
           currentToast.parentNode.removeChild(currentToast);
         }
         currentToast = null;
-      }, 10000);
+      } else {
+        // Wait for animation to complete for natural dismissal
+        setTimeout(() => {
+          if (currentToast && currentToast.parentNode) {
+            currentToast.parentNode.removeChild(currentToast);
+          }
+          currentToast = null;
+        }, 10000);
+      }
     }
 
     // Event listeners for dismissing toast
