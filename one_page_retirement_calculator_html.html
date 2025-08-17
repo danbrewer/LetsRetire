@@ -153,6 +153,8 @@
     .help-icon {
       cursor: pointer;
       transition: opacity 0.2s ease;
+      margin-left: 0.3em;
+      vertical-align: middle;
     }
     .help-icon:hover {
       opacity: 0.7;
@@ -189,98 +191,38 @@
             <div class="content grid">
               <div>
                 <label for="currentAge">Current age 
-                  <svg xmlns="http://www.w3.org/2000/svg" 
-                       viewBox="0 0 24 24" 
-                       width="1em" height="1em" 
-                       fill="white" 
-                       class="help-icon"
-                       onclick="showHelpToast(event, 'currentAge')"
-                       style="vertical-align: middle;">
-                    <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none"/>
-                    <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
-                    <circle cx="12" cy="17" r="1" fill="white"/>
-                  </svg>
+                  <span class="help-icon-placeholder" data-field="currentAge"></span>
                 </label>
                 <input id="currentAge" type="number" min="18" max="80" step="1" value="45" />
               </div>
               <div>
                 <label for="retireAge">Retirement age
-                  <svg xmlns="http://www.w3.org/2000/svg" 
-                       viewBox="0 0 24 24" 
-                       width="1em" height="1em" 
-                       fill="white" 
-                       class="help-icon"
-                       onclick="showHelpToast(event, 'retireAge')"
-                       style="vertical-align: middle;">
-                    <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none"/>
-                    <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
-                    <circle cx="12" cy="17" r="1" fill="white"/>
-                  </svg>
+                  <span class="help-icon-placeholder" data-field="retireAge"></span>
                 </label>
                 <input id="retireAge" type="number" min="40" max="80" step="1" value="67" />
               </div>
               <div>
                 <label for="endAge">Plan to age
-                  <svg xmlns="http://www.w3.org/2000/svg" 
-                       viewBox="0 0 24 24" 
-                       width="1em" height="1em" 
-                       fill="white" 
-                       class="help-icon"
-                       onclick="showHelpToast(event, 'endAge')"
-                       style="vertical-align: middle;">
-                    <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none"/>
-                    <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
-                    <circle cx="12" cy="17" r="1" fill="white"/>
-                  </svg>
+                  <span class="help-icon-placeholder" data-field="endAge"></span>
                 </label>
                 <input id="endAge" type="number" min="70" max="110" step="1" value="95" />
               </div>
               <div>
                 <label for="inflation">Inflation (%)
-                  <svg xmlns="http://www.w3.org/2000/svg" 
-                       viewBox="0 0 24 24" 
-                       width="1em" height="1em" 
-                       fill="white" 
-                       class="help-icon"
-                       onclick="showHelpToast(event, 'inflation')"
-                       style="vertical-align: middle;">
-                    <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none"/>
-                    <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
-                    <circle cx="12" cy="17" r="1" fill="white"/>
-                  </svg>
+                  <span class="help-icon-placeholder" data-field="inflation"></span>
                 </label>
                 <input id="inflation" type="number" step="0.1" value="2.5" />
               </div>
               <div>
                 <label for="spendingToday">Retirement spending (today's $ / yr)
-                  <svg xmlns="http://www.w3.org/2000/svg" 
-                       viewBox="0 0 24 24" 
-                       width="1em" height="1em" 
-                       fill="white" 
-                       class="help-icon"
-                       onclick="showHelpToast(event, 'spendingToday')"
-                       style="vertical-align: middle;">
-                    <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none"/>
-                    <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
-                    <circle cx="12" cy="17" r="1" fill="white"/>
-                  </svg>
+                  <span class="help-icon-placeholder" data-field="spendingToday"></span>
                 </label>
                 <input id="spendingToday" type="number" step="1000" value="80000" />
                 <div class="hint">We'll inflate this to retirement, then apply COLA annually.</div>
               </div>
               <div>
                 <label for="spendingDecline">Annual spending decline in retirement (%)
-                  <svg xmlns="http://www.w3.org/2000/svg" 
-                       viewBox="0 0 24 24" 
-                       width="1em" height="1em" 
-                       fill="white" 
-                       class="help-icon"
-                       onclick="showHelpToast(event, 'spendingDecline')"
-                       style="vertical-align: middle;">
-                    <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none"/>
-                    <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
-                    <circle cx="12" cy="17" r="1" fill="white"/>
-                  </svg>
+                  <span class="help-icon-placeholder" data-field="spendingDecline"></span>
                 </label>
                 <input id="spendingDecline" type="number" step="0.1" value="0" />
                 <div class="hint">Spending reduction each year (e.g., 2% = spending drops to 98%, then 96%, etc.)</div>
@@ -298,34 +240,14 @@
               <div class="grid">
                 <div>
                   <label for="spouseAge">Spouse current age
-                    <svg xmlns="http://www.w3.org/2000/svg" 
-                         viewBox="0 0 24 24" 
-                         width="1em" height="1em" 
-                         fill="white" 
-                         class="help-icon"
-                         onclick="showHelpToast(event, 'spouseAge')"
-                         style="vertical-align: middle;">
-                      <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none"/>
-                      <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
-                      <circle cx="12" cy="17" r="1" fill="white"/>
-                    </svg>
+                    <span class="help-icon-placeholder" data-field="spouseAge"></span>
                   </label>
                   <input id="spouseAge" type="number" min="18" max="80" step="1" value="0" />
                   <div class="hint">Set to 0 if no spouse</div>
                 </div>
                 <div>
                   <label for="spouseRetireAge">Spouse retirement age
-                    <svg xmlns="http://www.w3.org/2000/svg" 
-                         viewBox="0 0 24 24" 
-                         width="1em" height="1em" 
-                         fill="white" 
-                         class="help-icon"
-                         onclick="showHelpToast(event, 'spouseRetireAge')"
-                         style="vertical-align: middle;">
-                      <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none"/>
-                      <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
-                      <circle cx="12" cy="17" r="1" fill="white"/>
-                    </svg>
+                    <span class="help-icon-placeholder" data-field="spouseRetireAge"></span>
                   </label>
                   <input id="spouseRetireAge" type="number" min="40" max="80" step="1" value="67" />
                 </div>
@@ -381,33 +303,13 @@
               <div class="grid">
                 <div>
                   <label for="salary">Current salary ($/yr)
-                    <svg xmlns="http://www.w3.org/2000/svg" 
-                         viewBox="0 0 24 24" 
-                         width="1em" height="1em" 
-                         fill="white" 
-                         class="help-icon"
-                         onclick="showHelpToast(event, 'salary')"
-                         style="vertical-align: middle;">
-                      <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none"/>
-                      <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
-                      <circle cx="12" cy="17" r="1" fill="white"/>
-                    </svg>
+                    <span class="help-icon-placeholder" data-field="salary"></span>
                   </label>
                   <input id="salary" type="number" step="1000" value="150000" />
                 </div>
                 <div>
                   <label for="salaryGrowth">Salary growth (%)
-                    <svg xmlns="http://www.w3.org/2000/svg" 
-                         viewBox="0 0 24 24" 
-                         width="1em" height="1em" 
-                         fill="white" 
-                         class="help-icon"
-                         onclick="showHelpToast(event, 'salaryGrowth')"
-                         style="vertical-align: middle;">
-                      <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none"/>
-                      <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
-                      <circle cx="12" cy="17" r="1" fill="white"/>
-                    </svg>
+                    <span class="help-icon-placeholder" data-field="salaryGrowth"></span>
                   </label>
                   <input id="salaryGrowth" type="number" step="0.1" value="3.0" />
                 </div>
@@ -415,49 +317,19 @@
               <div class="grid-3">
                 <div>
                   <label for="pretaxPct">Pre‑tax 401k/IRA contribution (% of salary)
-                    <svg xmlns="http://www.w3.org/2000/svg" 
-                         viewBox="0 0 24 24" 
-                         width="1em" height="1em" 
-                         fill="white" 
-                         class="help-icon"
-                         onclick="showHelpToast(event, 'pretaxPct')"
-                         style="vertical-align: middle;">
-                      <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none"/>
-                      <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
-                      <circle cx="12" cy="17" r="1" fill="white"/>
-                    </svg>
+                    <span class="help-icon-placeholder" data-field="pretaxPct"></span>
                   </label>
                   <input id="pretaxPct" type="number" step="0.1" value="10" />
                 </div>
                 <div>
                   <label for="rothPct">Roth contribution (% of salary)
-                    <svg xmlns="http://www.w3.org/2000/svg" 
-                         viewBox="0 0 24 24" 
-                         width="1em" height="1em" 
-                         fill="white" 
-                         class="help-icon"
-                         onclick="showHelpToast(event, 'rothPct')"
-                         style="vertical-align: middle;">
-                      <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none"/>
-                      <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
-                      <circle cx="12" cy="17" r="1" fill="white"/>
-                    </svg>
+                    <span class="help-icon-placeholder" data-field="rothPct"></span>
                   </label>
                   <input id="rothPct" type="number" step="0.1" value="5" />
                 </div>
                 <div>
                   <label for="taxablePct">Taxable savings (% of salary)
-                    <svg xmlns="http://www.w3.org/2000/svg" 
-                         viewBox="0 0 24 24" 
-                         width="1em" height="1em" 
-                         fill="white" 
-                         class="help-icon"
-                         onclick="showHelpToast(event, 'taxablePct')"
-                         style="vertical-align: middle;">
-                      <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none"/>
-                      <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
-                      <circle cx="12" cy="17" r="1" fill="white"/>
-                    </svg>
+                    <span class="help-icon-placeholder" data-field="taxablePct"></span>
                   </label>
                   <input id="taxablePct" type="number" step="0.1" value="2" />
                 </div>
@@ -862,6 +734,21 @@
     const num = (id) => Number($(id).value || 0);
     const fmt = (n) => n.toLocaleString(undefined, { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
     const pow1p = (r, n) => Math.pow(1 + r, n);
+
+    // Helper function to create reusable help icon
+    function createHelpIcon(fieldId) {
+      return `<svg xmlns="http://www.w3.org/2000/svg" 
+                   viewBox="0 0 24 24" 
+                   width="1em" height="1em" 
+                   fill="white" 
+                   class="help-icon"
+                   onclick="showHelpToast(event, '${fieldId}')"
+                   style="vertical-align: middle; margin-left: 0.3em;">
+                <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none"/>
+                <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
+                <circle cx="12" cy="17" r="1" fill="white"/>
+              </svg>`;
+    }
 
     // Help toast functionality
     let currentToast = null;
@@ -1501,7 +1388,35 @@
     $('demoBtn').addEventListener('click', loadExample);
     $('clearBtn').addEventListener('click', resetAll);
 
+    // Initialize help icons
+    function initializeHelpIcons() {
+      // Find all help icon placeholders and replace them with actual help icons
+      const placeholders = document.querySelectorAll('.help-icon-placeholder');
+      placeholders.forEach(placeholder => {
+        const fieldId = placeholder.getAttribute('data-field');
+        if (fieldId) {
+          placeholder.innerHTML = createHelpIcon(fieldId);
+        }
+      });
+      
+      // Auto-convert remaining verbose SVG help icons to placeholders (one-time conversion)
+      const existingSvgIcons = document.querySelectorAll('svg.help-icon[onclick*="showHelpToast"]');
+      existingSvgIcons.forEach(svg => {
+        const onclickAttr = svg.getAttribute('onclick');
+        const match = onclickAttr.match(/showHelpToast\(event,\s*['"]([^'"]+)['"]\)/);
+        if (match) {
+          const fieldId = match[1];
+          const placeholder = document.createElement('span');
+          placeholder.className = 'help-icon-placeholder';
+          placeholder.setAttribute('data-field', fieldId);
+          placeholder.innerHTML = createHelpIcon(fieldId);
+          svg.parentNode.replaceChild(placeholder, svg);
+        }
+      });
+    }
+
     // First render
+    initializeHelpIcons();
     loadExample();
     calc();
   </script>
