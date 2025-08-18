@@ -96,6 +96,11 @@
     thead th { position: sticky; top: 0; background: #0d172b; z-index: 1; }
     tbody tr:hover { background: rgba(255,255,255,.03); }
 
+    /* Color coding for table values */
+    .income { color: #4ade80; } /* Green for income */
+    .outgoing { color: #f87171; } /* Red for outgoing */
+    .neutral { color: var(--text); } /* Default color for neutral items */
+
     .pill { padding:.2rem .5rem; border-radius: 999px; font-size: 12px; font-weight:600; display:inline-block; }
     .ok { color: #0b5; background: rgba(69,212,131,.15); border: 1px solid rgba(69,212,131,.3); }
     .alert { color: #ff6b6b; background: rgba(255,107,107,.15); border:1px solid rgba(255,107,107,.3); }
@@ -625,6 +630,22 @@
                   <span class="help-icon-placeholder" data-field="useAgiTax"></span>
                 </label>
               </div>
+              <div style="margin-top: 10px;">
+                <label for="filingStatus">Tax filing status
+                  <span class="help-icon-placeholder" data-field="filingStatus"></span>
+                </label>
+                <select id="filingStatus">
+                  <option value="single">Single</option>
+                  <option value="married">Married Filing Jointly</option>
+                </select>
+              </div>
+              <div style="margin-top: 10px;">
+                <label>
+                  <input type="checkbox" id="useSSRules" checked /> 
+                  Use proper Social Security taxation rules
+                  <span class="help-icon-placeholder" data-field="useSSRules"></span>
+                </label>
+              </div>
               <div class="hint">These are simplified, all‑in effective rates to keep the model understandable (not tax advice).</div>
             </div>
           </details>
@@ -709,6 +730,38 @@
       const upperRate = EFFECTIVE_TAX_RATES[upperAgi];
       const ratio = (agi - lowerAgi) / (upperAgi - lowerAgi);
       return lowerRate + (upperRate - lowerRate) * ratio;
+    }
+
+    // Social Security taxation calculation based on provisional income
+    function calculateSSTaxableAmount(ssGross, otherAGI, isMarried = false) {
+      if (ssGross <= 0) return 0;
+      
+      // Calculate provisional income: AGI + non-taxable interest + 50% of SS benefits
+      // For simplicity, we'll assume no non-taxable interest
+      const provisionalIncome = otherAGI + (ssGross * 0.5);
+      
+      // Set thresholds based on filing status
+      const threshold1 = isMarried ? 32000 : 25000;  // 0% to 50% transition
+      const threshold2 = isMarried ? 44000 : 34000;  // 50% to 85% transition
+      
+      let taxableAmount = 0;
+      
+      if (provisionalIncome <= threshold1) {
+        // No SS benefits are taxable
+        taxableAmount = 0;
+      } else if (provisionalIncome <= threshold2) {
+        // Up to 50% of SS benefits are taxable
+        const excessIncome = provisionalIncome - threshold1;
+        taxableAmount = Math.min(ssGross * 0.5, excessIncome * 0.5);
+      } else {
+        // Up to 85% of SS benefits are taxable
+        const tier1Max = (threshold2 - threshold1) * 0.5; // Max from first tier
+        const excessIncome = provisionalIncome - threshold2;
+        const tier2Amount = Math.min(ssGross * 0.35, excessIncome * 0.85); // Additional 35% (85% - 50%)
+        taxableAmount = Math.min(ssGross * 0.85, tier1Max + tier2Amount);
+      }
+      
+      return taxableAmount;
     }
 
     // Helper function to create reusable help icon
@@ -872,6 +925,14 @@
         useAgiTax: {
           title: "AGI-Based Tax Calculation",
           body: "When enabled, uses a progressive tax table based on total AGI (including Social Security, pension, and pre-tax withdrawals) for pre-tax withdrawals. This typically results in higher tax rates than the fixed percentage as withdrawal amounts increase total income. Check the browser console for detailed tax rate calculations."
+        },
+        filingStatus: {
+          title: "Tax Filing Status",
+          body: "Your tax filing status affects Social Security taxation thresholds and AGI-based tax calculations. Single filers have lower thresholds for SS taxation than married filing jointly."
+        },
+        useSSRules: {
+          title: "Proper Social Security Taxation",
+          body: "When enabled, uses actual IRS rules for Social Security taxation based on 'provisional income' rather than simple fixed percentages. SS taxation depends on your total income and can range from 0% to 85% of benefits being taxable."
         }
       };
 
@@ -1039,15 +1100,16 @@
 
     function loadExample(){
       const ex = {
-        currentAge: 60, retireAge: 62, endAge: 85, inflation: 2.5, 
+        currentAge: 60, retireAge: 62, endAge: 110, inflation: 2.5, 
         spendingToday: 95000, spendingDecline: 1.0,
         spouseAge: 56, spouseRetireAge: 62, 
         spouseSsMonthly: 1000, spouseSsStart: 66, spouseSsCola: 2.0,
         spousePenMonthly: 500, spousePenStart: 69, spousePenCola: 0, 
         spouseTaxSS: 10, spouseTaxPension: 20,
         salary: 170000, salaryGrowth: 2.0, pretaxPct: 0, rothPct: 0, taxablePct: 35,
-        matchCap: 0, matchRate: 0, balPre: 600000, balRoth: 0, balTax: 500000,
-        retPre: 3.0, retRoth: 0.0, retTax: 3.5, 
+        matchCap: 0, matchRate: 0, 
+        balPre: 600000, balRoth: 0, balTax: 500000,
+        retPre: 3.0, retRoth: 0.0, retTax: 3.0, 
         ssMonthly: 2500, ssStart: 62, ssCola: 2.0,
         penMonthly: 3500, penStart: 65, penCola: 0, taxPre: 15, taxTaxable: 0, taxRoth: 0,
         taxSS: 10, taxPension: 15, order: 'pretax,taxable,roth'
@@ -1218,14 +1280,10 @@
         const hasPen = age >= penStart && penMonthly > 0;
         const ssGross = hasSS ? ssAnnual : 0;
         const penGross = hasPen ? penAnnual : 0;
-        const ssNet = ssGross * (1 - taxSS);
-        const penNet = penGross * (1 - taxPension);
-
+        
         // Spouse income sources
         let spouseSsGross = 0;
         let spousePenGross = 0;
-        let spouseSsNet = 0;
-        let spousePenNet = 0;
         
         if (hasSpouse) {
           const spouseCurrentAge = spouseAge + (age - currentAge);
@@ -1234,9 +1292,41 @@
           
           spouseSsGross = hasSpouseSS ? spouseSsAnnual : 0;
           spousePenGross = hasSpousePen ? spousePenAnnual : 0;
-          spouseSsNet = spouseSsGross * (1 - spouseTaxSS);
-          spousePenNet = spousePenGross * (1 - spouseTaxPension);
         }
+
+        // Calculate total taxable income for AGI-based tax calculation (before SS tax calculation)
+        let totalAGI = penGross + spousePenGross; // Start with pension income
+        
+        // Calculate Social Security taxation
+        const useSSRules = $('useSSRules').checked;
+        const isMarried = $('filingStatus').value === 'married';
+        
+        let ssNet, spouseSsNet;
+        if (useSSRules && ssGross > 0) {
+          // Use proper SS taxation rules based on provisional income
+          const ssTaxableAmount = calculateSSTaxableAmount(ssGross, totalAGI, isMarried);
+          const ssTaxes = ssTaxableAmount * (getEffectiveTaxRate(totalAGI + ssTaxableAmount) / 100);
+          ssNet = ssGross - ssTaxes;
+          totalAGI += ssTaxableAmount; // Add taxable portion to AGI
+          console.log(`SS: Gross $${ssGross.toLocaleString()}, Taxable $${ssTaxableAmount.toLocaleString()}, Tax $${ssTaxes.toLocaleString()}, Net $${ssNet.toLocaleString()}`);
+        } else {
+          // Use simple fixed percentage method
+          ssNet = ssGross * (1 - taxSS);
+          totalAGI += ssGross; // Add full amount to AGI for withdrawal calculations
+        }
+        
+        if (useSSRules && spouseSsGross > 0) {
+          const spouseSsTaxableAmount = calculateSSTaxableAmount(spouseSsGross, totalAGI, isMarried);
+          const spouseSsTaxes = spouseSsTaxableAmount * (getEffectiveTaxRate(totalAGI + spouseSsTaxableAmount) / 100);
+          spouseSsNet = spouseSsGross - spouseSsTaxes;
+          totalAGI += spouseSsTaxableAmount;
+        } else {
+          spouseSsNet = spouseSsGross * (1 - spouseTaxSS);
+          totalAGI += spouseSsGross;
+        }
+        
+        const penNet = penGross * (1 - taxPension);
+        const spousePenNet = spousePenGross * (1 - spouseTaxPension);
 
         // Net spending need after all net incomes
         let needNet = Math.max(0, spend - (ssNet + penNet + spouseSsNet + spousePenNet));
@@ -1244,7 +1334,7 @@
         let taxesThisYear = 0;
 
         // Calculate total taxable income for AGI-based tax calculation
-        let totalAGI = ssGross + penGross + spouseSsGross + spousePenGross;
+        totalAGI = ssGross + penGross + spouseSsGross + spousePenGross;
 
         function withdrawFrom(kind, netAmount){
           console.log(`withdrawFrom called with kind: "${kind}", netAmount: ${netAmount}`);
@@ -1351,22 +1441,22 @@
       const tbody = $('rows');
       tbody.innerHTML = rows.map(r => `
         <tr>
-          <td>${r.year}</td>
-          <td>${r.age}</td>
-          <td>${r.salary? fmt(r.salary): ''}</td>
-          <td>${r.contrib? fmt(r.contrib): ''}</td>
-          <td>${r.ss? fmt(r.ss): ''}</td>
-          <td>${r.pen? fmt(r.pen): ''}</td>
-          <td>${r.spouseSs? fmt(r.spouseSs): ''}</td>
-          <td>${r.spousePen? fmt(r.spousePen): ''}</td>
-          <td>${r.spend? fmt(r.spend): ''}</td>
-          <td>${r.wGross? fmt(r.wGross): ''}</td>
-          <td>${r.taxes? fmt(r.taxes): ''}</td>
-          <td>${r.wNet ? fmt(r.wNet) : ''}</td>
-          <td>${fmt(r.balTax)}</td>
-          <td>${fmt(r.balPre)}</td>
-          <td>${fmt(r.balRoth)}</td>
-          <td>${fmt(r.total)}</td>
+          <td class="neutral">${r.year}</td>
+          <td class="neutral">${r.age}</td>
+          <td class="income">${r.salary? fmt(r.salary): ''}</td>
+          <td class="income">${r.contrib? fmt(r.contrib): ''}</td>
+          <td class="income">${r.ss? fmt(r.ss): ''}</td>
+          <td class="income">${r.pen? fmt(r.pen): ''}</td>
+          <td class="income">${r.spouseSs? fmt(r.spouseSs): ''}</td>
+          <td class="income">${r.spousePen? fmt(r.spousePen): ''}</td>
+          <td class="outgoing">${r.spend? fmt(r.spend): ''}</td>
+          <td class="outgoing">${r.wGross? fmt(r.wGross): ''}</td>
+          <td class="outgoing">${r.taxes? fmt(r.taxes): ''}</td>
+          <td class="income">${r.wNet ? fmt(r.wNet) : ''}</td>
+          <td class="neutral">${fmt(r.balTax)}</td>
+          <td class="neutral">${fmt(r.balPre)}</td>
+          <td class="neutral">${fmt(r.balRoth)}</td>
+          <td class="neutral">${fmt(r.total)}</td>
         </tr>`).join('');
 
       // KPIs
