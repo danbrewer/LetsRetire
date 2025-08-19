@@ -155,6 +155,68 @@
       border-radius: 0 0 8px 8px;
       width: 0%;
     }
+    
+    /* Toast Type Variations */
+    .toast-success {
+      background: #f0fff4 !important;
+      border-color: #28a745 !important;
+      box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3) !important;
+    }
+    .toast-success .toast-title {
+      color: #155724;
+    }
+    .toast-success .toast-body {
+      color: #155724;
+    }
+    .toast-success .progress-bar {
+      background: #28a745;
+    }
+    
+    .toast-error {
+      background: #fff5f5 !important;
+      border-color: #dc3545 !important;
+      box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3) !important;
+    }
+    .toast-error .toast-title {
+      color: #721c24;
+    }
+    .toast-error .toast-body {
+      color: #721c24;
+    }
+    .toast-error .progress-bar {
+      background: #dc3545;
+    }
+    
+    .toast-warning {
+      background: #fffbf0 !important;
+      border-color: #ffc107 !important;
+      box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3) !important;
+    }
+    .toast-warning .toast-title {
+      color: #856404;
+    }
+    .toast-warning .toast-body {
+      color: #856404;
+    }
+    .toast-warning .progress-bar {
+      background: #ffc107;
+    }
+    
+    .toast-info {
+      background: #f0f8ff !important;
+      border-color: #17a2b8 !important;
+      box-shadow: 0 4px 12px rgba(23, 162, 184, 0.3) !important;
+    }
+    .toast-info .toast-title {
+      color: #0c5460;
+    }
+    .toast-info .toast-body {
+      color: #0c5460;
+    }
+    .toast-info .progress-bar {
+      background: #17a2b8;
+    }
+    
     .help-icon {
       cursor: pointer;
       transition: opacity 0.2s ease;
@@ -1009,6 +1071,47 @@
       }
     }
 
+    // Generic toast notification function
+    function showToast(title, message, type = 'info', duration = 5000) {
+      // Remove existing toast if any
+      if (currentToast) {
+        hideToast(true); // Immediate cleanup when replacing
+      }
+
+      // Create toast element
+      const toast = document.createElement('div');
+      toast.className = `toast toast-${type}`;
+      toast.innerHTML = `
+        <div class="toast-title">${title}</div>
+        <div class="toast-body">${message}</div>
+        <div class="progress-bar"></div>
+      `;
+
+      document.body.appendChild(toast);
+      currentToast = toast;
+      
+      const progressBar = toast.querySelector('.progress-bar');
+      currentProgressBar = progressBar;
+
+      // Show toast with animation
+      progressTimer = setTimeout(() => {
+        toast.classList.add('show');
+        
+        // Initialize progress bar to full width without transition
+        progressBar.style.transition = 'none';
+        progressBar.style.width = '100%';
+        
+        // After a brief moment, enable transition and start countdown
+        setTimeout(() => {
+          progressBar.style.transition = `width ${duration}ms linear`;
+          progressBar.style.width = '0%';
+        }, 50);
+      }, 10);
+
+      // Auto-hide after specified duration
+      toastTimer = setTimeout(() => hideToast(), duration);
+    }
+
     // Event listeners for dismissing toast
     document.addEventListener('click', (e) => {
       if (currentToast && !currentToast.contains(e.target) && !e.target.closest('.help-icon')) {
@@ -1135,7 +1238,7 @@
       }
 
       if(retireAge <= currentAge || endAge <= retireAge){
-        alert('Please ensure: current age < retirement age < plan age.');
+        showToast('Invalid Ages', 'Please ensure: current age < retirement age < plan age.', 'error');
         return;
       }
 
@@ -1463,7 +1566,10 @@
 
     function exportCSV(){
       const rows = window.__rows || [];
-      if(!rows.length){ alert('Run a calculation first.'); return; }
+      if(!rows.length){ 
+        showToast('No Data', 'Run a calculation first to generate data for export.', 'warning');
+        return; 
+      }
       const headers = ['Year','Age','Salary','Contrib','SS_Net','Pension_Net','Spouse_SS_Net','Spouse_Pension_Net','Spend','Withdraw_Net','Withdraw_Gross','Taxes','Taxable_Bal','Pretax_Bal','Roth_Bal','Total_Bal'];
       const csv = [headers.join(',')]
         .concat(rows.map(r=>[
@@ -1512,7 +1618,7 @@
       if (!file) return;
       
       if (!file.name.toLowerCase().endsWith('.json')) {
-        alert('Please select a JSON file.');
+        showToast('Invalid File', 'Please select a JSON file.', 'error');
         return;
       }
       
@@ -1523,7 +1629,7 @@
           
           // Validate the JSON structure
           if (!data.inputs || typeof data.inputs !== 'object') {
-            alert('Invalid JSON file format. Expected retirement calculator scenario data.');
+            showToast('Invalid Format', 'Invalid JSON file format. Expected retirement calculator scenario data.', 'error');
             return;
           }
           
@@ -1541,7 +1647,7 @@
           });
           
           // Show import summary
-          let summary = `JSON imported successfully!\n\nLoaded ${loadedCount} of ${totalCount} settings.`;
+          let summary = `Loaded ${loadedCount} of ${totalCount} settings.`;
           if (data.description) {
             summary += `\nDescription: ${data.description}`;
           }
@@ -1549,11 +1655,11 @@
             summary += `\nExported: ${new Date(data.exportDate).toLocaleDateString()}`;
           }
           
-          alert(summary);
+          showToast('Import Successful', summary, 'success', 7000);
           calc(); // Automatically recalculate
           
         } catch (error) {
-          alert('Error reading JSON file: ' + error.message);
+          showToast('Import Error', 'Error reading JSON file: ' + error.message, 'error');
         }
       };
       
