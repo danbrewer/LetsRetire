@@ -1434,7 +1434,8 @@
           if(spouseCurrentAge >= spouseSsStart) spouseSsAnnual *= (1 + spouseSsCola);
           if(spouseCurrentAge >= spousePenStart && spousePenMonthly > 0) spousePenAnnual *= (1 + spousePenCola);
         }
-        spend *= (1 + inflation) * (1 - spendingDecline);
+        spend *= (1 + inflation);
+        spend *= (1 - spendingDecline);
       }
 
       // Write table
@@ -1478,15 +1479,26 @@
     function drawChart(series){
       const c = $('chart');
       const ctx = c.getContext('2d');
-      ctx.clearRect(0,0,c.width,c.height);
-      if(!series || !series.length){ return; }
-      // device ratio
+      
+      // Ensure canvas has proper dimensions before drawing
       const dpr = window.devicePixelRatio || 1;
-      const width = c.clientWidth * dpr, height = c.clientHeight * dpr;
-      if(c.width !== width) c.width = width; if(c.height !== height) c.height = height;
+      const rect = c.getBoundingClientRect();
+      const width = rect.width * dpr;
+      const height = rect.height * dpr;
+      
+      // Force canvas to correct size if needed
+      if(c.width !== width || c.height !== height) {
+        c.width = width;
+        c.height = height;
+        c.style.width = rect.width + 'px';
+        c.style.height = rect.height + 'px';
+      }
+      
+      ctx.clearRect(0, 0, width, height);
+      if(!series || !series.length){ return; }
 
-      // Padding
-      const pad = { l: 48, r: 12, t: 12, b: 28 };
+      // Padding (in device pixels) - increased left padding for Y-axis labels
+      const pad = { l: 80 * dpr, r: 12 * dpr, t: 12 * dpr, b: 28 * dpr };
       const xs = series.map(p=>p.x);
       const ys = series.map(p=>p.y);
       const xmin = Math.min(...xs), xmax = Math.max(...xs);
@@ -1495,32 +1507,33 @@
       const yTo = y => height - pad.b - ( (y - ymin) / (ymax - ymin) ) * (height - pad.t - pad.b);
 
       // Axes
-      ctx.strokeStyle = '#22304d'; ctx.lineWidth = 1; ctx.beginPath();
+      ctx.strokeStyle = '#22304d'; ctx.lineWidth = 1 * dpr; ctx.beginPath();
       ctx.moveTo(pad.l, yTo(0)); ctx.lineTo(width - pad.r, yTo(0));
       ctx.moveTo(pad.l, pad.t); ctx.lineTo(pad.l, height - pad.b); ctx.stroke();
 
       // Y ticks
-      ctx.fillStyle = '#7c8db5'; ctx.font = `${12*dpr}px system-ui`;
+      ctx.fillStyle = '#7c8db5'; ctx.font = `${12 * dpr}px system-ui`;
+      ctx.textAlign = 'right';
       const steps = 4;
       for(let i=0;i<=steps;i++){
         const v = (ymax/steps)*i; const y = yTo(v);
         ctx.strokeStyle = 'rgba(34,48,77,.4)'; ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(width - pad.r, y); ctx.stroke();
-        ctx.fillText(fmt(v), 6*dpr, y - 2*dpr);
+        ctx.fillText(fmt(v), pad.l - 8 * dpr, y + 4 * dpr);
       }
 
       // Line
-      ctx.strokeStyle = '#6ea8fe'; ctx.lineWidth = 2*dpr; ctx.beginPath();
+      ctx.strokeStyle = '#6ea8fe'; ctx.lineWidth = 2 * dpr; ctx.beginPath();
       series.forEach((p,i)=>{ const X = xTo(p.x), Y = yTo(p.y); if(i===0) ctx.moveTo(X,Y); else ctx.lineTo(X,Y); });
       ctx.stroke();
 
       // Points
       ctx.fillStyle = '#6ea8fe';
-      series.forEach(p=>{ const X=xTo(p.x), Y=yTo(p.y); ctx.beginPath(); ctx.arc(X,Y,2.5*dpr,0,Math.PI*2); ctx.fill(); });
+      series.forEach(p=>{ const X=xTo(p.x), Y=yTo(p.y); ctx.beginPath(); ctx.arc(X,Y,2.5 * dpr,0,Math.PI*2); ctx.fill(); });
 
       // X labels
-      ctx.fillStyle = '#7c8db5'; ctx.textAlign='center'; ctx.font = `${11*dpr}px system-ui`;
+      ctx.fillStyle = '#7c8db5'; ctx.textAlign='center'; ctx.font = `${11 * dpr}px system-ui`;
       const years = [series[0].x, series[Math.floor(series.length/2)].x, series[series.length-1].x];
-      years.forEach(x => ctx.fillText(String(x), xTo(x), height - 6*dpr));
+      years.forEach(x => ctx.fillText(String(x), xTo(x), height - 6 * dpr));
     }
 
     function exportCSV(){
