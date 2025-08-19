@@ -173,8 +173,6 @@
       <small>Pre‑tax vs Roth vs Taxable • Social Security • Pension • Spouse benefits • Declining spending • Employer match</small>
     </div>
     <div>
-      <button id="saveBtn" title="Save current inputs">Save Scenario</button>
-      <button id="loadBtn" title="Load saved inputs">Load Scenario</button>
       <button id="exportJsonBtn" title="Export inputs as JSON file">Export JSON</button>
       <button id="importJsonBtn" title="Import inputs from JSON file">Import JSON</button>
       <input type="file" id="jsonFileInput" accept=".json" style="display: none;">
@@ -1024,83 +1022,7 @@
       }
     });
 
-    function saveScenario(){
-      const inputs = {};
-      // Collect all input values
-      document.querySelectorAll('input, select').forEach(input => {
-        if(input.id) {
-          inputs[input.id] = input.value;
-        }
-      });
-      
-      const scenarioName = prompt('Enter a name for this scenario:', 'My Retirement Scenario');
-      if(!scenarioName) return;
-      
-      const savedScenarios = JSON.parse(localStorage.getItem('retirementScenarios') || '{}');
-      savedScenarios[scenarioName] = {
-        data: inputs,
-        savedDate: new Date().toISOString(),
-        description: `Saved on ${new Date().toLocaleDateString()}`
-      };
-      
-      localStorage.setItem('retirementScenarios', JSON.stringify(savedScenarios));
-      alert(`Scenario "${scenarioName}" saved successfully!`);
-    }
-
-    function loadScenario(){
-      const savedScenarios = JSON.parse(localStorage.getItem('retirementScenarios') || '{}');
-      const scenarioNames = Object.keys(savedScenarios);
-      
-      if(scenarioNames.length === 0) {
-        alert('No saved scenarios found.');
-        return;
-      }
-      
-      let options = scenarioNames.map((name, index) => 
-        `${index + 1}. ${name} (${savedScenarios[name].description})`
-      ).join('\n');
-      
-      const choice = prompt(`Select a scenario to load:\n\n${options}\n\nEnter the number (1-${scenarioNames.length}) or 'D' + number to delete (e.g., D1):`);
-      if(!choice) return;
-      
-      // Check if user wants to delete a scenario
-      if(choice.toUpperCase().startsWith('D')) {
-        const deleteIndex = parseInt(choice.substring(1)) - 1;
-        if(deleteIndex < 0 || deleteIndex >= scenarioNames.length) {
-          alert('Invalid selection.');
-          return;
-        }
-        
-        const scenarioToDelete = scenarioNames[deleteIndex];
-        if(confirm(`Are you sure you want to delete "${scenarioToDelete}"?`)) {
-          delete savedScenarios[scenarioToDelete];
-          localStorage.setItem('retirementScenarios', JSON.stringify(savedScenarios));
-          alert(`Scenario "${scenarioToDelete}" deleted successfully!`);
-        }
-        return;
-      }
-      
-      const index = parseInt(choice) - 1;
-      if(index < 0 || index >= scenarioNames.length) {
-        alert('Invalid selection.');
-        return;
-      }
-      
-      const selectedScenario = scenarioNames[index];
-      const scenarioData = savedScenarios[selectedScenario].data;
-      
-      // Load all input values
-      Object.entries(scenarioData).forEach(([id, value]) => {
-        const element = document.getElementById(id);
-        if(element) {
-          element.value = value;
-        }
-      });
-      
-      alert(`Scenario "${selectedScenario}" loaded successfully!`);
-      calc(); // Automatically recalculate
-    }
-
+  
     function loadExample(){
       const ex = {
         currentAge: 60, retireAge: 62, endAge: 110, inflation: 2.5, 
@@ -1643,8 +1565,6 @@
     // Events
     $('calcBtn').addEventListener('click', calc);
     $('csvBtn').addEventListener('click', exportCSV);
-    $('saveBtn').addEventListener('click', saveScenario);
-    $('loadBtn').addEventListener('click', loadScenario);
     $('exportJsonBtn').addEventListener('click', exportJSON);
     $('importJsonBtn').addEventListener('click', importJSON);
     $('jsonFileInput').addEventListener('change', handleJSONFile);
