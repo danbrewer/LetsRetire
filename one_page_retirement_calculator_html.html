@@ -175,6 +175,9 @@
     <div>
       <button id="saveBtn" title="Save current inputs">Save Scenario</button>
       <button id="loadBtn" title="Load saved inputs">Load Scenario</button>
+      <button id="exportJsonBtn" title="Export inputs as JSON file">Export JSON</button>
+      <button id="importJsonBtn" title="Import inputs from JSON file">Import JSON</button>
+      <input type="file" id="jsonFileInput" accept=".json" style="display: none;">
       <button id="demoBtn" title="Load example inputs">Load Example</button>
       <button id="clearBtn">Reset</button>
       <button id="calcBtn" class="primary">Calculate ▶</button>
@@ -1552,11 +1555,99 @@
       document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
     }
 
+    function exportJSON(){
+      const inputs = {};
+      // Collect all input values
+      document.querySelectorAll('input, select').forEach(input => {
+        if(input.id && input.id !== 'jsonFileInput') {
+          inputs[input.id] = input.value;
+        }
+      });
+      
+      const exportData = {
+        version: '1.0',
+        exportDate: new Date().toISOString(),
+        description: 'Retirement Calculator Scenario',
+        inputs: inputs
+      };
+      
+      const json = JSON.stringify(exportData, null, 2);
+      const blob = new Blob([json], {type:'application/json'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; 
+      a.download = `retirement_scenario_${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+    }
+
+    function importJSON(){
+      const fileInput = $('jsonFileInput');
+      fileInput.click();
+    }
+
+    function handleJSONFile(event){
+      const file = event.target.files[0];
+      if (!file) return;
+      
+      if (!file.name.toLowerCase().endsWith('.json')) {
+        alert('Please select a JSON file.');
+        return;
+      }
+      
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const data = JSON.parse(e.target.result);
+          
+          // Validate the JSON structure
+          if (!data.inputs || typeof data.inputs !== 'object') {
+            alert('Invalid JSON file format. Expected retirement calculator scenario data.');
+            return;
+          }
+          
+          let loadedCount = 0;
+          let totalCount = 0;
+          
+          // Load all input values
+          Object.entries(data.inputs).forEach(([id, value]) => {
+            totalCount++;
+            const element = document.getElementById(id);
+            if(element) {
+              element.value = value;
+              loadedCount++;
+            }
+          });
+          
+          // Show import summary
+          let summary = `JSON imported successfully!\n\nLoaded ${loadedCount} of ${totalCount} settings.`;
+          if (data.description) {
+            summary += `\nDescription: ${data.description}`;
+          }
+          if (data.exportDate) {
+            summary += `\nExported: ${new Date(data.exportDate).toLocaleDateString()}`;
+          }
+          
+          alert(summary);
+          calc(); // Automatically recalculate
+          
+        } catch (error) {
+          alert('Error reading JSON file: ' + error.message);
+        }
+      };
+      
+      reader.readAsText(file);
+      // Clear the file input so the same file can be selected again
+      event.target.value = '';
+    }
+
     // Events
     $('calcBtn').addEventListener('click', calc);
     $('csvBtn').addEventListener('click', exportCSV);
     $('saveBtn').addEventListener('click', saveScenario);
     $('loadBtn').addEventListener('click', loadScenario);
+    $('exportJsonBtn').addEventListener('click', exportJSON);
+    $('importJsonBtn').addEventListener('click', importJSON);
+    $('jsonFileInput').addEventListener('change', handleJSONFile);
     $('demoBtn').addEventListener('click', loadExample);
     $('clearBtn').addEventListener('click', resetAll);
 
