@@ -118,6 +118,9 @@ A comprehensive, interactive retirement planning tool built as a single HTML fil
 - Fully self-contained
 - No external dependencies
 
+### **Development Documentation**
+- [Toast Notification System Implementation](951880faec38f9289452cb825b003eae81724de2.md) - Detailed analysis of the commit that added modern toast notifications replacing alert dialogs
+
 ## Usage Tips
 
 ### **Getting Accurate Results**
