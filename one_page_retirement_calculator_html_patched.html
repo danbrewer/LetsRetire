@@ -720,16 +720,24 @@
               <span class="chev">▶</span>
             </summary>
             <div class="content">
-              <div class="hint" style="margin-bottom: 15px;">Override calculated spending amounts for specific retirement years. Leave fields empty to use automatic calculations based on inflation and spending decline. Use the checkbox below to enter values in today's dollars.</div>
-              <div style="margin-bottom: 15px;">
-                <label>
-                  <input type="checkbox" id="useCurrentYearValues" /> 
-                  Use current year values (will be adjusted for inflation to target year)
-                </label>
+              <div class="hint" style="margin-bottom: 15px;">
+                <div style="margin-bottom: 8px;">
+                  Override calculated spending amounts for specific retirement years.
+                  Leave fields empty to use automatic calculations based on inflation and spending decline.
+                </div>
+                <div style="display: flex; align-items: center; gap: 5px;">
+                  <input type="checkbox" id="useCurrentYearValues" style="width: auto;" />
+                  <label for="useCurrentYearValues">
+                    Use current year values (will be adjusted for inflation to target year)
+                  </label>
+                </div>
               </div>
+            
               <div id="spendingDetailsGrid" class="grid-3">
                 <!-- Spending override fields will be dynamically generated here -->
               </div>
+            </div>
+
               <div style="margin-top: 10px;">
                 <button type="button" id="generateSpendingFields" style="padding: 8px 12px; font-size: 12px;">Generate Fields for Current Ages</button>
                 <span style="font-size: 12px; color: var(--muted); margin-left: 10px;">Click after setting retirement and end ages</span>
