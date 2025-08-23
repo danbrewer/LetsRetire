@@ -712,6 +712,24 @@
               <div class="hint">These are simplified, all‑in effective rates to keep the model understandable (not tax advice).</div>
             </div>
           </details>
+
+          <!-- Annual Spending Details -->
+          <details>
+            <summary>
+              <span>Annual Spending Details</span>
+              <span class="chev">▶</span>
+            </summary>
+            <div class="content">
+              <div class="hint" style="margin-bottom: 15px;">Override calculated spending amounts for specific retirement years. Leave fields empty to use automatic calculations based on inflation and spending decline. Values should be in future dollars (adjusted for inflation).</div>
+              <div id="spendingDetailsGrid" class="grid-3">
+                <!-- Spending override fields will be dynamically generated here -->
+              </div>
+              <div style="margin-top: 10px;">
+                <button type="button" id="generateSpendingFields" style="padding: 8px 12px; font-size: 12px;">Generate Fields for Current Ages</button>
+                <span style="font-size: 12px; color: var(--muted); margin-left: 10px;">Click after setting retirement and end ages</span>
+              </div>
+            </div>
+          </details>
         </div>
       </div>
       <div class="actions">
@@ -1287,6 +1305,47 @@
       }
     });
 
+    // Annual Spending Details Functions
+    function generateSpendingFields() {
+      const retireAge = num('retireAge');
+      const endAge = num('endAge');
+      
+      if (retireAge <= 0 || endAge <= retireAge) {
+        showToast('Invalid Ages', 'Please set valid retirement and end ages first.', 'warning');
+        return;
+      }
+
+      const grid = document.getElementById('spendingDetailsGrid');
+      grid.innerHTML = ''; // Clear existing fields
+
+      // Generate input fields for each retirement year
+      for (let age = retireAge; age <= endAge; age++) {
+        const div = document.createElement('div');
+        div.innerHTML = `
+          <label for="spending_${age}">Age ${age} spending ($)</label>
+          <input id="spending_${age}" type="number" step="1000" placeholder="Auto" />
+        `;
+        grid.appendChild(div);
+      }
+
+      showToast('Fields Generated', `Created spending override fields for ages ${retireAge} to ${endAge}.`, 'success');
+    }
+
+    function getSpendingOverride(age) {
+      const field = document.getElementById(`spending_${age}`);
+      if (field && field.value && !isNaN(field.value)) {
+        return Number(field.value);
+      }
+      return null; // No override specified
+    }
+
+    function setSpendingFieldValue(age, value) {
+      const field = document.getElementById(`spending_${age}`);
+      if (field) {
+        field.placeholder = `Auto`;
+      }
+    }
+
   
     function loadExample(){
       const ex = {
@@ -1333,6 +1392,12 @@
     function resetAll(){
       document.querySelectorAll('input').forEach(i=> i.value = i.defaultValue ?? '');
       $('order').value = 'taxable,pretax,roth';
+      $('filingStatus').value = 'single';
+      
+      // Clear spending override fields
+      const grid = document.getElementById('spendingDetailsGrid');
+      grid.innerHTML = '';
+      
       $('rows').innerHTML = '';
       $('kpiAge').textContent = '—';
       $('kpiEndBal').textContent = '—';
@@ -1561,7 +1626,15 @@ const penNet = penGross * (1 - taxPension);
         const spousePenNet = spousePenGross * (1 - spouseTaxPension);
 
         // Net spending need after all net incomes
-        let needNet = Math.max(0, spend - (ssNet + penNet + spouseSsNet + spousePenNet));
+        const spendingOverride = getSpendingOverride(age);
+        const actualSpend = spendingOverride !== null ? spendingOverride : spend;
+        
+        // Update placeholder to show auto-calculated value
+        if (spendingOverride === null) {
+          setSpendingFieldValue(age, spend);
+        }
+        
+        let needNet = Math.max(0, actualSpend - (ssNet + penNet + spouseSsNet + spousePenNet));
         let needGross = 0; // track gross withdrawals
         let taxesThisYear = 0;
 
@@ -1657,7 +1730,7 @@ const penNet = penGross * (1 - taxPension);
 
         rows.push({
           year, age, salary: 0, contrib: 0,
-          ss: ssNet, pen: penNet, spouseSs: spouseSsNet, spousePen: spousePenNet, spend,
+          ss: ssNet, pen: penNet, spouseSs: spouseSsNet, spousePen: spousePenNet, spend: actualSpend,
           wNet, wGross, taxes: taxesThisYear,
           balTax, balPre, balRoth, total: totalBal
         });
@@ -1793,7 +1866,7 @@ const penNet = penGross * (1 - taxPension);
 
     function exportJSON(){
       const inputs = {};
-      // Collect all input values
+      // Collect all input values including spending overrides
       document.querySelectorAll('input, select').forEach(input => {
         if(input.id && input.id !== 'jsonFileInput') {
           inputs[input.id] = input.value;
@@ -1801,9 +1874,9 @@ const penNet = penGross * (1 - taxPension);
       });
       
       const exportData = {
-        version: '1.0',
+        version: '1.1',
         exportDate: new Date().toISOString(),
-        description: 'Retirement Calculator Scenario',
+        description: 'Retirement Calculator Scenario with Spending Overrides',
         inputs: inputs
       };
       
@@ -1851,8 +1924,27 @@ const penNet = penGross * (1 - taxPension);
             if(element) {
               element.value = value;
               loadedCount++;
+            } else if (id.startsWith('spending_')) {
+              // Handle spending override fields that may not exist yet
+              totalCount--; // Don't count these in the totals since they're dynamic
             }
           });
+          
+          // If there are spending override fields in the import, regenerate the fields first
+          const hasSpendingOverrides = Object.keys(data.inputs).some(id => id.startsWith('spending_'));
+          if (hasSpendingOverrides) {
+            generateSpendingFields();
+            // Now load the spending override values
+            Object.entries(data.inputs).forEach(([id, value]) => {
+              if (id.startsWith('spending_')) {
+                const element = document.getElementById(id);
+                if (element) {
+                  element.value = value;
+                  loadedCount++;
+                }
+              }
+            });
+          }
           
           // Show import summary
           let summary = `Loaded ${loadedCount} of ${totalCount} settings.`;
@@ -1884,6 +1976,7 @@ const penNet = penGross * (1 - taxPension);
     $('jsonFileInput').addEventListener('change', handleJSONFile);
     $('demoBtn').addEventListener('click', loadExample);
     $('clearBtn').addEventListener('click', resetAll);
+    $('generateSpendingFields').addEventListener('click', generateSpendingFields);
 
     // Initialize help icons
     function initializeHelpIcons() {
