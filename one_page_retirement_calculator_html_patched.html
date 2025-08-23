@@ -720,7 +720,13 @@
               <span class="chev">▶</span>
             </summary>
             <div class="content">
-              <div class="hint" style="margin-bottom: 15px;">Override calculated spending amounts for specific retirement years. Leave fields empty to use automatic calculations based on inflation and spending decline. Values should be in future dollars (adjusted for inflation).</div>
+              <div class="hint" style="margin-bottom: 15px;">Override calculated spending amounts for specific retirement years. Leave fields empty to use automatic calculations based on inflation and spending decline. Use the checkbox below to enter values in today's dollars.</div>
+              <div style="margin-bottom: 15px;">
+                <label>
+                  <input type="checkbox" id="useCurrentYearValues" /> 
+                  Use current year values (will be adjusted for inflation to target year)
+                </label>
+              </div>
               <div id="spendingDetailsGrid" class="grid-3">
                 <!-- Spending override fields will be dynamically generated here -->
               </div>
@@ -1326,6 +1332,10 @@
           <input id="spending_${age}" type="number" step="1000" placeholder="Auto" />
         `;
         grid.appendChild(div);
+        
+        // Add event listener for inflation adjustment
+        const field = document.getElementById(`spending_${age}`);
+        field.addEventListener('blur', (event) => handleSpendingFieldChange(age, event));
       }
 
       showToast('Fields Generated', `Created spending override fields for ages ${retireAge} to ${endAge}.`, 'success');
@@ -1334,8 +1344,32 @@
     function getSpendingOverride(age) {
       const field = document.getElementById(`spending_${age}`);
       if (field && field.value && !isNaN(field.value)) {
-        return Number(field.value);
+        const useCurrentYear = document.getElementById('useCurrentYearValues').checked;
+        const fieldValue = Number(field.value);
+        
+        console.log(`getSpendingOverride(${age}): fieldValue=${fieldValue}, useCurrentYear=${useCurrentYear}`);
+        
+        if (useCurrentYear) {
+          // If in current year mode, check if we have a stored current year value
+          const storedCurrentYearValue = field.getAttribute('data-current-year-value');
+          if (storedCurrentYearValue && !isNaN(storedCurrentYearValue)) {
+            // Use the stored current year value and apply inflation
+            const inflatedValue = applyInflationToSpendingValue(Number(storedCurrentYearValue), age);
+            console.log(`  Using stored current year value ${storedCurrentYearValue} → inflated ${inflatedValue}`);
+            return inflatedValue;
+          } else {
+            // Treat the field value as current year value and apply inflation
+            const inflatedValue = applyInflationToSpendingValue(fieldValue, age);
+            console.log(`  Using field value as current year ${fieldValue} → inflated ${inflatedValue}`);
+            return inflatedValue;
+          }
+        } else {
+          // Return the field value as-is (already in future dollars)
+          console.log(`  Using field value as future dollars: ${fieldValue}`);
+          return fieldValue;
+        }
       }
+      console.log(`getSpendingOverride(${age}): No override (field empty or invalid)`);
       return null; // No override specified
     }
 
@@ -1346,33 +1380,116 @@
       }
     }
 
+    function applyInflationToSpendingValue(currentYearValue, targetAge) {
+      if (!currentYearValue) return 0;
+      const currentAge = parseInt(document.getElementById('current_age').value) || 0;
+      const yearsFromNow = targetAge - currentAge;
+      const inflationRate = parseFloat(document.getElementById('cola').value) / 100 || 0.025;
+      return currentYearValue * Math.pow(1 + inflationRate, yearsFromNow);
+    }
+
+    function handleSpendingFieldChange(age, event) {
+      const useCurrentYear = document.getElementById('useCurrentYearValues').checked;
+      const inputValue = parseFloat(event.target.value) || 0;
+      
+      if (useCurrentYear && inputValue > 0) {
+        // Store the current year value but don't change the field value
+        // The user sees what they typed, but we store it for inflation calculation
+        event.target.setAttribute('data-current-year-value', inputValue);
+        
+        // Calculate and show what the inflated value would be in the tooltip
+        const inflatedValue = applyInflationToSpendingValue(inputValue, age);
+        event.target.setAttribute('title', `Current year value: $${inputValue.toLocaleString()} → Inflated to age ${age}: $${inflatedValue.toLocaleString()}`);
+      } else if (!useCurrentYear) {
+        // In future dollar mode, clear any stored current year value
+        event.target.removeAttribute('data-current-year-value');
+        event.target.removeAttribute('title');
+      }
+      
+      // Trigger recalculation
+      calc();
+    }
+
+    function updateSpendingFieldsDisplayMode() {
+      const useCurrentYear = document.getElementById('useCurrentYearValues').checked;
+      const retireAge = num('retireAge');
+      const endAge = num('endAge');
+      
+      if (retireAge <= 0 || endAge <= retireAge) return;
+      
+      for (let age = retireAge; age <= endAge; age++) {
+        const field = document.getElementById(`spending_${age}`);
+        if (!field) continue;
+        
+        const currentValue = parseFloat(field.value) || 0;
+        const storedCurrentYearValue = parseFloat(field.getAttribute('data-current-year-value')) || 0;
+        
+        if (useCurrentYear) {
+          // Switch to current year mode
+          field.placeholder = 'Current year $';
+          
+          if (currentValue > 0 && !storedCurrentYearValue) {
+            // Convert from inflated to current year value (reverse inflation)
+            const currentAge = parseInt(document.getElementById('current_age').value) || 0;
+            const yearsFromNow = age - currentAge;
+            const inflationRate = parseFloat(document.getElementById('cola').value) / 100 || 0.025;
+            const currentYearValue = currentValue / Math.pow(1 + inflationRate, yearsFromNow);
+            field.value = currentYearValue.toFixed(0);
+            field.setAttribute('data-current-year-value', currentYearValue);
+          }
+          
+          // Update tooltip to show inflation calculation
+          if (field.value && !isNaN(field.value)) {
+            const displayValue = parseFloat(field.value);
+            const inflatedValue = applyInflationToSpendingValue(displayValue, age);
+            field.setAttribute('title', `Current year value: $${displayValue.toLocaleString()} → Inflated to age ${age}: $${inflatedValue.toLocaleString()}`);
+          }
+        } else {
+          // Switch to inflated mode
+          field.placeholder = 'Future $';
+          
+          if (storedCurrentYearValue > 0) {
+            // Convert current year value to inflated and display
+            const inflatedValue = applyInflationToSpendingValue(storedCurrentYearValue, age);
+            field.value = inflatedValue.toFixed(0);
+            field.removeAttribute('data-current-year-value');
+          }
+          
+          // Clear tooltips when switching to inflated mode
+          field.removeAttribute('title');
+        }
+      }
+      
+      calc();
+    }
+
   
     function loadExample(){
-      const ex = {
-        currentAge: 60, retireAge: 62, endAge: 110, inflation: 2.5, 
-        spendingToday: 95000, spendingDecline: 1.0,
-        spouseAge: 56, spouseRetireAge: 62, 
-        spouseSsMonthly: 1000, spouseSsStart: 66, spouseSsCola: 2.0,
-        spousePenMonthly: 500, spousePenStart: 69, spousePenCola: 0, 
-        spouseTaxSS: 10, spouseTaxPension: 20,
-        salary: 170000, salaryGrowth: 2.0, pretaxPct: 0, rothPct: 0, taxablePct: 35,
-        matchCap: 0, matchRate: 0, 
-        balPre: 600000, balRoth: 0, balTax: 500000,
-        retPre: 3.0, retRoth: 0.0, retTax: 3.0, 
-        ssMonthly: 2500, ssStart: 62, ssCola: 2.0,
-        penMonthly: 3500, penStart: 65, penCola: 0, taxPre: 15, taxTaxable: 0, taxRoth: 0,
-        taxSS: 10, taxPension: 15, order: 'pretax,taxable,roth'
-      };
       // const ex = {
-      //   currentAge:55, retireAge:65, endAge:85, inflation:2.5, spendingToday:60000, spendingDecline:1.0,
-      //   spouseAge:52, spouseRetireAge:62, spouseSsMonthly:1000, spouseSsStart:62, spouseSsCola:2.0,
-      //   spousePenMonthly:500, spousePenStart:65, spousePenCola:0, spouseTaxSS:10, spouseTaxPension:20,
-      //   salary:100000, salaryGrowth:3.0, pretaxPct:10, rothPct:5, taxablePct:5,
-      //   matchCap:4, matchRate:50, balPre:300000, balRoth:100000, balTax:50000,
-      //   retPre:6.0, retRoth:6.0, retTax:5.5, ssMonthly:2500, ssStart:67, ssCola:2.0,
-      //   penMonthly:0, penStart:65, penCola:0, taxPre:22, taxTaxable:10, taxRoth:0,
-      //   taxSS:10, taxPension:20, order:'taxable,pretax,roth'
+      //   currentAge: 60, retireAge: 62, endAge: 110, inflation: 2.5, 
+      //   spendingToday: 95000, spendingDecline: 1.0,
+      //   spouseAge: 56, spouseRetireAge: 62, 
+      //   spouseSsMonthly: 1000, spouseSsStart: 66, spouseSsCola: 2.0,
+      //   spousePenMonthly: 500, spousePenStart: 69, spousePenCola: 0, 
+      //   spouseTaxSS: 10, spouseTaxPension: 20,
+      //   salary: 170000, salaryGrowth: 2.0, pretaxPct: 0, rothPct: 0, taxablePct: 35,
+      //   matchCap: 0, matchRate: 0, 
+      //   balPre: 600000, balRoth: 0, balTax: 500000,
+      //   retPre: 3.0, retRoth: 0.0, retTax: 3.0, 
+      //   ssMonthly: 2500, ssStart: 62, ssCola: 2.0,
+      //   penMonthly: 3500, penStart: 65, penCola: 0, taxPre: 15, taxTaxable: 0, taxRoth: 0,
+      //   taxSS: 10, taxPension: 15, order: 'pretax,taxable,roth'
       // };
+      const ex = {
+        currentAge:55, retireAge:65, endAge:85, inflation:2.5, spendingToday:60000, spendingDecline:1.0,
+        spouseAge:52, spouseRetireAge:62, spouseSsMonthly:1000, spouseSsStart:62, spouseSsCola:2.0,
+        spousePenMonthly:500, spousePenStart:65, spousePenCola:0, spouseTaxSS:10, spouseTaxPension:20,
+        salary:100000, salaryGrowth:3.0, pretaxPct:10, rothPct:5, taxablePct:5,
+        matchCap:4, matchRate:50, balPre:300000, balRoth:100000, balTax:50000,
+        retPre:6.0, retRoth:6.0, retTax:5.5, ssMonthly:2500, ssStart:67, ssCola:2.0,
+        penMonthly:0, penStart:65, penCola:0, taxPre:22, taxTaxable:10, taxRoth:0,
+        taxSS:10, taxPension:20, order:'taxable,pretax,roth'
+      };
       // const ex = {
       //   currentAge: 54, retireAge: 55, endAge: 85, 
       //   inflation: 0.0, spendingToday: 50000, spendingDecline: 0.0,
@@ -1628,6 +1745,11 @@ const penNet = penGross * (1 - taxPension);
         // Net spending need after all net incomes
         const spendingOverride = getSpendingOverride(age);
         const actualSpend = spendingOverride !== null ? spendingOverride : spend;
+        
+        // Debug spending override
+        if (spendingOverride !== null) {
+          console.log(`Age ${age}: Using override spending $${spendingOverride.toLocaleString()} instead of auto $${spend.toLocaleString()}`);
+        }
         
         // Update placeholder to show auto-calculated value
         if (spendingOverride === null) {
@@ -1977,6 +2099,9 @@ const penNet = penGross * (1 - taxPension);
     $('demoBtn').addEventListener('click', loadExample);
     $('clearBtn').addEventListener('click', resetAll);
     $('generateSpendingFields').addEventListener('click', generateSpendingFields);
+    $('useCurrentYearValues').addEventListener('change', function() {
+      updateSpendingFieldsDisplayMode();
+    });
 
     // Initialize help icons
     function initializeHelpIcons() {
