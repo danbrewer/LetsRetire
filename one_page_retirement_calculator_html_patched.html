@@ -1774,6 +1774,10 @@
         
         const penNet = penGross * (1 - pensionTaxRate);
         const spousePenNet = spousePenGross * (1 - spousePensionTaxRate);
+        
+        // Calculate pension taxes
+        const penTaxes = penGross - penNet;
+        const spousePenTaxes = spousePenGross - spousePenNet;
 
         // Net spending need after all net incomes
         const spendingOverride = getSpendingOverride(age);
@@ -1791,7 +1795,11 @@
         
         let needNet = Math.max(0, actualSpend - (ssNet + penNet + spouseSsNet + spousePenNet));
         let needGross = 0; // track gross withdrawals
-        let taxesThisYear = 0;
+        
+        // Calculate all taxes for this year
+        const ssTaxes = ssGross - ssNet;
+        const spouseSsTaxes = spouseSsGross - spouseSsNet;
+        let taxesThisYear = penTaxes + spousePenTaxes + ssTaxes + spouseSsTaxes;
 
         // Calculate total taxable income for AGI-based tax calculation
         totalAGI = (penGross + spousePenGross) + (ssTaxableAmount || 0) + (spouseSsTaxableAmount || 0);
