@@ -776,6 +776,7 @@
                 <th>Spend (Net)</th>
                 <th>Withdraw Gross</th>
                 <th>Taxes</th>
+                <th>Effective Tax Rate</th>
                 <th>Withdraw Net</th>
                 <th>Taxable Bal</th>
                 <th>Pre‑tax Bal</th>
@@ -1643,7 +1644,7 @@
           salary,
           contrib: cPre + cRoth + cTax + match,
           ss: 0, pen: 0, spouseSs: 0, spousePen: 0, spend: 0,
-          wNet: 0, wGross: 0, taxes: 0,
+          wNet: 0, wGross: 0, taxes: 0, effectiveTaxRate: 0,
           balTax, balPre, balRoth,
           total: balTax + balPre + balRoth
         });
@@ -1882,10 +1883,14 @@
         totalTaxes += taxesThisYear;
         if(totalBal < maxDrawdown.value){ maxDrawdown = { year, value: totalBal }; }
 
+        // Calculate effective tax rate for the year
+        const totalGrossIncome = ssGross + penGross + spouseSsGross + spousePenGross + wGross;
+        const effectiveTaxRate = totalGrossIncome > 0 ? taxesThisYear / totalGrossIncome : 0;
+
         rows.push({
           year, age, salary: 0, contrib: 0,
           ss: ssNet, pen: penNet, spouseSs: spouseSsNet, spousePen: spousePenNet, spend: actualSpend,
-          wNet, wGross, taxes: taxesThisYear,
+          wNet, wGross, taxes: taxesThisYear, effectiveTaxRate,
           balTax, balPre, balRoth, total: totalBal
         });
 
@@ -1916,6 +1921,7 @@
           <td class="outgoing">${r.spend? fmt(r.spend): ''}</td>
           <td class="outgoing">${r.wGross? fmt(r.wGross): ''}</td>
           <td class="outgoing">${r.taxes? fmt(r.taxes): ''}</td>
+          <td class="neutral">${r.effectiveTaxRate ? (r.effectiveTaxRate * 100).toFixed(1) + '%' : ''}</td>
           <td class="income">${r.wNet ? fmt(r.wNet) : ''}</td>
           <td class="neutral">${fmt(r.balTax)}</td>
           <td class="neutral">${fmt(r.balPre)}</td>
