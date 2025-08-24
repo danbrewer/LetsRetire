@@ -687,11 +687,13 @@
                 </div>
               </div>
               <div style="margin-top: 15px;">
-                <label>
-                  <input type="checkbox" id="useAgiTax" checked /> 
-                  Use AGI-based tax calculation for pre-tax withdrawals
-                  <span class="help-icon-placeholder" data-field="useAgiTax"></span>
-                </label>
+                <div style="display: flex; align-items: center; gap: 5px;">
+                  <input type="checkbox" id="useAgiTax" checked style="width: auto;" />
+                  <label for="useAgiTax">
+                    Use AGI-based tax calculation for pre-tax withdrawals
+                    <span class="help-icon-placeholder" data-field="useAgiTax"></span>
+                  </label>
+                </div>
               </div>
               <div style="margin-top: 10px;">
                 <label for="filingStatus">Tax filing status
@@ -703,11 +705,13 @@
                 </select>
               </div>
               <div style="margin-top: 10px;">
-                <label>
-                  <input type="checkbox" id="useSSRules" checked /> 
-                  Use proper Social Security taxation rules
-                  <span class="help-icon-placeholder" data-field="useSSRules"></span>
-                </label>
+                <div style="display: flex; align-items: center; gap: 5px;">
+                  <input type="checkbox" id="useSSRules" checked style="width: auto;" />
+                  <label for="useSSRules">
+                    Use proper Social Security taxation rules
+                    <span class="help-icon-placeholder" data-field="useSSRules"></span>
+                  </label>
+                </div>
               </div>
               <div class="hint">These are simplified, all‑in effective rates to keep the model understandable (not tax advice).</div>
             </div>
