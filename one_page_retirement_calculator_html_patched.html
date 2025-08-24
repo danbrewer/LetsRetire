@@ -1474,7 +1474,7 @@
   
     function loadExample(){
       const ex = {
-        currentAge: 60, retireAge: 62, endAge: 110, inflation: 2.5, 
+        currentAge: 60, retireAge: 62, endAge: 90, inflation: 2.5, 
         spendingToday: 95000, spendingDecline: 1.0,
         spouseAge: 56, spouseRetireAge: 62, 
         spouseSsMonthly: 1000, spouseSsStart: 66, spouseSsCola: 2.0,
@@ -1484,9 +1484,10 @@
         matchCap: 0, matchRate: 0, 
         balPre: 600000, balRoth: 0, balTax: 500000,
         retPre: 3.0, retRoth: 0.0, retTax: 3.0, 
-        ssMonthly: 2500, ssStart: 62, ssCola: 2.0,
+        ssMonthly: 2500, ssStart: 62, ssCola: 2.5,
         penMonthly: 3500, penStart: 65, penCola: 0, taxPre: 15, taxTaxable: 0, taxRoth: 0,
-        taxSS: 10, taxPension: 15, order: 'pretax,taxable,roth'
+        taxSS: 10, taxPension: 15, order: 'pretax,taxable,roth',
+        filingStatus: 'married', useAgiTax: true, useSSRules: true
       };
       // const ex = {
       //   currentAge:55, retireAge:65, endAge:85, inflation:2.5, spendingToday:60000, spendingDecline:1.0,
