@@ -686,7 +686,7 @@
                 <div style="display: flex; align-items: center; gap: 5px;">
                   <input type="checkbox" id="useAgiTax" checked style="width: auto;" />
                   <label for="useAgiTax">
-                    Use AGI-based tax calculation for pre-tax withdrawals
+                    Use AGI-based tax calculation for pre-tax withdrawals and pension income
                     <span class="help-icon-placeholder" data-field="useAgiTax"></span>
                   </label>
                 </div>
@@ -1173,7 +1173,7 @@
         },
         taxPension: {
           title: "Pension Tax Rate",
-          body: "The effective tax rate on pension benefits. Usually taxed as ordinary income at your marginal tax rate."
+          body: "The baseline effective tax rate on pension benefits. When AGI-based calculation is enabled, the calculator uses progressive tax rates based on total income, but falls back to this rate as a minimum. Usually taxed as ordinary income at your marginal tax rate."
         },
         order: {
           title: "Withdrawal Order Strategy",
@@ -1181,7 +1181,7 @@
         },
         useAgiTax: {
           title: "AGI-Based Tax Calculation",
-          body: "When enabled, uses a progressive tax table based on Adjusted Gross Income (gross income minus standard deduction) for pre-tax withdrawals. Uses 2024 standard deductions: $14,600 (single) / $29,200 (married). This typically results in more accurate tax rates than fixed percentages, especially for larger withdrawal amounts. Check the browser console for detailed calculations showing gross income → AGI → tax rates."
+          body: "When enabled, uses a progressive tax table based on Adjusted Gross Income (gross income minus standard deduction) for pre-tax withdrawals and pension income. Uses 2024 standard deductions: $14,600 (single) / $29,200 (married). This typically results in more accurate tax rates than fixed percentages, especially for larger withdrawal amounts. Check the browser console for detailed calculations showing gross income → AGI → tax rates."
         },
         filingStatus: {
           title: "Tax Filing Status",
@@ -1748,8 +1748,31 @@
           var spouseSsTaxableAmount = spouseApproxTaxable;
           totalAGI += spouseSsTaxableAmount;
         }
-const penNet = penGross * (1 - taxPension);
-        const spousePenNet = spousePenGross * (1 - spouseTaxPension);
+
+        // Calculate pension taxation - use AGI-based calculation if enabled
+        const useAgiTax = $('useAgiTax').checked;
+        const filingStatus = $('filingStatus').value;
+        let pensionTaxRate = taxPension;
+        let spousePensionTaxRate = spouseTaxPension;
+        
+        if (useAgiTax) {
+          // For pension taxation, include all income in AGI calculation
+          const grossIncomeForPensionTax = (penGross + spousePenGross) + (ssTaxableAmount || 0) + (spouseSsTaxableAmount || 0);
+          const agiForPensionTax = calculateAGI(grossIncomeForPensionTax, filingStatus);
+          const agiBasedRate = filingStatus === "married" 
+            ? getEffectiveTaxRateMarried(agiForPensionTax)
+            : getEffectiveTaxRate(agiForPensionTax);
+          
+          // Convert to decimal and use the higher of AGI rate or fixed rate
+          const agiRateDecimal = agiBasedRate / 100;
+          pensionTaxRate = Math.max(taxPension, agiRateDecimal);
+          spousePensionTaxRate = Math.max(spouseTaxPension, agiRateDecimal);
+          
+          console.log(`Pension AGI Tax Calc: Gross Income: $${grossIncomeForPensionTax.toLocaleString()}, AGI: $${agiForPensionTax.toLocaleString()}, Filing: ${filingStatus}, AGI Rate: ${agiBasedRate.toFixed(1)}%, Fixed Rate: ${(taxPension*100).toFixed(1)}%, Using: ${(pensionTaxRate*100).toFixed(1)}%`);
+        }
+        
+        const penNet = penGross * (1 - pensionTaxRate);
+        const spousePenNet = spousePenGross * (1 - spousePensionTaxRate);
 
         // Net spending need after all net incomes
         const spendingOverride = getSpendingOverride(age);
