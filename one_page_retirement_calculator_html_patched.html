@@ -755,10 +755,10 @@
     <section class="card">
       <div class="results">
         <div class="summary">
+          <div class="kpi"><div class="label">Retirement Age</div><div id="kpiDraw" class="value">—</div></div>
           <div class="kpi"><div class="label">Funded to Age</div><div id="kpiAge" class="value">—</div></div>
+          <div class="kpi"><div class="label">Starting Balance</div><div id="kpiTax" class="value">—</div></div>
           <div class="kpi"><div class="label">Ending Balance</div><div id="kpiEndBal" class="value">—</div></div>
-          <div class="kpi"><div class="label">Max Drawdown Year</div><div id="kpiDraw" class="value">—</div></div>
-          <div class="kpi"><div class="label">Total Taxes (retirement)</div><div id="kpiTax" class="value">—</div></div>
         </div>
         <canvas id="chart" height="260"></canvas>
         <div class="card" style="padding:0; overflow:auto; max-height: 50vh;">
@@ -1473,31 +1473,31 @@
 
   
     function loadExample(){
-      // const ex = {
-      //   currentAge: 60, retireAge: 62, endAge: 110, inflation: 2.5, 
-      //   spendingToday: 95000, spendingDecline: 1.0,
-      //   spouseAge: 56, spouseRetireAge: 62, 
-      //   spouseSsMonthly: 1000, spouseSsStart: 66, spouseSsCola: 2.0,
-      //   spousePenMonthly: 500, spousePenStart: 69, spousePenCola: 0, 
-      //   spouseTaxSS: 10, spouseTaxPension: 20,
-      //   salary: 170000, salaryGrowth: 2.0, pretaxPct: 0, rothPct: 0, taxablePct: 35,
-      //   matchCap: 0, matchRate: 0, 
-      //   balPre: 600000, balRoth: 0, balTax: 500000,
-      //   retPre: 3.0, retRoth: 0.0, retTax: 3.0, 
-      //   ssMonthly: 2500, ssStart: 62, ssCola: 2.0,
-      //   penMonthly: 3500, penStart: 65, penCola: 0, taxPre: 15, taxTaxable: 0, taxRoth: 0,
-      //   taxSS: 10, taxPension: 15, order: 'pretax,taxable,roth'
-      // };
       const ex = {
-        currentAge:55, retireAge:65, endAge:85, inflation:2.5, spendingToday:60000, spendingDecline:1.0,
-        spouseAge:52, spouseRetireAge:62, spouseSsMonthly:1000, spouseSsStart:62, spouseSsCola:2.0,
-        spousePenMonthly:500, spousePenStart:65, spousePenCola:0, spouseTaxSS:10, spouseTaxPension:20,
-        salary:100000, salaryGrowth:3.0, pretaxPct:10, rothPct:5, taxablePct:5,
-        matchCap:4, matchRate:50, balPre:300000, balRoth:100000, balTax:50000,
-        retPre:6.0, retRoth:6.0, retTax:5.5, ssMonthly:2500, ssStart:67, ssCola:2.0,
-        penMonthly:0, penStart:65, penCola:0, taxPre:22, taxTaxable:10, taxRoth:0,
-        taxSS:10, taxPension:20, order:'taxable,pretax,roth'
+        currentAge: 60, retireAge: 62, endAge: 110, inflation: 2.5, 
+        spendingToday: 95000, spendingDecline: 1.0,
+        spouseAge: 56, spouseRetireAge: 62, 
+        spouseSsMonthly: 1000, spouseSsStart: 66, spouseSsCola: 2.0,
+        spousePenMonthly: 500, spousePenStart: 69, spousePenCola: 0, 
+        spouseTaxSS: 10, spouseTaxPension: 20,
+        salary: 170000, salaryGrowth: 2.0, pretaxPct: 0, rothPct: 0, taxablePct: 35,
+        matchCap: 0, matchRate: 0, 
+        balPre: 600000, balRoth: 0, balTax: 500000,
+        retPre: 3.0, retRoth: 0.0, retTax: 3.0, 
+        ssMonthly: 2500, ssStart: 62, ssCola: 2.0,
+        penMonthly: 3500, penStart: 65, penCola: 0, taxPre: 15, taxTaxable: 0, taxRoth: 0,
+        taxSS: 10, taxPension: 15, order: 'pretax,taxable,roth'
       };
+      // const ex = {
+      //   currentAge:55, retireAge:65, endAge:85, inflation:2.5, spendingToday:60000, spendingDecline:1.0,
+      //   spouseAge:52, spouseRetireAge:62, spouseSsMonthly:1000, spouseSsStart:62, spouseSsCola:2.0,
+      //   spousePenMonthly:500, spousePenStart:65, spousePenCola:0, spouseTaxSS:10, spouseTaxPension:20,
+      //   salary:100000, salaryGrowth:3.0, pretaxPct:10, rothPct:5, taxablePct:5,
+      //   matchCap:4, matchRate:50, balPre:300000, balRoth:100000, balTax:50000,
+      //   retPre:6.0, retRoth:6.0, retTax:5.5, ssMonthly:2500, ssStart:67, ssCola:2.0,
+      //   penMonthly:0, penStart:65, penCola:0, taxPre:22, taxTaxable:10, taxRoth:0,
+      //   taxSS:10, taxPension:20, order:'taxable,pretax,roth'
+      // };
       // const ex = {
       //   currentAge: 54, retireAge: 55, endAge: 85, 
       //   inflation: 0.0, spendingToday: 50000, spendingDecline: 0.0,
@@ -1905,8 +1905,8 @@ const penNet = penGross * (1 - taxPension);
       const fundedTo = last.total > 0 ? endAge : rows.reduce((lastGoodAge, r) => r.total > 0 ? r.age : lastGoodAge, currentAge);
       $('kpiAge').innerHTML = `${fundedTo} <span class="pill ${fundedTo >= endAge ? 'ok':'alert'}">${fundedTo >= endAge ? 'Fully funded' : 'Shortfall'}</span>`;
       $('kpiEndBal').textContent = fmt(Math.max(0, last.total));
-      $('kpiDraw').textContent = `${maxDrawdown.year ?? '—'}`;
-      $('kpiTax').textContent = fmt(totalTaxes);
+      $('kpiDraw').textContent = `${retireAge}`;
+      $('kpiTax').textContent = fmt(num('balPre') + num('balRoth') + num('balTax'));
 
       // Chart (total balance)
       drawChart(rows.map(r => ({ x: r.year, y: r.total })));
