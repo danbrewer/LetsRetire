@@ -65,8 +65,10 @@
     .content { padding: 14px; border-top: 1px dashed var(--border); background: rgba(255,255,255,.02); display:grid; gap:10px; }
 
     .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .grid-1 { display: grid; grid-template-columns: repeat(1, 1fr); gap: 10px; }
+    .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
     .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-    @media (max-width: 520px){ .grid, .grid-3 { grid-template-columns: 1fr; } }
+    @media (max-width: 520px){ .grid, .grid-2, .grid-3 { grid-template-columns: 1fr; } }
 
     label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; }
     input, select { width: 100%; padding: 10px 11px; background: #0b1426; color: var(--text); border: 1px solid var(--border); border-radius: 10px; outline: none; }
@@ -299,13 +301,13 @@
           </details>
 
           <!-- Spouse Information -->
-          <details>
+          <details open>
             <summary>
               <span>Spouse Information</span>
               <span class="chev">▶</span>
             </summary>
             <div class="content">
-              <div class="grid">
+              <div class="grid-1">
                 <div>
                   <label for="spouseAge">Spouse current age
                     <span class="help-icon-placeholder" data-field="spouseAge"></span>
@@ -313,44 +315,49 @@
                   <input id="spouseAge" type="number" min="18" max="80" step="1" value="0" />
                   <div class="hint">Set to 0 if no spouse</div>
                 </div>
+              </div>
+              <div class="grid-2">
                 <div>
-                  <label for="spouseRetireAge">Spouse retirement age
+                  <label for="spouseRetireAge">Retirement age
                     <span class="help-icon-placeholder" data-field="spouseRetireAge"></span>
                   </label>
                   <input id="spouseRetireAge" type="number" min="40" max="80" step="1" value="67" />
                 </div>
-              </div>
-              <div class="grid-3">
                 <div>
-                  <label for="spouseSsMonthly">Spouse Social Security ($/mo, first year)</label>
-                  <input id="spouseSsMonthly" type="number" step="50" value="0" />
-                </div>
-                <div>
-                  <label for="spouseSsStart">Spouse SS start age</label>
+                  <label for="spouseSsStart">Social Sec start age</label>
                   <input id="spouseSsStart" type="number" step="1" value="67" />
                 </div>
+              </div>
+              <div class="grid-2">
                 <div>
-                  <label for="spouseSsCola">Spouse SS COLA (%/yr)</label>
+                  <label for="spouseSsMonthly">Social Sec Disbursement ($/mo, first year)</label>
+                  <input id="spouseSsMonthly" type="number" step="50" value="0" />
+                </div>
+                
+                <div>
+                  <label for="spouseSsCola">Social Sec COLA (%/yr)</label>
                   <input id="spouseSsCola" type="number" step="0.1" value="2.0" />
                 </div>
               </div>
-              <div class="grid-3">
+              <div class=""grid-1">
                 <div>
-                  <label for="spousePenMonthly">Spouse Pension ($/mo, first year)</label>
-                  <input id="spousePenMonthly" type="number" step="50" value="0" />
-                </div>
-                <div>
-                  <label for="spousePenStart">Spouse Pension start age</label>
+                  <label for="spousePenStart">Pension start age</label>
                   <input id="spousePenStart" type="number" step="1" value="65" />
+                </div>
+              </div>
+              <div class="grid-2">
+                <div>
+                  <label for="spousePenMonthly">Pension disbursement ($/mo, first year)</label>
+                  <input id="spousePenMonthly" type="number" step="50" value="0" />
                 </div>
                 <div>
                   <label for="spousePenCola">Spouse Pension COLA (%/yr)</label>
                   <input id="spousePenCola" type="number" step="0.1" value="0" />
                 </div>
               </div>
-              <div class="grid">
+              <div class="grid-2">
                 <div>
-                  <label for="spouseTaxSS">Effective tax on Spouse SS (%)</label>
+                  <label for="spouseTaxSS">Effective tax on Spouse Social Security (%)</label>
                   <input id="spouseTaxSS" type="number" step="0.5" value="10" />
                 </div>
                 <div>
@@ -418,7 +425,7 @@
               <span class="chev">▶</span>
             </summary>
             <div class="content">
-              <div class="grid-3">
+              <div class="grid-2">
                 <div>
                   <label for="balPre">Pre‑tax (401k/Trad IRA) balance
                     <svg xmlns="http://www.w3.org/2000/svg" 
@@ -528,7 +535,7 @@
               <span class="chev">▶</span>
             </summary>
             <div class="content">
-              <div class="grid-3">
+              <div class="grid-2">
                 <div>
                   <label for="ssMonthly">Social Security ($/mo, first year)
                     <svg xmlns="http://www.w3.org/2000/svg" 
