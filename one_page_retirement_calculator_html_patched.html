@@ -709,6 +709,15 @@
                   </label>
                 </div>
               </div>
+              <div style="margin-top: 10px;">
+                <div style="display: flex; align-items: center; gap: 5px;">
+                  <input type="checkbox" id="useRMD" checked style="width: auto;" />
+                  <label for="useRMD">
+                    Apply Required Minimum Distribution (RMD) rules
+                    <span class="help-icon-placeholder" data-field="useRMD"></span>
+                  </label>
+                </div>
+              </div>
               <div class="hint">These are simplified, all‑in effective rates to keep the model understandable (not tax advice).</div>
             </div>
           </details>
@@ -1022,6 +1031,31 @@
       return taxableAmount;
     }
 
+    // Required Minimum Distribution (RMD) calculation
+    // Based on IRS Uniform Lifetime Table for 2024+
+    function calculateRMD(age, accountBalance) {
+      if (age < 73 || accountBalance <= 0) return 0;
+      
+      // IRS Uniform Lifetime Table (simplified version for common ages)
+      const lifeFactor = {
+        73: 26.5, 74: 25.5, 75: 24.6, 76: 23.7, 77: 22.9, 78: 22.0, 79: 21.1,
+        80: 20.2, 81: 19.4, 82: 18.5, 83: 17.7, 84: 16.8, 85: 16.0, 86: 15.2,
+        87: 14.4, 88: 13.7, 89: 12.9, 90: 12.2, 91: 11.5, 92: 10.8, 93: 10.1,
+        94: 9.5, 95: 8.9, 96: 8.4, 97: 7.8, 98: 7.3, 99: 6.8, 100: 6.4
+      };
+      
+      // For ages beyond 100, use declining factors
+      let factor;
+      if (age <= 100) {
+        factor = lifeFactor[age] || lifeFactor[100];
+      } else {
+        // Linear decline after 100
+        factor = Math.max(1.0, lifeFactor[100] - (age - 100) * 0.1);
+      }
+      
+      return accountBalance / factor;
+    }
+
     // Helper function to create reusable help icon
     function createHelpIcon(fieldId) {
       return `<svg xmlns="http://www.w3.org/2000/svg" 
@@ -1191,6 +1225,10 @@
         useSSRules: {
           title: "Proper Social Security Taxation",
           body: "When enabled, uses actual IRS rules for Social Security taxation based on 'provisional income' rather than simple fixed percentages. SS taxation depends on your total income and can range from 0% to 85% of benefits being taxable."
+        },
+        useRMD: {
+          title: "Required Minimum Distribution Rules",
+          body: "When enabled, enforces mandatory withdrawals from pre-tax retirement accounts (401k, traditional IRA) starting at age 73. RMD amounts are calculated based on IRS life expectancy tables and account balances. These withdrawals are required by law and failure to take them results in significant penalties."
         }
       };
 
@@ -1488,7 +1526,7 @@
         ssMonthly: 2500, ssStart: 62, ssCola: 2.5,
         penMonthly: 3500, penStart: 65, penCola: 0, taxPre: 15, taxTaxable: 0, taxRoth: 0,
         taxSS: 10, taxPension: 15, order: 'pretax,taxable,roth',
-        filingStatus: 'married', useAgiTax: true, useSSRules: true
+        filingStatus: 'married', useAgiTax: true, useSSRules: true, useRMD: true
       };
       // const ex = {
       //   currentAge:55, retireAge:65, endAge:85, inflation:2.5, spendingToday:60000, spendingDecline:1.0,
@@ -1871,8 +1909,53 @@
           return { gross: grossTake, net: netReceived };
         }
 
-        // Withdraw following order until need met
+        // Apply Required Minimum Distributions if enabled
+        const useRMD = $('useRMD').checked;
+        let rmdAmount = 0;
         let wGross = 0, wNet = 0;
+        
+        // Special function for RMD withdrawals (gross amount based)
+        function withdrawRMD(grossAmount) {
+          if (grossAmount <= 0 || balPre <= 0) return { gross: 0, net: 0 };
+          
+          const actualGross = Math.min(grossAmount, balPre);
+          
+          // Use same tax calculation logic as regular pre-tax withdrawals
+          let taxRate = taxPre;
+          const useAgiCalculation = $('useAgiTax').checked;
+          const filingStatus = $('filingStatus').value;
+          
+          if (useAgiCalculation) {
+            const projectedGrossIncome = totalAGI + actualGross;
+            const projectedAGI = calculateAGI(projectedGrossIncome, filingStatus);
+            const agiBasedRate = filingStatus === "married" 
+              ? getEffectiveTaxRateMarried(projectedAGI)
+              : getEffectiveTaxRate(projectedAGI);
+            const agiRateDecimal = agiBasedRate / 100;
+            taxRate = Math.max(taxPre, agiRateDecimal);
+          }
+          
+          const netReceived = actualGross * (1 - taxRate);
+          const taxPaid = actualGross - netReceived;
+          balPre -= actualGross;
+          taxesThisYear += taxPaid;
+          totalAGI += actualGross;
+          
+          return { gross: actualGross, net: netReceived };
+        }
+        
+        if (useRMD && age >= 73) {
+          rmdAmount = calculateRMD(age, balPre);
+          if (rmdAmount > 0) {
+            const rmdWithdrawal = withdrawRMD(rmdAmount);
+            needNet = Math.max(0, needNet - rmdWithdrawal.net);
+            wGross += rmdWithdrawal.gross;
+            wNet += rmdWithdrawal.net;
+            console.log(`RMD at age ${age}: Required $${rmdAmount.toLocaleString()}, Withdrew $${rmdWithdrawal.gross.toLocaleString()} gross, $${rmdWithdrawal.net.toLocaleString()} net`);
+          }
+        }
+
+        // Withdraw following order until remaining need is met (after RMDs)
         console.log('Withdrawal order:', order);
         for(const k of order){
           console.log(`Processing withdrawal kind: "${k}"`);
