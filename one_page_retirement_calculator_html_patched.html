@@ -253,7 +253,7 @@
         <h3>Inputs</h3>
         <div class="sections">
           <!-- Personal -->
-          <details open>
+          <details>
             <summary>
               <span>Personal & Timeline</span>
               <span class="chev">▶</span>
@@ -301,28 +301,29 @@
           </details>
 
           <!-- Spouse Information -->
-          <details open>
+          <details>
             <summary>
               <span>Spouse Information</span>
               <span class="chev">▶</span>
             </summary>
             <div class="content">
-              <div class="grid-1">
+              <div class="grid-2">
                 <div>
-                  <label for="spouseAge">Spouse current age
+                  <label for="spouseAge">Current age
                     <span class="help-icon-placeholder" data-field="spouseAge"></span>
                   </label>
                   <input id="spouseAge" type="number" min="18" max="80" step="1" value="0" />
                   <div class="hint">Set to 0 if no spouse</div>
                 </div>
-              </div>
-              <div class="grid-2">
                 <div>
                   <label for="spouseRetireAge">Retirement age
                     <span class="help-icon-placeholder" data-field="spouseRetireAge"></span>
                   </label>
                   <input id="spouseRetireAge" type="number" min="40" max="80" step="1" value="67" />
                 </div>
+              </div>
+              <div class="grid-1">
+                
                 <div>
                   <label for="spouseSsStart">Social Sec start age</label>
                   <input id="spouseSsStart" type="number" step="1" value="67" />
@@ -330,7 +331,7 @@
               </div>
               <div class="grid-2">
                 <div>
-                  <label for="spouseSsMonthly">Social Sec Disbursement ($/mo, first year)</label>
+                  <label for="spouseSsMonthly">$/Month (1st yr benefits)</label>
                   <input id="spouseSsMonthly" type="number" step="50" value="0" />
                 </div>
                 
@@ -369,7 +370,7 @@
           </details>
 
           <!-- Work & Contributions -->
-          <details open>
+          <details>
             <summary>
               <span>Work & Contributions</span>
               <span class="chev">▶</span>
@@ -402,7 +403,7 @@
                 <input id="rothPct" type="number" step="0.1" value="5" />
               </div>
               <div>
-                <label for="taxablePct">Taxable savings (% of salary)
+                <label for="taxablePct">Savings rate (% of salary)
                   <span class="help-icon-placeholder" data-field="taxablePct"></span>
                 </label>
                 <input id="taxablePct" type="number" step="0.1" value="2" />
@@ -419,13 +420,13 @@
           </details>
 
           <!-- Balances & Returns -->
-          <details open>
+          <details>
             <summary>
               <span>Balances & Returns</span>
               <span class="chev">▶</span>
             </summary>
             <div class="content">
-              <div class="grid-2">
+              <div class="grid-1">
                 <div>
                   <label for="balPre">Pre‑tax (401k/Trad IRA) balance
                     <svg xmlns="http://www.w3.org/2000/svg" 
@@ -442,24 +443,23 @@
                   </label>
                   <input id="balPre" type="number" step="1000" value="400000" />
                 </div>
+                <div class="grid-1">
                 <div>
-                  <label for="balRoth">Roth balance
-                    <svg xmlns="http://www.w3.org/2000/svg" 
-                         viewBox="0 0 24 24" 
-                         width="1em" height="1em" 
-                         fill="white" 
-                         class="help-icon"
-                         onclick="showHelpToast(event, 'balRoth')"
-                         style="vertical-align: middle;">
-                      <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none"/>
-                      <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
-                      <circle cx="12" cy="17" r="1" fill="white"/>
+                  <label for="balRoth">Roth balance (tax-free)
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1em" height="1em" fill="white" class="help-icon"
+                      onclick="showHelpToast(event, 'balRoth')" style="vertical-align: middle;">
+                      <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none" />
+                      <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2" fill="none"
+                        stroke-linecap="round" />
+                      <circle cx="12" cy="17" r="1" fill="white" />
                     </svg>
                   </label>
                   <input id="balRoth" type="number" step="1000" value="100000" />
                 </div>
-                <div>
-                  <label for="balTax">Taxable (brokerage) balance
+
+                </div>
+                <div class="grid-1">
+                  <label for="balTax">Savings balance (taxable interest/dividends)
                     <svg xmlns="http://www.w3.org/2000/svg" 
                          viewBox="0 0 24 24" 
                          width="1em" height="1em" 
@@ -509,7 +509,7 @@
                   <input id="retRoth" type="number" step="0.1" value="6.0" />
                 </div>
                 <div>
-                  <label for="retTax">Taxable return (%/yr)
+                  <label for="retTax">Savings return (APY)
                     <svg xmlns="http://www.w3.org/2000/svg" 
                          viewBox="0 0 24 24" 
                          width="1em" height="1em" 
