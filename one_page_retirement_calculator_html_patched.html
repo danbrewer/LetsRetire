@@ -249,12 +249,9 @@
       <small>Pre‑tax vs Roth vs Taxable • Social Security • Pension • Spouse benefits • Declining spending • Employer match</small>
     </div>
     <div>
-      <button id="exportJsonBtn" title="Export inputs as JSON file">Export JSON</button>
-      <button id="importJsonBtn" title="Import inputs from JSON file">Import JSON</button>
       <input type="file" id="jsonFileInput" accept=".json" style="display: none;">
-      <button id="demoBtn" title="Load example inputs">Load Example</button>
       <button id="clearBtn">Reset</button>
-      <button id="calcBtn" class="primary">Calculate ▶</button>
+      <button id="calcBtn" class="primary" title="Calculate (Ctrl+Enter)">Calculate ▶</button>
     </div>
   </header>
 
@@ -770,6 +767,8 @@
       </div>
       <div class="actions">
         <button id="csvBtn" title="Export yearly table">Export CSV</button>
+        <button id="exportJsonBtn" title="Export inputs as JSON file">Export JSON</button>
+        <button id="importJsonBtn" title="Import inputs from JSON file">Import JSON</button>
       </div>
     </section>
 
@@ -1373,6 +1372,12 @@
       if (e.key === 'Escape' && currentToast) {
         hideToast();
       }
+      
+      // Calculate button shortcut: Ctrl+Enter (or Cmd+Enter on Mac)
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        calc();
+      }
     });
 
     // Annual Spending Details Functions
@@ -1579,6 +1584,11 @@
     }
 
     function calc(){
+      // Enhanced retirement calculator with realistic working year modeling:
+      // - Calculates taxes on salary during working years
+      // - Subtracts current living expenses (retirement spending adjusted for inflation)
+      // - Limits taxable savings to what's actually available after taxes and expenses
+      
       const currentAge = num('currentAge');
       const retireAge  = num('retireAge');
       const endAge     = num('endAge');
@@ -1671,11 +1681,14 @@
 // Accumulation years
       for(let y = 0; y < yearsToRetire; y++){
         const age = currentAge + y;
+        
+        // Calculate current year living expenses (retirement spending adjusted to current year)
+        const currentYearSpending = spendingToday * pow1p(inflation, y);
+        
         // Desired contributions this year
         let desiredPre   = salary * pretaxPct;
         let desiredRoth  = salary * rothPct;
-        const cTax       = salary * taxablePct;
-
+        
         // 401k/Roth 401k elective deferral cap (employee-only)
         let electiveLimit = EMPLOYEE_401K_LIMIT_2025 + (age >= 50 ? EMPLOYEE_401K_CATCHUP_50 : 0);
         const totalDesired = desiredPre + desiredRoth;
@@ -1687,17 +1700,60 @@
         const actualPrePct = salary > 0 ? (cPre / salary) : 0;
         const match  = Math.min(actualPrePct, matchCap) * salary * matchRate;
 
+        // Calculate taxes on working income
+        // Taxable income = salary - pre-tax contributions
+        const taxableIncome = salary - cPre;
+        const workingYearTaxes = useAgiTax ? 
+          calculateFederalTax(taxableIncome, filingStatus) : 
+          taxableIncome * taxPre; // Use pre-tax rate as working tax rate fallback
+        
+        // After-tax income = salary - pre-tax contributions - taxes - Roth contributions
+        const afterTaxIncome = salary - cPre - workingYearTaxes - cRoth;
+        
+        // Available for spending and savings = after-tax income
+        const availableForSpendingAndSavings = afterTaxIncome;
+        
+        // Remaining after living expenses
+        const remainingAfterSpending = Math.max(0, availableForSpendingAndSavings - currentYearSpending);
+        
+        // Desired taxable savings rate amount
+        const desiredTaxableSavings = salary * taxablePct;
+        
+        // Actual taxable contribution = lesser of desired amount or what's available
+        const cTax = Math.min(desiredTaxableSavings, remainingAfterSpending);
+        
+        // Debug working year calculations (show for first few years)
+        if (y < 3) {
+          console.log(`Working Year ${y + 1} (Age ${age}):`);
+          console.log(`  Salary: ${fmt(salary)}`);
+          console.log(`  Pre-tax contrib: ${fmt(cPre)} | Roth contrib: ${fmt(cRoth)}`);
+          console.log(`  Taxable income: ${fmt(taxableIncome)} | Taxes: ${fmt(workingYearTaxes)}`);
+          console.log(`  After-tax income: ${fmt(afterTaxIncome)}`);
+          console.log(`  Living expenses: ${fmt(currentYearSpending)}`);
+          console.log(`  Remaining for savings: ${fmt(remainingAfterSpending)}`);
+          console.log(`  Desired taxable savings: ${fmt(desiredTaxableSavings)} | Actual: ${fmt(cTax)}`);
+          if (cTax < desiredTaxableSavings) {
+            console.log(`  ⚠️ Savings limited by available income (shortfall: ${fmt(desiredTaxableSavings - cTax)})`);
+          }
+        }
+
         balPre  = (balPre  + cPre + match) * (1 + retPre);
         balRoth = (balRoth + cRoth) * (1 + retRoth);
         balTax  = (balTax  + cTax) * (1 + retTax);
+
+        // Track total taxes paid during working years
+        totalTaxes += workingYearTaxes;
 
         rows.push({
           year: new Date().getFullYear() + y,
           age,
           salary,
           contrib: cPre + cRoth + cTax + match,
-          ss: 0, pen: 0, spouseSs: 0, spousePen: 0, spend: 0,
-          wNet: 0, wGross: 0, taxes: 0, effectiveTaxRate: 0,
+          ss: 0, pen: 0, spouseSs: 0, spousePen: 0, 
+          spend: currentYearSpending, // Show current year living expenses
+          wNet: 0, wGross: 0, 
+          taxes: workingYearTaxes, // Show working year taxes
+          effectiveTaxRate: salary > 0 ? (workingYearTaxes / salary) * 100 : 0,
           balTax, balPre, balRoth,
           total: balTax + balPre + balRoth
         });
@@ -2241,7 +2297,6 @@
     $('exportJsonBtn').addEventListener('click', exportJSON);
     $('importJsonBtn').addEventListener('click', importJSON);
     $('jsonFileInput').addEventListener('change', handleJSONFile);
-    $('demoBtn').addEventListener('click', loadExample);
     $('clearBtn').addEventListener('click', resetAll);
     $('useCurrentYearValues').addEventListener('change', function() {
       updateSpendingFieldsDisplayMode();
