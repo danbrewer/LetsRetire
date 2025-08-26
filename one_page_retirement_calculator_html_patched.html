@@ -764,14 +764,6 @@
               <div id="spendingDetailsGrid" class="grid-3">
                 <!-- Spending override fields will be dynamically generated here -->
               </div>
-            
-
-              <div class="grid-1">
-                <button type="button" id="generateSpendingFields" font-size: 12px;">Generate Fields for Current Ages</button>
-              </div>
-              <div class="grid-1">
-                                <span style="font-size: 12px; color: var(--muted); text-align: center;">(Click after Calculate)</span>
-              </div>
             </div>
           </details>
         </div>
@@ -826,6 +818,10 @@
   // --- Added by patch: 2025 elective deferral limits (401k/Roth 401k) ---
   const EMPLOYEE_401K_LIMIT_2025 = 23000;      // elective deferral
   const EMPLOYEE_401K_CATCHUP_50 = 7500;       // catch-up age 50+
+
+  // Track previous ages to only regenerate spending fields when they change
+  let lastRetireAge = null;
+  let lastEndAge = null;
 
     const $ = (id) => document.getElementById(id);
     const pct = (v) => (isNaN(v) ? 0 : Number(v)/100);
@@ -1384,8 +1380,8 @@
       const retireAge = num('retireAge');
       const endAge = num('endAge');
       
+      // Only generate if ages are valid
       if (retireAge <= 0 || endAge <= retireAge) {
-        showToast('Invalid Ages', 'Please set valid retirement and end ages first.', 'warning');
         return;
       }
 
@@ -1405,8 +1401,6 @@
         const field = document.getElementById(`spending_${age}`);
         field.addEventListener('blur', (event) => handleSpendingFieldChange(age, event));
       }
-
-      showToast('Fields Generated', `Created spending override fields for ages ${retireAge} to ${endAge}.`, 'success');
     }
 
     function getSpendingOverride(age) {
@@ -1450,9 +1444,9 @@
 
     function applyInflationToSpendingValue(currentYearValue, targetAge) {
       if (!currentYearValue) return 0;
-      const currentAge = parseInt(document.getElementById('current_age').value) || 0;
+      const currentAge = parseInt(document.getElementById('currentAge').value) || 0;
       const yearsFromNow = targetAge - currentAge;
-      const inflationRate = parseFloat(document.getElementById('cola').value) / 100 || 0.025;
+      const inflationRate = parseFloat(document.getElementById('inflation').value) / 100 || 0.025;
       return currentYearValue * Math.pow(1 + inflationRate, yearsFromNow);
     }
 
@@ -1497,13 +1491,10 @@
           field.placeholder = 'Current year $';
           
           if (currentValue > 0 && !storedCurrentYearValue) {
-            // Convert from inflated to current year value (reverse inflation)
-            const currentAge = parseInt(document.getElementById('current_age').value) || 0;
-            const yearsFromNow = age - currentAge;
-            const inflationRate = parseFloat(document.getElementById('cola').value) / 100 || 0.025;
-            const currentYearValue = currentValue / Math.pow(1 + inflationRate, yearsFromNow);
-            field.value = currentYearValue.toFixed(0);
-            field.setAttribute('data-current-year-value', currentYearValue);
+            // When switching to current year mode, assume the current field value 
+            // is already in current year dollars (user entered it as such)
+            // Store it as the current year value without conversion
+            field.setAttribute('data-current-year-value', currentValue);
           }
           
           // Update tooltip to show inflation calculation
@@ -1516,14 +1507,9 @@
           // Switch to inflated mode
           field.placeholder = 'Future $';
           
-          if (storedCurrentYearValue > 0) {
-            // Convert current year value to inflated and display
-            const inflatedValue = applyInflationToSpendingValue(storedCurrentYearValue, age);
-            field.value = inflatedValue.toFixed(0);
-            field.removeAttribute('data-current-year-value');
-          }
-          
-          // Clear tooltips when switching to inflated mode
+          // Don't change the field value - let the user keep what they typed
+          // Just clear the stored current year value and tooltips
+          field.removeAttribute('data-current-year-value');
           field.removeAttribute('title');
         }
       }
@@ -1599,6 +1585,14 @@
       const inflation  = pct(num('inflation'));
       const spendingToday = num('spendingToday');
       const spendingDecline = pct(num('spendingDecline'));
+
+      // Auto-generate spending override fields only if ages have changed
+      if (retireAge > 0 && endAge > retireAge && 
+          (lastRetireAge !== retireAge || lastEndAge !== endAge)) {
+        generateSpendingFields();
+        lastRetireAge = retireAge;
+        lastEndAge = endAge;
+      }
 
       // Spouse information
       const spouseAge = num('spouseAge');
@@ -1845,6 +1839,7 @@
         // Debug spending override
         if (spendingOverride !== null) {
           console.log(`Age ${age}: Using override spending $${spendingOverride.toLocaleString()} instead of auto $${spend.toLocaleString()}`);
+          console.log(`  Checkbox "Use current year values" is ${document.getElementById('useCurrentYearValues').checked ? 'CHECKED' : 'UNCHECKED'}`);
         }
         
         // Update placeholder to show auto-calculated value
@@ -2248,7 +2243,6 @@
     $('jsonFileInput').addEventListener('change', handleJSONFile);
     $('demoBtn').addEventListener('click', loadExample);
     $('clearBtn').addEventListener('click', resetAll);
-    $('generateSpendingFields').addEventListener('click', generateSpendingFields);
     $('useCurrentYearValues').addEventListener('change', function() {
       updateSpendingFieldsDisplayMode();
     });
