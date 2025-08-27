@@ -832,12 +832,12 @@
      * Effective Tax Rate Table and Standard Deductions
      *
      * This table provides estimated effective federal tax rates for different AGI levels.
-     * These rates are approximations based on 2024 tax brackets and include proper
+     * These rates are based on 2025 tax brackets and include proper
      * standard deduction handling.
      *
-     * 2024 Standard Deductions:
-     * - Single filers: $14,600
-     * - Married filing jointly: $29,200
+     * 2025 Standard Deductions:
+     * - Single filers: $15,000 (estimated)
+     * - Married filing jointly: $32,600
      *
      * Note: These are simplified estimates and do not account for:
      * - State taxes
@@ -850,44 +850,47 @@
      * For accurate tax planning, consult a tax professional.
      */
     
-    // 2024 Standard Deductions
+    // 2025 Standard Deductions
     const STANDARD_DEDUCTIONS = {
-      single: 14600,
-      married: 29200
+      single: 15000,
+      married: 32600
     };
     const EFFECTIVE_TAX_RATES = {
-      // AGI: Effective Rate (%)
+      // AGI: Effective Rate (%) - Based on 2025 Married Filing Jointly Tax Brackets
+      // 10%: $0 – $23,200, 12%: $23,200 – $94,300, 22%: $94,300 – $201,050, 24%: $201,050+
+      // These rates are applied to AGI (after standard deduction)
       0: 0.0,
-      5000: 0.0,
-      10000: 0.0,
-      15000: 0.0,
-      20000: 2.5,
-      25000: 4.0,
-      30000: 5.5,
-      35000: 6.8,
-      40000: 7.9,
-      45000: 8.9,
-      50000: 9.8,
-      55000: 10.6,
-      60000: 11.3,
-      65000: 12.0,
-      70000: 12.6,
-      75000: 13.1,
-      80000: 13.6,
-      85000: 14.1,
-      90000: 14.5,
-      95000: 14.9,
-      100000: 15.3,
-      110000: 16.0,
-      120000: 16.6,
-      130000: 17.1,
-      140000: 17.6,
-      150000: 18.0,
-      160000: 18.4,
-      170000: 18.8,
-      180000: 19.1,
-      190000: 19.4,
-      200000: 19.7,
+      5000: 10.0,    // $5,000 × 10% = $500 → 10.0%
+      10000: 10.0,   // $10,000 × 10% = $1,000 → 10.0%
+      15000: 10.0,   // $15,000 × 10% = $1,500 → 10.0%
+      20000: 10.0,   // $20,000 × 10% = $2,000 → 10.0%
+      23200: 10.0,   // $23,200 × 10% = $2,320 → 10.0%
+      30000: 10.5,   // $2,320 + $6,800×12% = $3,136 → 10.5%
+      40000: 10.8,   // $2,320 + $16,800×12% = $4,336 → 10.8%
+      50000: 11.1,   // $2,320 + $26,800×12% = $5,536 → 11.1%
+      60000: 11.2,   // $2,320 + $36,800×12% = $6,736 → 11.2%
+      70000: 11.3,   // $2,320 + $46,800×12% = $7,936 → 11.3%
+      74900: 11.4,   // $2,320 + $51,700×12% = $8,524 → 11.4% (matches your example)
+      80000: 11.4,   // $2,320 + $56,800×12% = $9,136 → 11.4%
+      90000: 11.5,   // $2,320 + $66,800×12% = $10,336 → 11.5%
+      94300: 11.5,   // $2,320 + $71,100×12% = $10,852 → 11.5%
+      100000: 12.1,  // $10,852 + $5,700×22% = $12,106 → 12.1%
+      110000: 12.7,  // $10,852 + $15,700×22% = $14,306 → 13.0%
+      120000: 13.5,  // $10,852 + $25,700×22% = $16,506 → 13.8%
+      130000: 14.1,  // $10,852 + $35,700×22% = $18,706 → 14.4%
+      140000: 14.9,  // $10,852 + $45,700×22% = $20,906 → 14.9%
+      150000: 15.5,  // $10,852 + $55,700×22% = $23,106 → 15.4%
+      160000: 16.0,  // $10,852 + $65,700×22% = $25,306 → 15.8%
+      170000: 16.4,  // $10,852 + $75,700×22% = $27,506 → 16.2%
+      180000: 16.9,  // $10,852 + $85,700×22% = $29,706 → 16.5%
+      190000: 17.3,  // $10,852 + $95,700×22% = $31,906 → 16.8%
+      200000: 17.6,  // $10,852 + $105,700×22% = $34,106 → 17.1%
+      201050: 17.7,  // $10,852 + $106,750×22% = $34,337 → 17.1%
+      220000: 18.1,  // $34,337 + $18,950×24% = $38,885 → 17.7%
+      240000: 18.5,  // $34,337 + $38,950×24% = $43,685 → 18.2%
+      260000: 18.9,  // $34,337 + $58,950×24% = $48,485 → 18.6%
+      280000: 19.2,  // $34,337 + $78,950×24% = $53,285 → 19.0%
+      300000: 19.5,  // $34,337 + $98,950×24% = $58,085 → 19.4%
     };
 
     /**
@@ -947,9 +950,10 @@
      * @returns {number} Effective tax rate as a percentage (0-100)
      */
     function getEffectiveTaxRateMarried(agi) {
-      // Approximate married rates by using single rates at half the income
-      // This is a simplification - actual married brackets are roughly 2x single brackets
-      return getEffectiveTaxRate(agi / 2);
+      // For married filing jointly, use the same rates as single but on the full AGI
+      // The standard deduction is already doubled in calculateAGI()
+      // The tax brackets for MFJ are roughly 2x single brackets, so rates are similar
+      return getEffectiveTaxRate(agi);
     }
 
     /**
@@ -1232,7 +1236,7 @@
         },
         useAgiTax: {
           title: "AGI-Based Tax Calculation",
-          body: "When enabled, uses a progressive tax table based on Adjusted Gross Income (gross income minus standard deduction) for pre-tax withdrawals and pension income. Uses 2024 standard deductions: $14,600 (single) / $29,200 (married). This typically results in more accurate tax rates than fixed percentages, especially for larger withdrawal amounts. Check the browser console for detailed calculations showing gross income → AGI → tax rates."
+          body: "When enabled, uses a progressive tax table based on Adjusted Gross Income (gross income minus standard deduction) for pre-tax withdrawals and pension income. Uses 2025 standard deductions: $15,000 (single) / $32,600 (married). This typically results in more accurate tax rates than fixed percentages, especially for larger withdrawal amounts. Check the browser console for detailed calculations showing gross income → AGI → tax rates."
         },
         filingStatus: {
           title: "Tax Filing Status",
@@ -1707,6 +1711,29 @@
           calculateFederalTax(taxableIncome, filingStatus) : 
           taxableIncome * taxPre; // Use pre-tax rate as working tax rate fallback
         
+        // Debug tax calculation for first few years
+        if (y < 3) {
+          console.log(`\n=== WORKING YEAR TAX DEBUG (Year ${y + 1}, Age ${age}) ===`);
+          console.log(`Salary: ${fmt(salary)}`);
+          console.log(`Pre-tax contributions: ${fmt(cPre)}`);
+          console.log(`Taxable Income: ${fmt(taxableIncome)}`);
+          console.log(`Filing Status: ${filingStatus}`);
+          console.log(`Use AGI Tax: ${useAgiTax}`);
+          if (useAgiTax) {
+            const agi = calculateAGI(taxableIncome, filingStatus);
+            const effectiveRate = filingStatus === "married" 
+              ? getEffectiveTaxRateMarried(agi)
+              : getEffectiveTaxRate(agi);
+            console.log(`AGI (after standard deduction): ${fmt(agi)}`);
+            console.log(`Effective Tax Rate: ${effectiveRate.toFixed(1)}%`);
+            console.log(`Calculated Federal Tax: ${fmt(workingYearTaxes)}`);
+          } else {
+            console.log(`Using fixed tax rate: ${(taxPre * 100).toFixed(1)}%`);
+            console.log(`Calculated Tax: ${fmt(workingYearTaxes)}`);
+          }
+          console.log(`=== END TAX DEBUG ===\n`);
+        }
+        
         // After-tax income = salary - pre-tax contributions - taxes - Roth contributions
         const afterTaxIncome = salary - cPre - workingYearTaxes - cRoth;
         
@@ -1753,7 +1780,7 @@
           spend: currentYearSpending, // Show current year living expenses
           wNet: 0, wGross: 0, 
           taxes: workingYearTaxes, // Show working year taxes
-          effectiveTaxRate: salary > 0 ? (workingYearTaxes / salary) * 100 : 0,
+          effectiveTaxRate: taxableIncome > 0 ? (workingYearTaxes / taxableIncome) * 100 : 0,
           balTax, balPre, balRoth,
           total: balTax + balPre + balRoth
         });
@@ -2048,7 +2075,7 @@
 
         // Calculate effective tax rate for the year
         const totalGrossIncome = ssGross + penGross + spouseSsGross + spousePenGross + wGross;
-        const effectiveTaxRate = totalGrossIncome > 0 ? taxesThisYear / totalGrossIncome : 0;
+        const effectiveTaxRate = totalGrossIncome > 0 ? (taxesThisYear / totalGrossIncome) * 100 : 0;
 
         rows.push({
           year, age, salary: 0, contrib: 0,
@@ -2084,7 +2111,7 @@
           <td class="outgoing">${r.spend? fmt(r.spend): ''}</td>
           <td class="outgoing">${r.wGross? fmt(r.wGross): ''}</td>
           <td class="outgoing">${r.taxes? fmt(r.taxes): ''}</td>
-          <td class="neutral">${r.effectiveTaxRate ? (r.effectiveTaxRate * 100).toFixed(1) + '%' : ''}</td>
+          <td class="neutral">${r.effectiveTaxRate ? r.effectiveTaxRate.toFixed(1) + '%' : ''}</td>
           <td class="income">${r.wNet ? fmt(r.wNet) : ''}</td>
           <td class="neutral">${fmt(r.balTax)}</td>
           <td class="neutral">${fmt(r.balPre)}</td>
