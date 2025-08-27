@@ -702,7 +702,7 @@
                 <div style="display: flex; align-items: center; gap: 5px;">
                   <input type="checkbox" id="useAgiTax" checked style="width: auto;" />
                   <label for="useAgiTax">
-                    Use AGI-based tax calculation for pre-tax withdrawals and pension income
+                    Use Taxable Income-based tax calculation for pre-tax withdrawals and pension income
                     <span class="help-icon-placeholder" data-field="useAgiTax"></span>
                   </label>
                 </div>
@@ -831,7 +831,7 @@
     /**
      * Effective Tax Rate Table and Standard Deductions
      *
-     * This table provides estimated effective federal tax rates for different AGI levels.
+     * This table provides estimated effective federal tax rates for different Taxable Income levels.
      * These rates are based on 2025 tax brackets and include proper
      * standard deduction handling.
      *
@@ -856,9 +856,9 @@
       married: 32600
     };
     const EFFECTIVE_TAX_RATES = {
-      // AGI: Effective Rate (%) - Based on 2025 Married Filing Jointly Tax Brackets
+      // Taxable Income: Effective Rate (%) - Based on 2025 Married Filing Jointly Tax Brackets
       // 10%: $0 – $23,200, 12%: $23,200 – $94,300, 22%: $94,300 – $201,050, 24%: $201,050+
-      // These rates are applied to AGI (after standard deduction)
+      // These rates are applied to Taxable Income (after standard deduction)
       0: 0.0,
       5000: 10.0,    // $5,000 × 10% = $500 → 10.0%
       10000: 10.0,   // $10,000 × 10% = $1,000 → 10.0%
@@ -894,44 +894,44 @@
     };
 
     /**
-     * Calculate AGI by subtracting standard deduction from gross income
+     * Calculate Taxable Income by subtracting standard deduction from gross income
      * @param {number} grossIncome - Total gross income
      * @param {string} filingStatus - 'single' or 'married'
      * @returns {number} Adjusted Gross Income (cannot be negative)
      */
-    function calculateAGI(grossIncome, filingStatus = "single") {
+    function calculateTaxableIncome(grossIncome, filingStatus = "single") {
       const standardDeduction = STANDARD_DEDUCTIONS[filingStatus] || STANDARD_DEDUCTIONS.single;
       return Math.max(0, grossIncome - standardDeduction);
     }
 
     /**
-     * Calculate effective tax rate for a given AGI using linear interpolation
-     * @param {number} agi - Adjusted Gross Income
+     * Calculate effective tax rate for a given Taxable Income using linear interpolation
+     * @param {number} taxableIncome - Adjusted Gross Income
      * @returns {number} Effective tax rate as a percentage (0-100)
      */
-    function getEffectiveTaxRate(agi) {
+    function getEffectiveTaxRate(taxableIncome) {
       // Handle edge cases
-      if (agi <= 0) return 0;
-      if (agi >= 200000) return EFFECTIVE_TAX_RATES[200000];
+      if (taxableIncome <= 0) return 0;
+      if (taxableIncome >= 200000) return EFFECTIVE_TAX_RATES[200000];
 
-      // Find the two closest AGI levels for interpolation
-      const agiLevels = Object.keys(EFFECTIVE_TAX_RATES)
+      // Find the two closest taxable income levels for interpolation
+      const taxableIncomeLevels = Object.keys(EFFECTIVE_TAX_RATES)
         .map(Number)
         .sort((a, b) => a - b);
 
       // Find exact match
-      if (EFFECTIVE_TAX_RATES[agi] !== undefined) {
-        return EFFECTIVE_TAX_RATES[agi];
+      if (EFFECTIVE_TAX_RATES[taxableIncome] !== undefined) {
+        return EFFECTIVE_TAX_RATES[taxableIncome];
       }
 
       // Find interpolation points
       let lowerAgi = 0;
       let upperAgi = 200000;
 
-      for (let i = 0; i < agiLevels.length - 1; i++) {
-        if (agi >= agiLevels[i] && agi <= agiLevels[i + 1]) {
-          lowerAgi = agiLevels[i];
-          upperAgi = agiLevels[i + 1];
+      for (let i = 0; i < taxableIncomeLevels.length - 1; i++) {
+        if (taxableIncome >= taxableIncomeLevels[i] && taxableIncome <= taxableIncomeLevels[i + 1]) {
+          lowerAgi = taxableIncomeLevels[i];
+          upperAgi = taxableIncomeLevels[i + 1];
           break;
         }
       }
@@ -939,21 +939,21 @@
       // Linear interpolation
       const lowerRate = EFFECTIVE_TAX_RATES[lowerAgi];
       const upperRate = EFFECTIVE_TAX_RATES[upperAgi];
-      const ratio = (agi - lowerAgi) / (upperAgi - lowerAgi);
+      const ratio = (taxableIncome - lowerAgi) / (upperAgi - lowerAgi);
 
       return lowerRate + (upperRate - lowerRate) * ratio;
     }
 
     /**
      * Calculate effective tax rate for married filing jointly (approximately 2x the single brackets)
-     * @param {number} agi - Adjusted Gross Income for married couple
+     * @param {number} taxableIncome - Adjusted Gross Income for married couple
      * @returns {number} Effective tax rate as a percentage (0-100)
      */
-    function getEffectiveTaxRateMarried(agi) {
-      // For married filing jointly, use the same rates as single but on the full AGI
-      // The standard deduction is already doubled in calculateAGI()
+    function getEffectiveTaxRateMarried(taxableIncome) {
+      // For married filing jointly, use the same rates as single but on the full Taxable Income
+      // The standard deduction is already doubled in calculateTaxableIncome()
       // The tax brackets for MFJ are roughly 2x single brackets, so rates are similar
-      return getEffectiveTaxRate(agi);
+      return getEffectiveTaxRate(taxableIncome);
     }
 
     /**
@@ -963,17 +963,17 @@
      * @returns {number} Estimated federal tax amount
      */
     function calculateFederalTax(grossIncome, filingStatus = "single") {
-      // First calculate AGI by subtracting standard deduction
-      const agi = calculateAGI(grossIncome, filingStatus);
+      // First calculate Taxable Income by subtracting standard deduction
+      const taxableIncome = calculateTaxableIncome(grossIncome, filingStatus);
       
-      // Then get effective rate based on AGI
+      // Then get effective rate based on Taxable Income
       const effectiveRate =
         filingStatus === "married"
-          ? getEffectiveTaxRateMarried(agi)
-          : getEffectiveTaxRate(agi);
+          ? getEffectiveTaxRateMarried(taxableIncome)
+          : getEffectiveTaxRate(taxableIncome);
 
-      // Tax is calculated on the AGI, not gross income
-      return agi * (effectiveRate / 100);
+      // Tax is calculated on the Taxable Income, not gross income
+      return taxableIncome * (effectiveRate / 100);
     }
 
     /**
@@ -1007,25 +1007,25 @@
       const testGrossIncomes = [25000, 50000, 75000, 100000, 150000, 200000];
       
       testGrossIncomes.forEach(grossIncome => {
-        const agi = calculateAGI(grossIncome, filingStatus);
+        const taxableIncome = calculateTaxableIncome(grossIncome, filingStatus);
         const effectiveRate = filingStatus === "married" 
-          ? getEffectiveTaxRateMarried(agi)
-          : getEffectiveTaxRate(agi);
+          ? getEffectiveTaxRateMarried(taxableIncome)
+          : getEffectiveTaxRate(taxableIncome);
         const taxAmount = calculateFederalTax(grossIncome, filingStatus);
         const marginalRate = getMarginalTaxRate(grossIncome, 1000, filingStatus);
         
-        console.log(`Gross $${grossIncome.toLocaleString()} → AGI $${agi.toLocaleString()}: Effective ${effectiveRate.toFixed(1)}%, Tax $${Math.round(taxAmount).toLocaleString()}, Marginal ${marginalRate.toFixed(1)}%`);
+        console.log(`Gross $${grossIncome.toLocaleString()} → Taxable Income $${taxableIncome.toLocaleString()}: Effective ${effectiveRate.toFixed(1)}%, Tax $${Math.round(taxAmount).toLocaleString()}, Marginal ${marginalRate.toFixed(1)}%`);
       });
       console.log("=================================\n");
     }
 
     // Social Security taxation calculation based on provisional income
-    function calculateSSTaxableAmount(ssGross, otherAGI, isMarried = false) {
+    function calculateSSTaxableAmount(ssGross, otherTaxableIncome, isMarried = false) {
       if (ssGross <= 0) return 0;
       
-      // Calculate provisional income: AGI + non-taxable interest + 50% of SS benefits
+      // Calculate provisional income: Taxable Income + non-taxable interest + 50% of SS benefits
       // For simplicity, we'll assume no non-taxable interest
-      const provisionalIncome = otherAGI + (ssGross * 0.5);
+      const provisionalIncome = otherTaxableIncome + (ssGross * 0.5);
       
       // Set thresholds based on filing status
       const threshold1 = isMarried ? 32000 : 25000;  // 0% to 50% transition
@@ -1212,7 +1212,7 @@
         },
         taxPre: {
           title: "Pre-tax Withdrawal Tax Rate",
-          body: "The baseline effective tax rate on withdrawals from pre-tax retirement accounts. The calculator uses AGI-based rates for more accuracy when total income is significant, but falls back to this rate as a minimum."
+          body: "The baseline effective tax rate on withdrawals from pre-tax retirement accounts. The calculator uses Taxable Income-based rates for more accuracy when total income is significant, but falls back to this rate as a minimum."
         },
         taxTaxable: {
           title: "Taxable Withdrawal Tax Rate",
@@ -1228,19 +1228,19 @@
         },
         taxPension: {
           title: "Pension Tax Rate",
-          body: "The baseline effective tax rate on pension benefits. When AGI-based calculation is enabled, the calculator uses progressive tax rates based on total income, but falls back to this rate as a minimum. Usually taxed as ordinary income at your marginal tax rate."
+          body: "The baseline effective tax rate on pension benefits. When Taxable Income-based calculation is enabled, the calculator uses progressive tax rates based on total income, but falls back to this rate as a minimum. Usually taxed as ordinary income at your marginal tax rate."
         },
         order: {
           title: "Withdrawal Order Strategy",
           body: "The order in which you'll withdraw from different account types. The default strategy withdraws from taxable first, then pre-tax, then Roth to optimize taxes."
         },
         useAgiTax: {
-          title: "AGI-Based Tax Calculation",
-          body: "When enabled, uses a progressive tax table based on Adjusted Gross Income (gross income minus standard deduction) for pre-tax withdrawals and pension income. Uses 2025 standard deductions: $15,000 (single) / $32,600 (married). This typically results in more accurate tax rates than fixed percentages, especially for larger withdrawal amounts. Check the browser console for detailed calculations showing gross income → AGI → tax rates."
+          title: "Taxable Income-Based Tax Calculation",
+          body: "When enabled, uses a progressive tax table based on Adjusted Gross Income (gross income minus standard deduction) for pre-tax withdrawals and pension income. Uses 2025 standard deductions: $15,000 (single) / $32,600 (married). This typically results in more accurate tax rates than fixed percentages, especially for larger withdrawal amounts. Check the browser console for detailed calculations showing gross income → Taxable Income → tax rates."
         },
         filingStatus: {
           title: "Tax Filing Status",
-          body: "Your tax filing status affects Social Security taxation thresholds and AGI-based tax calculations. Single filers have lower thresholds for SS taxation than married filing jointly."
+          body: "Your tax filing status affects Social Security taxation thresholds and Taxable Income-based tax calculations. Single filers have lower thresholds for SS taxation than married filing jointly."
         },
         useSSRules: {
           title: "Proper Social Security Taxation",
@@ -1718,13 +1718,13 @@
           console.log(`Pre-tax contributions: ${fmt(cPre)}`);
           console.log(`Taxable Income: ${fmt(taxableIncome)}`);
           console.log(`Filing Status: ${filingStatus}`);
-          console.log(`Use AGI Tax: ${useAgiTax}`);
+          console.log(`Use Taxable Income Tax: ${useAgiTax}`);
           if (useAgiTax) {
-            const agi = calculateAGI(taxableIncome, filingStatus);
+            const taxableIncome = calculateTaxableIncome(taxableIncome, filingStatus);
             const effectiveRate = filingStatus === "married" 
-              ? getEffectiveTaxRateMarried(agi)
-              : getEffectiveTaxRate(agi);
-            console.log(`AGI (after standard deduction): ${fmt(agi)}`);
+              ? getEffectiveTaxRateMarried(taxableIncome)
+              : getEffectiveTaxRate(taxableIncome);
+            console.log(`Taxable Income (after standard deduction): ${fmt(taxableIncome)}`);
             console.log(`Effective Tax Rate: ${effectiveRate.toFixed(1)}%`);
             console.log(`Calculated Federal Tax: ${fmt(workingYearTaxes)}`);
           } else {
@@ -1831,8 +1831,8 @@
           spousePenGross = hasSpousePen ? spousePenAnnual : 0;
         }
 
-        // Calculate total taxable income for AGI-based tax calculation (before SS tax calculation)
-        let totalAGI = penGross + spousePenGross; // Start with pension income
+        // Calculate total taxable income for Taxable Income-based tax calculation (before SS tax calculation)
+        let totalTaxableIncome = penGross + spousePenGross; // Start with pension income
         
         // Calculate Social Security taxation
         const useSSRules = $('useSSRules').checked;
@@ -1841,71 +1841,71 @@
         let ssNet, spouseSsNet;
         if (useSSRules && ssGross > 0) {
           // Use proper SS taxation rules based on provisional income
-          var ssTaxableAmount = calculateSSTaxableAmount(ssGross, totalAGI, isMarried);
-          // Calculate AGI for tax rate determination (total income minus standard deduction)
-          const grossIncomeForTax = totalAGI + ssTaxableAmount;
+          var ssTaxableAmount = calculateSSTaxableAmount(ssGross, totalTaxableIncome, isMarried);
+          // Calculate Taxable Income for tax rate determination (total income minus standard deduction)
+          const grossIncomeForTax = totalTaxableIncome + ssTaxableAmount;
           const effectiveRate = isMarried 
-            ? getEffectiveTaxRateMarried(calculateAGI(grossIncomeForTax, "married"))
-            : getEffectiveTaxRate(calculateAGI(grossIncomeForTax, "single"));
+            ? getEffectiveTaxRateMarried(calculateTaxableIncome(grossIncomeForTax, "married"))
+            : getEffectiveTaxRate(calculateTaxableIncome(grossIncomeForTax, "single"));
           const ssTaxes = ssTaxableAmount * (effectiveRate / 100);
           ssNet = ssGross - ssTaxes;
-          totalAGI += ssTaxableAmount; // Add taxable portion to AGI
+          totalTaxableIncome += ssTaxableAmount; // Add taxable portion to Taxable Income
           console.log(`SS: Gross $${ssGross.toLocaleString()}, Taxable $${ssTaxableAmount.toLocaleString()}, Tax $${ssTaxes.toLocaleString()}, Net $${ssNet.toLocaleString()}`);
         } else {
           // Use simple fixed percentage method
           const approxSSTaxablexable = ssGross * 0.85;
-          const grossIncomeForTax_simple = totalAGI + approxSSTaxablexable;
+          const grossIncomeForTax_simple = totalTaxableIncome + approxSSTaxablexable;
           const effRate_simple = isMarried 
-            ? getEffectiveTaxRateMarried(calculateAGI(grossIncomeForTax_simple, "married"))
-            : getEffectiveTaxRate(calculateAGI(grossIncomeForTax_simple, "single"));
+            ? getEffectiveTaxRateMarried(calculateTaxableIncome(grossIncomeForTax_simple, "married"))
+            : getEffectiveTaxRate(calculateTaxableIncome(grossIncomeForTax_simple, "single"));
           const ssTaxes_simple = approxSSTaxablexable * (effRate_simple / 100);
           ssNet = ssGross - ssTaxes_simple;
           var ssTaxableAmount = approxSSTaxablexable;
-          totalAGI += ssTaxableAmount;
+          totalTaxableIncome += ssTaxableAmount;
         }
         
         
         if (useSSRules && spouseSsGross > 0) {
-          var spouseSsTaxableAmount = calculateSSTaxableAmount(spouseSsGross, totalAGI, isMarried);
-          const grossIncomeForTax = totalAGI + spouseSsTaxableAmount;
+          var spouseSsTaxableAmount = calculateSSTaxableAmount(spouseSsGross, totalTaxableIncome, isMarried);
+          const grossIncomeForTax = totalTaxableIncome + spouseSsTaxableAmount;
           const effectiveRate = isMarried 
-            ? getEffectiveTaxRateMarried(calculateAGI(grossIncomeForTax, "married"))
-            : getEffectiveTaxRate(calculateAGI(grossIncomeForTax, "single"));
+            ? getEffectiveTaxRateMarried(calculateTaxableIncome(grossIncomeForTax, "married"))
+            : getEffectiveTaxRate(calculateTaxableIncome(grossIncomeForTax, "single"));
           const spouseSsTaxes = spouseSsTaxableAmount * (effectiveRate / 100);
           spouseSsNet = spouseSsGross - spouseSsTaxes;
-          totalAGI += spouseSsTaxableAmount;
+          totalTaxableIncome += spouseSsTaxableAmount;
         } else {
           const spouseApproxTaxable = spouseSsGross * 0.85;
-          const spouseGrossIncomeForTax_simple = totalAGI + spouseApproxTaxable;
+          const spouseGrossIncomeForTax_simple = totalTaxableIncome + spouseApproxTaxable;
           const spouseEffRate_simple = isMarried 
-            ? getEffectiveTaxRateMarried(calculateAGI(spouseGrossIncomeForTax_simple, "married"))
-            : getEffectiveTaxRate(calculateAGI(spouseGrossIncomeForTax_simple, "single"));
+            ? getEffectiveTaxRateMarried(calculateTaxableIncome(spouseGrossIncomeForTax_simple, "married"))
+            : getEffectiveTaxRate(calculateTaxableIncome(spouseGrossIncomeForTax_simple, "single"));
           const spouseSsTaxes_simple = spouseApproxTaxable * (spouseEffRate_simple / 100);
           spouseSsNet = spouseSsGross - spouseSsTaxes_simple;
           var spouseSsTaxableAmount = spouseApproxTaxable;
-          totalAGI += spouseSsTaxableAmount;
+          totalTaxableIncome += spouseSsTaxableAmount;
         }
 
-        // Calculate pension taxation - use AGI-based calculation if enabled
+        // Calculate pension taxation - use Taxable Income-based calculation if enabled
         const useAgiTax = $('useAgiTax').checked;
         const filingStatus = $('filingStatus').value;
         let pensionTaxRate = taxPension;
         let spousePensionTaxRate = spouseTaxPension;
         
         if (useAgiTax) {
-          // For pension taxation, include all income in AGI calculation
+          // For pension taxation, include all income in Taxable Income calculation
           const grossIncomeForPensionTax = (penGross + spousePenGross) + (ssTaxableAmount || 0) + (spouseSsTaxableAmount || 0);
-          const agiForPensionTax = calculateAGI(grossIncomeForPensionTax, filingStatus);
-          const agiBasedRate = filingStatus === "married" 
-            ? getEffectiveTaxRateMarried(agiForPensionTax)
-            : getEffectiveTaxRate(agiForPensionTax);
+          const taxableIncomeForPensionTax = calculateTaxableIncome(grossIncomeForPensionTax, filingStatus);
+          const taxableIncomeBasedRate = filingStatus === "married" 
+            ? getEffectiveTaxRateMarried(taxableIncomeForPensionTax)
+            : getEffectiveTaxRate(taxableIncomeForPensionTax);
           
-          // Convert to decimal and use the higher of AGI rate or fixed rate
-          const agiRateDecimal = agiBasedRate / 100;
-          pensionTaxRate = Math.max(taxPension, agiRateDecimal);
-          spousePensionTaxRate = Math.max(spouseTaxPension, agiRateDecimal);
+          // Convert to decimal and use the higher of Taxable Income rate or fixed rate
+          const taxableIncomeRateDecimal = taxableIncomeBasedRate / 100;
+          pensionTaxRate = Math.max(taxPension, taxableIncomeRateDecimal);
+          spousePensionTaxRate = Math.max(spouseTaxPension, taxableIncomeRateDecimal);
           
-          console.log(`Pension AGI Tax Calc: Gross Income: $${grossIncomeForPensionTax.toLocaleString()}, AGI: $${agiForPensionTax.toLocaleString()}, Filing: ${filingStatus}, AGI Rate: ${agiBasedRate.toFixed(1)}%, Fixed Rate: ${(taxPension*100).toFixed(1)}%, Using: ${(pensionTaxRate*100).toFixed(1)}%`);
+          console.log(`Pension Taxable Income Tax Calc: Gross Income: $${grossIncomeForPensionTax.toLocaleString()}, Taxable Income: $${taxableIncomeForPensionTax.toLocaleString()}, Filing: ${filingStatus}, Taxable Income Rate: ${taxableIncomeBasedRate.toFixed(1)}%, Fixed Rate: ${(taxPension*100).toFixed(1)}%, Using: ${(pensionTaxRate*100).toFixed(1)}%`);
         }
         
         const penNet = penGross * (1 - pensionTaxRate);
@@ -1938,8 +1938,8 @@
         const spouseSsTaxes = spouseSsGross - spouseSsNet;
         let taxesThisYear = penTaxes + spousePenTaxes + ssTaxes + spouseSsTaxes;
 
-        // Calculate total taxable income for AGI-based tax calculation
-        totalAGI = (penGross + spousePenGross) + (ssTaxableAmount || 0) + (spouseSsTaxableAmount || 0);
+        // Calculate total taxable income for Taxable Income-based tax calculation
+        totalTaxableIncome = (penGross + spousePenGross) + (ssTaxableAmount || 0) + (spouseSsTaxableAmount || 0);
 
         function withdrawFrom(kind, netAmount){
           console.log(`withdrawFrom called with kind: "${kind}", netAmount: ${netAmount}`);
@@ -1970,7 +1970,7 @@
             return { gross: 0, net: 0 };
           }
 
-          // Use AGI-based calculation for pre-tax withdrawals if enabled, fixed rates for others
+          // Use Taxable Income-based calculation for pre-tax withdrawals if enabled, fixed rates for others
           let taxRate = fixedTaxRate;
           const useAgiCalculation = $('useAgiTax').checked;
           const filingStatus = $('filingStatus').value;
@@ -1978,19 +1978,19 @@
           if (kind === 'pretax' && useAgiCalculation) {
             // Estimate gross withdrawal needed (start with fixed rate estimate)
             const estimatedGrossWithdrawal = netAmount / (1 - fixedTaxRate);
-            const projectedGrossIncome = totalAGI + estimatedGrossWithdrawal;
+            const projectedGrossIncome = totalTaxableIncome + estimatedGrossWithdrawal;
             
-            // Calculate AGI by subtracting standard deduction, then get effective rate
-            const projectedAGI = calculateAGI(projectedGrossIncome, filingStatus);
-            const agiBasedRate = filingStatus === "married" 
-              ? getEffectiveTaxRateMarried(projectedAGI)
-              : getEffectiveTaxRate(projectedAGI);
+            // Calculate Taxable Income by subtracting standard deduction, then get effective rate
+            const projectedTaxableIncome = calculateTaxableIncome(projectedGrossIncome, filingStatus);
+            const taxableIncomeBasedRate = filingStatus === "married" 
+              ? getEffectiveTaxRateMarried(projectedTaxableIncome)
+              : getEffectiveTaxRate(projectedTaxableIncome);
             
-            // Convert AGI rate to decimal and use the higher of AGI rate or fixed rate
-            const agiRateDecimal = agiBasedRate / 100;
-            taxRate = Math.max(fixedTaxRate, agiRateDecimal);
+            // Convert Taxable Income rate to decimal and use the higher of Taxable Income rate or fixed rate
+            const taxableIncomeRateDecimal = taxableIncomeBasedRate / 100;
+            taxRate = Math.max(fixedTaxRate, taxableIncomeRateDecimal);
             
-            console.log(`Gross Income: $${projectedGrossIncome.toLocaleString()}, AGI: $${projectedAGI.toLocaleString()}, Filing: ${filingStatus}, AGI Rate: ${agiBasedRate.toFixed(1)}%, Fixed Rate: ${(fixedTaxRate*100).toFixed(1)}%, Using: ${(taxRate*100).toFixed(1)}%`);
+            console.log(`Gross Income: $${projectedGrossIncome.toLocaleString()}, Taxable Income: $${projectedTaxableIncome.toLocaleString()}, Filing: ${filingStatus}, Taxable Income Rate: ${taxableIncomeBasedRate.toFixed(1)}%, Fixed Rate: ${(fixedTaxRate*100).toFixed(1)}%, Using: ${(taxRate*100).toFixed(1)}%`);
           }
 
           const grossNeeded = netAmount / (1 - taxRate);
@@ -2000,9 +2000,9 @@
           setBal(balRef - grossTake);
           taxesThisYear += taxPaid;
           
-          // Add pre-tax withdrawals to AGI for subsequent calculations
+          // Add pre-tax withdrawals to Taxable Income for subsequent calculations
           if (kind === 'pretax') {
-            totalAGI += grossTake;
+            totalTaxableIncome += grossTake;
           }
           
           return { gross: grossTake, net: netReceived };
@@ -2025,20 +2025,20 @@
           const filingStatus = $('filingStatus').value;
           
           if (useAgiCalculation) {
-            const projectedGrossIncome = totalAGI + actualGross;
-            const projectedAGI = calculateAGI(projectedGrossIncome, filingStatus);
-            const agiBasedRate = filingStatus === "married" 
-              ? getEffectiveTaxRateMarried(projectedAGI)
-              : getEffectiveTaxRate(projectedAGI);
-            const agiRateDecimal = agiBasedRate / 100;
-            taxRate = Math.max(taxPre, agiRateDecimal);
+            const projectedGrossIncome = totalTaxableIncome + actualGross;
+            const projectedTaxableIncome = calculateTaxableIncome(projectedGrossIncome, filingStatus);
+            const taxableIncomeBasedRate = filingStatus === "married" 
+              ? getEffectiveTaxRateMarried(projectedTaxableIncome)
+              : getEffectiveTaxRate(projectedTaxableIncome);
+            const taxableIncomeRateDecimal = taxableIncomeBasedRate / 100;
+            taxRate = Math.max(taxPre, taxableIncomeRateDecimal);
           }
           
           const netReceived = actualGross * (1 - taxRate);
           const taxPaid = actualGross - netReceived;
           balPre -= actualGross;
           taxesThisYear += taxPaid;
-          totalAGI += actualGross;
+          totalTaxableIncome += actualGross;
           
           return { gross: actualGross, net: netReceived };
         }
