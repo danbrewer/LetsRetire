@@ -418,11 +418,11 @@
                 <input id="taxablePct" type="number" step="0.1" value="2" />
               </div>
               <div>
-                <label for="matchCap">Employer match up to (% of salary)</label>
+                <label for="matchCap">Employer 401k match up to (% of salary)</label>
                 <input id="matchCap" type="number" step="0.1" value="4" />
               </div>
               <div>
-                <label for="matchRate">Employer match rate (%)</label>
+                <label for="matchRate">Employer 401k match rate (%)</label>
                 <input id="matchRate" type="number" step="1" value="50" />
               </div>
             </div>
@@ -1655,7 +1655,7 @@
       // Fallback to default order if parsing failed
       if (order.length === 0) {
         order.push('taxable', 'pretax', 'roth');
-        console.log('Using fallback order:', order);
+        console.log('Using fallback withdrawal order:', order);
       }
 
       if(retireAge <= currentAge || endAge <= retireAge){
@@ -1682,7 +1682,7 @@
       const spendAtRetire = spendingToday * pow1p(inflation, yearsToRetire);
 
       
-// Accumulation years
+      // Accumulation years
       for(let y = 0; y < yearsToRetire; y++){
         const age = currentAge + y;
         
@@ -1706,7 +1706,8 @@
 
         // Calculate taxes on working income
         // Taxable income = salary - pre-tax contributions
-        const taxableIncome = salary - cPre;
+        let taxableIncome = salary - cPre;
+        debugger;
         const workingYearTaxes = useAgiTax ? 
           calculateFederalTax(taxableIncome, filingStatus) : 
           taxableIncome * taxPre; // Use pre-tax rate as working tax rate fallback
@@ -1720,7 +1721,7 @@
           console.log(`Filing Status: ${filingStatus}`);
           console.log(`Use Taxable Income Tax: ${useAgiTax}`);
           if (useAgiTax) {
-            const taxableIncome = calculateTaxableIncome(taxableIncome, filingStatus);
+            taxableIncome = calculateTaxableIncome(taxableIncome, filingStatus);
             const effectiveRate = filingStatus === "married" 
               ? getEffectiveTaxRateMarried(taxableIncome)
               : getEffectiveTaxRate(taxableIncome);
