@@ -1152,7 +1152,7 @@
         },
         taxablePct: {
           title: "Taxable Savings Rate",
-          body: "The percentage of your salary saved in regular taxable investment accounts. These provide flexibility but don't have tax advantages."
+          body: "The percentage of your salary saved in regular taxable investment accounts. These provide flexibility but don't have tax advantages. Note: Interest and dividends earned on these accounts are included in your taxable income each year during working years."
         },
         matchCap: {
           title: "Employer Match Cap",
@@ -1704,28 +1704,33 @@
         const actualPrePct = salary > 0 ? (cPre / salary) : 0;
         const match  = Math.min(actualPrePct, matchCap) * salary * matchRate;
 
-        // Calculate taxes on working income
-        // Taxable income = salary - pre-tax contributions
-        let taxableIncome = salary - cPre;
-        debugger;
+        // Calculate taxes on working income including taxable interest
+        // Interest earned on current taxable balance (before adding new contributions)
+        const taxableInterestIncome = balTax * retTax;
+        
+        // Total taxable income = salary - pre-tax contributions + taxable interest
+        let grossTaxableIncome = salary - cPre + taxableInterestIncome;
+        
         const workingYearTaxes = useAgiTax ? 
-          calculateFederalTax(taxableIncome, filingStatus) : 
-          taxableIncome * taxPre; // Use pre-tax rate as working tax rate fallback
+          calculateFederalTax(grossTaxableIncome, filingStatus) : 
+          grossTaxableIncome * taxPre; // Use pre-tax rate as working tax rate fallback
         
         // Debug tax calculation for first few years
         if (y < 3) {
           console.log(`\n=== WORKING YEAR TAX DEBUG (Year ${y + 1}, Age ${age}) ===`);
           console.log(`Salary: ${fmt(salary)}`);
           console.log(`Pre-tax contributions: ${fmt(cPre)}`);
-          console.log(`Taxable Income: ${fmt(taxableIncome)}`);
+          console.log(`Taxable balance (start of year): ${fmt(balTax)}`);
+          console.log(`Taxable interest income: ${fmt(taxableInterestIncome)}`);
+          console.log(`Gross Taxable Income: ${fmt(grossTaxableIncome)}`);
           console.log(`Filing Status: ${filingStatus}`);
           console.log(`Use Taxable Income Tax: ${useAgiTax}`);
           if (useAgiTax) {
-            taxableIncome = calculateTaxableIncome(taxableIncome, filingStatus);
+            const taxableIncomeAfterDeduction = calculateTaxableIncome(grossTaxableIncome, filingStatus);
             const effectiveRate = filingStatus === "married" 
-              ? getEffectiveTaxRateMarried(taxableIncome)
-              : getEffectiveTaxRate(taxableIncome);
-            console.log(`Taxable Income (after standard deduction): ${fmt(taxableIncome)}`);
+              ? getEffectiveTaxRateMarried(taxableIncomeAfterDeduction)
+              : getEffectiveTaxRate(taxableIncomeAfterDeduction);
+            console.log(`Taxable Income (after standard deduction): ${fmt(taxableIncomeAfterDeduction)}`);
             console.log(`Effective Tax Rate: ${effectiveRate.toFixed(1)}%`);
             console.log(`Calculated Federal Tax: ${fmt(workingYearTaxes)}`);
           } else {
@@ -1755,7 +1760,8 @@
           console.log(`Working Year ${y + 1} (Age ${age}):`);
           console.log(`  Salary: ${fmt(salary)}`);
           console.log(`  Pre-tax contrib: ${fmt(cPre)} | Roth contrib: ${fmt(cRoth)}`);
-          console.log(`  Taxable income: ${fmt(taxableIncome)} | Taxes: ${fmt(workingYearTaxes)}`);
+          console.log(`  Taxable interest income: ${fmt(taxableInterestIncome)}`);
+          console.log(`  Gross taxable income: ${fmt(grossTaxableIncome)} | Taxes: ${fmt(workingYearTaxes)}`);
           console.log(`  After-tax income: ${fmt(afterTaxIncome)}`);
           console.log(`  Living expenses: ${fmt(currentYearSpending)}`);
           console.log(`  Remaining for savings: ${fmt(remainingAfterSpending)}`);
@@ -1781,7 +1787,7 @@
           spend: currentYearSpending, // Show current year living expenses
           wNet: 0, wGross: 0, 
           taxes: workingYearTaxes, // Show working year taxes
-          effectiveTaxRate: taxableIncome > 0 ? (workingYearTaxes / taxableIncome) * 100 : 0,
+          effectiveTaxRate: grossTaxableIncome > 0 ? (workingYearTaxes / grossTaxableIncome) * 100 : 0,
           balTax, balPre, balRoth,
           total: balTax + balPre + balRoth
         });
