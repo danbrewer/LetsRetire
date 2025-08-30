@@ -1804,7 +1804,7 @@
         balSavings: params.balSavings
       };
 
-      const rows = [];
+      const calculations = [];
 
       let currentSalary = params.startingSalary;
       let totalTaxes = 0;
@@ -1815,7 +1815,7 @@
       for(let y = 0; y < params.yearsToRetire; y++){
         const yearData = calculateWorkingYearData(params, y, currentSalary, balances);
         
-        rows.push({
+        calculations.push({
           year: new Date().getFullYear() + y,
           ...yearData
         });
@@ -1827,7 +1827,7 @@
         currentSalary *= (1 + params.salaryGrowth);
       }
 
-      console.log('Working years: ', rows);
+      // console.log('Working years: ', calculations);
 
       /**
        * Calculate spouse benefit amounts at the time of primary person's retirement
@@ -2171,7 +2171,7 @@
           };
           
           const yearData = calculateRetirementYearData(params, y, balances, benefitAmounts, spend);
-          rows.push(yearData);
+          calculations.push(yearData);
 
           
 
@@ -2197,7 +2197,7 @@
         }
 
       
-        console.log('Retirement years: ', rows);
+        console.log('Calculations: ', calculations);
 
       /**
        * Generate final summary, write table, and update KPIs
@@ -2205,7 +2205,7 @@
       function generateOutputAndSummary(params, rows, totalTaxes, maxDrawdown) {
         // Write table
         const tbody = $('rows');
-        tbody.innerHTML = rows.map(r => `
+        tbody.innerHTML = calculations.map(r => `
           <tr>
             <td class="neutral">${r.year}</td>
             <td class="neutral">${r.age}</td>
@@ -2227,32 +2227,32 @@
           </tr>`).join('');
 
         // KPIs
-        const last = rows[rows.length - 1];
+        const last = calculations[calculations.length - 1];
         // Find the last age where there's still money, or endAge if money lasts throughout
-        const fundedTo = last.total > 0 ? params.endAge : rows.reduce((lastGoodAge, r) => r.total > 0 ? r.age : lastGoodAge, params.currentAge);
+        const fundedTo = last.total > 0 ? params.endAge : calculations.reduce((lastGoodAge, r) => r.total > 0 ? r.age : lastGoodAge, params.currentAge);
         $('kpiAge').innerHTML = `${fundedTo} <span class="pill ${fundedTo >= params.endAge ? 'ok':'alert'}">${fundedTo >= params.endAge ? 'Fully funded' : 'Shortfall'}</span>`;
         $('kpiEndBal').textContent = fmt(Math.max(0, last.total));
         $('kpiDraw').textContent = `${params.retireAge}`;
         $('kpiTax').textContent = fmt(params.balPre + params.balRoth + params.balSavings);
 
         // Chart (total balance)
-        drawChart(rows.map(r => ({ x: r.year, y: r.total })));
+        drawChart(calculations.map(r => ({ x: r.year, y: r.total })));
 
         // Save rows for export
         window.__rows = rows;
       }
 
       // Key Performance Indicators
-      const last = rows[rows.length - 1];
+      const last = calculations[calculations.length - 1];
       // Find the last age where there's still money, or endAge if money lasts throughout
-      const fundedTo = last.total > 0 ? endAge : rows.reduce((lastGoodAge, r) => r.total > 0 ? r.age : lastGoodAge, currentAge);
+      const fundedTo = last.total > 0 ? endAge : calculations.reduce((lastGoodAge, r) => r.total > 0 ? r.age : lastGoodAge, currentAge);
       $('kpiAge').innerHTML = `${fundedTo} <span class="pill ${fundedTo >= endAge ? 'ok':'alert'}">${fundedTo >= endAge ? 'Fully funded' : 'Shortfall'}</span>`;
       $('kpiEndBal').textContent = fmt(Math.max(0, last.total));
       $('kpiDraw').textContent = `${retireAge}`;
       $('kpiTax').textContent = fmt(num('balPre') + num('balRoth') + num('balSavings'));
 
       // Chart (total balance)
-      drawChart(rows.map(r => ({ x: r.year, y: r.total })));
+      drawChart(calculations.map(r => ({ x: r.year, y: r.total })));
 
       // Save rows for export
       window.__rows = rows;
@@ -2323,13 +2323,13 @@
 
     function exportCSV(){
       const rows = window.__rows || [];
-      if(!rows.length){ 
+      if(!calculations.length){ 
         showToast('No Data', 'Run a calculation first to generate data for export.', 'warning');
         return; 
       }
       const headers = ['Year','Age','Salary','Contrib','SS_Net','Pension_Net','Spouse_SS_Net','Spouse_Pension_Net','Spend','Withdraw_Net','Withdraw_Gross','Taxes','Taxable_Bal','Pretax_Bal','Roth_Bal','Total_Bal'];
       const csv = [headers.join(',')]
-        .concat(rows.map(r=>[
+        .concat(calculations.map(r=>[
           r.year, r.age, r.salary, r.contrib, r.ss, r.pen, r.spouseSs||0, r.spousePen||0, r.spend, r.wNet, r.wGross, r.taxes, r.balSavings, r.balPre, r.balRoth, r.total
         ].map(v => typeof v === 'number' ? Math.round(v*100)/100 : v).join(',')))
         .join('\n');
