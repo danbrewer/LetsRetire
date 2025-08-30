@@ -468,20 +468,20 @@
 
                 </div>
                 <div class="grid-1">
-                  <label for="balTax">Savings balance (taxable interest/dividends)
+                  <label for="balSavings">Savings balance (taxable interest/dividends)
                     <svg xmlns="http://www.w3.org/2000/svg" 
                          viewBox="0 0 24 24" 
                          width="1em" height="1em" 
                          fill="white" 
                          class="help-icon"
-                         onclick="showHelpToast(event, 'balTax')"
+                         onclick="showHelpToast(event, 'balSavings')"
                          style="vertical-align: middle;">
                       <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none"/>
                       <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
                       <circle cx="12" cy="17" r="1" fill="white"/>
                     </svg>
                   </label>
-                  <input id="balTax" type="number" step="1000" value="80000" />
+                  <input id="balSavings" type="number" step="1000" value="80000" />
                 </div>
               </div>
               <div class="grid-3">
@@ -789,17 +789,17 @@
                 <th>Year</th>
                 <th>Age</th>
                 <th>Salary</th>
+                <th>Spend (Net)</th>
                 <th>Contrib (Tot)</th>
                 <th>SS (Net)</th>
                 <th>Pension (Net)</th>
                 <th>Spouse SS (Net)</th>
                 <th>Spouse Pen (Net)</th>
-                <th>Spend (Net)</th>
+                <th>Withdraw Net</th>
                 <th>Withdraw Gross</th>
                 <th>Taxes</th>
                 <th>Effective Tax Rate</th>
-                <th>Withdraw Net</th>
-                <th>Taxable Bal</th>
+                <th>Savings Bal</th>
                 <th>Pre‑tax Bal</th>
                 <th>Roth Bal</th>
                 <th>Total Bal</th>
@@ -1170,7 +1170,7 @@
           title: "Roth Balance",
           body: "Your current balance in Roth retirement accounts like Roth 401(k) or Roth IRA. These grow tax-free."
         },
-        balTax: {
+        balSavings: {
           title: "Taxable Balance",
           body: "Your current balance in regular taxable investment accounts like brokerage accounts, savings, or CDs."
         },
@@ -1385,7 +1385,7 @@
     });
 
     // Annual Spending Details Functions
-    function generateSpendingFields() {
+    function regenerateSpendingFields() {
       const retireAge = num('retireAge');
       const endAge = num('endAge');
       
@@ -1537,7 +1537,7 @@
         spouseTaxSS: 10, spouseTaxPension: 20,
         salary: 170000, salaryGrowth: 2.0, pretaxPct: 0, rothPct: 0, taxablePct: 35,
         matchCap: 0, matchRate: 0, 
-        balPre: 600000, balRoth: 0, balTax: 500000,
+        balPre: 600000, balRoth: 0, balSavings: 500000,
         retPre: 3.0, retRoth: 0.0, retTax: 3.0, 
         ssMonthly: 2500, ssStart: 62, ssCola: 2.5,
         penMonthly: 3500, penStart: 65, penCola: 0, taxPre: 15, taxTaxable: 0, taxRoth: 0,
@@ -1549,7 +1549,7 @@
       //   spouseAge:52, spouseRetireAge:62, spouseSsMonthly:1000, spouseSsStart:62, spouseSsCola:2.0,
       //   spousePenMonthly:500, spousePenStart:65, spousePenCola:0, spouseTaxSS:10, spouseTaxPension:20,
       //   salary:100000, salaryGrowth:3.0, pretaxPct:10, rothPct:5, taxablePct:5,
-      //   matchCap:4, matchRate:50, balPre:300000, balRoth:100000, balTax:50000,
+      //   matchCap:4, matchRate:50, balPre:300000, balRoth:100000, balSavings:50000,
       //   retPre:6.0, retRoth:6.0, retTax:5.5, ssMonthly:2500, ssStart:67, ssCola:2.0,
       //   penMonthly:0, penStart:65, penCola:0, taxPre:22, taxTaxable:10, taxRoth:0,
       //   taxSS:10, taxPension:20, order:'taxable,pretax,roth'
@@ -1560,7 +1560,7 @@
       //   spouseAge: 52, spouseRetireAge: 62, spouseSsMonthly: 0, spouseSsStart: 62, spouseSsCola: 2.0,
       //   spousePenMonthly: 0, spousePenStart: 65, spousePenCola: 0, spouseTaxSS: 10, spouseTaxPension: 20,
       //   salary: 0, salaryGrowth: 3.0, pretaxPct: 10, rothPct: 5, taxablePct: 5,
-      //   matchCap: 4, matchRate: 50, balPre: 1000000, balRoth: 0, balTax: 0,
+      //   matchCap: 4, matchRate: 50, balPre: 1000000, balRoth: 0, balSavings: 0,
       //   retPre: 0.0, retRoth: 0.0, retTax: 0.0, 
       //   ssMonthly: 0, ssStart: 67, ssCola: 2.0,
       //   penMonthly: 0, penStart: 65, penCola: 0, 
@@ -1613,7 +1613,7 @@
         spouseTaxPension: pct(num('spouseTaxPension')),
         
         // Employment and contributions
-        salary0: num('salary'),
+        startingSalary: num('salary'),
         salaryGrowth: pct(num('salaryGrowth')),
         pretaxPct: pct(num('pretaxPct')),
         rothPct: pct(num('rothPct')),
@@ -1624,7 +1624,7 @@
         // Account balances and returns
         balPre: num('balPre'),
         balRoth: num('balRoth'),
-        balTax: num('balTax'),
+        balSavings: num('balSavings'),
         retPre: pct(num('retPre')),
         retRoth: pct(num('retRoth')),
         retTax: pct(num('retTax')),
@@ -1701,7 +1701,7 @@
       const match = Math.min(actualPrePct, params.matchCap) * salary * params.matchRate;
 
       // Calculate taxes on working income including taxable interest
-      const taxableInterestIncome = balances.balTax * params.retTax;
+      const taxableInterestIncome = balances.balSavings * params.retTax;
       let grossTaxableIncome = salary - cPre + taxableInterestIncome;
       
       const workingYearTaxes = params.useAgiTax ? 
@@ -1713,7 +1713,7 @@
         console.log(`\n=== WORKING YEAR TAX DEBUG (Year ${year + 1}, Age ${age}) ===`);
         console.log(`Salary: ${fmt(salary)}`);
         console.log(`Pre-tax contributions: ${fmt(cPre)}`);
-        console.log(`Taxable balance (start of year): ${fmt(balances.balTax)}`);
+        console.log(`Taxable balance (start of year): ${fmt(balances.balSavings)}`);
         console.log(`Taxable interest income: ${fmt(taxableInterestIncome)}`);
         console.log(`Gross Taxable Income: ${fmt(grossTaxableIncome)}`);
         console.log(`Filing Status: ${params.filingStatus}`);
@@ -1759,7 +1759,7 @@
       // Update balances
       balances.balPre = (balances.balPre + cPre + match) * (1 + params.retPre);
       balances.balRoth = (balances.balRoth + cRoth) * (1 + params.retRoth);
-      balances.balTax = (balances.balTax + cTax) * (1 + params.retTax);
+      balances.balSavings = (balances.balSavings + cTax) * (1 + params.retTax);
 
       return {
         age,
@@ -1770,10 +1770,10 @@
         wNet: 0, wGross: 0, 
         taxes: workingYearTaxes,
         effectiveTaxRate: grossTaxableIncome > 0 ? (workingYearTaxes / grossTaxableIncome) * 100 : 0,
-        balTax: balances.balTax, 
+        balSavings: balances.balSavings, 
         balPre: balances.balPre, 
         balRoth: balances.balRoth,
-        total: balances.balTax + balances.balPre + balances.balRoth
+        total: balances.balSavings + balances.balPre + balances.balRoth
       };
     }
 
@@ -1785,10 +1785,10 @@
         return;
       }
 
-      // Auto-generate spending override fields only if ages have changed
+      // Auto-regenerate spending override fields only if ages have changed
       if (params.retireAge > 0 && params.endAge > params.retireAge && 
           (lastRetireAge !== params.retireAge || lastEndAge !== params.endAge)) {
-        generateSpendingFields();
+        regenerateSpendingFields();
         lastRetireAge = params.retireAge;
         lastEndAge = params.endAge;
       }
@@ -1798,7 +1798,7 @@
         displayTaxExamples(params.filingStatus);
       }
 
-      let salary = params.salary0;
+      let currentSalary = params.startingSalary;
       const rows = [];
       let totalTaxes = 0;
       let maxDrawdown = { year: null, value: Infinity };
@@ -1807,13 +1807,13 @@
       const balances = {
         balPre: params.balPre,
         balRoth: params.balRoth,
-        balTax: params.balTax
+        balSavings: params.balSavings
       };
 
       
       // Accumulation years
       for(let y = 0; y < params.yearsToRetire; y++){
-        const yearData = calculateAccumulationYear(params, y, salary, balances);
+        const yearData = calculateAccumulationYear(params, y, currentSalary, balances);
         
         rows.push({
           year: new Date().getFullYear() + y,
@@ -1822,7 +1822,7 @@
 
         // Track total taxes paid during working years
         totalTaxes += yearData.taxes;
-        salary *= (1 + params.salaryGrowth);
+        currentSalary *= (1 + params.salaryGrowth);
       }
 
 
@@ -1939,8 +1939,8 @@
         
         if(kind === 'taxable'){ 
           fixedTaxRate = params.taxTaxable; 
-          balRef = balances.balTax; 
-          setBal = (v) => { balances.balTax = v; };
+          balRef = balances.balSavings; 
+          setBal = (v) => { balances.balSavings = v; };
         } else if(kind === 'pretax'){ 
           fixedTaxRate = params.taxPre; 
           balRef = balances.balPre; 
@@ -2106,11 +2106,11 @@
       taxesThisYear += withdrawalFunctions.getTaxesThisYear();
 
       // Grow remaining balances
-      balances.balTax *= (1 + params.retTax);
+      balances.balSavings *= (1 + params.retTax);
       balances.balPre *= (1 + params.retPre);
       balances.balRoth *= (1 + params.retRoth);
 
-      const totalBal = balances.balTax + balances.balPre + balances.balRoth;
+      const totalBal = balances.balSavings + balances.balPre + balances.balRoth;
       
       // Calculate effective tax rate for the year
       const totalGrossIncome = ssGross + penGross + spouseSsGross + spousePenGross + wGross;
@@ -2130,7 +2130,7 @@
         wGross, 
         taxes: taxesThisYear, 
         effectiveTaxRate,
-        balTax: balances.balTax, 
+        balSavings: balances.balSavings, 
         balPre: balances.balPre, 
         balRoth: balances.balRoth, 
         total: totalBal
@@ -2180,17 +2180,17 @@
           <td class="neutral">${r.year}</td>
           <td class="neutral">${r.age}</td>
           <td class="income">${r.salary? fmt(r.salary): ''}</td>
+          <td class="outgoing">${r.spend ? fmt(r.spend) : ''}</td>
           <td class="income">${r.contrib? fmt(r.contrib): ''}</td>
           <td class="income">${r.ss? fmt(r.ss): ''}</td>
           <td class="income">${r.pen? fmt(r.pen): ''}</td>
           <td class="income">${r.spouseSs? fmt(r.spouseSs): ''}</td>
           <td class="income">${r.spousePen? fmt(r.spousePen): ''}</td>
-          <td class="outgoing">${r.spend? fmt(r.spend): ''}</td>
+          <td class="income">${r.wNet ? fmt(r.wNet) : ''}</td>
           <td class="outgoing">${r.wGross? fmt(r.wGross): ''}</td>
           <td class="outgoing">${r.taxes? fmt(r.taxes): ''}</td>
           <td class="neutral">${r.effectiveTaxRate ? r.effectiveTaxRate.toFixed(1) + '%' : ''}</td>
-          <td class="income">${r.wNet ? fmt(r.wNet) : ''}</td>
-          <td class="neutral">${fmt(r.balTax)}</td>
+          <td class="neutral">${fmt(r.balSavings)}</td>
           <td class="neutral">${fmt(r.balPre)}</td>
           <td class="neutral">${fmt(r.balRoth)}</td>
           <td class="neutral">${fmt(r.total)}</td>
@@ -2203,7 +2203,7 @@
       $('kpiAge').innerHTML = `${fundedTo} <span class="pill ${fundedTo >= params.endAge ? 'ok':'alert'}">${fundedTo >= params.endAge ? 'Fully funded' : 'Shortfall'}</span>`;
       $('kpiEndBal').textContent = fmt(Math.max(0, last.total));
       $('kpiDraw').textContent = `${params.retireAge}`;
-      $('kpiTax').textContent = fmt(params.balPre + params.balRoth + params.balTax);
+      $('kpiTax').textContent = fmt(params.balPre + params.balRoth + params.balSavings);
 
       // Chart (total balance)
       drawChart(rows.map(r => ({ x: r.year, y: r.total })));
@@ -2212,37 +2212,14 @@
       window.__rows = rows;
     }
 
-      // Write table
-      const tbody = $('rows');
-      tbody.innerHTML = rows.map(r => `
-        <tr>
-          <td class="neutral">${r.year}</td>
-          <td class="neutral">${r.age}</td>
-          <td class="income">${r.salary? fmt(r.salary): ''}</td>
-          <td class="income">${r.contrib? fmt(r.contrib): ''}</td>
-          <td class="income">${r.ss? fmt(r.ss): ''}</td>
-          <td class="income">${r.pen? fmt(r.pen): ''}</td>
-          <td class="income">${r.spouseSs? fmt(r.spouseSs): ''}</td>
-          <td class="income">${r.spousePen? fmt(r.spousePen): ''}</td>
-          <td class="outgoing">${r.spend? fmt(r.spend): ''}</td>
-          <td class="outgoing">${r.wGross? fmt(r.wGross): ''}</td>
-          <td class="outgoing">${r.taxes? fmt(r.taxes): ''}</td>
-          <td class="neutral">${r.effectiveTaxRate ? r.effectiveTaxRate.toFixed(1) + '%' : ''}</td>
-          <td class="income">${r.wNet ? fmt(r.wNet) : ''}</td>
-          <td class="neutral">${fmt(r.balTax)}</td>
-          <td class="neutral">${fmt(r.balPre)}</td>
-          <td class="neutral">${fmt(r.balRoth)}</td>
-          <td class="neutral">${fmt(r.total)}</td>
-        </tr>`).join('');
-
-      // KPIs
+      // Key Performance Indicators
       const last = rows[rows.length - 1];
       // Find the last age where there's still money, or endAge if money lasts throughout
       const fundedTo = last.total > 0 ? endAge : rows.reduce((lastGoodAge, r) => r.total > 0 ? r.age : lastGoodAge, currentAge);
       $('kpiAge').innerHTML = `${fundedTo} <span class="pill ${fundedTo >= endAge ? 'ok':'alert'}">${fundedTo >= endAge ? 'Fully funded' : 'Shortfall'}</span>`;
       $('kpiEndBal').textContent = fmt(Math.max(0, last.total));
       $('kpiDraw').textContent = `${retireAge}`;
-      $('kpiTax').textContent = fmt(num('balPre') + num('balRoth') + num('balTax'));
+      $('kpiTax').textContent = fmt(num('balPre') + num('balRoth') + num('balSavings'));
 
       // Chart (total balance)
       drawChart(rows.map(r => ({ x: r.year, y: r.total })));
@@ -2323,7 +2300,7 @@
       const headers = ['Year','Age','Salary','Contrib','SS_Net','Pension_Net','Spouse_SS_Net','Spouse_Pension_Net','Spend','Withdraw_Net','Withdraw_Gross','Taxes','Taxable_Bal','Pretax_Bal','Roth_Bal','Total_Bal'];
       const csv = [headers.join(',')]
         .concat(rows.map(r=>[
-          r.year, r.age, r.salary, r.contrib, r.ss, r.pen, r.spouseSs||0, r.spousePen||0, r.spend, r.wNet, r.wGross, r.taxes, r.balTax, r.balPre, r.balRoth, r.total
+          r.year, r.age, r.salary, r.contrib, r.ss, r.pen, r.spouseSs||0, r.spousePen||0, r.spend, r.wNet, r.wGross, r.taxes, r.balSavings, r.balPre, r.balRoth, r.total
         ].map(v => typeof v === 'number' ? Math.round(v*100)/100 : v).join(',')))
         .join('\n');
       const blob = new Blob([csv], {type:'text/csv'});
@@ -2402,7 +2379,7 @@
           // If there are spending override fields in the import, regenerate the fields first
           const hasSpendingOverrides = Object.keys(data.inputs).some(id => id.startsWith('spending_'));
           if (hasSpendingOverrides) {
-            generateSpendingFields();
+            regenerateSpendingFields();
             // Now load the spending override values
             Object.entries(data.inputs).forEach(([id, value]) => {
               if (id.startsWith('spending_')) {
