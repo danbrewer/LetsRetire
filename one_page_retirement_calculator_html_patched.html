@@ -1002,8 +1002,8 @@
      * @param {string} filingStatus - 'single' or 'married'
      */
     function displayTaxExamples(filingStatus = "single") {
-      console.log(`\n=== Tax Rate Examples (${filingStatus} filer) ===`);
-      console.log(`Standard Deduction: $${STANDARD_DEDUCTIONS[filingStatus].toLocaleString()}`);
+      // console.log(`\n=== Tax Rate Examples (${filingStatus} filer) ===`);
+      // console.log(`Standard Deduction: $${STANDARD_DEDUCTIONS[filingStatus].toLocaleString()}`);
       const testGrossIncomes = [25000, 50000, 75000, 100000, 150000, 200000];
       
       testGrossIncomes.forEach(grossIncome => {
@@ -1014,9 +1014,9 @@
         const taxAmount = calculateFederalTax(grossIncome, filingStatus);
         const marginalRate = getMarginalTaxRate(grossIncome, 1000, filingStatus);
         
-        console.log(`Gross $${grossIncome.toLocaleString()} → Taxable Income $${taxableIncome.toLocaleString()}: Effective ${effectiveRate.toFixed(1)}%, Tax $${Math.round(taxAmount).toLocaleString()}, Marginal ${marginalRate.toFixed(1)}%`);
+        // console.log(`Gross $${grossIncome.toLocaleString()} → Taxable Income $${taxableIncome.toLocaleString()}: Effective ${effectiveRate.toFixed(1)}%, Tax $${Math.round(taxAmount).toLocaleString()}, Marginal ${marginalRate.toFixed(1)}%`);
       });
-      console.log("=================================\n");
+      // console.log("=================================\n");
     }
 
     // Social Security taxation calculation based on provisional income
@@ -1418,7 +1418,7 @@
         const useCurrentYear = document.getElementById('useCurrentYearValues').checked;
         const fieldValue = Number(field.value);
         
-        console.log(`getSpendingOverride(${age}): fieldValue=${fieldValue}, useCurrentYear=${useCurrentYear}`);
+        // console.log(`getSpendingOverride(${age}): fieldValue=${fieldValue}, useCurrentYear=${useCurrentYear}`);
         
         if (useCurrentYear) {
           // If in current year mode, check if we have a stored current year value
@@ -1426,21 +1426,21 @@
           if (storedCurrentYearValue && !isNaN(storedCurrentYearValue)) {
             // Use the stored current year value and apply inflation
             const inflatedValue = applyInflationToSpendingValue(Number(storedCurrentYearValue), age);
-            console.log(`  Using stored current year value ${storedCurrentYearValue} → inflated ${inflatedValue}`);
+            // console.log(`  Using stored current year value ${storedCurrentYearValue} → inflated ${inflatedValue}`);
             return inflatedValue;
           } else {
             // Treat the field value as current year value and apply inflation
             const inflatedValue = applyInflationToSpendingValue(fieldValue, age);
-            console.log(`  Using field value as current year ${fieldValue} → inflated ${inflatedValue}`);
+            // console.log(`  Using field value as current year ${fieldValue} → inflated ${inflatedValue}`);
             return inflatedValue;
           }
         } else {
           // Return the field value as-is (already in future dollars)
-          console.log(`  Using field value as future dollars: ${fieldValue}`);
+          // console.log(`  Using field value as future dollars: ${fieldValue}`);
           return fieldValue;
         }
       }
-      console.log(`getSpendingOverride(${age}): No override (field empty or invalid)`);
+      // console.log(`getSpendingOverride(${age}): No override (field empty or invalid)`);
       return null; // No override specified
     }
 
@@ -1525,7 +1525,6 @@
       
       calc();
     }
-
   
     function loadExample(){
       const ex = {
@@ -1653,7 +1652,7 @@
       params.order = $('order').value.split(',').map(s => s.trim()).filter(s => s.length > 0);
       if (params.order.length === 0) {
         params.order = ['taxable', 'pretax', 'roth'];
-        console.log('Using fallback withdrawal order:', params.order);
+        // console.log('Using fallback withdrawal order:', params.order);
       }
       
       // Derived values
@@ -1679,7 +1678,7 @@
     /**
      * Calculate one year of accumulation phase (working years)
      */
-    function calculateAccumulationYear(params, year, salary, balances) {
+    function calculateWorkingYearData(params, year, salary, balances) {
       const age = params.currentAge + year;
       
       // Calculate current year living expenses (retirement spending adjusted to current year)
@@ -1710,27 +1709,27 @@
       
       // Debug tax calculation for first few years
       if (year < 3) {
-        console.log(`\n=== WORKING YEAR TAX DEBUG (Year ${year + 1}, Age ${age}) ===`);
-        console.log(`Salary: ${fmt(salary)}`);
-        console.log(`Pre-tax contributions: ${fmt(cPre)}`);
-        console.log(`Taxable balance (start of year): ${fmt(balances.balSavings)}`);
-        console.log(`Taxable interest income: ${fmt(taxableInterestIncome)}`);
-        console.log(`Gross Taxable Income: ${fmt(grossTaxableIncome)}`);
-        console.log(`Filing Status: ${params.filingStatus}`);
-        console.log(`Use Taxable Income Tax: ${params.useAgiTax}`);
+        // console.log(`\n=== WORKING YEAR TAX DEBUG (Year ${year + 1}, Age ${age}) ===`);
+        // console.log(`Salary: ${fmt(salary)}`);
+        // console.log(`Pre-tax contributions: ${fmt(cPre)}`);
+        // console.log(`Taxable balance (start of year): ${fmt(balances.balSavings)}`);
+        // console.log(`Taxable interest income: ${fmt(taxableInterestIncome)}`);
+        // console.log(`Gross Taxable Income: ${fmt(grossTaxableIncome)}`);
+        // console.log(`Filing Status: ${params.filingStatus}`);
+        // console.log(`Use Taxable Income Tax: ${params.useAgiTax}`);
         if (params.useAgiTax) {
           const taxableIncomeAfterDeduction = calculateTaxableIncome(grossTaxableIncome, params.filingStatus);
           const effectiveRate = params.filingStatus === "married" 
             ? getEffectiveTaxRateMarried(taxableIncomeAfterDeduction)
             : getEffectiveTaxRate(taxableIncomeAfterDeduction);
-          console.log(`Taxable Income (after standard deduction): ${fmt(taxableIncomeAfterDeduction)}`);
-          console.log(`Effective Tax Rate: ${effectiveRate.toFixed(1)}%`);
-          console.log(`Calculated Federal Tax: ${fmt(workingYearTaxes)}`);
+          // console.log(`Taxable Income (after standard deduction): ${fmt(taxableIncomeAfterDeduction)}`);
+          // console.log(`Effective Tax Rate: ${effectiveRate.toFixed(1)}%`);
+          // console.log(`Calculated Federal Tax: ${fmt(workingYearTaxes)}`);
         } else {
-          console.log(`Using fixed tax rate: ${(params.taxPre * 100).toFixed(1)}%`);
-          console.log(`Calculated Tax: ${fmt(workingYearTaxes)}`);
+          // console.log(`Using fixed tax rate: ${(params.taxPre * 100).toFixed(1)}%`);
+          // console.log(`Calculated Tax: ${fmt(workingYearTaxes)}`);
         }
-        console.log(`=== END TAX DEBUG ===\n`);
+        // console.log(`=== END TAX DEBUG ===\n`);
       }
       
       // After-tax income calculations
@@ -1742,17 +1741,17 @@
       
       // Debug working year calculations (show for first few years)
       if (year < 3) {
-        console.log(`Working Year ${year + 1} (Age ${age}):`);
-        console.log(`  Salary: ${fmt(salary)}`);
-        console.log(`  Pre-tax contrib: ${fmt(cPre)} | Roth contrib: ${fmt(cRoth)}`);
-        console.log(`  Taxable interest income: ${fmt(taxableInterestIncome)}`);
-        console.log(`  Gross taxable income: ${fmt(grossTaxableIncome)} | Taxes: ${fmt(workingYearTaxes)}`);
-        console.log(`  After-tax income: ${fmt(afterTaxIncome)}`);
-        console.log(`  Living expenses: ${fmt(currentYearSpending)}`);
-        console.log(`  Remaining for savings: ${fmt(remainingAfterSpending)}`);
-        console.log(`  Desired taxable savings: ${fmt(desiredTaxableSavings)} | Actual: ${fmt(cTax)}`);
+        // console.log(`Working Year ${year + 1} (Age ${age}):`);
+        // console.log(`  Salary: ${fmt(salary)}`);
+        // console.log(`  Pre-tax contrib: ${fmt(cPre)} | Roth contrib: ${fmt(cRoth)}`);
+        // console.log(`  Taxable interest income: ${fmt(taxableInterestIncome)}`);
+        // console.log(`  Gross taxable income: ${fmt(grossTaxableIncome)} | Taxes: ${fmt(workingYearTaxes)}`);
+        // console.log(`  After-tax income: ${fmt(afterTaxIncome)}`);
+        // console.log(`  Living expenses: ${fmt(currentYearSpending)}`);
+        // console.log(`  Remaining for savings: ${fmt(remainingAfterSpending)}`);
+        // console.log(`  Desired taxable savings: ${fmt(desiredTaxableSavings)} | Actual: ${fmt(cTax)}`);
         if (cTax < desiredTaxableSavings) {
-          console.log(`  ⚠️ Savings limited by available income (shortfall: ${fmt(desiredTaxableSavings - cTax)})`);
+          // console.log(`  ⚠️ Savings limited by available income (shortfall: ${fmt(desiredTaxableSavings - cTax)})`);
         }
       }
 
@@ -1798,11 +1797,6 @@
         displayTaxExamples(params.filingStatus);
       }
 
-      let currentSalary = params.startingSalary;
-      const rows = [];
-      let totalTaxes = 0;
-      let maxDrawdown = { year: null, value: Infinity };
-      
       // Initialize balances object for tracking
       const balances = {
         balPre: params.balPre,
@@ -1810,10 +1804,16 @@
         balSavings: params.balSavings
       };
 
+      const rows = [];
+
+      let currentSalary = params.startingSalary;
+      let totalTaxes = 0;
+      let maxDrawdown = { year: null, value: Infinity };
       
-      // Accumulation years
+      
+      // Working years
       for(let y = 0; y < params.yearsToRetire; y++){
-        const yearData = calculateAccumulationYear(params, y, currentSalary, balances);
+        const yearData = calculateWorkingYearData(params, y, currentSalary, balances);
         
         rows.push({
           year: new Date().getFullYear() + y,
@@ -1822,94 +1822,97 @@
 
         // Track total taxes paid during working years
         totalTaxes += yearData.taxes;
+
+        // Update salary for next year
         currentSalary *= (1 + params.salaryGrowth);
       }
 
+      console.log('Working years: ', rows);
 
-    /**
-     * Calculate spouse benefit amounts at the time of primary person's retirement
-     */
-    function calculateSpouseBenefits(params) {
-      let spouseSsAnnual = 0;
-      let spousePenAnnual = 0;
-      
-      if (params.hasSpouse) {
-        const spouseCurrentYear = params.retireAge - params.currentAge; // Years from now when primary person retires
-        const spouseAgeAtPrimaryRetirement = params.spouseAge + spouseCurrentYear;
+      /**
+       * Calculate spouse benefit amounts at the time of primary person's retirement
+       */
+      function calculateSpouseBenefits(params) {
+        let spouseSsAnnual = 0;
+        let spousePenAnnual = 0;
         
-        spouseSsAnnual = params.spouseSsMonthly * 12 * (spouseAgeAtPrimaryRetirement >= params.spouseSsStart ? 
-          pow1p(params.spouseSsCola, spouseAgeAtPrimaryRetirement - params.spouseSsStart) : 1);
-        spousePenAnnual = params.spousePenMonthly * 12 * (spouseAgeAtPrimaryRetirement >= params.spousePenStart ? 
-          pow1p(params.spousePenCola, spouseAgeAtPrimaryRetirement - params.spousePenStart) : 1);
-      }
+        if (params.hasSpouse) {
+          const spouseCurrentYear = params.retireAge - params.currentAge; // Years from now when primary person retires
+          const spouseAgeAtPrimaryRetirement = params.spouseAge + spouseCurrentYear;
+          
+          spouseSsAnnual = params.spouseSsMonthly * 12 * (spouseAgeAtPrimaryRetirement >= params.spouseSsStart ? 
+            pow1p(params.spouseSsCola, spouseAgeAtPrimaryRetirement - params.spouseSsStart) : 1);
+          spousePenAnnual = params.spousePenMonthly * 12 * (spouseAgeAtPrimaryRetirement >= params.spousePenStart ? 
+            pow1p(params.spousePenCola, spouseAgeAtPrimaryRetirement - params.spousePenStart) : 1);
+        }
       
-      return { spouseSsAnnual, spousePenAnnual };
-    }
+        return { spouseSsAnnual, spousePenAnnual };
+      }
     
-    /**
-     * Calculate Social Security taxation for a given year
-     */
-    function calculateSocialSecurityTaxation(params, ssGross, totalTaxableIncome) {
-      if (!ssGross || ssGross <= 0) {
-        return { ssNet: 0, ssTaxableAmount: 0, ssTaxes: 0 };
-      }
-      
-      const isMarried = params.filingStatus === 'married';
-      
-      if (params.useSSRules) {
-        // Use proper SS taxation rules based on provisional income
-        const ssTaxableAmount = calculateSSTaxableAmount(ssGross, totalTaxableIncome, isMarried);
-        const grossIncomeForTax = totalTaxableIncome + ssTaxableAmount;
-        const effectiveRate = isMarried 
-          ? getEffectiveTaxRateMarried(calculateTaxableIncome(grossIncomeForTax, "married"))
-          : getEffectiveTaxRate(calculateTaxableIncome(grossIncomeForTax, "single"));
-        const ssTaxes = ssTaxableAmount * (effectiveRate / 100);
-        const ssNet = ssGross - ssTaxes;
-        console.log(`SS: Gross $${ssGross.toLocaleString()}, Taxable $${ssTaxableAmount.toLocaleString()}, Tax $${ssTaxes.toLocaleString()}, Net $${ssNet.toLocaleString()}`);
-        return { ssNet, ssTaxableAmount, ssTaxes };
-      } else {
-        // Use simple fixed percentage method
-        const ssTaxableAmount = ssGross * 0.85;
-        const grossIncomeForTax_simple = totalTaxableIncome + ssTaxableAmount;
-        const effRate_simple = isMarried 
-          ? getEffectiveTaxRateMarried(calculateTaxableIncome(grossIncomeForTax_simple, "married"))
-          : getEffectiveTaxRate(calculateTaxableIncome(grossIncomeForTax_simple, "single"));
-        const ssTaxes = ssTaxableAmount * (effRate_simple / 100);
-        const ssNet = ssGross - ssTaxes;
-        return { ssNet, ssTaxableAmount, ssTaxes };
-      }
-    }
-    
-    /**
-     * Calculate pension taxation for a given year
-     */
-    function calculatePensionTaxation(params, penGross, totalTaxableIncome) {
-      if (!penGross || penGross <= 0) {
-        return { penNet: 0, penTaxes: 0, pensionTaxRate: 0 };
-      }
-      
-      let pensionTaxRate = params.taxPension;
-      
-      if (params.useAgiTax) {
-        const grossIncomeForPensionTax = penGross + totalTaxableIncome;
-        const taxableIncomeForPensionTax = calculateTaxableIncome(grossIncomeForPensionTax, params.filingStatus);
-        const taxableIncomeBasedRate = params.filingStatus === "married" 
-          ? getEffectiveTaxRateMarried(taxableIncomeForPensionTax)
-          : getEffectiveTaxRate(taxableIncomeForPensionTax);
+      /**
+       * Calculate Social Security taxation for a given year
+       */
+      function calculateSocialSecurityTaxation(params, ssGross, totalTaxableIncome) {
+        if (!ssGross || ssGross <= 0) {
+          return { ssNet: 0, ssTaxableAmount: 0, ssTaxes: 0 };
+        }
         
-        const taxableIncomeRateDecimal = taxableIncomeBasedRate / 100;
-        pensionTaxRate = Math.max(params.taxPension, taxableIncomeRateDecimal);
+        const isMarried = params.filingStatus === 'married';
         
-        console.log(`Pension Taxable Income Tax Calc: Gross Income: $${grossIncomeForPensionTax.toLocaleString()}, Taxable Income: $${taxableIncomeForPensionTax.toLocaleString()}, Filing: ${params.filingStatus}, Taxable Income Rate: ${taxableIncomeBasedRate.toFixed(1)}%, Fixed Rate: ${(params.taxPension*100).toFixed(1)}%, Using: ${(pensionTaxRate*100).toFixed(1)}%`);
+        if (params.useSSRules) {
+          // Use proper SS taxation rules based on provisional income
+          const ssTaxableAmount = calculateSSTaxableAmount(ssGross, totalTaxableIncome, isMarried);
+          const grossIncomeForTax = totalTaxableIncome + ssTaxableAmount;
+          const effectiveRate = isMarried 
+            ? getEffectiveTaxRateMarried(calculateTaxableIncome(grossIncomeForTax, "married"))
+            : getEffectiveTaxRate(calculateTaxableIncome(grossIncomeForTax, "single"));
+          const ssTaxes = ssTaxableAmount * (effectiveRate / 100);
+          const ssNet = ssGross - ssTaxes;
+          // console.log(`SS: Gross $${ssGross.toLocaleString()}, Taxable $${ssTaxableAmount.toLocaleString()}, Tax $${ssTaxes.toLocaleString()}, Net $${ssNet.toLocaleString()}`);
+          return { ssNet, ssTaxableAmount, ssTaxes };
+        } else {
+          // Use simple fixed percentage method
+          const ssTaxableAmount = ssGross * 0.85;
+          const grossIncomeForTax_simple = totalTaxableIncome + ssTaxableAmount;
+          const effRate_simple = isMarried 
+            ? getEffectiveTaxRateMarried(calculateTaxableIncome(grossIncomeForTax_simple, "married"))
+            : getEffectiveTaxRate(calculateTaxableIncome(grossIncomeForTax_simple, "single"));
+          const ssTaxes = ssTaxableAmount * (effRate_simple / 100);
+          const ssNet = ssGross - ssTaxes;
+          return { ssNet, ssTaxableAmount, ssTaxes };
+        }
       }
       
-      const penNet = penGross * (1 - pensionTaxRate);
-      const penTaxes = penGross - penNet;
-      
-      return { penNet, penTaxes, pensionTaxRate };
-    }
+      /**
+       * Calculate pension taxation for a given year
+       */
+      function calculatePensionTaxation(params, penGross, totalTaxableIncome) {
+        if (!penGross || penGross <= 0) {
+          return { penNet: 0, penTaxes: 0, pensionTaxRate: 0 };
+        }
+        
+        let pensionTaxRate = params.taxPension;
+        
+        if (params.useAgiTax) {
+          const grossIncomeForPensionTax = penGross + totalTaxableIncome;
+          const taxableIncomeForPensionTax = calculateTaxableIncome(grossIncomeForPensionTax, params.filingStatus);
+          const taxableIncomeBasedRate = params.filingStatus === "married" 
+            ? getEffectiveTaxRateMarried(taxableIncomeForPensionTax)
+            : getEffectiveTaxRate(taxableIncomeForPensionTax);
+          
+          const taxableIncomeRateDecimal = taxableIncomeBasedRate / 100;
+          pensionTaxRate = Math.max(params.taxPension, taxableIncomeRateDecimal);
+          
+          // console.log(`Pension Taxable Income Tax Calc: Gross Income: $${grossIncomeForPensionTax.toLocaleString()}, Taxable Income: $${taxableIncomeForPensionTax.toLocaleString()}, Filing: ${params.filingStatus}, Taxable Income Rate: ${taxableIncomeBasedRate.toFixed(1)}%, Fixed Rate: ${(params.taxPension*100).toFixed(1)}%, Using: ${(pensionTaxRate*100).toFixed(1)}%`);
+        }
+        
+        const penNet = penGross * (1 - pensionTaxRate);
+        const penTaxes = penGross - penNet;
+        
+        return { penNet, penTaxes, pensionTaxRate };
+      }
 
-      // Setup retirement years - calculate initial benefit amounts
+      // Setup retirement years; calculate initial benefit amounts
       let ssAnnual = params.ssMonthly * 12 * (params.retireAge >= params.ssStart ? pow1p(params.ssCola, params.retireAge - params.ssStart) : 1);
       let penAnnual = params.penMonthly * 12 * (params.retireAge >= params.penStart ? pow1p(params.penCola, params.retireAge - params.penStart) : 1);
       
@@ -1919,298 +1922,306 @@
       
       let spend = params.spendAtRetire;
 
-    /**
-     * Create withdrawal function for a specific retirement year
-     */
-    function createWithdrawalFunction(params, balances, totalTaxableIncomeRef) {
-      let taxesThisYear = 0;
-      
-      function withdrawFrom(kind, netAmount) {
-        console.log(`withdrawFrom called with kind: "${kind}", netAmount: ${netAmount}`);
-        if(netAmount <= 0) return { gross: 0, net: 0 };
+      /**
+       * Create withdrawal function for a specific retirement year
+       */
+      function createWithdrawalFunction(params, balances, totalTaxableIncomeRef) {
+        let taxesThisYear = 0;
         
-        // Validate kind parameter
-        if (!kind || typeof kind !== 'string') {
-          console.error('Invalid withdrawal kind:', kind);
-          return { gross: 0, net: 0 };
-        }
-        
-        let fixedTaxRate = 0, balRef = 0, setBal;
-        
-        if(kind === 'taxable'){ 
-          fixedTaxRate = params.taxTaxable; 
-          balRef = balances.balSavings; 
-          setBal = (v) => { balances.balSavings = v; };
-        } else if(kind === 'pretax'){ 
-          fixedTaxRate = params.taxPre; 
-          balRef = balances.balPre; 
-          setBal = (v) => { balances.balPre = v; };
-        } else if(kind === 'roth'){   
-          fixedTaxRate = params.taxRoth; 
-          balRef = balances.balRoth; 
-          setBal = (v) => { balances.balRoth = v; };
-        } else {
-          console.error('Unknown withdrawal kind:', kind);
-          return { gross: 0, net: 0 };
-        }
-
-        // Use Taxable Income-based calculation for pre-tax withdrawals if enabled
-        let taxRate = fixedTaxRate;
-        
-        if (kind === 'pretax' && params.useAgiTax) {
-          const estimatedGrossWithdrawal = netAmount / (1 - fixedTaxRate);
-          const projectedGrossIncome = totalTaxableIncomeRef.value + estimatedGrossWithdrawal;
+        function withdrawFrom(kind, netAmount) {
+          // console.log(`withdrawFrom called with kind: "${kind}", netAmount: ${netAmount}`);
+          if(netAmount <= 0) return { gross: 0, net: 0 };
           
-          const projectedTaxableIncome = calculateTaxableIncome(projectedGrossIncome, params.filingStatus);
-          const taxableIncomeBasedRate = params.filingStatus === "married" 
-            ? getEffectiveTaxRateMarried(projectedTaxableIncome)
-            : getEffectiveTaxRate(projectedTaxableIncome);
+          // Validate kind parameter
+          if (!kind || typeof kind !== 'string') {
+            console.error('Invalid withdrawal kind:', kind);
+            return { gross: 0, net: 0 };
+          }
           
-          const taxableIncomeRateDecimal = taxableIncomeBasedRate / 100;
-          taxRate = Math.max(fixedTaxRate, taxableIncomeRateDecimal);
+          let fixedTaxRate = 0, balRef = 0, setBal;
           
-          console.log(`Gross Income: $${projectedGrossIncome.toLocaleString()}, Taxable Income: $${projectedTaxableIncome.toLocaleString()}, Filing: ${params.filingStatus}, Taxable Income Rate: ${taxableIncomeBasedRate.toFixed(1)}%, Fixed Rate: ${(fixedTaxRate*100).toFixed(1)}%, Using: ${(taxRate*100).toFixed(1)}%`);
+          if(kind === 'taxable'){ 
+            fixedTaxRate = params.taxTaxable; 
+            balRef = balances.balSavings; 
+            setBal = (v) => { balances.balSavings = v; };
+          } else if(kind === 'pretax'){ 
+            fixedTaxRate = params.taxPre; 
+            balRef = balances.balPre; 
+            setBal = (v) => { balances.balPre = v; };
+          } else if(kind === 'roth'){   
+            fixedTaxRate = params.taxRoth; 
+            balRef = balances.balRoth; 
+            setBal = (v) => { balances.balRoth = v; };
+          } else {
+            console.error('Unknown withdrawal kind:', kind);
+            return { gross: 0, net: 0 };
+          }
+
+          // Use Taxable Income-based calculation for pre-tax withdrawals if enabled
+          let taxRate = fixedTaxRate;
+          
+          if (kind === 'pretax' && params.useAgiTax) {
+            const estimatedGrossWithdrawal = netAmount / (1 - fixedTaxRate);
+            const projectedGrossIncome = totalTaxableIncomeRef.value + estimatedGrossWithdrawal;
+            
+            const projectedTaxableIncome = calculateTaxableIncome(projectedGrossIncome, params.filingStatus);
+            const taxableIncomeBasedRate = params.filingStatus === "married" 
+              ? getEffectiveTaxRateMarried(projectedTaxableIncome)
+              : getEffectiveTaxRate(projectedTaxableIncome);
+            
+            const taxableIncomeRateDecimal = taxableIncomeBasedRate / 100;
+            taxRate = Math.max(fixedTaxRate, taxableIncomeRateDecimal);
+            
+            // console.log(`Gross Income: $${projectedGrossIncome.toLocaleString()}, Taxable Income: $${projectedTaxableIncome.toLocaleString()}, Filing: ${params.filingStatus}, Taxable Income Rate: ${taxableIncomeBasedRate.toFixed(1)}%, Fixed Rate: ${(fixedTaxRate*100).toFixed(1)}%, Using: ${(taxRate*100).toFixed(1)}%`);
+          }
+
+          const grossNeeded = netAmount / (1 - taxRate);
+          const grossTake = Math.min(grossNeeded, balRef);
+          const netReceived = grossTake * (1 - taxRate);
+          const taxPaid = grossTake - netReceived;
+          setBal(balRef - grossTake);
+          taxesThisYear += taxPaid;
+          
+          // Add pre-tax withdrawals to Taxable Income for subsequent calculations
+          if (kind === 'pretax') {
+            totalTaxableIncomeRef.value += grossTake;
+          }
+          
+          return { gross: grossTake, net: netReceived };
         }
-
-        const grossNeeded = netAmount / (1 - taxRate);
-        const grossTake = Math.min(grossNeeded, balRef);
-        const netReceived = grossTake * (1 - taxRate);
-        const taxPaid = grossTake - netReceived;
-        setBal(balRef - grossTake);
-        taxesThisYear += taxPaid;
         
-        // Add pre-tax withdrawals to Taxable Income for subsequent calculations
-        if (kind === 'pretax') {
-          totalTaxableIncomeRef.value += grossTake;
+        // Special function for RMD withdrawals (gross amount based)
+        function withdrawRMD(grossAmount) {
+          if (grossAmount <= 0 || balances.balPre <= 0) return { gross: 0, net: 0 };
+          
+          const actualGross = Math.min(grossAmount, balances.balPre);
+          
+          let taxRate = params.taxPre;
+          
+          if (params.useAgiTax) {
+            const projectedGrossIncome = totalTaxableIncomeRef.value + actualGross;
+            const projectedTaxableIncome = calculateTaxableIncome(projectedGrossIncome, params.filingStatus);
+            const taxableIncomeBasedRate = params.filingStatus === "married" 
+              ? getEffectiveTaxRateMarried(projectedTaxableIncome)
+              : getEffectiveTaxRate(projectedTaxableIncome);
+            const taxableIncomeRateDecimal = taxableIncomeBasedRate / 100;
+            taxRate = Math.max(params.taxPre, taxableIncomeRateDecimal);
+          }
+          
+          const netReceived = actualGross * (1 - taxRate);
+          const taxPaid = actualGross - netReceived;
+          balances.balPre -= actualGross;
+          taxesThisYear += taxPaid;
+          totalTaxableIncomeRef.value += actualGross;
+          
+          return { gross: actualGross, net: netReceived };
         }
         
-        return { gross: grossTake, net: netReceived };
+        return { withdrawFrom, withdrawRMD, getTaxesThisYear: () => taxesThisYear };
       }
       
-      // Special function for RMD withdrawals (gross amount based)
-      function withdrawRMD(grossAmount) {
-        if (grossAmount <= 0 || balances.balPre <= 0) return { gross: 0, net: 0 };
+      /**
+       * Calculate a given retirement year
+       */
+      function calculateRetirementYearData(params, year, balances, benefitAmounts, spend) {
+        const age = params.currentAge + year;
+        const yearNum = new Date().getFullYear() + year;
+
+        // Income sources (apply start ages and COLA each year)
+        const hasSS = age >= params.ssStart;
+        const hasPen = age >= params.penStart && params.penMonthly > 0;
+        const ssGross = hasSS ? benefitAmounts.ssAnnual : 0;
+        const penGross = hasPen ? benefitAmounts.penAnnual : 0;
         
-        const actualGross = Math.min(grossAmount, balances.balPre);
+        // Spouse income sources
+        let spouseSsGross = 0;
+        let spousePenGross = 0;
         
-        let taxRate = params.taxPre;
-        
-        if (params.useAgiTax) {
-          const projectedGrossIncome = totalTaxableIncomeRef.value + actualGross;
-          const projectedTaxableIncome = calculateTaxableIncome(projectedGrossIncome, params.filingStatus);
-          const taxableIncomeBasedRate = params.filingStatus === "married" 
-            ? getEffectiveTaxRateMarried(projectedTaxableIncome)
-            : getEffectiveTaxRate(projectedTaxableIncome);
-          const taxableIncomeRateDecimal = taxableIncomeBasedRate / 100;
-          taxRate = Math.max(params.taxPre, taxableIncomeRateDecimal);
-        }
-        
-        const netReceived = actualGross * (1 - taxRate);
-        const taxPaid = actualGross - netReceived;
-        balances.balPre -= actualGross;
-        taxesThisYear += taxPaid;
-        totalTaxableIncomeRef.value += actualGross;
-        
-        return { gross: actualGross, net: netReceived };
-      }
-      
-      return { withdrawFrom, withdrawRMD, getTaxesThisYear: () => taxesThisYear };
-    }
-    
-    /**
-     * Calculate one retirement year
-     */
-    function calculateRetirementYear(params, year, balances, benefitAmounts, spend) {
-      const age = params.currentAge + year;
-      const yearNum = new Date().getFullYear() + year;
-
-      // Income sources (apply start ages and COLA each year)
-      const hasSS = age >= params.ssStart;
-      const hasPen = age >= params.penStart && params.penMonthly > 0;
-      const ssGross = hasSS ? benefitAmounts.ssAnnual : 0;
-      const penGross = hasPen ? benefitAmounts.penAnnual : 0;
-      
-      // Spouse income sources
-      let spouseSsGross = 0;
-      let spousePenGross = 0;
-      
-      if (params.hasSpouse) {
-        const spouseCurrentAge = params.spouseAge + (age - params.currentAge);
-        const hasSpouseSS = spouseCurrentAge >= params.spouseSsStart;
-        const hasSpousePen = spouseCurrentAge >= params.spousePenStart && params.spousePenMonthly > 0;
-        
-        spouseSsGross = hasSpouseSS ? benefitAmounts.spouseSsAnnual : 0;
-        spousePenGross = hasSpousePen ? benefitAmounts.spousePenAnnual : 0;
-      }
-
-      // Calculate total taxable income (starts with pension income)
-      let totalTaxableIncomeRef = { value: penGross + spousePenGross };
-      
-      // Calculate Social Security taxation
-      const ssResults = calculateSocialSecurityTaxation(params, ssGross, totalTaxableIncomeRef.value);
-      const spouseSsResults = calculateSocialSecurityTaxation(params, spouseSsGross, totalTaxableIncomeRef.value + ssResults.ssTaxableAmount);
-      
-      totalTaxableIncomeRef.value += ssResults.ssTaxableAmount + spouseSsResults.ssTaxableAmount;
-
-      // Calculate pension taxation
-      const penResults = calculatePensionTaxation(params, penGross, totalTaxableIncomeRef.value);
-      const spousePenResults = calculatePensionTaxation(params, spousePenGross, totalTaxableIncomeRef.value);
-
-      // Net spending need after all net incomes
-      const spendingOverride = getSpendingOverride(age);
-      const actualSpend = spendingOverride !== null ? spendingOverride : spend;
-      
-      if (spendingOverride !== null) {
-        console.log(`Age ${age}: Using override spending $${spendingOverride.toLocaleString()} instead of auto $${spend.toLocaleString()}`);
-      }
-      
-      if (spendingOverride === null) {
-        setSpendingFieldValue(age, spend);
-      }
-      
-      let needNet = Math.max(0, actualSpend - (ssResults.ssNet + penResults.penNet + spouseSsResults.ssNet + spousePenResults.penNet));
-      let needGross = 0;
-      
-      // Calculate all taxes for this year so far
-      let taxesThisYear = penResults.penTaxes + spousePenResults.penTaxes + ssResults.ssTaxes + spouseSsResults.ssTaxes;
-
-      // Create withdrawal functions for this year
-      const withdrawalFunctions = createWithdrawalFunction(params, balances, totalTaxableIncomeRef);
-      
-      // Apply Required Minimum Distributions if enabled
-      let rmdAmount = 0;
-      let wGross = 0, wNet = 0;
-      
-      if (params.useRMD && age >= 73) {
-        rmdAmount = calculateRMD(age, balances.balPre);
-        if (rmdAmount > 0) {
-          const rmdWithdrawal = withdrawalFunctions.withdrawRMD(rmdAmount);
-          needNet = Math.max(0, needNet - rmdWithdrawal.net);
-          wGross += rmdWithdrawal.gross;
-          wNet += rmdWithdrawal.net;
-          console.log(`RMD at age ${age}: Required $${rmdAmount.toLocaleString()}, Withdrew $${rmdWithdrawal.gross.toLocaleString()} gross, $${rmdWithdrawal.net.toLocaleString()} net`);
-        }
-      }
-
-      // Withdraw following order until remaining need is met (after RMDs)
-      console.log('Withdrawal order:', params.order);
-      for(const k of params.order){
-        console.log(`Processing withdrawal kind: "${k}"`);
-        if(needNet <= 0) break;
-        const {gross=0, net=0} = withdrawalFunctions.withdrawFrom(k, needNet) || {};
-        needNet = Math.max(0, needNet - net);
-        wGross += gross; wNet += net;
-      }
-
-      // Add withdrawal taxes to total
-      taxesThisYear += withdrawalFunctions.getTaxesThisYear();
-
-      // Grow remaining balances
-      balances.balSavings *= (1 + params.retTax);
-      balances.balPre *= (1 + params.retPre);
-      balances.balRoth *= (1 + params.retRoth);
-
-      const totalBal = balances.balSavings + balances.balPre + balances.balRoth;
-      
-      // Calculate effective tax rate for the year
-      const totalGrossIncome = ssGross + penGross + spouseSsGross + spousePenGross + wGross;
-      const effectiveTaxRate = totalGrossIncome > 0 ? (taxesThisYear / totalGrossIncome) * 100 : 0;
-
-      return {
-        year: yearNum, 
-        age, 
-        salary: 0, 
-        contrib: 0,
-        ss: ssResults.ssNet, 
-        pen: penResults.penNet, 
-        spouseSs: spouseSsResults.ssNet, 
-        spousePen: spousePenResults.penNet, 
-        spend: actualSpend,
-        wNet, 
-        wGross, 
-        taxes: taxesThisYear, 
-        effectiveTaxRate,
-        balSavings: balances.balSavings, 
-        balPre: balances.balPre, 
-        balRoth: balances.balRoth, 
-        total: totalBal
-      };
-    }
-
-      for(let y = params.yearsToRetire; y < params.yearsTotal; y++){
-        const benefitAmounts = {
-          ssAnnual,
-          penAnnual,
-          spouseSsAnnual,
-          spousePenAnnual
-        };
-        
-        const yearData = calculateRetirementYear(params, y, balances, benefitAmounts, spend);
-        rows.push(yearData);
-
-        const totalBal = yearData.total;
-        totalTaxes += yearData.taxes;
-        if(totalBal < maxDrawdown.value){ 
-          maxDrawdown = { year: yearData.year, value: totalBal }; 
-        }
-
-        // Step next year: Apply COLAs to benefits
-        const age = yearData.age;
-        if(age >= params.ssStart) ssAnnual *= (1 + params.ssCola);
-        if(age >= params.penStart && params.penMonthly > 0) penAnnual *= (1 + params.penCola);
-        
-        if(params.hasSpouse) {
+        if (params.hasSpouse) {
           const spouseCurrentAge = params.spouseAge + (age - params.currentAge);
-          if(spouseCurrentAge >= params.spouseSsStart) spouseSsAnnual *= (1 + params.spouseSsCola);
-          if(spouseCurrentAge >= params.spousePenStart && params.spousePenMonthly > 0) spousePenAnnual *= (1 + params.spousePenCola);
+          const hasSpouseSS = spouseCurrentAge >= params.spouseSsStart;
+          const hasSpousePen = spouseCurrentAge >= params.spousePenStart && params.spousePenMonthly > 0;
+          
+          spouseSsGross = hasSpouseSS ? benefitAmounts.spouseSsAnnual : 0;
+          spousePenGross = hasSpousePen ? benefitAmounts.spousePenAnnual : 0;
+        }
+
+        // Calculate total taxable income (starts with pension income)
+        let totalTaxableIncomeRef = { value: penGross + spousePenGross };
+        
+        // Calculate Social Security taxation
+        const ssResults = calculateSocialSecurityTaxation(params, ssGross, totalTaxableIncomeRef.value);
+        const spouseSsResults = calculateSocialSecurityTaxation(params, spouseSsGross, totalTaxableIncomeRef.value + ssResults.ssTaxableAmount);
+        
+        totalTaxableIncomeRef.value += ssResults.ssTaxableAmount + spouseSsResults.ssTaxableAmount;
+
+        // Calculate pension taxation
+        const penResults = calculatePensionTaxation(params, penGross, totalTaxableIncomeRef.value);
+        const spousePenResults = calculatePensionTaxation(params, spousePenGross, totalTaxableIncomeRef.value);
+
+        // Net spending need after all net incomes
+        const spendingOverride = getSpendingOverride(age);
+        const actualSpend = spendingOverride !== null ? spendingOverride : spend;
+        
+        if (spendingOverride !== null) {
+          // console.log(`Age ${age}: Using override spending $${spendingOverride.toLocaleString()} instead of auto $${spend.toLocaleString()}`);
         }
         
-        spend *= (1 + params.inflation);
-        spend *= (1 - params.spendingDecline);
+        if (spendingOverride === null) {
+          setSpendingFieldValue(age, spend);
+        }
+        
+        let needNet = Math.max(0, actualSpend - (ssResults.ssNet + penResults.penNet + spouseSsResults.ssNet + spousePenResults.penNet));
+        let needGross = 0;
+        
+        // Calculate all taxes for this year so far
+        let taxesThisYear = penResults.penTaxes + spousePenResults.penTaxes + ssResults.ssTaxes + spouseSsResults.ssTaxes;
+
+        // Create withdrawal functions for this year
+        const withdrawalFunctions = createWithdrawalFunction(params, balances, totalTaxableIncomeRef);
+        
+        // Apply Required Minimum Distributions if enabled
+        let rmdAmount = 0;
+        let wGross = 0, wNet = 0;
+        
+        if (params.useRMD && age >= 73) {
+          rmdAmount = calculateRMD(age, balances.balPre);
+          if (rmdAmount > 0) {
+            const rmdWithdrawal = withdrawalFunctions.withdrawRMD(rmdAmount);
+            needNet = Math.max(0, needNet - rmdWithdrawal.net);
+            wGross += rmdWithdrawal.gross;
+            wNet += rmdWithdrawal.net;
+            // console.log(`RMD at age ${age}: Required $${rmdAmount.toLocaleString()}, Withdrew $${rmdWithdrawal.gross.toLocaleString()} gross, $${rmdWithdrawal.net.toLocaleString()} net`);
+          }
+        }
+
+        // Withdraw following order until remaining need is met (after RMDs)
+        // console.log('Withdrawal order:', params.order);
+        for(const k of params.order){
+          // console.log(`Processing withdrawal kind: "${k}"`);
+          if(needNet <= 0) break;
+          const {gross=0, net=0} = withdrawalFunctions.withdrawFrom(k, needNet) || {};
+          needNet = Math.max(0, needNet - net);
+          wGross += gross; wNet += net;
+        }
+
+        // Add withdrawal taxes to total
+        taxesThisYear += withdrawalFunctions.getTaxesThisYear();
+
+        // Grow remaining balances
+        balances.balSavings *= (1 + params.retTax);
+        balances.balPre *= (1 + params.retPre);
+        balances.balRoth *= (1 + params.retRoth);
+
+        const totalBal = balances.balSavings + balances.balPre + balances.balRoth;
+        
+        // Calculate effective tax rate for the year
+        const totalGrossIncome = ssGross + penGross + spouseSsGross + spousePenGross + wGross;
+        const effectiveTaxRate = totalGrossIncome > 0 ? (taxesThisYear / totalGrossIncome) * 100 : 0;
+
+        return {
+          year: yearNum, 
+          age, 
+          salary: 0, 
+          contrib: 0,
+          ss: ssResults.ssNet, 
+          pen: penResults.penNet, 
+          spouseSs: spouseSsResults.ssNet, 
+          spousePen: spousePenResults.penNet, 
+          spend: actualSpend,
+          wNet, 
+          wGross, 
+          taxes: taxesThisYear, 
+          effectiveTaxRate,
+          balSavings: balances.balSavings, 
+          balPre: balances.balPre, 
+          balRoth: balances.balRoth, 
+          total: totalBal
+        };
       }
 
-    /**
-     * Generate final summary, write table, and update KPIs
-     */
-    function generateOutputAndSummary(params, rows, totalTaxes, maxDrawdown) {
-      // Write table
-      const tbody = $('rows');
-      tbody.innerHTML = rows.map(r => `
-        <tr>
-          <td class="neutral">${r.year}</td>
-          <td class="neutral">${r.age}</td>
-          <td class="income">${r.salary? fmt(r.salary): ''}</td>
-          <td class="outgoing">${r.spend ? fmt(r.spend) : ''}</td>
-          <td class="income">${r.contrib? fmt(r.contrib): ''}</td>
-          <td class="income">${r.ss? fmt(r.ss): ''}</td>
-          <td class="income">${r.pen? fmt(r.pen): ''}</td>
-          <td class="income">${r.spouseSs? fmt(r.spouseSs): ''}</td>
-          <td class="income">${r.spousePen? fmt(r.spousePen): ''}</td>
-          <td class="income">${r.wNet ? fmt(r.wNet) : ''}</td>
-          <td class="outgoing">${r.wGross? fmt(r.wGross): ''}</td>
-          <td class="outgoing">${r.taxes? fmt(r.taxes): ''}</td>
-          <td class="neutral">${r.effectiveTaxRate ? r.effectiveTaxRate.toFixed(1) + '%' : ''}</td>
-          <td class="neutral">${fmt(r.balSavings)}</td>
-          <td class="neutral">${fmt(r.balPre)}</td>
-          <td class="neutral">${fmt(r.balRoth)}</td>
-          <td class="neutral">${fmt(r.total)}</td>
-        </tr>`).join('');
 
-      // KPIs
-      const last = rows[rows.length - 1];
-      // Find the last age where there's still money, or endAge if money lasts throughout
-      const fundedTo = last.total > 0 ? params.endAge : rows.reduce((lastGoodAge, r) => r.total > 0 ? r.age : lastGoodAge, params.currentAge);
-      $('kpiAge').innerHTML = `${fundedTo} <span class="pill ${fundedTo >= params.endAge ? 'ok':'alert'}">${fundedTo >= params.endAge ? 'Fully funded' : 'Shortfall'}</span>`;
-      $('kpiEndBal').textContent = fmt(Math.max(0, last.total));
-      $('kpiDraw').textContent = `${params.retireAge}`;
-      $('kpiTax').textContent = fmt(params.balPre + params.balRoth + params.balSavings);
+      // Retirement years
+      for(let y = params.yearsToRetire; y < params.yearsTotal; y++){
 
-      // Chart (total balance)
-      drawChart(rows.map(r => ({ x: r.year, y: r.total })));
+          const benefitAmounts = {
+            ssAnnual,
+            penAnnual,
+            spouseSsAnnual,
+            spousePenAnnual
+          };
+          
+          const yearData = calculateRetirementYearData(params, y, balances, benefitAmounts, spend);
+          rows.push(yearData);
 
-      // Save rows for export
-      window.__rows = rows;
-    }
+          
+
+          const totalBal = yearData.total;
+          totalTaxes += yearData.taxes;
+          if(totalBal < maxDrawdown.value){ 
+            maxDrawdown = { year: yearData.year, value: totalBal }; 
+          }
+
+          // Step next year: Apply COLAs to benefits
+          const age = yearData.age;
+          if(age >= params.ssStart) ssAnnual *= (1 + params.ssCola);
+          if(age >= params.penStart && params.penMonthly > 0) penAnnual *= (1 + params.penCola);
+          
+          if(params.hasSpouse) {
+            const spouseCurrentAge = params.spouseAge + (age - params.currentAge);
+            if(spouseCurrentAge >= params.spouseSsStart) spouseSsAnnual *= (1 + params.spouseSsCola);
+            if(spouseCurrentAge >= params.spousePenStart && params.spousePenMonthly > 0) spousePenAnnual *= (1 + params.spousePenCola);
+          }
+          
+          spend *= (1 + params.inflation);
+          spend *= (1 - params.spendingDecline);
+        }
+
+      
+        console.log('Retirement years: ', rows);
+
+      /**
+       * Generate final summary, write table, and update KPIs
+       */
+      function generateOutputAndSummary(params, rows, totalTaxes, maxDrawdown) {
+        // Write table
+        const tbody = $('rows');
+        tbody.innerHTML = rows.map(r => `
+          <tr>
+            <td class="neutral">${r.year}</td>
+            <td class="neutral">${r.age}</td>
+            <td class="income">${r.salary? fmt(r.salary): ''}</td>
+            <td class="outgoing">${r.spend ? fmt(r.spend) : ''}</td>
+            <td class="income">${r.contrib? fmt(r.contrib): ''}</td>
+            <td class="income">${r.ss? fmt(r.ss): ''}</td>
+            <td class="income">${r.pen? fmt(r.pen): ''}</td>
+            <td class="income">${r.spouseSs? fmt(r.spouseSs): ''}</td>
+            <td class="income">${r.spousePen? fmt(r.spousePen): ''}</td>
+            <td class="income">${r.wNet ? fmt(r.wNet) : ''}</td>
+            <td class="outgoing">${r.wGross? fmt(r.wGross): ''}</td>
+            <td class="outgoing">${r.taxes? fmt(r.taxes): ''}</td>
+            <td class="neutral">${r.effectiveTaxRate ? r.effectiveTaxRate.toFixed(1) + '%' : ''}</td>
+            <td class="neutral">${fmt(r.balSavings)}</td>
+            <td class="neutral">${fmt(r.balPre)}</td>
+            <td class="neutral">${fmt(r.balRoth)}</td>
+            <td class="neutral">${fmt(r.total)}</td>
+          </tr>`).join('');
+
+        // KPIs
+        const last = rows[rows.length - 1];
+        // Find the last age where there's still money, or endAge if money lasts throughout
+        const fundedTo = last.total > 0 ? params.endAge : rows.reduce((lastGoodAge, r) => r.total > 0 ? r.age : lastGoodAge, params.currentAge);
+        $('kpiAge').innerHTML = `${fundedTo} <span class="pill ${fundedTo >= params.endAge ? 'ok':'alert'}">${fundedTo >= params.endAge ? 'Fully funded' : 'Shortfall'}</span>`;
+        $('kpiEndBal').textContent = fmt(Math.max(0, last.total));
+        $('kpiDraw').textContent = `${params.retireAge}`;
+        $('kpiTax').textContent = fmt(params.balPre + params.balRoth + params.balSavings);
+
+        // Chart (total balance)
+        drawChart(rows.map(r => ({ x: r.year, y: r.total })));
+
+        // Save rows for export
+        window.__rows = rows;
+      }
 
       // Key Performance Indicators
       const last = rows[rows.length - 1];
