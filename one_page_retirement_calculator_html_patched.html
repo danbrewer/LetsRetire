@@ -797,7 +797,9 @@
                 <th>Spouse Pen (Net)</th>
                 <th>Withdraw Net</th>
                 <th>Withdraw Gross</th>
-                <th>Taxes</th>
+                <th>Total Taxes</th>
+                <th>SS Taxes</th>
+                <th>Other Taxes</th>
                 <th>Effective Tax Rate</th>
                 <th>Savings Bal</th>
                 <th>Pre‑tax Bal</th>
@@ -1768,6 +1770,8 @@
         spend: currentYearSpending,
         wNet: 0, wGross: 0, 
         taxes: workingYearTaxes,
+        ssTaxes: 0,
+        otherTaxes: workingYearTaxes,
         effectiveTaxRate: grossTaxableIncome > 0 ? (workingYearTaxes / grossTaxableIncome) * 100 : 0,
         balSavings: balances.balSavings, 
         balPre: balances.balPre, 
@@ -2138,6 +2142,10 @@
         const totalGrossIncome = ssGross + penGross + spouseSsGross + spousePenGross + finalWGross;
         const effectiveTaxRate = totalGrossIncome > 0 ? (taxesThisYear / totalGrossIncome) * 100 : 0;
         
+        // Track Social Security taxes separately
+        const ssTaxes = ssResults.ssTaxes + spouseSsResults.ssTaxes;
+        const otherTaxes = taxesThisYear - ssTaxes;
+        
         return {
           year: yearNum, 
           age, 
@@ -2151,6 +2159,8 @@
           wNet: finalWNet, 
           wGross: finalWGross, 
           taxes: taxesThisYear, 
+          ssTaxes: ssTaxes,
+          otherTaxes: otherTaxes,
           effectiveTaxRate,
           balSavings: balances.balSavings, 
           balPre: balances.balPre, 
@@ -2219,6 +2229,8 @@
             <td class="income">${r.wNet ? fmt(r.wNet) : ''}</td>
             <td class="outgoing">${r.wGross? fmt(r.wGross): ''}</td>
             <td class="outgoing">${r.taxes? fmt(r.taxes): ''}</td>
+            <td class="outgoing">${r.ssTaxes? fmt(r.ssTaxes): ''}</td>
+            <td class="outgoing">${r.otherTaxes? fmt(r.otherTaxes): ''}</td>
             <td class="neutral">${r.effectiveTaxRate ? r.effectiveTaxRate.toFixed(1) + '%' : ''}</td>
             <td class="neutral">${fmt(r.balSavings)}</td>
             <td class="neutral">${fmt(r.balPre)}</td>
@@ -2327,10 +2339,10 @@
         showToast('No Data', 'Run a calculation first to generate data for export.', 'warning');
         return; 
       }
-      const headers = ['Year','Age','Salary','Contrib','SS_Net','Pension_Net','Spouse_SS_Net','Spouse_Pension_Net','Spend','Withdraw_Net','Withdraw_Gross','Taxes','Taxable_Bal','Pretax_Bal','Roth_Bal','Total_Bal'];
+      const headers = ['Year','Age','Salary','Contrib','SS_Net','Pension_Net','Spouse_SS_Net','Spouse_Pension_Net','Spend','Withdraw_Net','Withdraw_Gross','Total_Taxes','SS_Taxes','Other_Taxes','Taxable_Bal','Pretax_Bal','Roth_Bal','Total_Bal'];
       const csv = [headers.join(',')]
         .concat(calculations.map(r=>[
-          r.year, r.age, r.salary, r.contrib, r.ss, r.pen, r.spouseSs||0, r.spousePen||0, r.spend, r.wNet, r.wGross, r.taxes, r.balSavings, r.balPre, r.balRoth, r.total
+          r.year, r.age, r.salary, r.contrib, r.ss, r.pen, r.spouseSs||0, r.spousePen||0, r.spend, r.wNet, r.wGross, r.taxes, r.ssTaxes||0, r.otherTaxes||0, r.balSavings, r.balPre, r.balRoth, r.total
         ].map(v => typeof v === 'number' ? Math.round(v*100)/100 : v).join(',')))
         .join('\n');
       const blob = new Blob([csv], {type:'text/csv'});
