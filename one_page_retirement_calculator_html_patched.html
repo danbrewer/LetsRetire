@@ -801,6 +801,8 @@
                 <th>SS Taxes</th>
                 <th>Other Taxes</th>
                 <th>Non-Taxable Income</th>
+                <th>Taxable Income</th>
+                <th>Taxable Interest</th>
                 <th>Effective Tax Rate</th>
                 <th>Savings Bal</th>
                 <th>Pre‑tax Bal</th>
@@ -1774,6 +1776,8 @@
         ssTaxes: 0,
         otherTaxes: workingYearTaxes,
         nonTaxableIncome: 0, // No non-taxable income during working years
+        taxableIncome: grossTaxableIncome, // Working year taxable income
+        taxableInterest: taxableInterestIncome, // Track taxable interest earned
         effectiveTaxRate: grossTaxableIncome > 0 ? (workingYearTaxes / grossTaxableIncome) * 100 : 0,
         balSavings: balances.balSavings, 
         balPre: balances.balPre, 
@@ -2152,6 +2156,9 @@
         balances.balPre *= (1 + params.retPre);
         balances.balRoth *= (1 + params.retRoth);
         
+        // Calculate taxable interest earned this year (after withdrawals, before growth)
+        const taxableInterestEarned = (balances.balSavings / (1 + params.retTax)) * params.retTax;
+        
         const totalBal = balances.balSavings + balances.balPre + balances.balRoth;
         const totalGrossIncome = ssGross + penGross + spouseSsGross + spousePenGross + finalWGross;
         const effectiveTaxRate = totalGrossIncome > 0 ? (taxesThisYear / totalGrossIncome) * 100 : 0;
@@ -2160,6 +2167,7 @@
         const ssTaxes = ssResults.ssTaxes + spouseSsResults.ssTaxes;
         const otherTaxes = taxesThisYear - ssTaxes;
         const totalNonTaxableIncome = ssResults.ssNonTaxable + spouseSsResults.ssNonTaxable + penResults.penNonTaxable + spousePenResults.penNonTaxable;
+        const totalTaxableIncome = penResults.penTaxableAmount + spousePenResults.penTaxableAmount + ssResults.ssTaxableAmount + spouseSsResults.ssTaxableAmount + finalWGross;
         
         return {
           year: yearNum, 
@@ -2177,6 +2185,8 @@
           ssTaxes: ssTaxes,
           otherTaxes: otherTaxes,
           nonTaxableIncome: totalNonTaxableIncome,
+          taxableIncome: totalTaxableIncome,
+          taxableInterest: taxableInterestEarned,
           effectiveTaxRate,
           balSavings: balances.balSavings, 
           balPre: balances.balPre, 
@@ -2248,6 +2258,8 @@
             <td class="outgoing">${r.ssTaxes? fmt(r.ssTaxes): ''}</td>
             <td class="outgoing">${r.otherTaxes? fmt(r.otherTaxes): ''}</td>
             <td class="income">${r.nonTaxableIncome? fmt(r.nonTaxableIncome): ''}</td>
+            <td class="neutral">${r.taxableIncome? fmt(r.taxableIncome): ''}</td>
+            <td class="income">${r.taxableInterest? fmt(r.taxableInterest): ''}</td>
             <td class="neutral">${r.effectiveTaxRate ? r.effectiveTaxRate.toFixed(1) + '%' : ''}</td>
             <td class="neutral">${fmt(r.balSavings)}</td>
             <td class="neutral">${fmt(r.balPre)}</td>
@@ -2356,10 +2368,10 @@
         showToast('No Data', 'Run a calculation first to generate data for export.', 'warning');
         return; 
       }
-      const headers = ['Year','Age','Salary','Contrib','SS_Net','Pension_Net','Spouse_SS_Net','Spouse_Pension_Net','Spend','Withdraw_Net','Withdraw_Gross','Total_Taxes','SS_Taxes','Other_Taxes','Non_Taxable_Income','Taxable_Bal','Pretax_Bal','Roth_Bal','Total_Bal'];
+      const headers = ['Year','Age','Salary','Contrib','SS_Net','Pension_Net','Spouse_SS_Net','Spouse_Pension_Net','Spend','Withdraw_Net','Withdraw_Gross','Total_Taxes','SS_Taxes','Other_Taxes','Non_Taxable_Income','Taxable_Income','Taxable_Interest','Taxable_Bal','Pretax_Bal','Roth_Bal','Total_Bal'];
       const csv = [headers.join(',')]
         .concat(calculations.map(r=>[
-          r.year, r.age, r.salary, r.contrib, r.ss, r.pen, r.spouseSs||0, r.spousePen||0, r.spend, r.wNet, r.wGross, r.taxes, r.ssTaxes||0, r.otherTaxes||0, r.nonTaxableIncome||0, r.balSavings, r.balPre, r.balRoth, r.total
+          r.year, r.age, r.salary, r.contrib, r.ss, r.pen, r.spouseSs||0, r.spousePen||0, r.spend, r.wNet, r.wGross, r.taxes, r.ssTaxes||0, r.otherTaxes||0, r.nonTaxableIncome||0, r.taxableIncome||0, r.taxableInterest||0, r.balSavings, r.balPre, r.balRoth, r.total
         ].map(v => typeof v === 'number' ? Math.round(v*100)/100 : v).join(',')))
         .join('\n');
       const blob = new Blob([csv], {type:'text/csv'});
