@@ -2021,13 +2021,13 @@
       }
       
       /**
-       * Calculate a given retirement year
+       * Calculate a given retirement year with proper SS taxation based on total income
        */
       function calculateRetirementYearData(params, year, balances, benefitAmounts, spend) {
         const age = params.currentAge + year;
         const yearNum = new Date().getFullYear() + year;
 
-        // Income sources (apply start ages and COLA each year)
+        // Income sources (gross amounts)
         const hasSS = age >= params.ssStart;
         const hasPen = age >= params.penStart && params.penMonthly > 0;
         const ssGross = hasSS ? benefitAmounts.ssAnnual : 0;
@@ -2046,20 +2046,7 @@
           spousePenGross = hasSpousePen ? benefitAmounts.spousePenAnnual : 0;
         }
 
-        // Calculate total taxable income (starts with pension income)
-        let totalTaxableIncomeRef = { value: penGross + spousePenGross };
-        
-        // Calculate Social Security taxation
-        const ssResults = calculateSocialSecurityTaxation(params, ssGross, totalTaxableIncomeRef.value);
-        const spouseSsResults = calculateSocialSecurityTaxation(params, spouseSsGross, totalTaxableIncomeRef.value + ssResults.ssTaxableAmount);
-        
-        totalTaxableIncomeRef.value += ssResults.ssTaxableAmount + spouseSsResults.ssTaxableAmount;
-
-        // Calculate pension taxation
-        const penResults = calculatePensionTaxation(params, penGross, totalTaxableIncomeRef.value);
-        const spousePenResults = calculatePensionTaxation(params, spousePenGross, totalTaxableIncomeRef.value);
-
-        // Net spending need after all net incomes
+        // Get spending need (with overrides)
         const spendingOverride = getSpendingOverride(age);
         const actualSpend = spendingOverride !== null ? spendingOverride : spend;
         
@@ -2071,54 +2058,86 @@
           setSpendingFieldValue(age, spend);
         }
         
-        let needNet = Math.max(0, actualSpend - (ssResults.ssNet + penResults.penNet + spouseSsResults.ssNet + spousePenResults.penNet));
-        let needGross = 0;
+        // STEP 1: Calculate pension taxation (straightforward - doesn't depend on SS)
+        let totalTaxableIncomeRef = { value: penGross + spousePenGross };
+        const penResults = calculatePensionTaxation(params, penGross, totalTaxableIncomeRef.value);
+        const spousePenResults = calculatePensionTaxation(params, spousePenGross, totalTaxableIncomeRef.value);
         
-        // Calculate all taxes for this year so far
-        let taxesThisYear = penResults.penTaxes + spousePenResults.penTaxes + ssResults.ssTaxes + spouseSsResults.ssTaxes;
-
-        // Create withdrawal functions for this year
-        const withdrawalFunctions = createWithdrawalFunction(params, balances, totalTaxableIncomeRef);
+        // STEP 2: Estimate initial withdrawal need (before SS taxation)
+        let preliminaryNeedNet = Math.max(0, actualSpend - (penResults.penNet + spousePenResults.penNet));
         
-        // Apply Required Minimum Distributions if enabled
-        let rmdAmount = 0;
-        let wGross = 0, wNet = 0;
+        // STEP 3: Make preliminary withdrawals to estimate total income for SS calculation
+        let balancesCopy = { ...balances }; // Work with copy for estimation
+        let totalTaxableIncomeCopy = { value: totalTaxableIncomeRef.value };
+        
+        const preliminaryWithdrawalFunctions = createWithdrawalFunction(params, balancesCopy, totalTaxableIncomeCopy);
+        
+        // Apply RMDs first (preliminary)
+        let preliminaryRmdAmount = 0;
+        let preliminaryWGross = 0;
         
         if (params.useRMD && age >= 73) {
-          rmdAmount = calculateRMD(age, balances.balPre);
-          if (rmdAmount > 0) {
-            const rmdWithdrawal = withdrawalFunctions.withdrawRMD(rmdAmount);
-            needNet = Math.max(0, needNet - rmdWithdrawal.net);
-            wGross += rmdWithdrawal.gross;
-            wNet += rmdWithdrawal.net;
-            // console.log(`RMD at age ${age}: Required $${rmdAmount.toLocaleString()}, Withdrew $${rmdWithdrawal.gross.toLocaleString()} gross, $${rmdWithdrawal.net.toLocaleString()} net`);
+          preliminaryRmdAmount = calculateRMD(age, balancesCopy.balPre);
+          if (preliminaryRmdAmount > 0) {
+            const rmdWithdrawal = preliminaryWithdrawalFunctions.withdrawRMD(preliminaryRmdAmount);
+            preliminaryNeedNet = Math.max(0, preliminaryNeedNet - rmdWithdrawal.net);
+            preliminaryWGross += rmdWithdrawal.gross;
           }
         }
-
-        // Withdraw following order until remaining need is met (after RMDs)
-        // console.log('Withdrawal order:', params.order);
+        
+        // Then regular withdrawals (preliminary)
         for(const k of params.order){
-          // console.log(`Processing withdrawal kind: "${k}"`);
-          if(needNet <= 0) break;
-          const {gross=0, net=0} = withdrawalFunctions.withdrawFrom(k, needNet) || {};
-          needNet = Math.max(0, needNet - net);
-          wGross += gross; wNet += net;
+          if(preliminaryNeedNet <= 0) break;
+          const {gross=0, net=0} = preliminaryWithdrawalFunctions.withdrawFrom(k, preliminaryNeedNet) || {};
+          preliminaryNeedNet = Math.max(0, preliminaryNeedNet - net);
+          preliminaryWGross += gross;
         }
-
-        // Add withdrawal taxes to total
-        taxesThisYear += withdrawalFunctions.getTaxesThisYear();
-
+        
+        // STEP 4: Now calculate SS taxation based on total income including withdrawals
+        const totalIncomeForSSCalculation = totalTaxableIncomeCopy.value + preliminaryWGross;
+        const ssResults = calculateSocialSecurityTaxation(params, ssGross, totalIncomeForSSCalculation);
+        const spouseSsResults = calculateSocialSecurityTaxation(params, spouseSsGross, totalIncomeForSSCalculation + ssResults.ssTaxableAmount);
+        
+        // STEP 5: Recalculate final withdrawals with correct SS net amounts
+        totalTaxableIncomeRef.value = penGross + spousePenGross + ssResults.ssTaxableAmount + spouseSsResults.ssTaxableAmount;
+        
+        let finalNeedNet = Math.max(0, actualSpend - (ssResults.ssNet + penResults.penNet + spouseSsResults.ssNet + spousePenResults.penNet));
+        
+        const finalWithdrawalFunctions = createWithdrawalFunction(params, balances, totalTaxableIncomeRef);
+        
+        let finalWGross = 0, finalWNet = 0;
+        let taxesThisYear = penResults.penTaxes + spousePenResults.penTaxes + ssResults.ssTaxes + spouseSsResults.ssTaxes;
+        
+        // Apply RMDs (final)
+        if (params.useRMD && age >= 73 && preliminaryRmdAmount > 0) {
+          const rmdWithdrawal = finalWithdrawalFunctions.withdrawRMD(preliminaryRmdAmount);
+          finalNeedNet = Math.max(0, finalNeedNet - rmdWithdrawal.net);
+          finalWGross += rmdWithdrawal.gross;
+          finalWNet += rmdWithdrawal.net;
+          // console.log(`RMD at age ${age}: Required $${preliminaryRmdAmount.toLocaleString()}, Withdrew $${rmdWithdrawal.gross.toLocaleString()} gross, $${rmdWithdrawal.net.toLocaleString()} net`);
+        }
+        
+        // Regular withdrawals (final)
+        for(const k of params.order){
+          if(finalNeedNet <= 0) break;
+          const {gross=0, net=0} = finalWithdrawalFunctions.withdrawFrom(k, finalNeedNet) || {};
+          finalNeedNet = Math.max(0, finalNeedNet - net);
+          finalWGross += gross;
+          finalWNet += net;
+        }
+        
+        // Add withdrawal taxes
+        taxesThisYear += finalWithdrawalFunctions.getTaxesThisYear();
+        
         // Grow remaining balances
         balances.balSavings *= (1 + params.retTax);
         balances.balPre *= (1 + params.retPre);
         balances.balRoth *= (1 + params.retRoth);
-
-        const totalBal = balances.balSavings + balances.balPre + balances.balRoth;
         
-        // Calculate effective tax rate for the year
-        const totalGrossIncome = ssGross + penGross + spouseSsGross + spousePenGross + wGross;
+        const totalBal = balances.balSavings + balances.balPre + balances.balRoth;
+        const totalGrossIncome = ssGross + penGross + spouseSsGross + spousePenGross + finalWGross;
         const effectiveTaxRate = totalGrossIncome > 0 ? (taxesThisYear / totalGrossIncome) * 100 : 0;
-
+        
         return {
           year: yearNum, 
           age, 
@@ -2129,8 +2148,8 @@
           spouseSs: spouseSsResults.ssNet, 
           spousePen: spousePenResults.penNet, 
           spend: actualSpend,
-          wNet, 
-          wGross, 
+          wNet: finalWNet, 
+          wGross: finalWGross, 
           taxes: taxesThisYear, 
           effectiveTaxRate,
           balSavings: balances.balSavings, 
