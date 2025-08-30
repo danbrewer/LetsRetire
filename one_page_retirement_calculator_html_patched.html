@@ -800,6 +800,7 @@
                 <th>Total Taxes</th>
                 <th>SS Taxes</th>
                 <th>Other Taxes</th>
+                <th>Non-Taxable Income</th>
                 <th>Effective Tax Rate</th>
                 <th>Savings Bal</th>
                 <th>Pre‑tax Bal</th>
@@ -1772,6 +1773,7 @@
         taxes: workingYearTaxes,
         ssTaxes: 0,
         otherTaxes: workingYearTaxes,
+        nonTaxableIncome: 0, // No non-taxable income during working years
         effectiveTaxRate: grossTaxableIncome > 0 ? (workingYearTaxes / grossTaxableIncome) * 100 : 0,
         balSavings: balances.balSavings, 
         balPre: balances.balPre, 
@@ -1858,7 +1860,7 @@
        */
       function calculateSocialSecurityTaxation(params, ssGross, totalTaxableIncome) {
         if (!ssGross || ssGross <= 0) {
-          return { ssNet: 0, ssTaxableAmount: 0, ssTaxes: 0 };
+          return { ssNet: 0, ssTaxableAmount: 0, ssNonTaxable: 0, ssTaxes: 0 };
         }
         
         const isMarried = params.filingStatus === 'married';
@@ -1866,24 +1868,26 @@
         if (params.useSSRules) {
           // Use proper SS taxation rules based on provisional income
           const ssTaxableAmount = calculateSSTaxableAmount(ssGross, totalTaxableIncome, isMarried);
+          const ssNonTaxable = ssGross - ssTaxableAmount;
           const grossIncomeForTax = totalTaxableIncome + ssTaxableAmount;
           const effectiveRate = isMarried 
             ? getEffectiveTaxRateMarried(calculateTaxableIncome(grossIncomeForTax, "married"))
             : getEffectiveTaxRate(calculateTaxableIncome(grossIncomeForTax, "single"));
           const ssTaxes = ssTaxableAmount * (effectiveRate / 100);
           const ssNet = ssGross - ssTaxes;
-          // console.log(`SS: Gross $${ssGross.toLocaleString()}, Taxable $${ssTaxableAmount.toLocaleString()}, Tax $${ssTaxes.toLocaleString()}, Net $${ssNet.toLocaleString()}`);
-          return { ssNet, ssTaxableAmount, ssTaxes };
+          // console.log(`SS: Gross $${ssGross.toLocaleString()}, Taxable $${ssTaxableAmount.toLocaleString()}, Non-Taxable $${ssNonTaxable.toLocaleString()}, Tax $${ssTaxes.toLocaleString()}, Net $${ssNet.toLocaleString()}`);
+          return { ssNet, ssTaxableAmount, ssNonTaxable, ssTaxes };
         } else {
           // Use simple fixed percentage method
           const ssTaxableAmount = ssGross * 0.85;
+          const ssNonTaxable = ssGross * 0.15; // 15% is non-taxable
           const grossIncomeForTax_simple = totalTaxableIncome + ssTaxableAmount;
           const effRate_simple = isMarried 
             ? getEffectiveTaxRateMarried(calculateTaxableIncome(grossIncomeForTax_simple, "married"))
             : getEffectiveTaxRate(calculateTaxableIncome(grossIncomeForTax_simple, "single"));
           const ssTaxes = ssTaxableAmount * (effRate_simple / 100);
           const ssNet = ssGross - ssTaxes;
-          return { ssNet, ssTaxableAmount, ssTaxes };
+          return { ssNet, ssTaxableAmount, ssNonTaxable, ssTaxes };
         }
       }
       
@@ -1892,13 +1896,17 @@
        */
       function calculatePensionTaxation(params, penGross, totalTaxableIncome) {
         if (!penGross || penGross <= 0) {
-          return { penNet: 0, penTaxes: 0, pensionTaxRate: 0 };
+          return { penNet: 0, penTaxes: 0, penTaxableAmount: 0, penNonTaxable: 0, pensionTaxRate: 0 };
         }
+        
+        // Pensions are typically fully taxable, but we track for consistency
+        const penTaxableAmount = penGross; // 100% taxable
+        const penNonTaxable = 0; // 0% non-taxable
         
         let pensionTaxRate = params.taxPension;
         
         if (params.useAgiTax) {
-          const grossIncomeForPensionTax = penGross + totalTaxableIncome;
+          const grossIncomeForPensionTax = penTaxableAmount + totalTaxableIncome;
           const taxableIncomeForPensionTax = calculateTaxableIncome(grossIncomeForPensionTax, params.filingStatus);
           const taxableIncomeBasedRate = params.filingStatus === "married" 
             ? getEffectiveTaxRateMarried(taxableIncomeForPensionTax)
@@ -1910,10 +1918,10 @@
           // console.log(`Pension Taxable Income Tax Calc: Gross Income: $${grossIncomeForPensionTax.toLocaleString()}, Taxable Income: $${taxableIncomeForPensionTax.toLocaleString()}, Filing: ${params.filingStatus}, Taxable Income Rate: ${taxableIncomeBasedRate.toFixed(1)}%, Fixed Rate: ${(params.taxPension*100).toFixed(1)}%, Using: ${(pensionTaxRate*100).toFixed(1)}%`);
         }
         
-        const penNet = penGross * (1 - pensionTaxRate);
-        const penTaxes = penGross - penNet;
+        const penTaxes = penTaxableAmount * pensionTaxRate;
+        const penNet = penGross - penTaxes;
         
-        return { penNet, penTaxes, pensionTaxRate };
+        return { penNet, penTaxes, penTaxableAmount, penNonTaxable, pensionTaxRate };
       }
 
       // Setup retirement years; calculate initial benefit amounts
@@ -2064,10 +2072,14 @@
         
         // STEP 1: Calculate pension taxation (straightforward - doesn't depend on SS)
         let totalTaxableIncomeRef = { value: penGross + spousePenGross };
-        const penResults = calculatePensionTaxation(params, penGross, totalTaxableIncomeRef.value);
-        const spousePenResults = calculatePensionTaxation(params, spousePenGross, totalTaxableIncomeRef.value);
+        const penResults = calculatePensionTaxation(params, penGross, 0); // Start with no other income
+        const spousePenResults = calculatePensionTaxation(params, spousePenGross, penResults.penTaxableAmount);
+        
+        // Update taxable income reference to include only taxable portions
+        totalTaxableIncomeRef.value = penResults.penTaxableAmount + spousePenResults.penTaxableAmount;
         
         // STEP 2: Estimate initial withdrawal need (before SS taxation)
+        // Use net amounts (after tax) for spending calculation
         let preliminaryNeedNet = Math.max(0, actualSpend - (penResults.penNet + spousePenResults.penNet));
         
         // STEP 3: Make preliminary withdrawals to estimate total income for SS calculation
@@ -2103,8 +2115,10 @@
         const spouseSsResults = calculateSocialSecurityTaxation(params, spouseSsGross, totalIncomeForSSCalculation + ssResults.ssTaxableAmount);
         
         // STEP 5: Recalculate final withdrawals with correct SS net amounts
-        totalTaxableIncomeRef.value = penGross + spousePenGross + ssResults.ssTaxableAmount + spouseSsResults.ssTaxableAmount;
+        // Only include taxable portions in taxable income reference
+        totalTaxableIncomeRef.value = penResults.penTaxableAmount + spousePenResults.penTaxableAmount + ssResults.ssTaxableAmount + spouseSsResults.ssTaxableAmount;
         
+        // Use full net amounts (including non-taxable portions) for spending calculation
         let finalNeedNet = Math.max(0, actualSpend - (ssResults.ssNet + penResults.penNet + spouseSsResults.ssNet + spousePenResults.penNet));
         
         const finalWithdrawalFunctions = createWithdrawalFunction(params, balances, totalTaxableIncomeRef);
@@ -2142,9 +2156,10 @@
         const totalGrossIncome = ssGross + penGross + spouseSsGross + spousePenGross + finalWGross;
         const effectiveTaxRate = totalGrossIncome > 0 ? (taxesThisYear / totalGrossIncome) * 100 : 0;
         
-        // Track Social Security taxes separately
+        // Track Social Security taxes separately and non-taxable income
         const ssTaxes = ssResults.ssTaxes + spouseSsResults.ssTaxes;
         const otherTaxes = taxesThisYear - ssTaxes;
+        const totalNonTaxableIncome = ssResults.ssNonTaxable + spouseSsResults.ssNonTaxable + penResults.penNonTaxable + spousePenResults.penNonTaxable;
         
         return {
           year: yearNum, 
@@ -2161,6 +2176,7 @@
           taxes: taxesThisYear, 
           ssTaxes: ssTaxes,
           otherTaxes: otherTaxes,
+          nonTaxableIncome: totalNonTaxableIncome,
           effectiveTaxRate,
           balSavings: balances.balSavings, 
           balPre: balances.balPre, 
@@ -2231,6 +2247,7 @@
             <td class="outgoing">${r.taxes? fmt(r.taxes): ''}</td>
             <td class="outgoing">${r.ssTaxes? fmt(r.ssTaxes): ''}</td>
             <td class="outgoing">${r.otherTaxes? fmt(r.otherTaxes): ''}</td>
+            <td class="income">${r.nonTaxableIncome? fmt(r.nonTaxableIncome): ''}</td>
             <td class="neutral">${r.effectiveTaxRate ? r.effectiveTaxRate.toFixed(1) + '%' : ''}</td>
             <td class="neutral">${fmt(r.balSavings)}</td>
             <td class="neutral">${fmt(r.balPre)}</td>
@@ -2339,10 +2356,10 @@
         showToast('No Data', 'Run a calculation first to generate data for export.', 'warning');
         return; 
       }
-      const headers = ['Year','Age','Salary','Contrib','SS_Net','Pension_Net','Spouse_SS_Net','Spouse_Pension_Net','Spend','Withdraw_Net','Withdraw_Gross','Total_Taxes','SS_Taxes','Other_Taxes','Taxable_Bal','Pretax_Bal','Roth_Bal','Total_Bal'];
+      const headers = ['Year','Age','Salary','Contrib','SS_Net','Pension_Net','Spouse_SS_Net','Spouse_Pension_Net','Spend','Withdraw_Net','Withdraw_Gross','Total_Taxes','SS_Taxes','Other_Taxes','Non_Taxable_Income','Taxable_Bal','Pretax_Bal','Roth_Bal','Total_Bal'];
       const csv = [headers.join(',')]
         .concat(calculations.map(r=>[
-          r.year, r.age, r.salary, r.contrib, r.ss, r.pen, r.spouseSs||0, r.spousePen||0, r.spend, r.wNet, r.wGross, r.taxes, r.ssTaxes||0, r.otherTaxes||0, r.balSavings, r.balPre, r.balRoth, r.total
+          r.year, r.age, r.salary, r.contrib, r.ss, r.pen, r.spouseSs||0, r.spousePen||0, r.spend, r.wNet, r.wGross, r.taxes, r.ssTaxes||0, r.otherTaxes||0, r.nonTaxableIncome||0, r.balSavings, r.balPre, r.balRoth, r.total
         ].map(v => typeof v === 'number' ? Math.round(v*100)/100 : v).join(',')))
         .join('\n');
       const blob = new Blob([csv], {type:'text/csv'});
