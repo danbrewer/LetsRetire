@@ -1605,10 +1605,10 @@
         salary: 170000, salaryGrowth: 2.0, pretaxPct: 0, rothPct: 0, taxablePct: 35,
         matchCap: 0, matchRate: 0, 
         balPre: 600000, balRoth: 0, balSavings: 500000,
-        retPre: 3.0, retRoth: 0.0, retTax: 3.0, 
+        retPre: 0.0, retRoth: 0.0, retTax: 0.0, 
         ssMonthly: 2500, ssStart: 62, ssCola: 0.0,
         penMonthly: 3500, penStart: 65, penCola: 0, taxPre: 15, taxTaxable: 0, taxRoth: 0,
-        taxSS: 10, taxPension: 15, order: 'pretax,taxable,roth',
+        taxSS: 10, taxPension: 15, order: 'taxable,pretax,roth',
         filingStatus: 'married', useAgiTax: true, useSSRules: true, useRMD: true
       };
       // const ex = {
@@ -2245,11 +2245,15 @@
         // Track Social Security taxes separately and non-taxable income
         const ssTaxes = ssResults.ssTaxes + spouseSsResults.ssTaxes;
         const otherTaxes = taxesThisYear - ssTaxes;
-        const totalNonTaxableIncome = ssResults.ssNonTaxable + spouseSsResults.ssNonTaxable + penResults.penNonTaxable + spousePenResults.penNonTaxable;
-        const totalTaxableIncome = penResults.penTaxableAmount + spousePenResults.penTaxableAmount + ssResults.ssTaxableAmount + spouseSsResults.ssTaxableAmount + finalWGross;
         
         // Get withdrawal breakdown by source
         const withdrawalsBySource = finalWithdrawalFunctions.getWithdrawalsBySource();
+        
+        // Non-taxable income includes SS/pension non-taxable portions + savings withdrawals (already after-tax) + Roth withdrawals
+        const totalNonTaxableIncome = ssResults.ssNonTaxable + spouseSsResults.ssNonTaxable + penResults.penNonTaxable + spousePenResults.penNonTaxable + withdrawalsBySource.taxable + withdrawalsBySource.roth;
+        
+        // Only pre-tax withdrawals contribute to taxable income (savings withdrawals are already after-tax)
+        const totalTaxableIncome = penResults.penTaxableAmount + spousePenResults.penTaxableAmount + ssResults.ssTaxableAmount + spouseSsResults.ssTaxableAmount + withdrawalsBySource.pretax;
         
         return {
           year: yearNum, 
