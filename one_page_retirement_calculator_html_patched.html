@@ -159,6 +159,113 @@
     .warn { color: #ffbf69; background: rgba(255,191,105,.15); border:1px solid rgba(255,191,105,.3); }
     .disclaimer { color: var(--muted); font-size: 12px; }
     
+    /* SS Breakdown Popup Styles */
+    .ss-popup {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 100000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    
+    .ss-popup.show {
+      display: flex;
+    }
+    
+    .ss-popup-content {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      max-width: 500px;
+      width: 100%;
+      max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+    }
+    
+    .ss-popup-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    
+    .ss-popup-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text);
+      margin: 0;
+    }
+    
+    .ss-popup-close {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 24px;
+      cursor: pointer;
+      padding: 0;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+    }
+    
+    .ss-popup-close:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--text);
+    }
+    
+    .ss-breakdown-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .ss-breakdown-item:last-child {
+      border-bottom: none;
+      font-weight: 600;
+      padding-top: 12px;
+      margin-top: 8px;
+      border-top: 2px solid var(--border);
+    }
+    
+    .ss-breakdown-label {
+      color: var(--muted);
+    }
+    
+    .ss-breakdown-value {
+      color: var(--text);
+      font-weight: 500;
+    }
+    
+    .ss-breakdown-item:last-child .ss-breakdown-label,
+    .ss-breakdown-item:last-child .ss-breakdown-value {
+      color: var(--accent);
+    }
+    
+    /* Clickable SS link styling */
+    .ss-link {
+      color: inherit;
+      text-decoration: underline;
+      cursor: pointer;
+      text-decoration-style: dotted;
+    }
+    
+    .ss-link:hover {
+      color: var(--accent);
+      text-decoration-style: solid;
+    }
+    
     /* Toast Notification Styles */
     .toast {
       position: fixed !important;
@@ -1849,9 +1956,19 @@
         balSavings: balances.balSavings, 
         balPre: balances.balPre, 
         balRoth: balances.balRoth,
-        total: balances.balSavings + balances.balPre + balances.balRoth
+        total: balances.balSavings + balances.balPre + balances.balRoth,
+        // Add empty SS breakdown for working years
+        ssBreakdown: {
+          ssGross: 0,
+          ssTaxableAmount: 0,
+          ssNonTaxable: 0,
+          ssTaxes: 0
+        }
       };
     }
+
+    // Global variable to store calculations for popup access
+    let calculations = [];
 
     function calc(){
       // Enhanced retirement calculator with realistic working year modeling
@@ -1881,7 +1998,8 @@
         balSavings: params.balSavings
       };
 
-      const calculations = [];
+      // Reset calculations array
+      calculations = [];
 
       let currentSalary = params.startingSalary;
       let totalTaxes = 0;
@@ -2287,7 +2405,14 @@
           balSavings: balances.balSavings, 
           balPre: balances.balPre, 
           balRoth: balances.balRoth, 
-          total: totalBal
+          total: totalBal,
+          // Add SS breakdown data for popup
+          ssBreakdown: {
+            ssGross: ssGross,
+            ssTaxableAmount: ssResults.ssTaxableAmount,
+            ssNonTaxable: ssResults.ssNonTaxable,
+            ssTaxes: ssResults.ssTaxes
+          }
         };
       }
 
@@ -2337,7 +2462,7 @@
       function generateOutputAndSummary(params, rows, totalTaxes, maxDrawdown) {
         // Write table
         const tbody = $('rows');
-        tbody.innerHTML = calculations.map(r => `
+        tbody.innerHTML = calculations.map((r, index) => `
           <tr>
             <td class="neutral">${r.year}</td>
             <td class="neutral">${r.age}</td>
@@ -2346,7 +2471,7 @@
             <td class="outgoing">${r.spend ? fmt(r.spend) : ''}</td>
             
             <!-- NET INCOME (what you actually receive) -->
-            <td class="income">${r.ss? fmt(r.ss): ''}</td>
+            <td class="income">${r.ss? `<span class="ss-link" onclick="showSsBreakdown(${index})">${fmt(r.ss)}</span>`: ''}</td>
             <td class="income">${r.pen? fmt(r.pen): ''}</td>
             <td class="income">${r.spouseSs? fmt(r.spouseSs): ''}</td>
             <td class="income">${r.spousePen? fmt(r.spousePen): ''}</td>
@@ -2638,10 +2763,114 @@
       });
     }
 
+    // SS Breakdown Popup Functions
+    function showSsBreakdown(yearIndex) {
+      const calculation = calculations[yearIndex];
+      if (!calculation || !calculation.ss) {
+        return; // No SS data to show
+      }
+
+      const popup = document.getElementById('ssPopup');
+      const content = document.getElementById('ssBreakdownContent');
+      
+      // Get the breakdown data from the calculation
+      const ssBreakdown = calculation.ssBreakdown || {};
+      
+      // Build the breakdown content
+      let breakdownHtml = `
+        <div class="ss-breakdown-item">
+          <span class="ss-breakdown-label">Year:</span>
+          <span class="ss-breakdown-value">${calculation.year}</span>
+        </div>
+        <div class="ss-breakdown-item">
+          <span class="ss-breakdown-label">Age:</span>
+          <span class="ss-breakdown-value">${calculation.age}</span>
+        </div>
+        <div class="ss-breakdown-item">
+          <span class="ss-breakdown-label">SS Monthly Benefit:</span>
+          <span class="ss-breakdown-value">${fmt((ssBreakdown.ssGross || 0) / 12)}</span>
+        </div>
+        <div class="ss-breakdown-item">
+          <span class="ss-breakdown-label">SS Gross Annual:</span>
+          <span class="ss-breakdown-value">${fmt(ssBreakdown.ssGross || 0)}</span>
+        </div>
+        <div class="ss-breakdown-item">
+          <span class="ss-breakdown-label">Taxable Amount:</span>
+          <span class="ss-breakdown-value">${fmt(ssBreakdown.ssTaxableAmount || 0)}</span>
+        </div>
+        <div class="ss-breakdown-item">
+          <span class="ss-breakdown-label">Non-Taxable Amount:</span>
+          <span class="ss-breakdown-value">${fmt(ssBreakdown.ssNonTaxable || 0)}</span>
+        </div>
+        <div class="ss-breakdown-item">
+          <span class="ss-breakdown-label">Federal Taxes:</span>
+          <span class="ss-breakdown-value">${fmt(ssBreakdown.ssTaxes || 0)}</span>
+        </div>
+        <div class="ss-breakdown-item">
+          <span class="ss-breakdown-label">Net Amount (Take Home):</span>
+          <span class="ss-breakdown-value">${fmt(calculation.ss)}</span>
+        </div>
+      `;
+
+      // Add explanation based on taxation method
+      const params = parseInputParameters();
+      if (params.useSSRules) {
+        breakdownHtml += `
+          <div style="margin-top: 16px; padding: 12px; background: rgba(110, 168, 254, 0.1); border-radius: 8px; font-size: 12px; color: var(--muted);">
+            <strong>Taxation Method:</strong> IRS SS Rules<br/>
+            SS taxation based on provisional income thresholds. Up to 85% of benefits may be taxable for higher income levels.
+          </div>
+        `;
+      } else {
+        breakdownHtml += `
+          <div style="margin-top: 16px; padding: 12px; background: rgba(110, 168, 254, 0.1); border-radius: 8px; font-size: 12px; color: var(--muted);">
+            <strong>Taxation Method:</strong> Simplified (85% taxable)<br/>
+            Using simplified assumption that 85% of SS benefits are taxable.
+          </div>
+        `;
+      }
+
+      content.innerHTML = breakdownHtml;
+      popup.classList.add('show');
+    }
+
+    function closeSsPopup() {
+      const popup = document.getElementById('ssPopup');
+      popup.classList.remove('show');
+    }
+
+    // Close popup when clicking outside
+    document.addEventListener('click', function(event) {
+      const popup = document.getElementById('ssPopup');
+      if (event.target === popup) {
+        closeSsPopup();
+      }
+    });
+
+    // Close popup with Escape key
+    document.addEventListener('keydown', function(event) {
+      if (event.key === 'Escape') {
+        closeSsPopup();
+      }
+    });
+
     // First render
     initializeHelpIcons();
     loadExample();
     calc();
   </script>
+
+  <!-- SS Breakdown Popup -->
+  <div id="ssPopup" class="ss-popup">
+    <div class="ss-popup-content">
+      <div class="ss-popup-header">
+        <h3 class="ss-popup-title">Social Security Breakdown</h3>
+        <button class="ss-popup-close" onclick="closeSsPopup()">&times;</button>
+      </div>
+      <div id="ssBreakdownContent">
+        <!-- Content will be populated by JavaScript -->
+      </div>
+    </div>
+  </div>
 </body>
 </html>
