@@ -2936,6 +2936,7 @@
                 <div style="margin-top: 4px; font-size: 11px;">
                   Tier 1 (50%): ${fmt(details.tier1Amount)}<br/>
                   Tier 2 (85% of excess over $${details.threshold2.toLocaleString()}): ${fmt(details.tier2Amount)}<br/>
+                  85% of SS benefits: ${fmt((ssBreakdown.ssGross || 0) * 0.85)}<br/>
                   Total taxable: min(85% of SS, Tier 1 + Tier 2) = ${fmt(details.tier1Amount + details.tier2Amount)}
                 </div>
               </div>
