@@ -796,7 +796,9 @@
                 <th>Spouse SS (Net)</th>
                 <th>Spouse Pen (Net)</th>
                 <th>Withdraw Net</th>
-                <th>Withdraw Gross</th>
+                <th>401k Gross</th>
+                <th>Savings Gross</th>
+                <th>Roth Gross</th>
                 <th>Total Taxes</th>
                 <th>SS Taxes</th>
                 <th>Other Taxes</th>
@@ -1771,7 +1773,8 @@
         contrib: cPre + cRoth + cTax + match,
         ss: 0, pen: 0, spouseSs: 0, spousePen: 0, 
         spend: currentYearSpending,
-        wNet: 0, wGross: 0, 
+        wNet: 0, wGross: 0,
+        w401kGross: 0, wSavingsGross: 0, wRothGross: 0,
         taxes: workingYearTaxes,
         ssTaxes: 0,
         otherTaxes: workingYearTaxes,
@@ -1943,6 +1946,7 @@
        */
       function createWithdrawalFunction(params, balances, totalTaxableIncomeRef) {
         let taxesThisYear = 0;
+        let withdrawalsBySource = { pretax: 0, taxable: 0, roth: 0 };
         
         function withdrawFrom(kind, netAmount) {
           // console.log(`withdrawFrom called with kind: "${kind}", netAmount: ${netAmount}`);
@@ -1998,6 +2002,9 @@
           setBal(balRef - grossTake);
           taxesThisYear += taxPaid;
           
+          // Track withdrawals by source
+          withdrawalsBySource[kind] += grossTake;
+          
           // Add pre-tax withdrawals to Taxable Income for subsequent calculations
           if (kind === 'pretax') {
             totalTaxableIncomeRef.value += grossTake;
@@ -2030,10 +2037,18 @@
           taxesThisYear += taxPaid;
           totalTaxableIncomeRef.value += actualGross;
           
+          // Track RMD withdrawals as pretax
+          withdrawalsBySource.pretax += actualGross;
+          
           return { gross: actualGross, net: netReceived };
         }
         
-        return { withdrawFrom, withdrawRMD, getTaxesThisYear: () => taxesThisYear };
+        return { 
+          withdrawFrom, 
+          withdrawRMD, 
+          getTaxesThisYear: () => taxesThisYear,
+          getWithdrawalsBySource: () => withdrawalsBySource
+        };
       }
       
       /**
@@ -2169,6 +2184,9 @@
         const totalNonTaxableIncome = ssResults.ssNonTaxable + spouseSsResults.ssNonTaxable + penResults.penNonTaxable + spousePenResults.penNonTaxable;
         const totalTaxableIncome = penResults.penTaxableAmount + spousePenResults.penTaxableAmount + ssResults.ssTaxableAmount + spouseSsResults.ssTaxableAmount + finalWGross;
         
+        // Get withdrawal breakdown by source
+        const withdrawalsBySource = finalWithdrawalFunctions.getWithdrawalsBySource();
+        
         return {
           year: yearNum, 
           age, 
@@ -2180,7 +2198,10 @@
           spousePen: spousePenResults.penNet, 
           spend: actualSpend,
           wNet: finalWNet, 
-          wGross: finalWGross, 
+          wGross: finalWGross,
+          w401kGross: withdrawalsBySource.pretax,
+          wSavingsGross: withdrawalsBySource.taxable,
+          wRothGross: withdrawalsBySource.roth,
           taxes: taxesThisYear, 
           ssTaxes: ssTaxes,
           otherTaxes: otherTaxes,
@@ -2253,7 +2274,9 @@
             <td class="income">${r.spouseSs? fmt(r.spouseSs): ''}</td>
             <td class="income">${r.spousePen? fmt(r.spousePen): ''}</td>
             <td class="income">${r.wNet ? fmt(r.wNet) : ''}</td>
-            <td class="outgoing">${r.wGross? fmt(r.wGross): ''}</td>
+            <td class="outgoing">${r.w401kGross? fmt(r.w401kGross): ''}</td>
+            <td class="outgoing">${r.wSavingsGross? fmt(r.wSavingsGross): ''}</td>
+            <td class="outgoing">${r.wRothGross? fmt(r.wRothGross): ''}</td>
             <td class="outgoing">${r.taxes? fmt(r.taxes): ''}</td>
             <td class="outgoing">${r.ssTaxes? fmt(r.ssTaxes): ''}</td>
             <td class="outgoing">${r.otherTaxes? fmt(r.otherTaxes): ''}</td>
@@ -2368,10 +2391,10 @@
         showToast('No Data', 'Run a calculation first to generate data for export.', 'warning');
         return; 
       }
-      const headers = ['Year','Age','Salary','Contrib','SS_Net','Pension_Net','Spouse_SS_Net','Spouse_Pension_Net','Spend','Withdraw_Net','Withdraw_Gross','Total_Taxes','SS_Taxes','Other_Taxes','Non_Taxable_Income','Taxable_Income','Taxable_Interest','Taxable_Bal','Pretax_Bal','Roth_Bal','Total_Bal'];
+      const headers = ['Year','Age','Salary','Contrib','SS_Net','Pension_Net','Spouse_SS_Net','Spouse_Pension_Net','Spend','Withdraw_Net','401k_Gross','Savings_Gross','Roth_Gross','Total_Taxes','SS_Taxes','Other_Taxes','Non_Taxable_Income','Taxable_Income','Taxable_Interest','Taxable_Bal','Pretax_Bal','Roth_Bal','Total_Bal'];
       const csv = [headers.join(',')]
         .concat(calculations.map(r=>[
-          r.year, r.age, r.salary, r.contrib, r.ss, r.pen, r.spouseSs||0, r.spousePen||0, r.spend, r.wNet, r.wGross, r.taxes, r.ssTaxes||0, r.otherTaxes||0, r.nonTaxableIncome||0, r.taxableIncome||0, r.taxableInterest||0, r.balSavings, r.balPre, r.balRoth, r.total
+          r.year, r.age, r.salary, r.contrib, r.ss, r.pen, r.spouseSs||0, r.spousePen||0, r.spend, r.wNet, r.w401kGross||0, r.wSavingsGross||0, r.wRothGross||0, r.taxes, r.ssTaxes||0, r.otherTaxes||0, r.nonTaxableIncome||0, r.taxableIncome||0, r.taxableInterest||0, r.balSavings, r.balPre, r.balRoth, r.total
         ].map(v => typeof v === 'number' ? Math.round(v*100)/100 : v).join(',')))
         .join('\n');
       const blob = new Blob([csv], {type:'text/csv'});
