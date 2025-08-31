@@ -1217,9 +1217,14 @@
         taxableAmount = Math.min(ssGross * 0.5, excessIncome * 0.5);
       } else {
         // Up to 85% of SS benefits are taxable
-        const tier1Max = (threshold2 - threshold1) * 0.5; // Max from first tier
-        const excessIncome = provisionalIncome - threshold2;
-        const tier2Amount = Math.min(ssGross * 0.35, excessIncome * 0.85); // Additional 35% (85% - 50%)
+        // First calculate tier 1 amount (same as if we were in tier 1)
+        const tier1ExcessIncome = threshold2 - threshold1; // Full range of tier 1
+        const tier1Max = Math.min(ssGross * 0.5, tier1ExcessIncome * 0.5);
+        
+        // Then calculate tier 2 amount
+        const tier2ExcessIncome = provisionalIncome - threshold2;
+        const tier2Amount = Math.min(ssGross * 0.35, tier2ExcessIncome * 0.85); // Additional 35% (85% - 50%)
+        
         taxableAmount = Math.min(ssGross * 0.85, tier1Max + tier2Amount);
       }
       
@@ -2093,9 +2098,14 @@
             ssTaxableAmount = tier1Amount;
           } else {
             // Up to 85% of SS benefits are taxable
-            tier1Amount = (threshold2 - threshold1) * 0.5; // Max from first tier
-            const excessIncome = provisionalIncome - threshold2;
-            tier2Amount = Math.min(ssGross * 0.35, excessIncome * 0.85); // Additional 35% (85% - 50%)
+            // First calculate tier 1 amount (same as if we were in tier 1)
+            const tier1ExcessIncome = threshold2 - threshold1; // Full range of tier 1
+            tier1Amount = Math.min(ssGross * 0.5, tier1ExcessIncome * 0.5);
+            
+            // Then calculate tier 2 amount
+            const tier2ExcessIncome = provisionalIncome - threshold2;
+            tier2Amount = Math.min(ssGross * 0.35, tier2ExcessIncome * 0.85); // Additional 35% (85% - 50%)
+            
             ssTaxableAmount = Math.min(ssGross * 0.85, tier1Amount + tier2Amount);
           }
           
@@ -2913,7 +2923,7 @@
                 ⚠ Provisional income between $${details.threshold1.toLocaleString()} and $${details.threshold2.toLocaleString()}<br/>
                 → Up to 50% of SS benefits may be taxable<br/>
                 <div style="margin-top: 4px; font-size: 11px;">
-                  Excess over threshold: $${fmt(details.excessIncome1)}<br/>
+                  Excess over threshold: ${fmt(details.excessIncome1)}<br/>
                   Taxable amount: min(50% of SS, 50% of excess) = ${fmt(details.tier1Amount)}
                 </div>
               </div>
@@ -2924,9 +2934,9 @@
                 ⚠ Provisional income > $${details.threshold2.toLocaleString()}<br/>
                 → Up to 85% of SS benefits may be taxable<br/>
                 <div style="margin-top: 4px; font-size: 11px;">
-                  Tier 1 (50%): $${fmt(details.tier1Amount)}<br/>
-                  Tier 2 (85% of excess over $${details.threshold2.toLocaleString()}): $${fmt(details.tier2Amount)}<br/>
-                  Total taxable: min(85% of SS, Tier 1 + Tier 2) = $${fmt(details.tier1Amount + details.tier2Amount)}
+                  Tier 1 (50%): ${fmt(details.tier1Amount)}<br/>
+                  Tier 2 (85% of excess over $${details.threshold2.toLocaleString()}): ${fmt(details.tier2Amount)}<br/>
+                  Total taxable: min(85% of SS, Tier 1 + Tier 2) = ${fmt(details.tier1Amount + details.tier2Amount)}
                 </div>
               </div>
           `;
