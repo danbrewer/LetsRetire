@@ -2344,19 +2344,22 @@
           setSpendingFieldValue(age, spend);
         }
         
-        // STEP 1: Calculate pension taxation (straightforward - doesn't depend on SS)
-        let totalTaxableIncomeRef = { value: penGross + spousePenGross };
+        // STEP 1: Calculate taxable interest that will be earned this year (before withdrawals and growth)
+        const taxableInterestEarned = balances.balSavings * params.retTax;
+        
+        // STEP 2: Calculate pension taxation (straightforward - doesn't depend on SS)
+        let totalTaxableIncomeRef = { value: penGross + spousePenGross + taxableInterestEarned };
         const penResults = calculatePensionTaxation(params, penGross, 0); // Start with no other income
         const spousePenResults = calculatePensionTaxation(params, spousePenGross, penResults.penTaxableAmount);
         
-        // Update taxable income reference to include only taxable portions
-        totalTaxableIncomeRef.value = penResults.penTaxableAmount + spousePenResults.penTaxableAmount;
+        // Update taxable income reference to include only taxable portions plus taxable interest
+        totalTaxableIncomeRef.value = penResults.penTaxableAmount + spousePenResults.penTaxableAmount + taxableInterestEarned;
         
-        // STEP 2: Estimate initial withdrawal need (before SS taxation)
+        // STEP 3: Estimate initial withdrawal need (before SS taxation)
         // Use net amounts (after tax) for spending calculation
         let preliminaryNeedNet = Math.max(0, actualSpend - (penResults.penNet + spousePenResults.penNet));
         
-        // STEP 3: Make preliminary withdrawals to estimate total income for SS calculation
+        // STEP 4: Make preliminary withdrawals to estimate total income for SS calculation
         let balancesCopy = { ...balances }; // Work with copy for estimation
         let totalTaxableIncomeCopy = { value: totalTaxableIncomeRef.value };
         
@@ -2364,14 +2367,12 @@
         
         // Apply RMDs first (preliminary)
         let preliminaryRmdAmount = 0;
-        let preliminaryWGross = 0;
         
         if (params.useRMD && age >= 73) {
           preliminaryRmdAmount = calculateRMD(age, balancesCopy.balPre);
           if (preliminaryRmdAmount > 0) {
             const rmdWithdrawal = preliminaryWithdrawalFunctions.withdrawRMD(preliminaryRmdAmount);
             preliminaryNeedNet = Math.max(0, preliminaryNeedNet - rmdWithdrawal.net);
-            preliminaryWGross += rmdWithdrawal.gross;
           }
         }
         
@@ -2380,15 +2381,15 @@
           if(preliminaryNeedNet <= 0) break;
           const {gross=0, net=0} = preliminaryWithdrawalFunctions.withdrawFrom(k, preliminaryNeedNet) || {};
           preliminaryNeedNet = Math.max(0, preliminaryNeedNet - net);
-          preliminaryWGross += gross;
         }
         
-        // STEP 4: Now calculate SS taxation based on total income including withdrawals
-        const totalIncomeForSSCalculation = totalTaxableIncomeCopy.value + preliminaryWGross;
-        const ssResults = calculateSocialSecurityTaxation(params, ssGross, totalIncomeForSSCalculation);
-        const spouseSsResults = calculateSocialSecurityTaxation(params, spouseSsGross, totalIncomeForSSCalculation + ssResults.ssTaxableAmount);
+        // STEP 5: Now calculate SS taxation based on total taxable income (excluding non-taxable savings withdrawals)
+        // The totalTaxableIncomeCopy.value now contains only truly taxable income: pensions + pre-tax withdrawals + taxable interest
+        const totalTaxableIncomeForSS = totalTaxableIncomeCopy.value;
+        const ssResults = calculateSocialSecurityTaxation(params, ssGross, totalTaxableIncomeForSS);
+        const spouseSsResults = calculateSocialSecurityTaxation(params, spouseSsGross, totalTaxableIncomeForSS + ssResults.ssTaxableAmount);
         
-        // STEP 5: Recalculate final withdrawals with correct SS net amounts
+        // STEP 6: Recalculate final withdrawals with correct SS net amounts
         // Only include taxable portions in taxable income reference
         totalTaxableIncomeRef.value = penResults.penTaxableAmount + spousePenResults.penTaxableAmount + ssResults.ssTaxableAmount + spouseSsResults.ssTaxableAmount;
         
@@ -2426,8 +2427,7 @@
         balances.balPre *= (1 + params.retPre);
         balances.balRoth *= (1 + params.retRoth);
         
-        // Calculate taxable interest earned this year (after withdrawals, before growth)
-        const taxableInterestEarned = (balances.balSavings / (1 + params.retTax)) * params.retTax;
+        // Note: taxableInterestEarned was calculated earlier before withdrawals
         
         const totalBal = balances.balSavings + balances.balPre + balances.balRoth;
         const totalGrossIncome = ssGross + penGross + spouseSsGross + spousePenGross + finalWGross + taxableInterestEarned;
@@ -2486,7 +2486,7 @@
             ssNonTaxable: ssResults.ssNonTaxable,
             ssTaxes: ssResults.ssTaxes,
             calculationDetails: ssResults.calculationDetails,
-            otherTaxableIncome: totalIncomeForSSCalculation
+            otherTaxableIncome: totalTaxableIncomeForSS
           }
         };
       }
