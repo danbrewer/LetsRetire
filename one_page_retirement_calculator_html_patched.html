@@ -829,7 +829,7 @@
                 <th rowspan="2" class="timeline-header">Age</th>
                 <th rowspan="2" class="need-header">Annual Spend</th>
                 <th colspan="6" class="income-header">Net Income</th>
-                <th colspan="8" class="gross-income-header">Gross Income</th>
+                <th colspan="10" class="gross-income-header">Gross Income</th>
                 <th colspan="2" class="breakdown-header">Income Breakdown</th>
                 <th colspan="4" class="tax-header">Tax Information</th>
                 <th colspan="4" class="balance-header">Account Balances</th>
@@ -845,6 +845,8 @@
                 <th>Total Net</th>
                 
                 <!-- Gross Income (before taxes/deductions) -->
+                <th>Salary</th>
+                <th>Taxable Interest</th>
                 <th>SS Gross</th>
                 <th>Pension Gross</th>
                 <th>Spouse SS Gross</th>
@@ -2348,10 +2350,12 @@
             <td class="income">${r.totalNetIncome ? fmt(r.totalNetIncome) : ''}</td>
             
             <!-- GROSS INCOME (before taxes/deductions) -->
-            <td class="income">${r.ssGross? fmt(r.ssGross): r.salary? fmt(r.salary): ''}</td>
-            <td class="income">${r.penGross? fmt(r.penGross): r.taxableInterest? fmt(r.taxableInterest): ''}</td>
-            <td class="income">${r.spouseSsGross? fmt(r.spouseSsGross): ''}</td>
-            <td class="income">${r.spousePenGross? fmt(r.spousePenGross): ''}</td>
+            <td class="income">${r.salary ? fmt(r.salary) : ''}</td>
+            <td class="income">${r.taxableInterest ? fmt(r.taxableInterest) : ''}</td>
+            <td class="income">${r.ss ? fmt(r.ssGross || 0) : ''}</td>
+            <td class="income">${r.pen ? fmt(r.penGross || 0) : ''}</td>
+            <td class="income">${r.spouseSs ? fmt(r.spouseSsGross || 0) : ''}</td>
+            <td class="income">${r.spousePen ? fmt(r.spousePenGross || 0) : ''}</td>
             <td class="income">${r.w401kGross? fmt(r.w401kGross): ''}</td>
             <td class="income">${r.wSavingsGross? fmt(r.wSavingsGross): ''}</td>
             <td class="income">${r.wRothGross? fmt(r.wRothGross): ''}</td>
