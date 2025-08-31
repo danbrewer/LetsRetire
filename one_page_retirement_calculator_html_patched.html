@@ -788,8 +788,8 @@
               <tr>
                 <th>Year</th>
                 <th>Age</th>
+                <th>Annual Spend</th>
                 <th>Salary</th>
-                <th>Spend (Net)</th>
                 <th>Contrib (Tot)</th>
                 <th>SS (Net)</th>
                 <th>Pension (Net)</th>
@@ -1533,17 +1533,17 @@
   
     function loadExample(){
       const ex = {
-        currentAge: 60, retireAge: 62, endAge: 90, inflation: 2.5, 
-        spendingToday: 95000, spendingDecline: 1.0,
+        currentAge: 60, retireAge: 62, endAge: 90, inflation: 0.0, 
+        spendingToday: 95000, spendingDecline: 0.0,
         spouseAge: 56, spouseRetireAge: 62, 
-        spouseSsMonthly: 1000, spouseSsStart: 66, spouseSsCola: 2.0,
+        spouseSsMonthly: 1000, spouseSsStart: 66, spouseSsCola: 0.0,
         spousePenMonthly: 500, spousePenStart: 69, spousePenCola: 0, 
         spouseTaxSS: 10, spouseTaxPension: 20,
         salary: 170000, salaryGrowth: 2.0, pretaxPct: 0, rothPct: 0, taxablePct: 35,
         matchCap: 0, matchRate: 0, 
         balPre: 600000, balRoth: 0, balSavings: 500000,
         retPre: 3.0, retRoth: 0.0, retTax: 3.0, 
-        ssMonthly: 2500, ssStart: 62, ssCola: 2.5,
+        ssMonthly: 2500, ssStart: 62, ssCola: 0.0,
         penMonthly: 3500, penStart: 65, penCola: 0, taxPre: 15, taxTaxable: 0, taxRoth: 0,
         taxSS: 10, taxPension: 15, order: 'pretax,taxable,roth',
         filingStatus: 'married', useAgiTax: true, useSSRules: true, useRMD: true
@@ -2245,8 +2245,8 @@
           <tr>
             <td class="neutral">${r.year}</td>
             <td class="neutral">${r.age}</td>
-            <td class="income">${r.salary? fmt(r.salary): ''}</td>
             <td class="outgoing">${r.spend ? fmt(r.spend) : ''}</td>
+            <td class="income">${r.salary? fmt(r.salary): ''}</td>
             <td class="income">${r.contrib? fmt(r.contrib): ''}</td>
             <td class="income">${r.ss? fmt(r.ss): ''}</td>
             <td class="income">${r.pen? fmt(r.pen): ''}</td>
