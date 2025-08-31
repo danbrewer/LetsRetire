@@ -739,7 +739,7 @@
           </details>
 
           <!-- Annual Spending Details -->
-          <details open>
+          <details>
             <summary>
               <span>Annual Spending Details</span>
               <span class="chev">▶</span>
@@ -804,10 +804,10 @@
                 <th>Other Taxes</th>
                 <th>Non-Taxable Income</th>
                 <th>Taxable Income</th>
-                <th>Taxable Interest</th>
+                <th>Earned Interest</th>
                 <th>Effective Tax Rate</th>
                 <th>Savings Bal</th>
-                <th>Pre‑tax Bal</th>
+                <th>401k Bal</th>
                 <th>Roth Bal</th>
                 <th>Total Bal</th>
               </tr>
@@ -2266,7 +2266,7 @@
           <tr>
             <td class="neutral">${r.year}</td>
             <td class="neutral">${r.age}</td>
-            <td class="outgoing">${r.spend ? fmt(r.spend) : ''}</td>
+            <td class="neutral">${r.spend ? fmt(r.spend) : ''}</td>
             <td class="income">${r.salary? fmt(r.salary): ''}</td>
             <td class="income">${r.contrib? fmt(r.contrib): ''}</td>
             <td class="income">${r.ss? fmt(r.ss): ''}</td>
