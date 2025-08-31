@@ -2570,7 +2570,7 @@
             <td class="income">${r.nonTaxableIncome? fmt(r.nonTaxableIncome): ''}</td>
             
             <!-- THE COST -->
-            <td class="outgoing">${r.ssTaxes? fmt(r.ssTaxes): ''}</td>
+            <td class="outgoing">${r.ssTaxes !== undefined && r.ssTaxes !== null ? fmt(r.ssTaxes): ''}</td>
             <td class="outgoing">${r.otherTaxes? fmt(r.otherTaxes): ''}</td>
             <td class="outgoing">${r.taxes? fmt(r.taxes): ''}</td>
             <td class="neutral">${r.effectiveTaxRate ? r.effectiveTaxRate.toFixed(1) + '%' : ''}</td>
