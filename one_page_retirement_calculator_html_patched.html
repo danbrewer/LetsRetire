@@ -908,6 +908,60 @@
               </div>
             </div>
           </details>
+
+          <!-- Taxable Income Adjustments -->
+          <details>
+            <summary>
+              <span>Taxable Income Adjustments</span>
+              <span class="chev">▶</span>
+            </summary>
+            <div class="content">
+              <div class="hint">
+                <div style="margin-bottom: 8px;">
+                  Add additional taxable income sources (rental income, part-time work, etc.) for specific years.
+                  These amounts will be added to your annual salary and are subject to income tax.
+                  Leave fields blank if no additional taxable income for that year.
+                </div>
+                <div style="display: flex; align-items: center; gap: 5px;">
+                  <input type="checkbox" id="useTaxableCurrentYearValues" style="width: auto;" />
+                  <label for="useTaxableCurrentYearValues">
+                    Use current year values (will be adjusted for inflation for target year)
+                  </label>
+                </div>
+              </div>
+            
+              <div id="taxableIncomeDetailsGrid" class="grid-3">
+                <!-- Taxable income adjustment fields will be dynamically generated here -->
+              </div>
+            </div>
+          </details>
+
+          <!-- Tax-free Income Adjustments -->
+          <details>
+            <summary>
+              <span>Tax-free Income Adjustments</span>
+              <span class="chev">▶</span>
+            </summary>
+            <div class="content">
+              <div class="hint">
+                <div style="margin-bottom: 8px;">
+                  Add additional tax-free income sources (gifts, inheritance, Roth conversions, etc.) for specific years.
+                  These amounts will be added to your savings balance and are not subject to income tax.
+                  Leave fields blank if no additional tax-free income for that year.
+                </div>
+                <div style="display: flex; align-items: center; gap: 5px;">
+                  <input type="checkbox" id="useTaxFreeCurrentYearValues" style="width: auto;" />
+                  <label for="useTaxFreeCurrentYearValues">
+                    Use current year values (will be adjusted for inflation for target year)
+                  </label>
+                </div>
+              </div>
+            
+              <div id="taxFreeIncomeDetailsGrid" class="grid-3">
+                <!-- Tax-free income adjustment fields will be dynamically generated here -->
+              </div>
+            </div>
+          </details>
         </div>
       </div>
       <div class="actions">
@@ -996,6 +1050,7 @@
   // Track previous ages to only regenerate spending fields when they change
   let lastRetireAge = null;
   let lastEndAge = null;
+  let lastCurrentAge = null;
 
     const $ = (id) => document.getElementById(id);
     const pct = (v) => (isNaN(v) ? 0 : Number(v)/100);
@@ -1705,6 +1760,247 @@
       
       calc();
     }
+
+    // Taxable Income Adjustments Functions
+    function regenerateTaxableIncomeFields() {
+      const currentAge = num('currentAge');
+      const endAge = num('endAge');
+      
+      // Only generate if ages are valid
+      if (currentAge <= 0 || endAge <= currentAge) {
+        return;
+      }
+
+      const grid = document.getElementById('taxableIncomeDetailsGrid');
+      grid.innerHTML = ''; // Clear existing fields
+
+      // Generate input fields for each year from current age to end age
+      for (let age = currentAge; age <= endAge; age++) {
+        const div = document.createElement('div');
+        div.innerHTML = `
+          <label for="taxableIncome_${age}">Age ${age} taxable income ($)</label>
+          <input id="taxableIncome_${age}" type="number" step="1000" placeholder="0" />
+        `;
+        grid.appendChild(div);
+        
+        // Add event listener for inflation adjustment
+        const field = document.getElementById(`taxableIncome_${age}`);
+        field.addEventListener('blur', (event) => handleTaxableIncomeFieldChange(age, event));
+      }
+    }
+
+    function getTaxableIncomeOverride(age) {
+      const field = document.getElementById(`taxableIncome_${age}`);
+      if (field && field.value && !isNaN(field.value)) {
+        const useCurrentYear = document.getElementById('useTaxableCurrentYearValues').checked;
+        const fieldValue = Number(field.value);
+        
+        if (useCurrentYear) {
+          // If in current year mode, check if we have a stored current year value
+          const storedCurrentYearValue = field.getAttribute('data-current-year-value');
+          if (storedCurrentYearValue && !isNaN(storedCurrentYearValue)) {
+            // Use the stored current year value and apply inflation
+            const inflatedValue = applyInflationToIncomeValue(Number(storedCurrentYearValue), age);
+            return inflatedValue;
+          } else {
+            // Treat the field value as current year value and apply inflation
+            const inflatedValue = applyInflationToIncomeValue(fieldValue, age);
+            return inflatedValue;
+          }
+        } else {
+          // Return the field value as-is (already in future dollars)
+          return fieldValue;
+        }
+      }
+      return 0; // Default to 0 if no override specified
+    }
+
+    function handleTaxableIncomeFieldChange(age, event) {
+      const useCurrentYear = document.getElementById('useTaxableCurrentYearValues').checked;
+      const inputValue = parseFloat(event.target.value) || 0;
+      
+      if (useCurrentYear && inputValue > 0) {
+        // Store the current year value but don't change the field value
+        event.target.setAttribute('data-current-year-value', inputValue);
+        
+        // Calculate and show what the inflated value would be in the tooltip
+        const inflatedValue = applyInflationToIncomeValue(inputValue, age);
+        event.target.setAttribute('title', `Current year value: $${inputValue.toLocaleString()} → Inflated to age ${age}: $${inflatedValue.toLocaleString()}`);
+      } else if (!useCurrentYear) {
+        // In future dollar mode, clear any stored current year value
+        event.target.removeAttribute('data-current-year-value');
+        event.target.removeAttribute('title');
+      }
+      
+      // Trigger recalculation
+      calc();
+    }
+
+    function updateTaxableIncomeFieldsDisplayMode() {
+      const useCurrentYear = document.getElementById('useTaxableCurrentYearValues').checked;
+      const currentAge = num('currentAge');
+      const endAge = num('endAge');
+      
+      if (currentAge <= 0 || endAge <= currentAge) return;
+      
+      for (let age = currentAge; age <= endAge; age++) {
+        const field = document.getElementById(`taxableIncome_${age}`);
+        if (!field) continue;
+        
+        const currentValue = parseFloat(field.value) || 0;
+        const storedCurrentYearValue = parseFloat(field.getAttribute('data-current-year-value')) || 0;
+        
+        if (useCurrentYear) {
+          // Switch to current year mode
+          field.placeholder = 'Current year $';
+          
+          if (currentValue > 0 && !storedCurrentYearValue) {
+            field.setAttribute('data-current-year-value', currentValue);
+          }
+          
+          // Update tooltip to show inflation calculation
+          if (field.value && !isNaN(field.value)) {
+            const displayValue = parseFloat(field.value);
+            const inflatedValue = applyInflationToIncomeValue(displayValue, age);
+            field.setAttribute('title', `Current year value: $${displayValue.toLocaleString()} → Inflated to age ${age}: $${inflatedValue.toLocaleString()}`);
+          }
+        } else {
+          // Switch to inflated mode
+          field.placeholder = '0';
+          
+          // Clear the stored current year value and tooltips
+          field.removeAttribute('data-current-year-value');
+          field.removeAttribute('title');
+        }
+      }
+      
+      calc();
+    }
+
+    // Tax-free Income Adjustments Functions
+    function regenerateTaxFreeIncomeFields() {
+      const currentAge = num('currentAge');
+      const endAge = num('endAge');
+      
+      // Only generate if ages are valid
+      if (currentAge <= 0 || endAge <= currentAge) {
+        return;
+      }
+
+      const grid = document.getElementById('taxFreeIncomeDetailsGrid');
+      grid.innerHTML = ''; // Clear existing fields
+
+      // Generate input fields for each year from current age to end age
+      for (let age = currentAge; age <= endAge; age++) {
+        const div = document.createElement('div');
+        div.innerHTML = `
+          <label for="taxFreeIncome_${age}">Age ${age} tax-free income ($)</label>
+          <input id="taxFreeIncome_${age}" type="number" step="1000" placeholder="0" />
+        `;
+        grid.appendChild(div);
+        
+        // Add event listener for inflation adjustment
+        const field = document.getElementById(`taxFreeIncome_${age}`);
+        field.addEventListener('blur', (event) => handleTaxFreeIncomeFieldChange(age, event));
+      }
+    }
+
+    function getTaxFreeIncomeOverride(age) {
+      const field = document.getElementById(`taxFreeIncome_${age}`);
+      if (field && field.value && !isNaN(field.value)) {
+        const useCurrentYear = document.getElementById('useTaxFreeCurrentYearValues').checked;
+        const fieldValue = Number(field.value);
+        
+        if (useCurrentYear) {
+          // If in current year mode, check if we have a stored current year value
+          const storedCurrentYearValue = field.getAttribute('data-current-year-value');
+          if (storedCurrentYearValue && !isNaN(storedCurrentYearValue)) {
+            // Use the stored current year value and apply inflation
+            const inflatedValue = applyInflationToIncomeValue(Number(storedCurrentYearValue), age);
+            return inflatedValue;
+          } else {
+            // Treat the field value as current year value and apply inflation
+            const inflatedValue = applyInflationToIncomeValue(fieldValue, age);
+            return inflatedValue;
+          }
+        } else {
+          // Return the field value as-is (already in future dollars)
+          return fieldValue;
+        }
+      }
+      return 0; // Default to 0 if no override specified
+    }
+
+    function handleTaxFreeIncomeFieldChange(age, event) {
+      const useCurrentYear = document.getElementById('useTaxFreeCurrentYearValues').checked;
+      const inputValue = parseFloat(event.target.value) || 0;
+      
+      if (useCurrentYear && inputValue > 0) {
+        // Store the current year value but don't change the field value
+        event.target.setAttribute('data-current-year-value', inputValue);
+        
+        // Calculate and show what the inflated value would be in the tooltip
+        const inflatedValue = applyInflationToIncomeValue(inputValue, age);
+        event.target.setAttribute('title', `Current year value: $${inputValue.toLocaleString()} → Inflated to age ${age}: $${inflatedValue.toLocaleString()}`);
+      } else if (!useCurrentYear) {
+        // In future dollar mode, clear any stored current year value
+        event.target.removeAttribute('data-current-year-value');
+        event.target.removeAttribute('title');
+      }
+      
+      // Trigger recalculation
+      calc();
+    }
+
+    function updateTaxFreeIncomeFieldsDisplayMode() {
+      const useCurrentYear = document.getElementById('useTaxFreeCurrentYearValues').checked;
+      const currentAge = num('currentAge');
+      const endAge = num('endAge');
+      
+      if (currentAge <= 0 || endAge <= currentAge) return;
+      
+      for (let age = currentAge; age <= endAge; age++) {
+        const field = document.getElementById(`taxFreeIncome_${age}`);
+        if (!field) continue;
+        
+        const currentValue = parseFloat(field.value) || 0;
+        const storedCurrentYearValue = parseFloat(field.getAttribute('data-current-year-value')) || 0;
+        
+        if (useCurrentYear) {
+          // Switch to current year mode
+          field.placeholder = 'Current year $';
+          
+          if (currentValue > 0 && !storedCurrentYearValue) {
+            field.setAttribute('data-current-year-value', currentValue);
+          }
+          
+          // Update tooltip to show inflation calculation
+          if (field.value && !isNaN(field.value)) {
+            const displayValue = parseFloat(field.value);
+            const inflatedValue = applyInflationToIncomeValue(displayValue, age);
+            field.setAttribute('title', `Current year value: $${displayValue.toLocaleString()} → Inflated to age ${age}: $${inflatedValue.toLocaleString()}`);
+          }
+        } else {
+          // Switch to inflated mode
+          field.placeholder = '0';
+          
+          // Clear the stored current year value and tooltips
+          field.removeAttribute('data-current-year-value');
+          field.removeAttribute('title');
+        }
+      }
+      
+      calc();
+    }
+
+    // Helper function for income inflation (similar to spending inflation)
+    function applyInflationToIncomeValue(currentYearValue, targetAge) {
+      if (!currentYearValue) return 0;
+      const currentAge = parseInt(document.getElementById('currentAge').value) || 0;
+      const yearsFromNow = targetAge - currentAge;
+      const inflationRate = parseFloat(document.getElementById('inflation').value) / 100 || 0.025;
+      return currentYearValue * Math.pow(1 + inflationRate, yearsFromNow);
+    }
   
     function loadExample(){
       const ex = {
@@ -1757,6 +2053,12 @@
       // Clear spending override fields
       const grid = document.getElementById('spendingDetailsGrid');
       grid.innerHTML = '';
+      
+      // Clear income adjustment fields
+      const taxableGrid = document.getElementById('taxableIncomeDetailsGrid');
+      taxableGrid.innerHTML = '';
+      const taxFreeGrid = document.getElementById('taxFreeIncomeDetailsGrid');
+      taxFreeGrid.innerHTML = '';
       
       $('rows').innerHTML = '';
       $('kpiAge').textContent = '—';
@@ -1881,7 +2183,11 @@
 
       // Calculate taxes on working income including taxable interest
       const taxableInterestIncome = balances.balSavings * params.retTax;
-      let grossTaxableIncome = salary - cPre + taxableInterestIncome;
+      
+      // Get taxable income adjustments for this age
+      const taxableIncomeAdjustment = getTaxableIncomeOverride(age);
+      
+      let grossTaxableIncome = salary - cPre + taxableInterestIncome + taxableIncomeAdjustment;
       
       const workingYearTaxes = params.useAgiTax ? 
         calculateFederalTax(grossTaxableIncome, params.filingStatus) : 
@@ -1913,7 +2219,9 @@
       }
       
       // After-tax income calculations
-      const afterTaxIncome = salary - cPre - workingYearTaxes - cRoth;
+      // Total gross income includes salary plus additional taxable income
+      const totalGrossIncome = salary + taxableIncomeAdjustment;
+      const afterTaxIncome = totalGrossIncome - cPre - workingYearTaxes - cRoth;
       const availableForSpendingAndSavings = afterTaxIncome;
       const remainingAfterSpending = Math.max(0, availableForSpendingAndSavings - currentYearSpending);
       const desiredTaxableSavings = salary * params.taxablePct;
@@ -1936,9 +2244,12 @@
       }
 
       // Update balances
+      // Get tax-free income adjustments for this age
+      const taxFreeIncomeAdjustment = getTaxFreeIncomeOverride(age);
+      
       balances.balPre = (balances.balPre + cPre + match) * (1 + params.retPre);
       balances.balRoth = (balances.balRoth + cRoth) * (1 + params.retRoth);
-      balances.balSavings = (balances.balSavings + cTax) * (1 + params.retTax);
+      balances.balSavings = (balances.balSavings + cTax + taxFreeIncomeAdjustment) * (1 + params.retTax);
 
       return {
         age,
@@ -1951,12 +2262,12 @@
         taxes: workingYearTaxes,
         ssTaxes: 0,
         otherTaxes: workingYearTaxes,
-        nonTaxableIncome: 0, // No non-taxable income during working years
+        nonTaxableIncome: taxFreeIncomeAdjustment, // Tax-free income adjustment
         taxableIncome: grossTaxableIncome, // Working year taxable income
         taxableInterest: taxableInterestIncome, // Track taxable interest earned
-        totalIncome: salary + taxableInterestIncome, // Total income for working years (kept for backwards compatibility)
-        totalNetIncome: salary + taxableInterestIncome, // Net income for working years (salary is net after deductions)
-        totalGrossIncome: salary + taxableInterestIncome, // Gross income for working years
+        totalIncome: totalGrossIncome + taxableInterestIncome, // Total income for working years including adjustments
+        totalNetIncome: afterTaxIncome + taxFreeIncomeAdjustment, // Net income including tax-free adjustments
+        totalGrossIncome: totalGrossIncome + taxableInterestIncome, // Gross income for working years including adjustments
         effectiveTaxRate: grossTaxableIncome > 0 ? (workingYearTaxes / grossTaxableIncome) * 100 : 0,
         balSavings: balances.balSavings, 
         balPre: balances.balPre, 
@@ -1989,6 +2300,14 @@
         regenerateSpendingFields();
         lastRetireAge = params.retireAge;
         lastEndAge = params.endAge;
+      }
+
+      // Auto-regenerate income adjustment fields only if ages have changed
+      if (params.currentAge > 0 && params.endAge > params.currentAge && 
+          (lastCurrentAge !== params.currentAge || lastEndAge !== params.endAge)) {
+        regenerateTaxableIncomeFields();
+        regenerateTaxFreeIncomeFields();
+        lastCurrentAge = params.currentAge;
       }
 
       // Display enhanced tax calculation examples
@@ -2342,6 +2661,13 @@
           spousePenGross = hasSpousePen ? benefitAmounts.spousePenAnnual : 0;
         }
 
+        // Get income adjustments for this age
+        const taxableIncomeAdjustment = getTaxableIncomeOverride(age);
+        const taxFreeIncomeAdjustment = getTaxFreeIncomeOverride(age);
+        
+        // Add tax-free income adjustment to savings balance (not taxable)
+        balances.balSavings += taxFreeIncomeAdjustment;
+
         // Get spending need (with overrides)
         const spendingOverride = getSpendingOverride(age);
         const actualSpend = spendingOverride !== null ? spendingOverride : spend;
@@ -2358,12 +2684,12 @@
         const taxableInterestEarned = balances.balSavings * params.retTax;
         
         // STEP 2: Calculate pension taxation (straightforward - doesn't depend on SS)
-        let totalTaxableIncomeRef = { value: penGross + spousePenGross + taxableInterestEarned };
+        let totalTaxableIncomeRef = { value: penGross + spousePenGross + taxableInterestEarned + taxableIncomeAdjustment };
         const penResults = calculatePensionTaxation(params, penGross, 0); // Start with no other income
         const spousePenResults = calculatePensionTaxation(params, spousePenGross, penResults.penTaxableAmount);
         
         // Update taxable income reference to include only taxable portions plus taxable interest
-        totalTaxableIncomeRef.value = penResults.penTaxableAmount + spousePenResults.penTaxableAmount + taxableInterestEarned;
+        totalTaxableIncomeRef.value = penResults.penTaxableAmount + spousePenResults.penTaxableAmount + taxableInterestEarned + taxableIncomeAdjustment;
         
         // STEP 3: Estimate initial withdrawal need (before SS taxation)
         // Use net amounts (after tax) for spending calculation
@@ -2440,7 +2766,7 @@
         // Note: taxableInterestEarned was calculated earlier before withdrawals
         
         const totalBal = balances.balSavings + balances.balPre + balances.balRoth;
-        const totalGrossIncome = ssGross + penGross + spouseSsGross + spousePenGross + finalWGross + taxableInterestEarned;
+        const totalGrossIncome = ssGross + penGross + spouseSsGross + spousePenGross + finalWGross + taxableInterestEarned + taxableIncomeAdjustment;
         const effectiveTaxRate = totalGrossIncome > 0 ? (taxesThisYear / totalGrossIncome) * 100 : 0;
         
         // Track Social Security taxes separately and non-taxable income
@@ -2481,9 +2807,9 @@
           nonTaxableIncome: totalNonTaxableIncome,
           taxableIncome: totalTaxableIncome,
           taxableInterest: taxableInterestEarned,
-          totalIncome: ssResults.ssNet + penResults.penNet + spouseSsResults.ssNet + spousePenResults.penNet + finalWNet + taxableInterestEarned, // Kept for backwards compatibility
-          totalNetIncome: ssResults.ssNet + penResults.penNet + spouseSsResults.ssNet + spousePenResults.penNet + finalWNet,
-          totalGrossIncome: ssGross + penGross + spouseSsGross + spousePenGross + taxableInterestEarned + finalWGross, // All gross income: SS, pension, spouse benefits, interest, and withdrawals
+          totalIncome: ssResults.ssNet + penResults.penNet + spouseSsResults.ssNet + spousePenResults.penNet + finalWNet + taxableInterestEarned + taxableIncomeAdjustment + taxFreeIncomeAdjustment, // Total income including all adjustments
+          totalNetIncome: ssResults.ssNet + penResults.penNet + spouseSsResults.ssNet + spousePenResults.penNet + finalWNet + taxFreeIncomeAdjustment, // Net income including tax-free adjustments
+          totalGrossIncome: ssGross + penGross + spouseSsGross + spousePenGross + taxableInterestEarned + finalWGross + taxableIncomeAdjustment, // All gross income: SS, pension, spouse benefits, interest, withdrawals, and taxable income adjustments
           effectiveTaxRate,
           balSavings: balances.balSavings, 
           balPre: balances.balPre, 
@@ -2787,6 +3113,24 @@
               }
             });
           }
+
+          // If there are income adjustment fields in the import, regenerate the fields first
+          const hasTaxableIncomeOverrides = Object.keys(data.inputs).some(id => id.startsWith('taxableIncome_'));
+          const hasTaxFreeIncomeOverrides = Object.keys(data.inputs).some(id => id.startsWith('taxFreeIncome_'));
+          if (hasTaxableIncomeOverrides || hasTaxFreeIncomeOverrides) {
+            regenerateTaxableIncomeFields();
+            regenerateTaxFreeIncomeFields();
+            // Now load the income adjustment values
+            Object.entries(data.inputs).forEach(([id, value]) => {
+              if (id.startsWith('taxableIncome_') || id.startsWith('taxFreeIncome_')) {
+                const element = document.getElementById(id);
+                if (element) {
+                  element.value = value;
+                  loadedCount++;
+                }
+              }
+            });
+          }
           
           // Show import summary
           let summary = `Loaded ${loadedCount} of ${totalCount} settings.`;
@@ -2819,6 +3163,12 @@
     $('clearBtn').addEventListener('click', resetAll);
     $('useCurrentYearValues').addEventListener('change', function() {
       updateSpendingFieldsDisplayMode();
+    });
+    $('useTaxableCurrentYearValues').addEventListener('change', function() {
+      updateTaxableIncomeFieldsDisplayMode();
+    });
+    $('useTaxFreeCurrentYearValues').addEventListener('change', function() {
+      updateTaxFreeIncomeFieldsDisplayMode();
     });
 
     // Initialize help icons
