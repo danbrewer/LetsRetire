@@ -2263,12 +2263,12 @@
         ssTaxes: 0,
         otherTaxes: workingYearTaxes,
         nonTaxableIncome: taxFreeIncomeAdjustment, // Tax-free income adjustment
-        taxableIncome: grossTaxableIncome, // Working year taxable income
+        taxableIncome: calculateTaxableIncome(grossTaxableIncome, params.filingStatus), // Working year taxable income after standard deduction
         taxableInterest: taxableInterestIncome, // Track taxable interest earned
         totalIncome: totalGrossIncome + taxableInterestIncome, // Total income for working years including adjustments
         totalNetIncome: afterTaxIncome + taxFreeIncomeAdjustment, // Net income including tax-free adjustments
         totalGrossIncome: totalGrossIncome + taxableInterestIncome, // Gross income for working years including adjustments
-        effectiveTaxRate: grossTaxableIncome > 0 ? (workingYearTaxes / grossTaxableIncome) * 100 : 0,
+        effectiveTaxRate: calculateTaxableIncome(grossTaxableIncome, params.filingStatus) > 0 ? (workingYearTaxes / calculateTaxableIncome(grossTaxableIncome, params.filingStatus)) * 100 : 0,
         balSavings: balances.balSavings, 
         balPre: balances.balPre, 
         balRoth: balances.balRoth,
@@ -2767,7 +2767,6 @@
         
         const totalBal = balances.balSavings + balances.balPre + balances.balRoth;
         const totalGrossIncome = ssGross + penGross + spouseSsGross + spousePenGross + finalWGross + taxableInterestEarned + taxableIncomeAdjustment;
-        const effectiveTaxRate = totalGrossIncome > 0 ? (taxesThisYear / totalGrossIncome) * 100 : 0;
         
         // Track Social Security taxes separately and non-taxable income
         const ssTaxes = ssResults.ssTaxes + spouseSsResults.ssTaxes;
@@ -2777,10 +2776,16 @@
         const withdrawalsBySource = finalWithdrawalFunctions.getWithdrawalsBySource();
         
         // Non-taxable income includes SS/pension non-taxable portions + savings withdrawals (already after-tax) + Roth withdrawals
-        const totalNonTaxableIncome = ssResults.ssNonTaxable + spouseSsResults.ssNonTaxable + penResults.penNonTaxable + spousePenResults.penNonTaxable + withdrawalsBySource.taxable + withdrawalsBySource.roth;
+        const totalNonTaxableIncome = ssResults.ssNonTaxable + spouseSsResults.ssNonTaxable + penResults.penNonTaxable + spousePenResults.penNonTaxable + withdrawalsBySource.taxable + withdrawalsBySource.roth + taxFreeIncomeAdjustment;
         
-        // Taxable income includes pre-tax withdrawals + taxable interest earned + taxable portions of benefits
-        const totalTaxableIncome = penResults.penTaxableAmount + spousePenResults.penTaxableAmount + ssResults.ssTaxableAmount + spouseSsResults.ssTaxableAmount + withdrawalsBySource.pretax + taxableInterestEarned;
+        // Gross taxable income includes pre-tax withdrawals + taxable interest earned + taxable portions of benefits + taxable income adjustments
+        const grossTaxableIncome = penResults.penTaxableAmount + spousePenResults.penTaxableAmount + ssResults.ssTaxableAmount + spouseSsResults.ssTaxableAmount + withdrawalsBySource.pretax + taxableInterestEarned + taxableIncomeAdjustment;
+        
+        // Taxable income after standard deduction (this is what gets taxed)
+        const taxableIncomeAfterDeduction = calculateTaxableIncome(grossTaxableIncome, params.filingStatus);
+        
+        // Effective tax rate should be based on taxes paid vs taxable income (after deduction)
+        const effectiveTaxRate = taxableIncomeAfterDeduction > 0 ? (taxesThisYear / taxableIncomeAfterDeduction) * 100 : 0;
         
         return {
           year: yearNum, 
@@ -2805,7 +2810,7 @@
           ssTaxes: ssTaxes,
           otherTaxes: otherTaxes,
           nonTaxableIncome: totalNonTaxableIncome,
-          taxableIncome: totalTaxableIncome,
+          taxableIncome: taxableIncomeAfterDeduction, // Taxable income after standard deduction (this is what appears in the table)
           taxableInterest: taxableInterestEarned,
           totalIncome: ssResults.ssNet + penResults.penNet + spouseSsResults.ssNet + spousePenResults.penNet + finalWNet + taxableInterestEarned + taxableIncomeAdjustment + taxFreeIncomeAdjustment, // Total income including all adjustments
           totalNetIncome: ssResults.ssNet + penResults.penNet + spouseSsResults.ssNet + spousePenResults.penNet + finalWNet + taxFreeIncomeAdjustment, // Net income including tax-free adjustments
