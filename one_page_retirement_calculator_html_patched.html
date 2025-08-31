@@ -828,7 +828,7 @@
                 <th rowspan="2" class="timeline-header">Age</th>
                 <th rowspan="2" class="need-header">Annual Spend</th>
                 <th colspan="7" class="income-header">Income Streams</th>
-                <th colspan="4" class="withdrawal-header">Withdrawal Sources</th>
+                <th colspan="3" class="withdrawal-header">Withdrawal Sources</th>
                 <th colspan="2" class="breakdown-header">Income Breakdown</th>
                 <th colspan="4" class="tax-header">Tax Information</th>
                 <th colspan="4" class="balance-header">Account Balances</th>
@@ -842,13 +842,13 @@
                 <th>Spouse Pen (Net)</th>
                 <th>Withdraw Net</th>
                 <th>Salary</th>
-                <th>Contrib (Tot)</th>
+                <!-- <th>Contrib (Tot)</th> -->
+                <th>Earned Interest</th>
                 
                 <!-- Withdrawal Sources -->
                 <th>401k Gross</th>
                 <th>Savings Gross</th>
                 <th>Roth Gross</th>
-                <th>Earned Interest</th>
                 
                 <!-- Income Breakdown -->
                 <th>Taxable Income</th>
@@ -2332,13 +2332,13 @@
             <td class="income">${r.spousePen? fmt(r.spousePen): ''}</td>
             <td class="income">${r.wNet ? fmt(r.wNet) : ''}</td>
             <td class="income">${r.salary? fmt(r.salary): ''}</td>
-            <td class="income">${r.contrib? fmt(r.contrib): ''}</td>
+            <!-- <td class="income">${r.contrib? fmt(r.contrib): ''}</td> -->
+            <td class="income">${r.taxableInterest? fmt(r.taxableInterest): ''}</td>
             
             <!-- THE REALITY (Gross Withdrawals) -->
             <td class="neutral">${r.w401kGross? fmt(r.w401kGross): ''}</td>
             <td class="neutral">${r.wSavingsGross? fmt(r.wSavingsGross): ''}</td>
             <td class="neutral">${r.wRothGross? fmt(r.wRothGross): ''}</td>
-            <td class="income">${r.taxableInterest? fmt(r.taxableInterest): ''}</td>
             
             <!-- THE BREAKDOWN -->
             <td class="neutral">${r.taxableIncome? fmt(r.taxableIncome): ''}</td>
@@ -2458,10 +2458,10 @@
         showToast('No Data', 'Run a calculation first to generate data for export.', 'warning');
         return; 
       }
-      const headers = ['Year','Age','Annual_Spend','SS_Net','Pension_Net','Spouse_SS_Net','Spouse_Pension_Net','Withdraw_Net','Salary','Contrib','401k_Gross','Savings_Gross','Roth_Gross','Earned_Interest','Taxable_Income','Non_Taxable_Income','SS_Taxes','Other_Taxes','Total_Taxes','Effective_Tax_Rate','Savings_Bal','401k_Bal','Roth_Bal','Total_Bal'];
+      const headers = ['Year','Age','Annual_Spend','SS_Net','Pension_Net','Spouse_SS_Net','Spouse_Pension_Net','Withdraw_Net','Salary','Contrib','Earned_Interest','401k_Gross','Savings_Gross','Roth_Gross','Taxable_Income','Non_Taxable_Income','SS_Taxes','Other_Taxes','Total_Taxes','Effective_Tax_Rate','Savings_Bal','401k_Bal','Roth_Bal','Total_Bal'];
       const csv = [headers.join(',')]
         .concat(calculations.map(r=>[
-          r.year, r.age, r.spend, r.ss, r.pen, r.spouseSs||0, r.spousePen||0, r.wNet, r.salary, r.contrib, r.w401kGross||0, r.wSavingsGross||0, r.wRothGross||0, r.taxableInterest||0, r.taxableIncome||0, r.nonTaxableIncome||0, r.ssTaxes||0, r.otherTaxes||0, r.taxes, r.effectiveTaxRate||0, r.balSavings, r.balPre, r.balRoth, r.total
+          r.year, r.age, r.spend, r.ss, r.pen, r.spouseSs||0, r.spousePen||0, r.wNet, r.salary, r.contrib, r.taxableInterest||0, r.w401kGross||0, r.wSavingsGross||0, r.wRothGross||0, r.taxableIncome||0, r.nonTaxableIncome||0, r.ssTaxes||0, r.otherTaxes||0, r.taxes, r.effectiveTaxRate||0, r.balSavings, r.balPre, r.balRoth, r.total
         ].map(v => typeof v === 'number' ? Math.round(v*100)/100 : v).join(',')))
         .join('\n');
       const blob = new Blob([csv], {type:'text/csv'});
