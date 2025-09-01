@@ -3344,7 +3344,7 @@
         
         // Draw custom status symbol
         const symbolX = 22;
-        const symbolY = yPos + 4;
+        const symbolY = yPos + 4.5; // Vertically center the symbol
         const radius = 3;
         
         if (isFullyFunded) {
@@ -3372,15 +3372,15 @@
         doc.setFontSize(12);
         doc.setFont(undefined, 'bold');
         doc.setTextColor(statusColor[0], statusColor[1], statusColor[2]);
-        doc.text(`Status: ${statusText}`, 30, yPos + 7);
+        doc.text(`Status: ${statusText}`, 30, yPos + 5.5); // Perfect vertical centering
         
         if (!isFullyFunded) {
           doc.setFontSize(10);
           doc.setFont(undefined, 'normal');
           doc.text(`Your retirement funds will last until age ${fundedTo}`, 20, yPos + 12);
-          yPos += 20; // Extra space for the warning text
+          yPos += 25; // Extra space for the warning text + more spacing
         } else {
-          yPos += 15; // Less space when fully funded
+          yPos += 20; // More space when fully funded
         }
         
         doc.setTextColor(0, 0, 0);
