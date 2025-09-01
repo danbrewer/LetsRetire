@@ -4,6 +4,8 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>One‑Page Retirement Calculator</title>
+  <!-- jsPDF library for PDF generation -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     :root {
       --bg: #0b1220;
@@ -87,6 +89,7 @@
       padding: 10px 14px; border-radius: 10px; font-weight: 600; cursor: pointer; transition: .2s;
     }
     .primary { background: linear-gradient(180deg, #2b63ff, #2349d2); border-color: #1f3fb8; }
+    #pdfBtn { background: linear-gradient(180deg, #d63384, #b02a5b); border-color: #9a2456; color: white; }
     button:hover { transform: translateY(-1px); filter: brightness(1.07); }
 
     .results { 
@@ -966,9 +969,11 @@
         </div>
       </div>
       <div class="actions">
+        <button id="pdfBtn" title="Generate comprehensive PDF report">PDF Report</button>
         <button id="csvBtn" title="Export yearly table">Export CSV</button>
         <button id="exportJsonBtn" title="Export inputs as JSON file">Export JSON</button>
         <button id="importJsonBtn" title="Import inputs from JSON file">Import JSON</button>
+        <input type="file" id="jsonFileInput" accept=".json" style="display: none;">
       </div>
     </section>
 
@@ -3237,8 +3242,524 @@
       event.target.value = '';
     }
 
+    /**
+     * Generate a comprehensive PDF report of the retirement calculation
+     */
+    function generatePDFReport() {
+      if (!calculations || calculations.length === 0) {
+        showToast('No Data', 'Please run the calculation first before generating a PDF report.', 'error');
+        return;
+      }
+
+      try {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        const params = parseInputParameters();
+        
+        // Color scheme
+        const colors = {
+          primary: [43, 99, 255],     // Blue
+          secondary: [110, 168, 254], // Light blue
+          success: [69, 212, 131],    // Green
+          warning: [255, 191, 105],   // Orange
+          danger: [255, 107, 107],    // Red
+          dark: [11, 18, 32],         // Dark blue
+          muted: [124, 141, 181],     // Muted blue
+          light: [230, 238, 252]      // Very light blue
+        };
+        
+        // Helper functions for styling
+        function addColoredRect(x, y, width, height, color, alpha = 0.1) {
+          // Calculate lighter color instead of using alpha
+          const lightenedColor = color.map(c => Math.min(255, c + (255 - c) * (1 - alpha)));
+          doc.setFillColor(lightenedColor[0], lightenedColor[1], lightenedColor[2]);
+          doc.rect(x, y, width, height, 'F');
+        }
+        
+        function addSectionHeader(title, yPos, color = colors.primary) {
+          // Background rectangle
+          addColoredRect(15, yPos - 8, 180, 12, color, 0.1);
+          
+          // Header text
+          doc.setFontSize(14);
+          doc.setFont(undefined, 'bold');
+          doc.setTextColor(color[0], color[1], color[2]);
+          doc.text(title, 20, yPos);
+          
+          // Reset color
+          doc.setTextColor(0, 0, 0);
+          return yPos + 15;
+        }
+        
+        function addKeyValuePair(key, value, yPos, indent = 0, valueColor = null) {
+          doc.setFontSize(10);
+          doc.setFont(undefined, 'normal');
+          doc.setTextColor(60, 60, 60);
+          doc.text(key, 20 + indent, yPos);
+          
+          if (valueColor) {
+            doc.setTextColor(valueColor[0], valueColor[1], valueColor[2]);
+            doc.setFont(undefined, 'bold');
+          }
+          
+          doc.text(value, 120, yPos);
+          doc.setTextColor(0, 0, 0);
+          doc.setFont(undefined, 'normal');
+          
+          return yPos + 7;
+        }
+        
+        // PAGE 1: Executive Summary
+        // Header with gradient-like effect
+        addColoredRect(0, 0, 210, 40, colors.primary, 0.05);
+        addColoredRect(0, 0, 210, 25, colors.primary, 0.1);
+        
+        doc.setFontSize(24);
+        doc.setFont(undefined, 'bold');
+        doc.setTextColor(colors.primary[0], colors.primary[1], colors.primary[2]);
+        doc.text('Retirement Planning Report', 20, 20);
+        
+        doc.setFontSize(11);
+        doc.setFont(undefined, 'normal');
+        doc.setTextColor(colors.muted[0], colors.muted[1], colors.muted[2]);
+        doc.text(`Generated: ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}`, 20, 32);
+        
+        doc.setTextColor(0, 0, 0);
+        
+        let yPos = 55;
+        
+        // Executive Summary with status indicator
+        yPos = addSectionHeader('Executive Summary', yPos);
+        
+        const last = calculations[calculations.length - 1];
+        const fundedTo = last.total > 0 ? params.endAge : calculations.reduce((lastGoodAge, r) => r.total > 0 ? r.age : lastGoodAge, params.currentAge);
+        const isFullyFunded = fundedTo >= params.endAge;
+        
+        // Status box
+        const statusColor = isFullyFunded ? colors.success : colors.danger;
+        addColoredRect(15, yPos - 5, 180, 20, statusColor, 0.1);
+        
+        doc.setFontSize(12);
+        doc.setFont(undefined, 'bold');
+        doc.setTextColor(statusColor[0], statusColor[1], statusColor[2]);
+        doc.text(`Status: ${isFullyFunded ? '✓ Fully Funded' : '⚠ Funding Shortfall'}`, 20, yPos + 5);
+        
+        if (!isFullyFunded) {
+          doc.setFontSize(10);
+          doc.setFont(undefined, 'normal');
+          doc.text(`Your retirement funds will last until age ${fundedTo}`, 20, yPos + 12);
+        }
+        
+        doc.setTextColor(0, 0, 0);
+        yPos += 25;
+        
+        // Key metrics in a nice layout
+        yPos = addKeyValuePair('Current Age:', `${params.currentAge} years`, yPos);
+        yPos = addKeyValuePair('Planned Retirement Age:', `${params.retireAge} years`, yPos);
+        yPos = addKeyValuePair('Plan Duration:', `${params.endAge - params.currentAge} years total`, yPos);
+        yPos = addKeyValuePair('Years to Retirement:', `${params.retireAge - params.currentAge} years`, yPos);
+        yPos += 5;
+        
+        yPos = addKeyValuePair('Current Total Assets:', fmt(params.balPre + params.balRoth + params.balSavings), yPos, 0, colors.primary);
+        yPos = addKeyValuePair('Projected Final Balance:', fmt(Math.max(0, last.total)), yPos, 0, isFullyFunded ? colors.success : colors.danger);
+        yPos += 10;
+        
+        // Asset allocation with visual representation
+        yPos = addSectionHeader('Current Asset Allocation', yPos, colors.secondary);
+        
+        const totalAssets = params.balPre + params.balRoth + params.balSavings;
+        const pretaxPct = (params.balPre / totalAssets * 100).toFixed(1);
+        const rothPct = (params.balRoth / totalAssets * 100).toFixed(1);
+        const savingsPct = (params.balSavings / totalAssets * 100).toFixed(1);
+        
+        yPos = addKeyValuePair('Pre-tax (401k/IRA):', `${fmt(params.balPre)} (${pretaxPct}%)`, yPos, 0, colors.primary);
+        yPos = addKeyValuePair('Roth IRA/401k:', `${fmt(params.balRoth)} (${rothPct}%)`, yPos, 0, colors.success);
+        yPos = addKeyValuePair('Taxable Savings:', `${fmt(params.balSavings)} (${savingsPct}%)`, yPos, 0, colors.warning);
+        
+        // Visual asset allocation bars
+        const barWidth = 150;
+        const barHeight = 8;
+        const barStartX = 25;
+        yPos += 10;
+        
+        // Pre-tax bar
+        const pretaxBarWidth = barWidth * (params.balPre / totalAssets);
+        doc.setFillColor(colors.primary[0], colors.primary[1], colors.primary[2]);
+        doc.rect(barStartX, yPos, pretaxBarWidth, barHeight, 'F');
+        
+        // Roth bar
+        const rothBarWidth = barWidth * (params.balRoth / totalAssets);
+        doc.setFillColor(colors.success[0], colors.success[1], colors.success[2]);
+        doc.rect(barStartX + pretaxBarWidth, yPos, rothBarWidth, barHeight, 'F');
+        
+        // Savings bar
+        const savingsBarWidth = barWidth * (params.balSavings / totalAssets);
+        doc.setFillColor(colors.warning[0], colors.warning[1], colors.warning[2]);
+        doc.rect(barStartX + pretaxBarWidth + rothBarWidth, yPos, savingsBarWidth, barHeight, 'F');
+        
+        // Add border around the complete bar
+        doc.setDrawColor(150, 150, 150);
+        doc.rect(barStartX, yPos, barWidth, barHeight);
+        
+        yPos += 25;
+        
+        // PAGE 2: Chart and Key Assumptions
+        doc.addPage();
+        yPos = 20;
+        
+        // Add the chart
+        yPos = addSectionHeader('Balance Projection Chart', yPos);
+        
+        // Get chart data and create a simple line chart
+        const chartData = calculations.map(r => ({ x: r.year, y: r.total }));
+        const chartWidth = 170;
+        const chartHeight = 80;
+        const chartX = 20;
+        const chartY = yPos;
+        
+        // Chart background
+        addColoredRect(chartX - 5, chartY - 5, chartWidth + 10, chartHeight + 10, colors.light, 0.3);
+        
+        // Find min/max values for scaling
+        const maxBalance = Math.max(...chartData.map(d => d.y));
+        const minBalance = Math.min(0, Math.min(...chartData.map(d => d.y)));
+        const balanceRange = maxBalance - minBalance;
+        
+        const minYear = Math.min(...chartData.map(d => d.x));
+        const maxYear = Math.max(...chartData.map(d => d.x));
+        const yearRange = maxYear - minYear;
+        
+        // Draw grid lines
+        doc.setDrawColor(200, 200, 200);
+        doc.setLineWidth(0.2);
+        
+        // Vertical grid lines (years)
+        for (let i = 0; i <= 4; i++) {
+          const x = chartX + (chartWidth * i / 4);
+          doc.line(x, chartY, x, chartY + chartHeight);
+        }
+        
+        // Horizontal grid lines (balance)
+        for (let i = 0; i <= 4; i++) {
+          const y = chartY + (chartHeight * i / 4);
+          doc.line(chartX, y, chartX + chartWidth, y);
+        }
+        
+        // Draw the data line
+        doc.setDrawColor(colors.primary[0], colors.primary[1], colors.primary[2]);
+        doc.setLineWidth(2);
+        
+        for (let i = 0; i < chartData.length - 1; i++) {
+          const point1 = chartData[i];
+          const point2 = chartData[i + 1];
+          
+          const x1 = chartX + ((point1.x - minYear) / yearRange) * chartWidth;
+          const y1 = chartY + chartHeight - ((point1.y - minBalance) / balanceRange) * chartHeight;
+          const x2 = chartX + ((point2.x - minYear) / yearRange) * chartWidth;
+          const y2 = chartY + chartHeight - ((point2.y - minBalance) / balanceRange) * chartHeight;
+          
+          doc.line(x1, y1, x2, y2);
+        }
+        
+        // Add chart labels
+        doc.setTextColor(colors.muted[0], colors.muted[1], colors.muted[2]);
+        doc.setFontSize(8);
+        
+        // Y-axis labels (balance)
+        for (let i = 0; i <= 4; i++) {
+          const balance = minBalance + (balanceRange * i / 4);
+          const y = chartY + chartHeight - (chartHeight * i / 4);
+          doc.text((balance / 1000000).toFixed(1) + 'M', chartX - 15, y + 2);
+        }
+        
+        // X-axis labels (years)
+        for (let i = 0; i <= 4; i++) {
+          const year = Math.round(minYear + (yearRange * i / 4));
+          const x = chartX + (chartWidth * i / 4);
+          doc.text(year.toString(), x - 8, chartY + chartHeight + 10);
+        }
+        
+        // Chart title and axis labels
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(9);
+        doc.setFont(undefined, 'bold');
+        doc.text('Total Account Balance Over Time', chartX + chartWidth/2 - 35, chartY - 10);
+        
+        doc.setFont(undefined, 'normal');
+        doc.text('Balance ($M)', chartX - 15, chartY - 15);
+        doc.text('Year', chartX + chartWidth/2 - 10, chartY + chartHeight + 20);
+        
+        doc.setTextColor(0, 0, 0);
+        yPos = chartY + chartHeight + 30;
+        
+        // Key Assumptions
+        yPos = addSectionHeader('Key Assumptions', yPos, colors.secondary);
+        
+        yPos = addKeyValuePair('Current Annual Spending:', fmt(params.spendingToday), yPos);
+        yPos = addKeyValuePair('Inflation Rate:', `${(params.inflation * 100).toFixed(1)}%`, yPos);
+        yPos = addKeyValuePair('Annual Spending Decline:', `${(params.spendingDecline * 100).toFixed(1)}%`, yPos);
+        yPos = addKeyValuePair('Current Salary:', fmt(params.startingSalary), yPos);
+        yPos = addKeyValuePair('Salary Growth Rate:', `${(params.salaryGrowth * 100).toFixed(1)}%`, yPos);
+        yPos += 5;
+        
+        // Investment returns in a box
+        addColoredRect(15, yPos - 5, 180, 25, colors.secondary, 0.05);
+        
+        doc.setFontSize(11);
+        doc.setFont(undefined, 'bold');
+        doc.text('Expected Investment Returns:', 20, yPos + 5);
+        
+        doc.setFontSize(10);
+        doc.setFont(undefined, 'normal');
+        yPos += 12;
+        yPos = addKeyValuePair('Pre-tax Accounts:', `${(params.retPre * 100).toFixed(1)}%`, yPos, 5);
+        yPos = addKeyValuePair('Roth Accounts:', `${(params.retRoth * 100).toFixed(1)}%`, yPos, 5);
+        yPos = addKeyValuePair('Taxable Accounts:', `${(params.retTax * 100).toFixed(1)}%`, yPos, 5);
+        
+        yPos += 10;
+        
+        // Income Sources
+        yPos = addSectionHeader('Income Sources', yPos, colors.success);
+        
+        yPos = addKeyValuePair('Social Security (Annual):', fmt(params.ssMonthly * 12), yPos);
+        yPos = addKeyValuePair('SS Starting Age:', `${params.ssStart}`, yPos, 5);
+        yPos = addKeyValuePair('SS COLA:', `${(params.ssCola * 100).toFixed(1)}%`, yPos, 5);
+        yPos += 3;
+        
+        if (params.penMonthly > 0) {
+          yPos = addKeyValuePair('Pension (Annual):', fmt(params.penMonthly * 12), yPos);
+          yPos = addKeyValuePair('Pension Starting Age:', `${params.penStart}`, yPos, 5);
+          yPos = addKeyValuePair('Pension COLA:', `${(params.penCola * 100).toFixed(1)}%`, yPos, 5);
+        } else {
+          yPos = addKeyValuePair('Pension:', 'None', yPos);
+        }
+        
+        if (params.hasSpouse) {
+          yPos += 5;
+          addColoredRect(15, yPos - 3, 180, 20, colors.light, 0.3);
+          
+          doc.setFontSize(11);
+          doc.setFont(undefined, 'bold');
+          doc.text('Spouse Information:', 20, yPos + 5);
+          
+          doc.setFontSize(10);
+          doc.setFont(undefined, 'normal');
+          yPos += 12;
+          yPos = addKeyValuePair('Spouse Age:', `${params.spouseAge}`, yPos, 5);
+          yPos = addKeyValuePair('Spouse SS (Annual):', fmt(params.spouseSsMonthly * 12), yPos, 5);
+          yPos = addKeyValuePair('Spouse Pension (Annual):', fmt(params.spousePenMonthly * 12), yPos, 5);
+        }
+        
+        // PAGE 3: Detailed Analysis
+        doc.addPage();
+        yPos = 20;
+        
+        // Working Years Summary
+        const workingYears = calculations.filter(c => c.age < params.retireAge);
+        if (workingYears.length > 0) {
+          yPos = addSectionHeader('Working Years Analysis', yPos, colors.primary);
+          
+          const totalContributions = workingYears.reduce((sum, year) => sum + year.contrib, 0);
+          const totalTaxesPaid = workingYears.reduce((sum, year) => sum + year.taxes, 0);
+          const finalWorkingBalance = workingYears[workingYears.length - 1];
+          
+          yPos = addKeyValuePair('Years Until Retirement:', `${workingYears.length}`, yPos);
+          yPos = addKeyValuePair('Total Contributions:', fmt(totalContributions), yPos, 0, colors.success);
+          yPos = addKeyValuePair('Total Taxes Paid:', fmt(totalTaxesPaid), yPos, 0, colors.danger);
+          yPos = addKeyValuePair('Balance at Retirement:', fmt(finalWorkingBalance.total), yPos, 0, colors.primary);
+          yPos += 15;
+        }
+        
+        // Retirement Years Summary
+        const retirementYears = calculations.filter(c => c.age >= params.retireAge);
+        if (retirementYears.length > 0) {
+          yPos = addSectionHeader('Retirement Years Analysis', yPos, colors.secondary);
+          
+          const totalRetirementSpending = retirementYears.reduce((sum, year) => sum + year.spend, 0);
+          const totalRetirementTaxes = retirementYears.reduce((sum, year) => sum + year.taxes, 0);
+          const totalSSIncome = retirementYears.reduce((sum, year) => sum + (year.ss || 0), 0);
+          const totalPensionIncome = retirementYears.reduce((sum, year) => sum + (year.pen || 0), 0);
+          const totalWithdrawals = retirementYears.reduce((sum, year) => sum + year.wNet, 0);
+          
+          yPos = addKeyValuePair('Years in Retirement:', `${retirementYears.length}`, yPos);
+          yPos = addKeyValuePair('Total Spending:', fmt(totalRetirementSpending), yPos, 0, colors.danger);
+          yPos = addKeyValuePair('Total SS Income:', fmt(totalSSIncome), yPos, 0, colors.success);
+          yPos = addKeyValuePair('Total Pension Income:', fmt(totalPensionIncome), yPos, 0, colors.success);
+          yPos = addKeyValuePair('Total Account Withdrawals:', fmt(totalWithdrawals), yPos, 0, colors.warning);
+          yPos = addKeyValuePair('Total Retirement Taxes:', fmt(totalRetirementTaxes), yPos, 0, colors.danger);
+          yPos += 15;
+        }
+        
+        // Key Year Projections Table with better formatting
+        yPos = addSectionHeader('Key Year Projections', yPos, colors.primary);
+        
+        // Table header with colored background
+        addColoredRect(15, yPos - 5, 180, 12, colors.primary, 0.1);
+        
+        doc.setFontSize(8);
+        doc.setFont(undefined, 'bold');
+        doc.setTextColor(colors.primary[0], colors.primary[1], colors.primary[2]);
+        
+        const headers = ['Year', 'Age', 'Spending', 'SS', 'Pension', 'Withdrawals', 'Taxes', 'Balance'];
+        const colWidths = [20, 15, 25, 20, 25, 25, 20, 25];
+        let xPos = 20;
+        
+        headers.forEach((header, i) => {
+          doc.text(header, xPos, yPos + 5);
+          xPos += colWidths[i];
+        });
+        
+        yPos += 15;
+        doc.setTextColor(0, 0, 0);
+        doc.setFont(undefined, 'normal');
+        
+        // Show key years with alternating row colors
+        const keyYears = calculations.filter((calc, index) => {
+          const isEveryFifthYear = index % 5 === 0;
+          const isLastWorkingYear = calc.age === params.retireAge - 1;
+          const isFirstRetirementYear = calc.age === params.retireAge;
+          const isLastYear = index === calculations.length - 1;
+          const isFirstYear = index === 0;
+          return isEveryFifthYear || isLastWorkingYear || isFirstRetirementYear || isLastYear || isFirstYear;
+        });
+        
+        keyYears.forEach((calc, index) => {
+          if (yPos > 270) { // Page break
+            doc.addPage();
+            yPos = 20;
+            // Repeat headers
+            addColoredRect(15, yPos - 5, 180, 12, colors.primary, 0.1);
+            doc.setFont(undefined, 'bold');
+            doc.setTextColor(colors.primary[0], colors.primary[1], colors.primary[2]);
+            xPos = 20;
+            headers.forEach((header, i) => {
+              doc.text(header, xPos, yPos + 5);
+              xPos += colWidths[i];
+            });
+            yPos += 15;
+            doc.setTextColor(0, 0, 0);
+            doc.setFont(undefined, 'normal');
+          }
+          
+          // Alternating row background
+          if (index % 2 === 0) {
+            addColoredRect(15, yPos - 3, 180, 8, colors.light, 0.3);
+          }
+          
+          // Highlight retirement transition
+          if (calc.age === params.retireAge) {
+            addColoredRect(15, yPos - 3, 180, 8, colors.warning, 0.2);
+          }
+          
+          const values = [
+            calc.year.toString(),
+            calc.age.toString(),
+            calc.spend ? '$' + (calc.spend / 1000).toFixed(0) + 'k' : '',
+            calc.ss ? '$' + (calc.ss / 1000).toFixed(0) + 'k' : '',
+            calc.pen ? '$' + (calc.pen / 1000).toFixed(0) + 'k' : '',
+            calc.wNet ? '$' + (calc.wNet / 1000).toFixed(0) + 'k' : '',
+            calc.taxes ? '$' + (calc.taxes / 1000).toFixed(0) + 'k' : '',
+            '$' + (calc.total / 1000).toFixed(0) + 'k'
+          ];
+          
+          xPos = 20;
+          values.forEach((value, i) => {
+            // Color code negative balances
+            if (i === 7 && calc.total < 0) {
+              doc.setTextColor(colors.danger[0], colors.danger[1], colors.danger[2]);
+              doc.setFont(undefined, 'bold');
+            }
+            
+            doc.text(value, xPos, yPos + 2);
+            
+            // Reset formatting
+            doc.setTextColor(0, 0, 0);
+            doc.setFont(undefined, 'normal');
+            
+            xPos += colWidths[i];
+          });
+          yPos += 8;
+        });
+        
+        // PAGE 4: Disclaimers
+        doc.addPage();
+        yPos = 20;
+        
+        yPos = addSectionHeader('Important Disclaimers', yPos, colors.danger);
+        
+        addColoredRect(15, yPos - 5, 180, 140, colors.warning, 0.05);
+        
+        doc.setFontSize(10);
+        doc.setFont(undefined, 'normal');
+        
+        const disclaimers = [
+          'This retirement planning report is for educational and informational purposes only.',
+          'It should not be considered as financial, investment, or tax advice. The projections',
+          'are based on the assumptions you provided and are estimates only.',
+          '',
+          'Key Limitations:',
+          '• Market returns are unpredictable and may vary significantly from assumptions',
+          '• Tax laws and Social Security rules may change over time',
+          '• Healthcare costs and long-term care needs are not explicitly modeled',
+          '• Inflation may vary from the assumed rate',
+          '• Individual circumstances may require different strategies',
+          '• Sequence of returns risk is not modeled',
+          '',
+          'Important Considerations:',
+          '• This model uses simplified tax calculations',
+          '• RMD rules may change in the future',
+          '• Social Security benefits may be reduced if the trust fund is depleted',
+          '• Healthcare inflation typically exceeds general inflation',
+          '• Long-term care costs can be substantial',
+          '',
+          'Recommendations:',
+          '• Consult with a qualified financial advisor before making investment decisions',
+          '• Review and update your retirement plan regularly (annually recommended)',
+          '• Consider multiple scenarios with different assumptions',
+          '• Factor in emergency funds and unexpected expenses',
+          '• Consider professional tax planning advice',
+          '• Review beneficiary designations regularly',
+          '',
+          'This calculator uses simplified models and may not capture all aspects of',
+          'retirement planning. Professional advice is recommended for comprehensive',
+          'retirement planning tailored to your specific situation.'
+        ];
+        
+        disclaimers.forEach(line => {
+          if (yPos > 280) { // Page break
+            doc.addPage();
+            yPos = 20;
+          }
+          if (line === '') {
+            yPos += 5;
+          } else {
+            doc.text(line, 20, yPos, { maxWidth: 170 });
+            yPos += 7;
+          }
+        });
+        
+        // Footer on last page
+        yPos = 280;
+        doc.setFontSize(8);
+        doc.setTextColor(colors.muted[0], colors.muted[1], colors.muted[2]);
+        doc.text(`Generated by Retirement Calculator • ${new Date().toLocaleDateString()}`, 20, yPos);
+        doc.text('This report contains confidential financial information', 120, yPos);
+        
+        // Save the PDF
+        const filename = `retirement-plan-report-${new Date().toISOString().split('T')[0]}.pdf`;
+        doc.save(filename);
+        
+        showToast('PDF Generated', `Beautiful PDF report saved as: ${filename}`, 'success');
+        
+      } catch (error) {
+        console.error('PDF generation error:', error);
+        showToast('PDF Error', 'Error generating PDF report: ' + error.message, 'error');
+      }
+    }
+
     // Events
     $('calcBtn').addEventListener('click', calc);
+    $('pdfBtn').addEventListener('click', generatePDFReport);
     $('csvBtn').addEventListener('click', exportCSV);
     $('exportJsonBtn').addEventListener('click', exportJSON);
     $('importJsonBtn').addEventListener('click', importJSON);
