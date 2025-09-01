@@ -3563,7 +3563,7 @@
         yPos += 10;
         
         // Income Sources
-        yPos = addSectionHeader('Income Sources', yPos, colors.success, 100);
+        yPos = addSectionHeader('Income Sources', yPos, colors.success, 120);
         
         yPos = addKeyValuePair('Social Security (Annual):', fmt(params.ssMonthly * 12), yPos);
         yPos = addKeyValuePair('SS Starting Age:', `${params.ssStart}`, yPos, 5);
@@ -3593,6 +3593,9 @@
           yPos = addKeyValuePair('Spouse SS (Annual):', fmt(params.spouseSsMonthly * 12), yPos, 5);
           yPos = addKeyValuePair('Spouse Pension (Annual):', fmt(params.spousePenMonthly * 12), yPos, 5);
         }
+        
+        // Add some spacing before detailed analysis
+        yPos += 10;
         
         // Detailed Analysis (will add page break if needed)
         // Working Years Summary
