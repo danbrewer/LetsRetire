@@ -3546,9 +3546,27 @@
         yPos = addKeyValuePair('Salary Growth Rate:', `${(params.salaryGrowth * 100).toFixed(1)}%`, yPos);
         yPos += 10;
         
-        // Investment returns in a box
-        addColoredRect(15, yPos - 5, 180, 25, colors.secondary, 0.05);
+        // Investment returns in a box - dynamic sizing for any number of items
+        const investmentReturnsStartY = yPos;
         
+        // Define the investment return items dynamically
+        const investmentItems = [
+          { key: 'Pre-tax Accounts:', value: `${(params.retPre * 100).toFixed(1)}%` },
+          { key: 'Roth Accounts:', value: `${(params.retRoth * 100).toFixed(1)}%` },
+          { key: 'Taxable Accounts:', value: `${(params.retTax * 100).toFixed(1)}%` }
+          // Future investment types can be added here
+        ];
+        
+        // Calculate required height: header (12) + items (7 each) + padding (5)
+        const headerHeight = 12;
+        const itemHeight = 7;
+        const bottomPadding = 5;
+        const boxHeight = headerHeight + (investmentItems.length * itemHeight) + bottomPadding;
+        
+        // Draw the box first (background layer)
+        addColoredRect(15, investmentReturnsStartY - 5, 180, boxHeight, colors.secondary, 0.05);
+        
+        // Draw the content on top
         doc.setFontSize(11);
         doc.setFont(undefined, 'bold');
         doc.text('Expected Investment Returns:', 20, yPos + 5);
@@ -3556,9 +3574,11 @@
         doc.setFontSize(10);
         doc.setFont(undefined, 'normal');
         yPos += 12;
-        yPos = addKeyValuePair('Pre-tax Accounts:', `${(params.retPre * 100).toFixed(1)}%`, yPos, 5);
-        yPos = addKeyValuePair('Roth Accounts:', `${(params.retRoth * 100).toFixed(1)}%`, yPos, 5);
-        yPos = addKeyValuePair('Taxable Accounts:', `${(params.retTax * 100).toFixed(1)}%`, yPos, 5);
+        
+        // Draw all investment items dynamically
+        investmentItems.forEach(item => {
+          yPos = addKeyValuePair(item.key, item.value, yPos, 5);
+        });
         
         yPos += 10;
         
