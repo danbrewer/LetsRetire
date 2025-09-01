@@ -837,9 +837,10 @@
                     <span class="help-icon-placeholder" data-field="order"></span>
                   </label>
                   <select id="order">
-                    <option value="taxable,pretax,roth">Taxable → Pre‑tax → Roth (default)</option>
-                    <option value="pretax,taxable,roth">Pre‑tax → Taxable → Roth</option>
+                    <option value="taxable,pretax,roth">Savings → 401k → Roth (default)</option>
+                    <option value="pretax,taxable,roth">401k → Savings → Roth</option>
                     <option value="roth,pretax,taxable">Roth → Pre‑tax → Taxable</option>
+                    <option value="50/50">50/50 Savings/401k (after SS & Pension)</option>
                   </select>
                 </div>
               </div>
@@ -1467,7 +1468,7 @@
         },
         order: {
           title: "Withdrawal Order Strategy",
-          body: "The order in which you'll withdraw from different account types. The default strategy withdraws from taxable first, then pre-tax, then Roth to optimize taxes."
+          body: "The order in which you'll withdraw from different account types. The default strategy withdraws from Savings first, then 401k, then Roth to optimize taxes. The 50/50 strategy takes equal net amounts from savings and 401k accounts (after Social Security and pension income), automatically grossing up the 401k withdrawal to account for taxes."
         },
         useAgiTax: {
           title: "Taxable Income-Based Tax Calculation",
@@ -2634,6 +2635,64 @@
           getWithdrawalsBySource: () => withdrawalsBySource
         };
       }
+
+      /**
+       * 50/50 Withdrawal Strategy
+       * Takes equal net amounts from savings (taxable) and 401k (pretax) accounts
+       * The 401k withdrawal is grossed up to account for taxes so net amounts are equal
+       */
+      function withdraw50_50(withdrawalFunctions, totalNetNeeded) {
+        if (totalNetNeeded <= 0) {
+          return { totalGross: 0, totalNet: 0 };
+        }
+        
+        // Target net amount from each source (half each)
+        const targetNetPerSource = totalNetNeeded / 2;
+        
+        let totalGross = 0;
+        let totalNet = 0;
+        
+        // Try to withdraw equal net amounts from both sources
+        // Start with savings (no tax impact)
+        const savingsResult = withdrawalFunctions.withdrawFrom('taxable', targetNetPerSource);
+        totalGross += savingsResult.gross;
+        totalNet += savingsResult.net;
+        
+        // Then try to get equal net amount from pretax (401k)
+        // This will automatically gross up to account for taxes
+        const pretaxResult = withdrawalFunctions.withdrawFrom('pretax', targetNetPerSource);
+        totalGross += pretaxResult.gross;
+        totalNet += pretaxResult.net;
+        
+        // If we couldn't get enough from one source, try to make up the difference from the other
+        const remaining = totalNetNeeded - totalNet;
+        if (remaining > 0) {
+          // Try savings first for any remaining amount
+          if (remaining > 0) {
+            const additionalSavings = withdrawalFunctions.withdrawFrom('taxable', remaining);
+            totalGross += additionalSavings.gross;
+            totalNet += additionalSavings.net;
+          }
+          
+          // Then try pretax for any still remaining amount
+          const stillRemaining = totalNetNeeded - totalNet;
+          if (stillRemaining > 0) {
+            const additionalPretax = withdrawalFunctions.withdrawFrom('pretax', stillRemaining);
+            totalGross += additionalPretax.gross;
+            totalNet += additionalPretax.net;
+          }
+          
+          // Finally try Roth if both other sources are exhausted
+          const finalRemaining = totalNetNeeded - totalNet;
+          if (finalRemaining > 0) {
+            const rothResult = withdrawalFunctions.withdrawFrom('roth', finalRemaining);
+            totalGross += rothResult.gross;
+            totalNet += rothResult.net;
+          }
+        }
+        
+        return { totalGross, totalNet };
+      }
       
       /**
        * Calculate a given retirement year with proper SS taxation based on total income
@@ -2713,10 +2772,19 @@
         }
         
         // Then regular withdrawals (preliminary)
-        for(const k of params.order){
-          if(preliminaryNeedNet <= 0) break;
-          const {gross=0, net=0} = preliminaryWithdrawalFunctions.withdrawFrom(k, preliminaryNeedNet) || {};
-          preliminaryNeedNet = Math.max(0, preliminaryNeedNet - net);
+        if (params.order[0] === '50/50') {
+          // Special 50/50 strategy: equal net amounts from savings and 401k
+          if (preliminaryNeedNet > 0) {
+            const fiftyFiftyResults = withdraw50_50(preliminaryWithdrawalFunctions, preliminaryNeedNet);
+            preliminaryNeedNet = Math.max(0, preliminaryNeedNet - fiftyFiftyResults.totalNet);
+          }
+        } else {
+          // Standard withdrawal order strategy
+          for(const k of params.order){
+            if(preliminaryNeedNet <= 0) break;
+            const {gross=0, net=0} = preliminaryWithdrawalFunctions.withdrawFrom(k, preliminaryNeedNet) || {};
+            preliminaryNeedNet = Math.max(0, preliminaryNeedNet - net);
+          }
         }
         
         // STEP 5: Now calculate SS taxation based on total taxable income (excluding non-taxable savings withdrawals)
@@ -2747,12 +2815,22 @@
         }
         
         // Regular withdrawals (final)
-        for(const k of params.order){
-          if(finalNeedNet <= 0) break;
-          const {gross=0, net=0} = finalWithdrawalFunctions.withdrawFrom(k, finalNeedNet) || {};
-          finalNeedNet = Math.max(0, finalNeedNet - net);
-          finalWGross += gross;
-          finalWNet += net;
+        if (params.order[0] === '50/50') {
+          // Special 50/50 strategy: equal net amounts from savings and 401k
+          if (finalNeedNet > 0) {
+            const fiftyFiftyResults = withdraw50_50(finalWithdrawalFunctions, finalNeedNet);
+            finalWGross += fiftyFiftyResults.totalGross;
+            finalWNet += fiftyFiftyResults.totalNet;
+          }
+        } else {
+          // Standard withdrawal order strategy
+          for(const k of params.order){
+            if(finalNeedNet <= 0) break;
+            const {gross=0, net=0} = finalWithdrawalFunctions.withdrawFrom(k, finalNeedNet) || {};
+            finalNeedNet = Math.max(0, finalNeedNet - net);
+            finalWGross += gross;
+            finalWNet += net;
+          }
         }
         
         // Add withdrawal taxes
