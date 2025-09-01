@@ -3335,23 +3335,55 @@
         const fundedTo = last.total > 0 ? params.endAge : calculations.reduce((lastGoodAge, r) => r.total > 0 ? r.age : lastGoodAge, params.currentAge);
         const isFullyFunded = fundedTo >= params.endAge;
         
-        // Status box
+        // Status box - smaller and with custom drawn symbols
         const statusColor = isFullyFunded ? colors.success : colors.danger;
-        addColoredRect(15, yPos - 5, 180, 20, statusColor, 0.1);
+        const statusText = isFullyFunded ? 'Fully Funded' : 'Funding Shortfall';
+        
+        // Smaller status box
+        addColoredRect(15, yPos - 3, 180, 15, statusColor, 0.1);
+        
+        // Draw custom status symbol
+        const symbolX = 22;
+        const symbolY = yPos + 4;
+        const radius = 3;
+        
+        if (isFullyFunded) {
+          // Draw green circle with checkmark
+          doc.setFillColor(colors.success[0], colors.success[1], colors.success[2]);
+          doc.circle(symbolX, symbolY, radius, 'F');
+          
+          // Draw checkmark inside circle
+          doc.setDrawColor(255, 255, 255);
+          doc.setLineWidth(0.8);
+          doc.line(symbolX - 1.5, symbolY, symbolX - 0.5, symbolY + 1);
+          doc.line(symbolX - 0.5, symbolY + 1, symbolX + 1.5, symbolY - 1);
+        } else {
+          // Draw red circle with X
+          doc.setFillColor(colors.danger[0], colors.danger[1], colors.danger[2]);
+          doc.circle(symbolX, symbolY, radius, 'F');
+          
+          // Draw X inside circle
+          doc.setDrawColor(255, 255, 255);
+          doc.setLineWidth(0.8);
+          doc.line(symbolX - 1.5, symbolY - 1.5, symbolX + 1.5, symbolY + 1.5);
+          doc.line(symbolX - 1.5, symbolY + 1.5, symbolX + 1.5, symbolY - 1.5);
+        }
         
         doc.setFontSize(12);
         doc.setFont(undefined, 'bold');
         doc.setTextColor(statusColor[0], statusColor[1], statusColor[2]);
-        doc.text(`Status: ${isFullyFunded ? '✓ Fully Funded' : '⚠ Funding Shortfall'}`, 20, yPos + 5);
+        doc.text(`Status: ${statusText}`, 30, yPos + 7);
         
         if (!isFullyFunded) {
           doc.setFontSize(10);
           doc.setFont(undefined, 'normal');
           doc.text(`Your retirement funds will last until age ${fundedTo}`, 20, yPos + 12);
+          yPos += 20; // Extra space for the warning text
+        } else {
+          yPos += 15; // Less space when fully funded
         }
         
         doc.setTextColor(0, 0, 0);
-        yPos += 25;
         
         // Key metrics in a nice layout
         yPos = addKeyValuePair('Current Age:', `${params.currentAge} years`, yPos);
