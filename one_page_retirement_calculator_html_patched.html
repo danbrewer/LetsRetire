@@ -3447,7 +3447,7 @@
         const chartWidth = 170;
         const chartHeight = 80;
         const chartX = 20;
-        const chartY = yPos;
+        const chartY = yPos + 15; // Add more space between header and chart
         
         // Chart background
         addColoredRect(chartX - 5, chartY - 5, chartWidth + 10, chartHeight + 10, colors.light, 0.3);
@@ -3532,7 +3532,7 @@
         yPos = addKeyValuePair('Annual Spending Decline:', `${(params.spendingDecline * 100).toFixed(1)}%`, yPos);
         yPos = addKeyValuePair('Current Salary:', fmt(params.startingSalary), yPos);
         yPos = addKeyValuePair('Salary Growth Rate:', `${(params.salaryGrowth * 100).toFixed(1)}%`, yPos);
-        yPos += 5;
+        yPos += 10;
         
         // Investment returns in a box
         addColoredRect(15, yPos - 5, 180, 25, colors.secondary, 0.05);
