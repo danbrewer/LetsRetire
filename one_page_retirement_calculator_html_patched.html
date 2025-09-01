@@ -3276,7 +3276,22 @@
           doc.rect(x, y, width, height, 'F');
         }
         
-        function addSectionHeader(title, yPos, color = colors.primary) {
+        // Page break management
+        function checkAndAddPageBreak(currentY, requiredSpace) {
+          const pageHeight = 297; // A4 page height in mm
+          const bottomMargin = 20; // Space to leave at bottom
+          
+          if (currentY + requiredSpace > pageHeight - bottomMargin) {
+            doc.addPage();
+            return 20; // Start new page at top margin
+          }
+          return currentY;
+        }
+        
+        function addSectionHeader(title, yPos, color = colors.primary, estimatedSectionHeight = 50) {
+          // Check if we need a page break before starting this section
+          yPos = checkAndAddPageBreak(yPos, estimatedSectionHeight);
+          
           // Background rectangle
           addColoredRect(15, yPos - 8, 180, 12, color, 0.1);
           
@@ -3397,7 +3412,7 @@
         yPos += 10;
         
         // Asset allocation with visual representation
-        yPos = addSectionHeader('Current Asset Allocation', yPos, colors.secondary);
+        yPos = addSectionHeader('Current Asset Allocation', yPos, colors.secondary, 80);
         
         const totalAssets = params.balPre + params.balRoth + params.balSavings;
         const pretaxPct = (params.balPre / totalAssets * 100).toFixed(1);
@@ -3435,12 +3450,9 @@
         
         yPos += 25;
         
-        // PAGE 2: Chart and Key Assumptions
-        doc.addPage();
-        yPos = 20;
-        
+        // Chart and Key Assumptions (will add page break if needed)
         // Add the chart
-        yPos = addSectionHeader('Balance Projection Chart', yPos);
+        yPos = addSectionHeader('Balance Projection Chart', yPos, colors.primary, 120);
         
         // Get chart data and create a simple line chart
         const chartData = calculations.map(r => ({ x: r.year, y: r.total }));
@@ -3525,7 +3537,7 @@
         yPos = chartY + chartHeight + 30;
         
         // Key Assumptions
-        yPos = addSectionHeader('Key Assumptions', yPos, colors.secondary);
+        yPos = addSectionHeader('Key Assumptions', yPos, colors.secondary, 70);
         
         yPos = addKeyValuePair('Current Annual Spending:', fmt(params.spendingToday), yPos);
         yPos = addKeyValuePair('Inflation Rate:', `${(params.inflation * 100).toFixed(1)}%`, yPos);
@@ -3551,7 +3563,7 @@
         yPos += 10;
         
         // Income Sources
-        yPos = addSectionHeader('Income Sources', yPos, colors.success);
+        yPos = addSectionHeader('Income Sources', yPos, colors.success, 100);
         
         yPos = addKeyValuePair('Social Security (Annual):', fmt(params.ssMonthly * 12), yPos);
         yPos = addKeyValuePair('SS Starting Age:', `${params.ssStart}`, yPos, 5);
@@ -3582,14 +3594,11 @@
           yPos = addKeyValuePair('Spouse Pension (Annual):', fmt(params.spousePenMonthly * 12), yPos, 5);
         }
         
-        // PAGE 3: Detailed Analysis
-        doc.addPage();
-        yPos = 20;
-        
+        // Detailed Analysis (will add page break if needed)
         // Working Years Summary
         const workingYears = calculations.filter(c => c.age < params.retireAge);
         if (workingYears.length > 0) {
-          yPos = addSectionHeader('Working Years Analysis', yPos, colors.primary);
+          yPos = addSectionHeader('Working Years Analysis', yPos, colors.primary, 60);
           
           const totalContributions = workingYears.reduce((sum, year) => sum + year.contrib, 0);
           const totalTaxesPaid = workingYears.reduce((sum, year) => sum + year.taxes, 0);
@@ -3605,7 +3614,7 @@
         // Retirement Years Summary
         const retirementYears = calculations.filter(c => c.age >= params.retireAge);
         if (retirementYears.length > 0) {
-          yPos = addSectionHeader('Retirement Years Analysis', yPos, colors.secondary);
+          yPos = addSectionHeader('Retirement Years Analysis', yPos, colors.secondary, 70);
           
           const totalRetirementSpending = retirementYears.reduce((sum, year) => sum + year.spend, 0);
           const totalRetirementTaxes = retirementYears.reduce((sum, year) => sum + year.taxes, 0);
@@ -3623,7 +3632,7 @@
         }
         
         // Key Year Projections Table with better formatting
-        yPos = addSectionHeader('Key Year Projections', yPos, colors.primary);
+        yPos = addSectionHeader('Key Year Projections', yPos, colors.primary, 150);
         
         // Table header with colored background
         addColoredRect(15, yPos - 5, 180, 12, colors.primary, 0.1);
@@ -3713,11 +3722,8 @@
           yPos += 8;
         });
         
-        // PAGE 4: Disclaimers
-        doc.addPage();
-        yPos = 20;
-        
-        yPos = addSectionHeader('Important Disclaimers', yPos, colors.danger);
+        // Disclaimers (will add page break if needed)
+        yPos = addSectionHeader('Important Disclaimers', yPos, colors.danger, 200);
         
         addColoredRect(15, yPos - 5, 180, 140, colors.warning, 0.05);
         
