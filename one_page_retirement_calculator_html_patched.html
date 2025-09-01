@@ -2732,15 +2732,15 @@
         // Add tax-free income adjustment to savings balance (not taxable)
         balances.balSavings += taxFreeIncomeAdjustment;
 
-        // Get spending need (with overrides)
-        const spendingOverride = getSpendingOverride(age);
-        const actualSpend = spendingOverride !== null ? spendingOverride : spend;
+        // Get spending need (with additional spending)
+        const additionalSpending = getSpendingOverride(age);
+        const actualSpend = spend + (additionalSpending || 0);
         
-        if (spendingOverride !== null) {
-          // console.log(`Age ${age}: Using override spending $${spendingOverride.toLocaleString()} instead of auto $${spend.toLocaleString()}`);
+        if (additionalSpending !== null && additionalSpending > 0) {
+          console.log(`Age ${age}: Adding extra spending $${additionalSpending.toLocaleString()} to base $${spend.toLocaleString()} = total $${actualSpend.toLocaleString()}`);
         }
         
-        if (spendingOverride === null) {
+        if (additionalSpending === null) {
           setSpendingFieldValue(age, spend);
         }
         
@@ -2803,7 +2803,14 @@
         totalTaxableIncomeRef.value = penResults.penTaxableAmount + spousePenResults.penTaxableAmount + ssResults.ssTaxableAmount + spouseSsResults.ssTaxableAmount;
         
         // Use full net amounts (including non-taxable portions) for spending calculation
-        let finalNeedNet = Math.max(0, actualSpend - (ssResults.ssNet + penResults.penNet + spouseSsResults.ssNet + spousePenResults.penNet));
+        // Calculate base spending need and additional spending need separately
+        const baseSpendNeed = Math.max(0, spend - (ssResults.ssNet + penResults.penNet + spouseSsResults.ssNet + spousePenResults.penNet));
+        const additionalSpendNeed = additionalSpending || 0;
+        const totalNeedNet = baseSpendNeed + additionalSpendNeed;
+        
+        if (additionalSpendNeed > 0) {
+          console.log(`Age ${age}: Base spending need: $${baseSpendNeed.toLocaleString()}, Additional spending need: $${additionalSpendNeed.toLocaleString()}, Total: $${totalNeedNet.toLocaleString()}`);
+        }
         
         const finalWithdrawalFunctions = createWithdrawalFunction(params, balances, totalTaxableIncomeRef);
         
@@ -2813,28 +2820,86 @@
         // Apply RMDs (final)
         if (params.useRMD && age >= 73 && preliminaryRmdAmount > 0) {
           const rmdWithdrawal = finalWithdrawalFunctions.withdrawRMD(preliminaryRmdAmount);
-          finalNeedNet = Math.max(0, finalNeedNet - rmdWithdrawal.net);
+          let remainingNeed = Math.max(0, totalNeedNet - rmdWithdrawal.net);
           finalWGross += rmdWithdrawal.gross;
           finalWNet += rmdWithdrawal.net;
           // console.log(`RMD at age ${age}: Required $${preliminaryRmdAmount.toLocaleString()}, Withdrew $${rmdWithdrawal.gross.toLocaleString()} gross, $${rmdWithdrawal.net.toLocaleString()} net`);
-        }
-        
-        // Regular withdrawals (final)
-        if (params.order[0] === '50/50') {
-          // Special 50/50 strategy: equal net amounts from savings and 401k
-          if (finalNeedNet > 0) {
-            const fiftyFiftyResults = withdraw50_50(finalWithdrawalFunctions, finalNeedNet);
-            finalWGross += fiftyFiftyResults.totalGross;
-            finalWNet += fiftyFiftyResults.totalNet;
+          
+          // Handle remaining withdrawals after RMD
+          if (remainingNeed > 0) {
+            // Handle additional spending first with tax-optimized approach
+            let remainingAdditionalNeed = Math.min(remainingNeed, additionalSpendNeed);
+            if (remainingAdditionalNeed > 0) {
+              // For additional spending, prioritize Savings first, then 401k
+              const savingsWithdrawal = finalWithdrawalFunctions.withdrawFrom('taxable', remainingAdditionalNeed);
+              finalWGross += savingsWithdrawal.gross;
+              finalWNet += savingsWithdrawal.net;
+              remainingNeed -= savingsWithdrawal.net;
+              
+              const stillNeedForAdditional = Math.max(0, remainingAdditionalNeed - savingsWithdrawal.net);
+              if (stillNeedForAdditional > 0) {
+                // Not enough in savings, use 401k for the remainder
+                const pretaxWithdrawal = finalWithdrawalFunctions.withdrawFrom('pretax', stillNeedForAdditional);
+                finalWGross += pretaxWithdrawal.gross;
+                finalWNet += pretaxWithdrawal.net;
+                remainingNeed -= pretaxWithdrawal.net;
+              }
+            }
+            
+            // Handle remaining base spending with normal withdrawal order
+            if (remainingNeed > 0) {
+              if (params.order[0] === '50/50') {
+                const result = withdraw50_50(finalWithdrawalFunctions, remainingNeed);
+                finalWGross += result.totalGross;
+                finalWNet += result.totalNet;
+              } else {
+                for(const k of params.order){
+                  if(remainingNeed <= 0) break;
+                  const {gross=0, net=0} = finalWithdrawalFunctions.withdrawFrom(k, remainingNeed) || {};
+                  remainingNeed = Math.max(0, remainingNeed - net);
+                  finalWGross += gross;
+                  finalWNet += net;
+                }
+              }
+            }
           }
         } else {
-          // Standard withdrawal order strategy
-          for(const k of params.order){
-            if(finalNeedNet <= 0) break;
-            const {gross=0, net=0} = finalWithdrawalFunctions.withdrawFrom(k, finalNeedNet) || {};
-            finalNeedNet = Math.max(0, finalNeedNet - net);
-            finalWGross += gross;
-            finalWNet += net;
+          // No RMD - handle all withdrawals
+          let remainingNeed = totalNeedNet;
+          
+          // Handle additional spending first with tax-optimized approach
+          if (additionalSpendNeed > 0) {
+            // For additional spending, prioritize Savings first, then 401k
+            const savingsWithdrawal = finalWithdrawalFunctions.withdrawFrom('taxable', additionalSpendNeed);
+            finalWGross += savingsWithdrawal.gross;
+            finalWNet += savingsWithdrawal.net;
+            remainingNeed -= savingsWithdrawal.net;
+            
+            const remainingAdditional = Math.max(0, additionalSpendNeed - savingsWithdrawal.net);
+            if (remainingAdditional > 0) {
+              // Not enough in savings, use 401k for the remainder
+              const pretaxWithdrawal = finalWithdrawalFunctions.withdrawFrom('pretax', remainingAdditional);
+              finalWGross += pretaxWithdrawal.gross;
+              finalWNet += pretaxWithdrawal.net;
+              remainingNeed -= pretaxWithdrawal.net;
+            }
+          }
+          
+          // Handle remaining base spending with normal withdrawal order  
+          if (remainingNeed > 0) {
+            if (params.order[0] === '50/50') {
+              const result = withdraw50_50(finalWithdrawalFunctions, remainingNeed);
+              finalWGross += result.totalGross;
+              finalWNet += result.totalNet;
+            } else {
+              for(const k of params.order){
+                if(remainingNeed <= 0) break;
+                const {gross=0, net=0} = finalWithdrawalFunctions.withdrawFrom(k, remainingNeed) || {};
+                remainingNeed = Math.max(0, remainingNeed - net);
+                finalWGross += gross;
+                finalWNet += net;
+              }
+            }
           }
         }
         
