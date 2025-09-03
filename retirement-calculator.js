@@ -2426,7 +2426,13 @@ function calc() {
         <td class="income">${r.spouseSs ? fmt(r.spouseSs) : ""}</td>
         <td class="income">${r.spousePen ? fmt(r.spousePen) : ""}</td>
         <td class="income">${r.wNet ? fmt(r.wNet) : ""}</td>
-        <td class="income">${r.totalNetIncome ? fmt(r.totalNetIncome) : ""}</td>
+        <td class="income">${
+          r.totalNetIncome
+            ? `<span class="ss-link" onclick="showTotalNetBreakdown(${index})">${fmt(
+                r.totalNetIncome
+              )}</span>`
+            : ""
+        }</td>
         
         <!-- GROSS INCOME (before taxes/deductions) -->
         <td class="income">${r.salary ? fmt(r.salary) : ""}</td>
@@ -3967,6 +3973,367 @@ document.addEventListener("click", function (event) {
 document.addEventListener("keydown", function (event) {
   if (event.key === "Escape") {
     closeSsPopup();
+    closeTotalNetPopup();
+  }
+});
+
+/**
+ * Show Total Net Income breakdown popup
+ */
+function showTotalNetBreakdown(index) {
+  if (!calculations || !calculations[index]) {
+    console.error("No calculation data available for index:", index);
+    return;
+  }
+
+  const data = calculations[index];
+  
+  // Use SS popup structure for Total Net breakdown
+  const ssPopup = document.getElementById("ssPopup");
+  if (ssPopup) {
+    const ssContent = document.getElementById("ssBreakdownContent");
+    if (ssContent) {
+      // Update popup title - use the actual class names
+      const popupHeader = ssPopup.querySelector("h3.ss-popup-title");
+      if (popupHeader) {
+        popupHeader.textContent = `Total Net Income Breakdown - Age ${data.age}`;
+      }
+      
+      // Update close button - use the actual class name
+      const closeBtn = ssPopup.querySelector("button.ss-popup-close");
+      if (closeBtn) {
+        closeBtn.onclick = function() {
+          closeTotalNetPopup();
+        };
+      }
+      
+      // Store original title and close function to restore later
+      if (!ssPopup.dataset.originalTitle) {
+        ssPopup.dataset.originalTitle = "Social Security Breakdown";
+        ssPopup.dataset.originalClose = "closeSsPopup()";
+      }
+      
+      // Generate full breakdown content
+      ssContent.innerHTML = generateTotalNetBreakdownContent(data);
+      
+      // Set display to flex to override the CSS !important rule
+      ssPopup.style.setProperty('display', 'flex', 'important');
+      ssPopup.style.setProperty('align-items', 'center', 'important');
+      ssPopup.style.setProperty('justify-content', 'center', 'important');
+      return;
+    }
+  }
+
+  // Fallback: Create popup if SS popup doesn't exist
+  let popup = document.getElementById("totalNetPopup");
+  if (!popup) {
+    popup = document.createElement("div");
+    popup.id = "totalNetPopup";
+    popup.className = "popup-overlay";
+    popup.innerHTML = `
+      <div class="popup-content">
+        <div class="popup-header">
+          <h3>Total Net Income Breakdown - Age ${data.age}</h3>
+          <button class="close-btn" onclick="closeTotalNetPopup()">&times;</button>
+        </div>
+        <div class="popup-body" id="totalNetBreakdownContent">
+        </div>
+      </div>
+    `;
+    document.body.appendChild(popup);
+  }
+
+  // Update content
+  const content = document.getElementById("totalNetBreakdownContent");
+  content.innerHTML = generateTotalNetBreakdownContent(data);
+  
+  popup.style.display = "block";
+}
+
+/**
+ * Generate the detailed breakdown content for Total Net Income
+ */
+function generateTotalNetBreakdownContent(data) {
+  const fmt = (val) => 
+    val == null || val === 0 ? "-" : 
+    `$${Math.round(val).toLocaleString()}`;
+
+  let html = `
+    <div class="breakdown-section">
+      <h4>Income Sources (Net After Taxes)</h4>
+      <table class="breakdown-table">
+        <thead>
+          <tr>
+            <th>Source</th>
+            <th>Amount</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+  `;
+
+  // Social Security (Net)
+  if (data.ss > 0) {
+    html += `
+      <tr>
+        <td>Social Security</td>
+        <td class="amount">${fmt(data.ss)}</td>
+        <td>After federal taxation</td>
+      </tr>
+    `;
+  }
+
+  // Spouse Social Security (Net)  
+  if (data.spouseSs > 0) {
+    html += `
+      <tr>
+        <td>Spouse Social Security</td>
+        <td class="amount">${fmt(data.spouseSs)}</td>
+        <td>After federal taxation</td>
+      </tr>
+    `;
+  }
+
+  // Pension (Net)
+  if (data.pen > 0) {
+    html += `
+      <tr>
+        <td>Pension</td>
+        <td class="amount">${fmt(data.pen)}</td>
+        <td>After federal taxation</td>
+      </tr>
+    `;
+  }
+
+  // Spouse Pension (Net)
+  if (data.spousePen > 0) {
+    html += `
+      <tr>
+        <td>Spouse Pension</td>
+        <td class="amount">${fmt(data.spousePen)}</td>
+        <td>After federal taxation</td>
+      </tr>
+    `;
+  }
+
+  // Withdrawals (Net)
+  if (data.wNet > 0) {
+    html += `
+      <tr>
+        <td>Portfolio Withdrawals</td>
+        <td class="amount">${fmt(data.wNet)}</td>
+        <td>After taxes and penalties</td>
+      </tr>
+    `;
+  }
+
+  // Tax-Free Income Adjustments (if any)
+  const taxFreeAdjustment = data.totalNetIncome - (data.ss + data.spouseSs + data.pen + data.spousePen + data.wNet);
+  if (taxFreeAdjustment > 0) {
+    html += `
+      <tr>
+        <td>Tax-Free Income</td>
+        <td class="amount">${fmt(taxFreeAdjustment)}</td>
+        <td>Additional tax-free income</td>
+      </tr>
+    `;
+  }
+
+  html += `
+        </tbody>
+      </table>
+    </div>
+  `;
+
+  // Show withdrawal breakdown if there were withdrawals
+  if (data.wNet > 0) {
+    html += `
+      <div class="breakdown-section">
+        <h4>Withdrawal Breakdown</h4>
+        <table class="breakdown-table">
+          <thead>
+            <tr>
+              <th>Account Type</th>
+              <th>Gross Withdrawal</th>
+              <th>Tax Treatment</th>
+            </tr>
+          </thead>
+          <tbody>
+    `;
+
+    if (data.wSavingsGross > 0) {
+      html += `
+        <tr>
+          <td>Taxable Savings</td>
+          <td class="amount">${fmt(data.wSavingsGross)}</td>
+          <td>Tax-free (already taxed)</td>
+        </tr>
+      `;
+    }
+
+    if (data.wRothGross > 0) {
+      html += `
+        <tr>
+          <td>Roth IRA/401k</td>
+          <td class="amount">${fmt(data.wRothGross)}</td>
+          <td>Tax-free qualified distribution</td>
+        </tr>
+      `;
+    }
+
+    if (data.w401kGross > 0) {
+      const withdrawalTaxes = data.w401kGross - (data.wNet - (data.wSavingsGross || 0) - (data.wRothGross || 0));
+      html += `
+        <tr>
+          <td>Pre-Tax 401k/IRA</td>
+          <td class="amount">${fmt(data.w401kGross)}</td>
+          <td>Taxable as ordinary income</td>
+        </tr>
+      `;
+      if (withdrawalTaxes > 0) {
+        html += `
+          <tr>
+            <td style="padding-left: 20px;">• Taxes on pre-tax withdrawal</td>
+            <td class="amount negative">-${fmt(withdrawalTaxes)}</td>
+            <td>Federal income tax</td>
+          </tr>
+        `;
+      }
+    }
+
+    html += `
+          </tbody>
+        </table>
+      </div>
+    `;
+  }
+
+  // Summary section
+  const totalGrossIncome = (data.ssGross || 0) + (data.spouseSsGross || 0) + (data.penGross || 0) + (data.spousePenGross || 0) + (data.wGross || 0) + (data.taxableInterest || 0);
+  const totalTaxes = data.taxes || 0;
+  const totalNetIncome = data.totalNetIncome;
+
+  html += `
+    <div class="breakdown-section summary-section">
+      <h4>Summary</h4>
+      <table class="breakdown-table">
+        <tbody>
+          <tr>
+            <td><strong>Total Gross Income</strong></td>
+            <td class="amount"><strong>${fmt(totalGrossIncome)}</strong></td>
+            <td>Before taxes</td>
+          </tr>
+          <tr>
+            <td><strong>Total Taxes Paid</strong></td>
+            <td class="amount negative"><strong>-${fmt(totalTaxes)}</strong></td>
+            <td>Federal income tax</td>
+          </tr>
+          <tr class="total-row">
+            <td><strong>Total Net Income</strong></td>
+            <td class="amount total"><strong>${fmt(totalNetIncome)}</strong></td>
+            <td><strong>Available for spending</strong></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  `;
+
+  // Tax details section
+  if (totalTaxes > 0) {
+    html += `
+      <div class="breakdown-section">
+        <h4>Tax Details</h4>
+        <table class="breakdown-table">
+          <tbody>
+    `;
+
+    if (data.ssTaxes > 0) {
+      html += `
+        <tr>
+          <td>Social Security Taxes</td>
+          <td class="amount">${fmt(data.ssTaxes)}</td>
+          <td>Federal tax on SS benefits</td>
+        </tr>
+      `;
+    }
+
+    if (data.otherTaxes > 0) {
+      html += `
+        <tr>
+          <td>Other Income Taxes</td>
+          <td class="amount">${fmt(data.otherTaxes)}</td>
+          <td>Tax on pensions, withdrawals, interest</td>
+        </tr>
+      `;
+    }
+
+    if (data.effectiveTaxRate) {
+      html += `
+        <tr>
+          <td><strong>Effective Tax Rate</strong></td>
+          <td class="amount"><strong>${data.effectiveTaxRate.toFixed(1)}%</strong></td>
+          <td>Total taxes ÷ taxable income</td>
+        </tr>
+      `;
+    }
+
+    html += `
+          </tbody>
+        </table>
+      </div>
+    `;
+  }
+
+  // Add note about calculations
+  html += `
+    <div class="breakdown-section note">
+      <p><strong>Note:</strong> This breakdown shows how your Total Net Income is calculated from all sources after federal taxes. 
+      Amounts may not add exactly due to rounding. Social Security taxation follows IRS provisional income rules.</p>
+    </div>
+  `;
+
+  return html;
+}
+
+/**
+ * Close Total Net breakdown popup
+ */
+function closeTotalNetPopup() {
+  const ssPopup = document.getElementById("ssPopup");
+  if (ssPopup) {
+    // Restore original title and close function
+    const popupHeader = ssPopup.querySelector("h3.ss-popup-title");
+    if (popupHeader && ssPopup.dataset.originalTitle) {
+      popupHeader.textContent = ssPopup.dataset.originalTitle;
+    }
+    
+    const closeBtn = ssPopup.querySelector("button.ss-popup-close");
+    if (closeBtn && ssPopup.dataset.originalClose) {
+      // Restore original onclick handler
+      closeBtn.onclick = function() {
+        closeSsPopup();
+      };
+    }
+    
+    // Clear the dataset markers
+    delete ssPopup.dataset.originalTitle;
+    delete ssPopup.dataset.originalClose;
+    
+    // Close the popup
+    ssPopup.style.setProperty('display', 'none', 'important');
+  }
+}
+
+// Close Total Net popup when clicking outside
+document.addEventListener("click", function (event) {
+  const ssPopup = document.getElementById("ssPopup");
+  if (ssPopup && (ssPopup.style.display === "flex" || ssPopup.style.display === "block") && event.target === ssPopup) {
+    // Check if this is being used for Total Net (has the dataset markers)
+    if (ssPopup.dataset.originalTitle) {
+      closeTotalNetPopup();
+    } else {
+      closeSsPopup();
+    }
   }
 });
 

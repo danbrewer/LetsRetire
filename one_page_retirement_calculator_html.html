@@ -1,0 +1,2216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>One‑Page Retirement Calculator</title>
+  <style>
+    :root {
+      --bg: #0b1220;
+      --card: #121a2b;
+      --muted: #7c8db5;
+      --text: #e6eefc;
+      --accent: #6ea8fe;
+      --good: #45d483;
+      --bad: #ff6b6b;
+      --warn: #ffbf69;
+      --border: #22304d;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, "Helvetica Neue", Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      margin: 0;
+      color: var(--text);
+      background: radial-gradient(1200px 900px at 15% -10%, #1a2440, #0b1220 50%);
+    }
+    header {
+      padding: 20px clamp(16px, 3vw, 40px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      position: sticky; top: 0; backdrop-filter: blur(6px);
+      background: linear-gradient(180deg, rgba(11,18,32,.85), rgba(11,18,32,.55));
+      border-bottom: 1px solid var(--border);
+      z-index: 10;
+    }
+    .title { font-weight: 700; letter-spacing:.2px; }
+    .title small{ color: var(--muted); font-weight: 500; }
+    .wrap {
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      gap: 18px;
+      padding: clamp(16px, 3vw, 40px);
+      align-items: start;
+    }
+    @media (max-width: 980px){ .wrap{ grid-template-columns: 1fr; } }
+
+    .card {
+      background: linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.00));
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.2);
+    }
+    .panel { padding: 18px; }
+    .panel h3 { margin: 0 0 8px; font-size: 14px; color: var(--muted); font-weight: 600; letter-spacing:.4px; text-transform: uppercase; }
+
+    .sections { display: grid; gap: 12px; }
+    details { border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+    details[open] summary { background: #0d172b; }
+    summary { padding: 14px 14px; cursor: pointer; list-style: none; user-select: none; display:flex; align-items:center; justify-content:space-between; gap:8px; }
+    summary::-webkit-details-marker{ display:none; }
+    .chev { transition: transform .2s; }
+    details[open] .chev{ transform: rotate(90deg); }
+    .content { padding: 14px; border-top: 1px dashed var(--border); background: rgba(255,255,255,.02); display:grid; gap:10px; }
+
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    @media (max-width: 520px){ .grid, .grid-3 { grid-template-columns: 1fr; } }
+
+    label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+    input, select { width: 100%; padding: 10px 11px; background: #0b1426; color: var(--text); border: 1px solid var(--border); border-radius: 10px; outline: none; }
+    input:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(110,168,254,.15); }
+    .hint { font-size: 12px; color: var(--muted); }
+
+    .actions { display:flex; gap:10px; padding: 14px; border-top: 1px solid var(--border); background: #0c1323; justify-content:flex-end; border-radius: 0 0 16px 16px; }
+    button {
+      appearance: none; border: 1px solid var(--border); background: #0f1930; color: var(--text);
+      padding: 10px 14px; border-radius: 10px; font-weight: 600; cursor: pointer; transition: .2s;
+    }
+    .primary { background: linear-gradient(180deg, #2b63ff, #2349d2); border-color: #1f3fb8; }
+    button:hover { transform: translateY(-1px); filter: brightness(1.07); }
+
+    .results { padding: 18px; display: grid; gap: 12px; }
+    .summary { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 10px; }
+    @media (max-width: 900px){ .summary{ grid-template-columns: repeat(2, minmax(0,1fr)); } }
+    .kpi { background: #0b1426; border: 1px solid var(--border); border-radius: 12px; padding: 12px; }
+    .kpi .label { color: var(--muted); font-size: 12px; }
+    .kpi .value { font-size: 20px; font-weight: 700; margin-top: 2px; }
+
+    canvas { width: 100%; height: 260px; background: #0b1426; border: 1px solid var(--border); border-radius: 12px; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { border-bottom: 1px solid var(--border); padding: 8px; text-align: right; white-space: nowrap; }
+    th:first-child, td:first-child, th:nth-child(2), td:nth-child(2) { text-align: left; }
+    thead th { position: sticky; top: 0; background: #0d172b; z-index: 1; }
+    tbody tr:hover { background: rgba(255,255,255,.03); }
+
+    /* Color coding for table values */
+    .income { color: #4ade80; } /* Green for income */
+    .outgoing { color: #f87171; } /* Red for outgoing */
+    .neutral { color: var(--text); } /* Default color for neutral items */
+
+    /* Clickable links in tables */
+    .ss-link {
+      cursor: pointer;
+      text-decoration: underline;
+      text-decoration-color: rgba(74, 222, 128, 0.5);
+      transition: all 0.2s ease;
+    }
+    .ss-link:hover {
+      text-decoration-color: #4ade80;
+      filter: brightness(1.2);
+    }
+
+    .pill { padding:.2rem .5rem; border-radius: 999px; font-size: 12px; font-weight:600; display:inline-block; }
+    .ok { color: #0b5; background: rgba(69,212,131,.15); border: 1px solid rgba(69,212,131,.3); }
+    .alert { color: #ff6b6b; background: rgba(255,107,107,.15); border:1px solid rgba(255,107,107,.3); }
+    .warn { color: #ffbf69; background: rgba(255,191,105,.15); border:1px solid rgba(255,191,105,.3); }
+    .disclaimer { color: var(--muted); font-size: 12px; }
+    
+    /* Toast Notification Styles */
+    .toast {
+      position: fixed !important;
+      top: 20px !important;
+      right: 20px !important;
+      background: #fffbf0 !important;
+      border: 1px solid #f0ad4e !important;
+      border-radius: 8px !important;
+      padding: 16px !important;
+      max-width: 300px !important;
+      box-shadow: 0 4px 12px rgba(240, 173, 78, 0.3) !important;
+      z-index: 99999 !important;
+      opacity: 0 !important;
+      transform: translateY(-10px) !important;
+      transition: opacity 0.3s ease, transform 0.3s ease !important;
+      overflow: visible !important;
+      pointer-events: auto !important;
+      display: block !important;
+      visibility: visible !important;
+      width: auto !important;
+      height: auto !important;
+    }
+    .toast.show {
+      opacity: 1 !important;
+      transform: translateY(0) !important;
+      visibility: visible !important;
+    }
+    .toast .toast-title {
+      font-weight: 600;
+      color: #8a6914;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+    .toast .toast-body {
+      color: #856404;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+    .toast .progress-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      height: 3px;
+      background: #f0ad4e;
+      transition: width linear;
+      border-radius: 0 0 8px 8px;
+      width: 0%;
+    }
+    
+    /* Toast Type Variations */
+    .toast-success {
+      background: #f0fff4 !important;
+      border-color: #28a745 !important;
+      box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3) !important;
+    }
+    .toast-success .toast-title {
+      color: #155724;
+    }
+    .toast-success .toast-body {
+      color: #155724;
+    }
+    .toast-success .progress-bar {
+      background: #28a745;
+    }
+    
+    /* Popup Overlay and Content Styles */
+    .popup-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.8);
+      display: none;
+      z-index: 100000;
+      backdrop-filter: blur(3px);
+    }
+    
+    .popup-content {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.4);
+      max-width: 90vw;
+      max-height: 90vh;
+      overflow-y: auto;
+      min-width: 600px;
+    }
+    
+    .popup-header {
+      padding: 20px 24px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(255,255,255,.02);
+      border-radius: 16px 16px 0 0;
+    }
+    
+    .popup-header h3 {
+      margin: 0;
+      color: var(--text);
+      font-size: 18px;
+      font-weight: 600;
+    }
+    
+    .close-btn {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 24px;
+      cursor: pointer;
+      padding: 0;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      transition: all 0.2s ease;
+    }
+    
+    .close-btn:hover {
+      background: rgba(255,255,255,.1);
+      color: var(--text);
+    }
+    
+    .popup-body {
+      padding: 24px;
+      color: var(--text);
+    }
+    
+    .breakdown-section {
+      margin-bottom: 24px;
+    }
+    
+    .breakdown-section:last-child {
+      margin-bottom: 0;
+    }
+    
+    .breakdown-section h4 {
+      margin: 0 0 12px 0;
+      color: var(--accent);
+      font-size: 16px;
+      font-weight: 600;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 8px;
+    }
+    
+    .breakdown-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+      margin-bottom: 0;
+    }
+    
+    .breakdown-table th,
+    .breakdown-table td {
+      padding: 8px 12px;
+      text-align: left;
+      border-bottom: 1px solid rgba(124, 141, 181, 0.2);
+    }
+    
+    .breakdown-table th {
+      background: rgba(255,255,255,.03);
+      color: var(--muted);
+      font-weight: 600;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .breakdown-table .amount {
+      text-align: right;
+      font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+      font-weight: 600;
+    }
+    
+    .breakdown-table .negative {
+      color: var(--bad);
+    }
+    
+    .breakdown-table .total {
+      color: var(--good);
+      font-size: 16px;
+    }
+    
+    .total-row td {
+      border-top: 2px solid var(--border);
+      padding-top: 12px;
+      font-weight: 600;
+    }
+    
+    .summary-section {
+      background: rgba(255,255,255,.02);
+      border-radius: 12px;
+      padding: 16px;
+      border: 1px solid rgba(124, 141, 181, 0.2);
+    }
+    
+    .note {
+      background: rgba(110, 168, 254, 0.1);
+      border-radius: 8px;
+      padding: 16px;
+      border-left: 4px solid var(--accent);
+    }
+    
+    .note p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    
+    /* SS Breakdown specific styles */
+    .ss-breakdown-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(124, 141, 181, 0.1);
+    }
+    
+    .ss-breakdown-item:last-child {
+      border-bottom: none;
+    }
+    
+    .ss-breakdown-label {
+      color: var(--muted);
+      font-weight: 500;
+    }
+    
+    .ss-breakdown-value {
+      color: var(--text);
+      font-weight: 600;
+      font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+    }
+    
+    @media (max-width: 768px) {
+      .popup-content {
+        min-width: 0;
+        width: 95vw;
+        margin: 20px;
+      }
+      
+      .popup-header {
+        padding: 16px 20px 12px;
+      }
+      
+      .popup-body {
+        padding: 20px;
+      }
+    }
+    
+    /* SS Popup overlay and centering styles */
+    #ssPopup.ss-popup {
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      right: 0 !important;
+      bottom: 0 !important;
+      background: rgba(0, 0, 0, 0.8) !important;
+      display: none !important;
+      z-index: 100000 !important;
+      backdrop-filter: blur(3px) !important;
+    }
+    
+    #ssPopup .ss-popup-content,
+    .ss-popup .ss-popup-content {
+      position: absolute !important;
+      top: 50% !important;
+      left: 50% !important;
+      transform: translate(-50%, -50%) !important;
+      background: var(--card) !important;
+      border: 1px solid var(--border) !important;
+      border-radius: 16px !important;
+      box-shadow: 0 20px 60px rgba(0,0,0,.4) !important;
+      max-width: 90vw !important;
+      max-height: 90vh !important;
+      overflow-y: auto !important;
+      min-width: 600px !important;
+    }
+    
+    .ss-popup {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.8);
+      display: none;
+      z-index: 100000;
+      backdrop-filter: blur(3px);
+    }
+    
+    /* SS Popup specific centering styles */
+    .ss-popup-content {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.4);
+      max-width: 90vw;
+      max-height: 90vh;
+      overflow-y: auto;
+      min-width: 600px;
+    }
+    
+    .ss-popup-header {
+      padding: 20px 24px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(255,255,255,.02);
+      border-radius: 16px 16px 0 0;
+    }
+    
+    .ss-popup-title {
+      margin: 0;
+      color: var(--text);
+      font-size: 18px;
+      font-weight: 600;
+    }
+    
+    .ss-popup-close {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 24px;
+      cursor: pointer;
+      padding: 0;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      transition: all 0.2s ease;
+    }
+    
+    .ss-popup-close:hover {
+      background: rgba(255,255,255,.1);
+      color: var(--text);
+    }
+    
+    @media (max-width: 768px) {
+      .ss-popup-content {
+        min-width: 0;
+        width: 95vw;
+        margin: 20px;
+      }
+    }
+    
+    .toast-error {
+      background: #fff5f5 !important;
+      border-color: #dc3545 !important;
+      box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3) !important;
+    }
+    .toast-error .toast-title {
+      color: #721c24;
+    }
+    .toast-error .toast-body {
+      color: #721c24;
+    }
+    .toast-error .progress-bar {
+      background: #dc3545;
+    }
+    
+    .toast-warning {
+      background: #fffbf0 !important;
+      border-color: #ffc107 !important;
+      box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3) !important;
+    }
+    .toast-warning .toast-title {
+      color: #856404;
+    }
+    .toast-warning .toast-body {
+      color: #856404;
+    }
+    .toast-warning .progress-bar {
+      background: #ffc107;
+    }
+    
+    .toast-info {
+      background: #f0f8ff !important;
+      border-color: #17a2b8 !important;
+      box-shadow: 0 4px 12px rgba(23, 162, 184, 0.3) !important;
+    }
+    .toast-info .toast-title {
+      color: #0c5460;
+    }
+    .toast-info .toast-body {
+      color: #0c5460;
+    }
+    .toast-info .progress-bar {
+      background: #17a2b8;
+    }
+    
+    .help-icon {
+      cursor: pointer;
+      transition: opacity 0.2s ease;
+      margin-left: 0.3em;
+      vertical-align: middle;
+    }
+    .help-icon:hover {
+      opacity: 0.7;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="title">
+      <div style="font-size:20px">Retirement Calculator</div>
+      <small>Pre‑tax vs Roth vs Taxable • Social Security • Pension • Spouse benefits • Declining spending • Employer match</small>
+    </div>
+    <div>
+      <button id="exportJsonBtn" title="Export inputs as JSON file">Export JSON</button>
+      <button id="importJsonBtn" title="Import inputs from JSON file">Import JSON</button>
+      <input type="file" id="jsonFileInput" accept=".json" style="display: none;">
+      <button id="demoBtn" title="Load example inputs">Load Example</button>
+      <button id="clearBtn">Reset</button>
+      <button id="calcBtn" class="primary">Calculate ▶</button>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <!-- Inputs -->
+    <section class="card">
+      <div class="panel">
+        <h3>Inputs</h3>
+        <div class="sections">
+          <!-- Personal -->
+          <details open>
+            <summary>
+              <span>Personal & Timeline</span>
+              <span class="chev">▶</span>
+            </summary>
+            <div class="content grid">
+              <div>
+                <label for="currentAge">Current age 
+                  <span class="help-icon-placeholder" data-field="currentAge"></span>
+                </label>
+                <input id="currentAge" type="number" min="18" max="80" step="1" value="45" />
+              </div>
+              <div>
+                <label for="retireAge">Retirement age
+                  <span class="help-icon-placeholder" data-field="retireAge"></span>
+                </label>
+                <input id="retireAge" type="number" min="40" max="80" step="1" value="67" />
+              </div>
+              <div>
+                <label for="endAge">Plan to age
+                  <span class="help-icon-placeholder" data-field="endAge"></span>
+                </label>
+                <input id="endAge" type="number" min="70" max="110" step="1" value="95" />
+              </div>
+              <div>
+                <label for="inflation">Inflation (%)
+                  <span class="help-icon-placeholder" data-field="inflation"></span>
+                </label>
+                <input id="inflation" type="number" step="0.1" value="2.5" />
+              </div>
+              <div>
+                <label for="spendingToday">Retirement spending (today's $ / yr)
+                  <span class="help-icon-placeholder" data-field="spendingToday"></span>
+                </label>
+                <input id="spendingToday" type="number" step="1000" value="80000" />
+                <div class="hint">We'll inflate this to retirement, then apply COLA annually.</div>
+              </div>
+              <div>
+                <label for="spendingDecline">Annual spending decline in retirement (%)
+                  <span class="help-icon-placeholder" data-field="spendingDecline"></span>
+                </label>
+                <input id="spendingDecline" type="number" step="0.1" value="0" />
+                <div class="hint">Spending reduction each year (e.g., 2% = spending drops to 98%, then 96%, etc.)</div>
+              </div>
+            </div>
+          </details>
+
+          <!-- Spouse Information -->
+          <details>
+            <summary>
+              <span>Spouse Information</span>
+              <span class="chev">▶</span>
+            </summary>
+            <div class="content">
+              <div class="grid">
+                <div>
+                  <label for="spouseAge">Spouse current age
+                    <span class="help-icon-placeholder" data-field="spouseAge"></span>
+                  </label>
+                  <input id="spouseAge" type="number" min="18" max="80" step="1" value="0" />
+                  <div class="hint">Set to 0 if no spouse</div>
+                </div>
+                <div>
+                  <label for="spouseRetireAge">Spouse retirement age
+                    <span class="help-icon-placeholder" data-field="spouseRetireAge"></span>
+                  </label>
+                  <input id="spouseRetireAge" type="number" min="40" max="80" step="1" value="67" />
+                </div>
+              </div>
+              <div class="grid-3">
+                <div>
+                  <label for="spouseSsMonthly">Spouse Social Security ($/mo, first year)</label>
+                  <input id="spouseSsMonthly" type="number" step="50" value="0" />
+                </div>
+                <div>
+                  <label for="spouseSsStart">Spouse SS start age</label>
+                  <input id="spouseSsStart" type="number" step="1" value="67" />
+                </div>
+                <div>
+                  <label for="spouseSsCola">Spouse SS COLA (%/yr)</label>
+                  <input id="spouseSsCola" type="number" step="0.1" value="2.0" />
+                </div>
+              </div>
+              <div class="grid-3">
+                <div>
+                  <label for="spousePenMonthly">Spouse Pension ($/mo, first year)</label>
+                  <input id="spousePenMonthly" type="number" step="50" value="0" />
+                </div>
+                <div>
+                  <label for="spousePenStart">Spouse Pension start age</label>
+                  <input id="spousePenStart" type="number" step="1" value="65" />
+                </div>
+                <div>
+                  <label for="spousePenCola">Spouse Pension COLA (%/yr)</label>
+                  <input id="spousePenCola" type="number" step="0.1" value="0" />
+                </div>
+              </div>
+              <div class="grid">
+                <div>
+                  <label for="spouseTaxSS">Effective tax on Spouse SS (%)</label>
+                  <input id="spouseTaxSS" type="number" step="0.5" value="10" />
+                </div>
+                <div>
+                  <label for="spouseTaxPension">Effective tax on Spouse Pension (%)</label>
+                  <input id="spouseTaxPension" type="number" step="0.5" value="20" />
+                </div>
+              </div>
+            </div>
+          </details>
+
+          <!-- Work & Contributions -->
+          <details open>
+            <summary>
+              <span>Work & Contributions</span>
+              <span class="chev">▶</span>
+            </summary>
+            <div class="content">
+              <div class="grid">
+                <div>
+                  <label for="salary">Current salary ($/yr)
+                    <span class="help-icon-placeholder" data-field="salary"></span>
+                  </label>
+                  <input id="salary" type="number" step="1000" value="150000" />
+                </div>
+                <div>
+                  <label for="salaryGrowth">Salary growth (%)
+                    <span class="help-icon-placeholder" data-field="salaryGrowth"></span>
+                  </label>
+                  <input id="salaryGrowth" type="number" step="0.1" value="3.0" />
+                </div>
+              </div>
+              <div class="grid-3">
+                <div>
+                  <label for="pretaxPct">Pre‑tax 401k/IRA contribution (% of salary)
+                    <span class="help-icon-placeholder" data-field="pretaxPct"></span>
+                  </label>
+                  <input id="pretaxPct" type="number" step="0.1" value="10" />
+                </div>
+                <div>
+                  <label for="rothPct">Roth contribution (% of salary)
+                    <span class="help-icon-placeholder" data-field="rothPct"></span>
+                  </label>
+                  <input id="rothPct" type="number" step="0.1" value="5" />
+                </div>
+                <div>
+                  <label for="taxablePct">Taxable savings (% of salary)
+                    <span class="help-icon-placeholder" data-field="taxablePct"></span>
+                  </label>
+                  <input id="taxablePct" type="number" step="0.1" value="2" />
+                </div>
+              </div>
+              <div class="grid">
+                <div>
+                  <label for="matchCap">Employer match up to (% of salary)</label>
+                  <input id="matchCap" type="number" step="0.1" value="4" />
+                </div>
+                <div>
+                  <label for="matchRate">Employer match rate (%)</label>
+                  <input id="matchRate" type="number" step="1" value="50" />
+                </div>
+              </div>
+            </div>
+          </details>
+
+          <!-- Balances & Returns -->
+          <details open>
+            <summary>
+              <span>Balances & Returns</span>
+              <span class="chev">▶</span>
+            </summary>
+            <div class="content">
+              <div class="grid-3">
+                <div>
+                  <label for="balPre">Pre‑tax (401k/Trad IRA) balance
+                    <svg xmlns="http://www.w3.org/2000/svg" 
+                         viewBox="0 0 24 24" 
+                         width="1em" height="1em" 
+                         fill="white" 
+                         class="help-icon"
+                         onclick="showHelpToast(event, 'balPre')"
+                         style="vertical-align: middle;">
+                      <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none"/>
+                      <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
+                      <circle cx="12" cy="17" r="1" fill="white"/>
+                    </svg>
+                  </label>
+                  <input id="balPre" type="number" step="1000" value="400000" />
+                </div>
+                <div>
+                  <label for="balRoth">Roth balance
+                    <svg xmlns="http://www.w3.org/2000/svg" 
+                         viewBox="0 0 24 24" 
+                         width="1em" height="1em" 
+                         fill="white" 
+                         class="help-icon"
+                         onclick="showHelpToast(event, 'balRoth')"
+                         style="vertical-align: middle;">
+                      <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none"/>
+                      <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
+                      <circle cx="12" cy="17" r="1" fill="white"/>
+                    </svg>
+                  </label>
+                  <input id="balRoth" type="number" step="1000" value="100000" />
+                </div>
+                <div>
+                  <label for="balTax">Taxable (brokerage) balance
+                    <svg xmlns="http://www.w3.org/2000/svg" 
+                         viewBox="0 0 24 24" 
+                         width="1em" height="1em" 
+                         fill="white" 
+                         class="help-icon"
+                         onclick="showHelpToast(event, 'balTax')"
+                         style="vertical-align: middle;">
+                      <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none"/>
+                      <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
+                      <circle cx="12" cy="17" r="1" fill="white"/>
+                    </svg>
+                  </label>
+                  <input id="balTax" type="number" step="1000" value="80000" />
+                </div>
+              </div>
+              <div class="grid-3">
+                <div>
+                  <label for="retPre">Pre‑tax return (%/yr)
+                    <svg xmlns="http://www.w3.org/2000/svg" 
+                         viewBox="0 0 24 24" 
+                         width="1em" height="1em" 
+                         fill="white" 
+                         class="help-icon"
+                         onclick="showHelpToast(event, 'retPre')"
+                         style="vertical-align: middle;">
+                      <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none"/>
+                      <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
+                      <circle cx="12" cy="17" r="1" fill="white"/>
+                    </svg>
+                  </label>
+                  <input id="retPre" type="number" step="0.1" value="6.0" />
+                </div>
+                <div>
+                  <label for="retRoth">Roth return (%/yr)
+                    <svg xmlns="http://www.w3.org/2000/svg" 
+                         viewBox="0 0 24 24" 
+                         width="1em" height="1em" 
+                         fill="white" 
+                         class="help-icon"
+                         onclick="showHelpToast(event, 'retRoth')"
+                         style="vertical-align: middle;">
+                      <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none"/>
+                      <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
+                      <circle cx="12" cy="17" r="1" fill="white"/>
+                    </svg>
+                  </label>
+                  <input id="retRoth" type="number" step="0.1" value="6.0" />
+                </div>
+                <div>
+                  <label for="retTax">Taxable return (%/yr)
+                    <svg xmlns="http://www.w3.org/2000/svg" 
+                         viewBox="0 0 24 24" 
+                         width="1em" height="1em" 
+                         fill="white" 
+                         class="help-icon"
+                         onclick="showHelpToast(event, 'retTax')"
+                         style="vertical-align: middle;">
+                      <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none"/>
+                      <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
+                      <circle cx="12" cy="17" r="1" fill="white"/>
+                    </svg>
+                  </label>
+                  <input id="retTax" type="number" step="0.1" value="5.5" />
+                </div>
+              </div>
+            </div>
+          </details>
+
+          <!-- Income Sources -->
+          <details>
+            <summary>
+              <span>Social Security & Pension</span>
+              <span class="chev">▶</span>
+            </summary>
+            <div class="content">
+              <div class="grid-3">
+                <div>
+                  <label for="ssMonthly">Social Security ($/mo, first year)
+                    <svg xmlns="http://www.w3.org/2000/svg" 
+                         viewBox="0 0 24 24" 
+                         width="1em" height="1em" 
+                         fill="white" 
+                         class="help-icon"
+                         onclick="showHelpToast(event, 'ssMonthly')"
+                         style="vertical-align: middle;">
+                      <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none"/>
+                      <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
+                      <circle cx="12" cy="17" r="1" fill="white"/>
+                    </svg>
+                  </label>
+                  <input id="ssMonthly" type="number" step="50" value="2800" />
+                </div>
+                <div>
+                  <label for="ssStart">SS start age
+                    <svg xmlns="http://www.w3.org/2000/svg" 
+                         viewBox="0 0 24 24" 
+                         width="1em" height="1em" 
+                         fill="white" 
+                         class="help-icon"
+                         onclick="showHelpToast(event, 'ssStart')"
+                         style="vertical-align: middle;">
+                      <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none"/>
+                      <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
+                      <circle cx="12" cy="17" r="1" fill="white"/>
+                    </svg>
+                  </label>
+                  <input id="ssStart" type="number" step="1" value="67" />
+                </div>
+                <div>
+                  <label for="ssCola">SS COLA (%/yr)
+                    <svg xmlns="http://www.w3.org/2000/svg" 
+                         viewBox="0 0 24 24" 
+                         width="1em" height="1em" 
+                         fill="white" 
+                         class="help-icon"
+                         onclick="showHelpToast(event, 'ssCola')"
+                         style="vertical-align: middle;">
+                      <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none"/>
+                      <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
+                      <circle cx="12" cy="17" r="1" fill="white"/>
+                    </svg>
+                  </label>
+                  <input id="ssCola" type="number" step="0.1" value="2.0" />
+                </div>
+              </div>
+              <div class="grid-3">
+                <div>
+                  <label for="penMonthly">Pension ($/mo, first year)
+                    <svg xmlns="http://www.w3.org/2000/svg" 
+                         viewBox="0 0 24 24" 
+                         width="1em" height="1em" 
+                         fill="white" 
+                         class="help-icon"
+                         onclick="showHelpToast(event, 'penMonthly')"
+                         style="vertical-align: middle;">
+                      <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none"/>
+                      <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
+                      <circle cx="12" cy="17" r="1" fill="white"/>
+                    </svg>
+                  </label>
+                  <input id="penMonthly" type="number" step="50" value="0" />
+                </div>
+                <div>
+                  <label for="penStart">Pension start age
+                    <svg xmlns="http://www.w3.org/2000/svg" 
+                         viewBox="0 0 24 24" 
+                         width="1em" height="1em" 
+                         fill="white" 
+                         class="help-icon"
+                         onclick="showHelpToast(event, 'penStart')"
+                         style="vertical-align: middle;">
+                      <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none"/>
+                      <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
+                      <circle cx="12" cy="17" r="1" fill="white"/>
+                    </svg>
+                  </label>
+                  <input id="penStart" type="number" step="1" value="65" />
+                </div>
+                <div>
+                  <label for="penCola">Pension COLA (%/yr)
+                    <svg xmlns="http://www.w3.org/2000/svg" 
+                         viewBox="0 0 24 24" 
+                         width="1em" height="1em" 
+                         fill="white" 
+                         class="help-icon"
+                         onclick="showHelpToast(event, 'penCola')"
+                         style="vertical-align: middle;">
+                      <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none"/>
+                      <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
+                      <circle cx="12" cy="17" r="1" fill="white"/>
+                    </svg>
+                  </label>
+                  <input id="penCola" type="number" step="0.1" value="0" />
+                </div>
+              </div>
+            </div>
+          </details>
+
+          <!-- Taxes & Strategy -->
+          <details>
+            <summary>
+              <span>Taxes & Withdrawal Strategy</span>
+              <span class="chev">▶</span>
+            </summary>
+            <div class="content">
+              <div class="grid-3">
+                <div>
+                  <label for="taxPre">Effective tax on pre‑tax withdrawals (%)
+                    <span class="help-icon-placeholder" data-field="taxPre"></span>
+                  </label>
+                  <input id="taxPre" type="number" step="0.5" value="22" />
+                </div>
+                <div>
+                  <label for="taxTaxable">Effective tax on taxable withdrawals (%)
+                    <span class="help-icon-placeholder" data-field="taxTaxable"></span>
+                  </label>
+                  <input id="taxTaxable" type="number" step="0.5" value="10" />
+                </div>
+                <div>
+                  <label for="taxRoth">Effective tax on Roth withdrawals (%)
+                    <span class="help-icon-placeholder" data-field="taxRoth"></span>
+                  </label>
+                  <input id="taxRoth" type="number" step="0.5" value="0" />
+                </div>
+              </div>
+              <div class="grid-3">
+                <div>
+                  <label for="taxSS">Effective tax on Social Security (%)
+                    <span class="help-icon-placeholder"  data-field="taxSS"></span>
+                  </label>
+                  <input id="taxSS" type="number" step="0.5" value="10" />
+                </div>
+                <div>
+                  <label for="taxPension">Effective tax on Pension (%)
+                    <span class="help-icon-placeholder" data-field="taxPension"></span>
+                  </label>
+                  <input id="taxPension" type="number" step="0.5" value="20" />
+                </div>
+                <div>
+                  <label for="order">Withdrawal order
+                    <span class="help-icon-placeholder" data-field="order"></span>
+                  </label>
+                  <select id="order">
+                    <option value="taxable,pretax,roth">Taxable → Pre‑tax → Roth (default)</option>
+                    <option value="pretax,taxable,roth">Pre‑tax → Taxable → Roth</option>
+                    <option value="roth,pretax,taxable">Roth → Pre‑tax → Taxable</option>
+                  </select>
+                </div>
+              </div>
+              <div style="margin-top: 15px;">
+                <label>
+                  <input type="checkbox" id="useAgiTax" checked /> 
+                  Use AGI-based tax calculation for pre-tax withdrawals
+                  <span class="help-icon-placeholder" data-field="useAgiTax"></span>
+                </label>
+              </div>
+              <div style="margin-top: 10px;">
+                <label for="filingStatus">Tax filing status
+                  <span class="help-icon-placeholder" data-field="filingStatus"></span>
+                </label>
+                <select id="filingStatus">
+                  <option value="single">Single</option>
+                  <option value="married">Married Filing Jointly</option>
+                </select>
+              </div>
+              <div style="margin-top: 10px;">
+                <label>
+                  <input type="checkbox" id="useSSRules" checked /> 
+                  Use proper Social Security taxation rules
+                  <span class="help-icon-placeholder" data-field="useSSRules"></span>
+                </label>
+              </div>
+              <div class="hint">These are simplified, all‑in effective rates to keep the model understandable (not tax advice).</div>
+            </div>
+          </details>
+        </div>
+      </div>
+      <div class="actions">
+        <button id="csvBtn" title="Export yearly table">Export CSV</button>
+      </div>
+    </section>
+
+    <!-- Results -->
+    <section class="card">
+      <div class="results">
+        <div class="summary">
+          <div class="kpi"><div class="label">Funded to Age</div><div id="kpiAge" class="value">—</div></div>
+          <div class="kpi"><div class="label">Ending Balance</div><div id="kpiEndBal" class="value">—</div></div>
+          <div class="kpi"><div class="label">Max Drawdown Year</div><div id="kpiDraw" class="value">—</div></div>
+          <div class="kpi"><div class="label">Total Taxes (retirement)</div><div id="kpiTax" class="value">—</div></div>
+        </div>
+        <canvas id="chart" height="260"></canvas>
+        <div class="card" style="padding:0; overflow:auto; max-height: 50vh;">
+          <table>
+            <thead>
+              <tr>
+                <th>Year</th>
+                <th>Age</th>
+                <th>Salary</th>
+                <th>Contrib (Tot)</th>
+                <th>SS (Net)</th>
+                <th>Pension (Net)</th>
+                <th>Spouse SS (Net)</th>
+                <th>Spouse Pen (Net)</th>
+                <th>Spend (Net)</th>
+                <th>Withdraw Gross</th>
+                <th>Taxes</th>
+                <th>Withdraw Net</th>
+                <th>Taxable Bal</th>
+                <th>Pre‑tax Bal</th>
+                <th>Roth Bal</th>
+                <th>Total Bal</th>
+              </tr>
+            </thead>
+            <tbody id="rows"></tbody>
+          </table>
+        </div>
+        <div class="disclaimer">This is an educational, simplified model. It ignores many realities (RMDs, detailed SS taxability, brackets/credits, healthcare, sequence risk, etc.). Consult a fiduciary advisor and a tax professional for personalized guidance.</div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const pct = (v) => (isNaN(v) ? 0 : Number(v)/100);
+    const num = (id) => Number($(id).value || 0);
+    const fmt = (n) => n.toLocaleString(undefined, { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+    const pow1p = (r, n) => Math.pow(1 + r, n);
+
+    /**
+     * Effective Tax Rate Table and Standard Deductions
+     *
+     * This table provides estimated effective federal tax rates for different AGI levels.
+     * These rates are approximations based on 2024 tax brackets and include proper
+     * standard deduction handling.
+     *
+     * 2024 Standard Deductions:
+     * - Single filers: $14,600
+     * - Married filing jointly: $29,200
+     *
+     * Note: These are simplified estimates and do not account for:
+     * - State taxes
+     * - Itemized deductions beyond standard deduction
+     * - Tax credits
+     * - FICA taxes on earned income
+     * - Capital gains vs ordinary income distinctions
+     * - Additional standard deduction for seniors (65+)
+     *
+     * For accurate tax planning, consult a tax professional.
+     */
+    
+    // 2024 Standard Deductions
+    const STANDARD_DEDUCTIONS = {
+      single: 14600,
+      married: 29200
+    };
+    const EFFECTIVE_TAX_RATES = {
+      // AGI: Effective Rate (%)
+      0: 0.0,
+      5000: 0.0,
+      10000: 0.0,
+      15000: 0.0,
+      20000: 2.5,
+      25000: 4.0,
+      30000: 5.5,
+      35000: 6.8,
+      40000: 7.9,
+      45000: 8.9,
+      50000: 9.8,
+      55000: 10.6,
+      60000: 11.3,
+      65000: 12.0,
+      70000: 12.6,
+      75000: 13.1,
+      80000: 13.6,
+      85000: 14.1,
+      90000: 14.5,
+      95000: 14.9,
+      100000: 15.3,
+      110000: 16.0,
+      120000: 16.6,
+      130000: 17.1,
+      140000: 17.6,
+      150000: 18.0,
+      160000: 18.4,
+      170000: 18.8,
+      180000: 19.1,
+      190000: 19.4,
+      200000: 19.7,
+    };
+
+    /**
+     * Calculate AGI by subtracting standard deduction from gross income
+     * @param {number} grossIncome - Total gross income
+     * @param {string} filingStatus - 'single' or 'married'
+     * @returns {number} Adjusted Gross Income (cannot be negative)
+     */
+    function calculateAGI(grossIncome, filingStatus = "single") {
+      const standardDeduction = STANDARD_DEDUCTIONS[filingStatus] || STANDARD_DEDUCTIONS.single;
+      return Math.max(0, grossIncome - standardDeduction);
+    }
+
+    /**
+     * Calculate effective tax rate for a given AGI using linear interpolation
+     * @param {number} agi - Adjusted Gross Income
+     * @returns {number} Effective tax rate as a percentage (0-100)
+     */
+    function getEffectiveTaxRate(agi) {
+      // Handle edge cases
+      if (agi <= 0) return 0;
+      if (agi >= 200000) return EFFECTIVE_TAX_RATES[200000];
+
+      // Find the two closest AGI levels for interpolation
+      const agiLevels = Object.keys(EFFECTIVE_TAX_RATES)
+        .map(Number)
+        .sort((a, b) => a - b);
+
+      // Find exact match
+      if (EFFECTIVE_TAX_RATES[agi] !== undefined) {
+        return EFFECTIVE_TAX_RATES[agi];
+      }
+
+      // Find interpolation points
+      let lowerAgi = 0;
+      let upperAgi = 200000;
+
+      for (let i = 0; i < agiLevels.length - 1; i++) {
+        if (agi >= agiLevels[i] && agi <= agiLevels[i + 1]) {
+          lowerAgi = agiLevels[i];
+          upperAgi = agiLevels[i + 1];
+          break;
+        }
+      }
+
+      // Linear interpolation
+      const lowerRate = EFFECTIVE_TAX_RATES[lowerAgi];
+      const upperRate = EFFECTIVE_TAX_RATES[upperAgi];
+      const ratio = (agi - lowerAgi) / (upperAgi - lowerAgi);
+
+      return lowerRate + (upperRate - lowerRate) * ratio;
+    }
+
+    /**
+     * Calculate effective tax rate for married filing jointly (approximately 2x the single brackets)
+     * @param {number} agi - Adjusted Gross Income for married couple
+     * @returns {number} Effective tax rate as a percentage (0-100)
+     */
+    function getEffectiveTaxRateMarried(agi) {
+      // Approximate married rates by using single rates at half the income
+      // This is a simplification - actual married brackets are roughly 2x single brackets
+      return getEffectiveTaxRate(agi / 2);
+    }
+
+    /**
+     * Get tax amount based on gross income and filing status
+     * @param {number} grossIncome - Total gross income before standard deduction
+     * @param {string} filingStatus - 'single' or 'married'
+     * @returns {number} Estimated federal tax amount
+     */
+    function calculateFederalTax(grossIncome, filingStatus = "single") {
+      // First calculate AGI by subtracting standard deduction
+      const agi = calculateAGI(grossIncome, filingStatus);
+      
+      // Then get effective rate based on AGI
+      const effectiveRate =
+        filingStatus === "married"
+          ? getEffectiveTaxRateMarried(agi)
+          : getEffectiveTaxRate(agi);
+
+      // Tax is calculated on the AGI, not gross income
+      return agi * (effectiveRate / 100);
+    }
+
+    /**
+     * Get marginal tax rate estimate for additional income
+     * @param {number} currentGrossIncome - Current gross income
+     * @param {number} additionalIncome - Additional income to evaluate
+     * @param {string} filingStatus - 'single' or 'married'
+     * @returns {number} Estimated marginal tax rate as percentage
+     */
+    function getMarginalTaxRate(
+      currentGrossIncome,
+      additionalIncome = 1000,
+      filingStatus = "single"
+    ) {
+      const currentTax = calculateFederalTax(currentGrossIncome, filingStatus);
+      const newTax = calculateFederalTax(
+        currentGrossIncome + additionalIncome,
+        filingStatus
+      );
+
+      return ((newTax - currentTax) / additionalIncome) * 100;
+    }
+
+    /**
+     * Display tax calculation examples for reference
+     * @param {string} filingStatus - 'single' or 'married'
+     */
+    function displayTaxExamples(filingStatus = "single") {
+      console.log(`\n=== Tax Rate Examples (${filingStatus} filer) ===`);
+      console.log(`Standard Deduction: $${STANDARD_DEDUCTIONS[filingStatus].toLocaleString()}`);
+      const testGrossIncomes = [25000, 50000, 75000, 100000, 150000, 200000];
+      
+      testGrossIncomes.forEach(grossIncome => {
+        const agi = calculateAGI(grossIncome, filingStatus);
+        const effectiveRate = filingStatus === "married" 
+          ? getEffectiveTaxRateMarried(agi)
+          : getEffectiveTaxRate(agi);
+        const taxAmount = calculateFederalTax(grossIncome, filingStatus);
+        const marginalRate = getMarginalTaxRate(grossIncome, 1000, filingStatus);
+        
+        console.log(`Gross $${grossIncome.toLocaleString()} → AGI $${agi.toLocaleString()}: Effective ${effectiveRate.toFixed(1)}%, Tax $${Math.round(taxAmount).toLocaleString()}, Marginal ${marginalRate.toFixed(1)}%`);
+      });
+      console.log("=================================\n");
+    }
+
+    // Social Security taxation calculation based on provisional income
+    function calculateSSTaxableAmount(ssGross, otherAGI, isMarried = false) {
+      if (ssGross <= 0) return 0;
+      
+      // Calculate provisional income: AGI + non-taxable interest + 50% of SS benefits
+      // For simplicity, we'll assume no non-taxable interest
+      const provisionalIncome = otherAGI + (ssGross * 0.5);
+      
+      // Set thresholds based on filing status
+      const threshold1 = isMarried ? 32000 : 25000;  // 0% to 50% transition
+      const threshold2 = isMarried ? 44000 : 34000;  // 50% to 85% transition
+      
+      let taxableAmount = 0;
+      
+      if (provisionalIncome <= threshold1) {
+        // No SS benefits are taxable
+        taxableAmount = 0;
+      } else if (provisionalIncome <= threshold2) {
+        // Up to 50% of SS benefits are taxable
+        const excessIncome = provisionalIncome - threshold1;
+        taxableAmount = Math.min(ssGross * 0.5, excessIncome * 0.5);
+      } else {
+        // Up to 85% of SS benefits are taxable
+        const tier1Max = (threshold2 - threshold1) * 0.5; // Max from first tier
+        const excessIncome = provisionalIncome - threshold2;
+        const tier2Amount = Math.min(ssGross * 0.35, excessIncome * 0.85); // Additional 35% (85% - 50%)
+        taxableAmount = Math.min(ssGross * 0.85, tier1Max + tier2Amount);
+      }
+      
+      return taxableAmount;
+    }
+
+    // Helper function to create reusable help icon
+    function createHelpIcon(fieldId) {
+      return `<svg xmlns="http://www.w3.org/2000/svg" 
+                   viewBox="0 0 24 24" 
+                   width="1em" height="1em" 
+                   fill="#7c8db5" 
+                   class="help-icon"
+                   onclick="showHelpToast(event, '${fieldId}')"
+                   style="vertical-align: middle; margin-left: 0.3em;">
+                <circle cx="12" cy="12" r="10" stroke="#7c8db5" stroke-width="2" fill="none"/>
+                <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="#7c8db5" stroke-width="2" fill="none" stroke-linecap="round"/>
+                <circle cx="12" cy="17" r="1" fill="#7c8db5"/>
+              </svg>`;
+    }
+
+    // Help toast functionality
+    let currentToast = null;
+    let currentProgressBar = null;
+    let toastTimer = null;
+    let progressTimer = null;
+
+    function showHelpToast(event, fieldId) {
+      // Prevent the click from bubbling up to document
+      event.stopPropagation();
+      
+      const helpTexts = {
+        currentAge: {
+          title: "Current Age",
+          body: "Enter your current age in years. This is used as the starting point for all retirement calculations and determines how many years you have until retirement."
+        },
+        retireAge: {
+          title: "Retirement Age",
+          body: "The age at which you plan to retire and stop working. This determines when you'll begin withdrawing from your retirement accounts."
+        },
+        endAge: {
+          title: "Plan to Age",
+          body: "The age until which you want your retirement funds to last. This is typically your expected lifespan or when you want financial security to end."
+        },
+        inflation: {
+          title: "Inflation Rate",
+          body: "The expected annual inflation rate as a percentage. This affects how your spending needs will grow over time and reduces the purchasing power of money."
+        },
+        spendingToday: {
+          title: "Retirement Spending",
+          body: "How much you expect to spend per year in retirement, expressed in today's dollars. This will be adjusted for inflation to your retirement date."
+        },
+        spendingDecline: {
+          title: "Annual Spending Decline",
+          body: "The percentage by which your spending decreases each year in retirement. Many retirees spend less as they age due to reduced activity and travel."
+        },
+        spouseAge: {
+          title: "Spouse Current Age",
+          body: "Your spouse's current age in years. Set to 0 if you don't have a spouse. This affects Social Security and pension benefit calculations."
+        },
+        spouseRetireAge: {
+          title: "Spouse Retirement Age",
+          body: "The age at which your spouse plans to retire. This determines when spouse income sources will begin or end."
+        },
+        salary: {
+          title: "Current Salary",
+          body: "Your current annual gross salary before taxes and deductions. This is used to calculate retirement contributions and employer matching."
+        },
+        salaryGrowth: {
+          title: "Salary Growth Rate",
+          body: "The expected annual percentage increase in your salary. This affects future contribution amounts and employer matching over time."
+        },
+        pretaxPct: {
+          title: "Pre-tax Contribution Rate",
+          body: "The percentage of your salary contributed to pre-tax retirement accounts like traditional 401(k) or IRA. These reduce current taxes but are taxed in retirement."
+        },
+        rothPct: {
+          title: "Roth Contribution Rate",
+          body: "The percentage of your salary contributed to Roth accounts. These are made with after-tax dollars but grow tax-free and are not taxed in retirement."
+        },
+        taxablePct: {
+          title: "Taxable Savings Rate",
+          body: "The percentage of your salary saved in regular taxable investment accounts. These provide flexibility but don't have tax advantages."
+        },
+        matchCap: {
+          title: "Employer Match Cap",
+          body: "The maximum percentage of salary that your employer will match. For example, if your employer matches up to 4% of salary."
+        },
+        matchRate: {
+          title: "Employer Match Rate",
+          body: "The percentage rate at which your employer matches contributions. For example, 50% means they contribute $0.50 for every $1.00 you contribute."
+        },
+        balPre: {
+          title: "Pre-tax Balance",
+          body: "Your current balance in pre-tax retirement accounts like traditional 401(k), 403(b), or traditional IRA."
+        },
+        balRoth: {
+          title: "Roth Balance",
+          body: "Your current balance in Roth retirement accounts like Roth 401(k) or Roth IRA. These grow tax-free."
+        },
+        balTax: {
+          title: "Taxable Balance",
+          body: "Your current balance in regular taxable investment accounts like brokerage accounts, savings, or CDs."
+        },
+        retPre: {
+          title: "Pre-tax Return Rate",
+          body: "The expected annual return on your pre-tax retirement investments, expressed as a percentage. Typically 6-8% for diversified portfolios."
+        },
+        retRoth: {
+          title: "Roth Return Rate",
+          body: "The expected annual return on your Roth retirement investments. Usually similar to pre-tax returns since they're often in similar investments."
+        },
+        retTax: {
+          title: "Taxable Return Rate",
+          body: "The expected annual return on your taxable investments. May be slightly lower due to tax drag from annual taxes on dividends and capital gains."
+        },
+        ssMonthly: {
+          title: "Social Security Benefit",
+          body: "Your estimated monthly Social Security benefit in the first year you claim it, in today's dollars. Check your Social Security statement for estimates."
+        },
+        ssStart: {
+          title: "Social Security Start Age",
+          body: "The age at which you plan to start claiming Social Security benefits. You can claim as early as 62 or delay until 70 for larger benefits."
+        },
+        ssCola: {
+          title: "Social Security COLA",
+          body: "The annual cost-of-living adjustment for Social Security, typically around 2-3% per year to keep pace with inflation."
+        },
+        penMonthly: {
+          title: "Pension Benefit",
+          body: "Your estimated monthly pension benefit in the first year you receive it. Set to 0 if you don't have a pension."
+        },
+        penStart: {
+          title: "Pension Start Age",
+          body: "The age at which you'll begin receiving pension benefits. This varies by employer and plan type."
+        },
+        penCola: {
+          title: "Pension COLA",
+          body: "The annual cost-of-living adjustment for your pension. Many pensions have no COLA (0%), while others may match inflation."
+        },
+        taxPre: {
+          title: "Pre-tax Withdrawal Tax Rate",
+          body: "The baseline effective tax rate on withdrawals from pre-tax retirement accounts. The calculator uses AGI-based rates for more accuracy when total income is significant, but falls back to this rate as a minimum."
+        },
+        taxTaxable: {
+          title: "Taxable Withdrawal Tax Rate",
+          body: "The effective tax rate on withdrawals from taxable accounts. Usually lower than income tax due to capital gains treatment."
+        },
+        taxRoth: {
+          title: "Roth Withdrawal Tax Rate",
+          body: "The effective tax rate on Roth withdrawals. Typically 0% since Roth withdrawals are tax-free in retirement."
+        },
+        taxSS: {
+          title: "Social Security Tax Rate",
+          body: "The effective tax rate on Social Security benefits. Varies based on total income, typically 0-18.5% of benefits."
+        },
+        taxPension: {
+          title: "Pension Tax Rate",
+          body: "The effective tax rate on pension benefits. Usually taxed as ordinary income at your marginal tax rate."
+        },
+        order: {
+          title: "Withdrawal Order Strategy",
+          body: "The order in which you'll withdraw from different account types. The default strategy withdraws from taxable first, then pre-tax, then Roth to optimize taxes."
+        },
+        useAgiTax: {
+          title: "AGI-Based Tax Calculation",
+          body: "When enabled, uses a progressive tax table based on Adjusted Gross Income (gross income minus standard deduction) for pre-tax withdrawals. Uses 2024 standard deductions: $14,600 (single) / $29,200 (married). This typically results in more accurate tax rates than fixed percentages, especially for larger withdrawal amounts. Check the browser console for detailed calculations showing gross income → AGI → tax rates."
+        },
+        filingStatus: {
+          title: "Tax Filing Status",
+          body: "Your tax filing status affects Social Security taxation thresholds and AGI-based tax calculations. Single filers have lower thresholds for SS taxation than married filing jointly."
+        },
+        useSSRules: {
+          title: "Proper Social Security Taxation",
+          body: "When enabled, uses actual IRS rules for Social Security taxation based on 'provisional income' rather than simple fixed percentages. SS taxation depends on your total income and can range from 0% to 85% of benefits being taxable."
+        }
+      };
+
+      const helpData = helpTexts[fieldId];
+      if (!helpData) {
+        return;
+      }
+
+      // Remove existing toast if any
+      if (currentToast) {
+        hideToast(true); // Immediate cleanup when replacing
+      }
+
+      // Create toast element
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.innerHTML = `
+        <div class="toast-title">${helpData.title}</div>
+        <div class="toast-body">${helpData.body}</div>
+        <div class="progress-bar"></div>
+      `;
+
+      document.body.appendChild(toast);
+      currentToast = toast;
+      
+      const progressBar = toast.querySelector('.progress-bar');
+      currentProgressBar = progressBar;
+
+      // Show toast with animation
+      progressTimer = setTimeout(() => {
+        toast.classList.add('show');
+        
+        // Initialize progress bar to full width without transition
+        progressBar.style.transition = 'none';
+        progressBar.style.width = '100%';
+        
+        // After a brief moment, enable transition and start countdown
+        setTimeout(() => {
+          progressBar.style.transition = 'width 10000ms linear';
+          progressBar.style.width = '0%';
+        }, 50);
+      }, 10);
+
+      // Auto-hide after 10 seconds
+      toastTimer = setTimeout(() => hideToast(), 10000);
+    }
+
+    function hideToast(immediate = false) {
+      if (!currentToast) return;
+      
+      // Clear any existing timers
+      if (toastTimer) {
+        clearTimeout(toastTimer);
+        toastTimer = null;
+      }
+      
+      currentToast.classList.remove('show');
+      
+      if (immediate) {
+        // Remove immediately for toast replacement
+        if (currentToast && currentToast.parentNode) {
+          currentToast.parentNode.removeChild(currentToast);
+        }
+        currentToast = null;
+      } else {
+        // Wait for animation to complete for natural dismissal
+        setTimeout(() => {
+          if (currentToast && currentToast.parentNode) {
+            currentToast.parentNode.removeChild(currentToast);
+          }
+          currentToast = null;
+        }, 10000);
+      }
+    }
+
+    // Generic toast notification function
+    function showToast(title, message, type = 'info', duration = 5000) {
+      // Remove existing toast if any
+      if (currentToast) {
+        hideToast(true); // Immediate cleanup when replacing
+      }
+
+      // Create toast element
+      const toast = document.createElement('div');
+      toast.className = `toast toast-${type}`;
+      toast.innerHTML = `
+        <div class="toast-title">${title}</div>
+        <div class="toast-body">${message}</div>
+        <div class="progress-bar"></div>
+      `;
+
+      document.body.appendChild(toast);
+      currentToast = toast;
+      
+      const progressBar = toast.querySelector('.progress-bar');
+      currentProgressBar = progressBar;
+
+      // Show toast with animation
+      progressTimer = setTimeout(() => {
+        toast.classList.add('show');
+        
+        // Initialize progress bar to full width without transition
+        progressBar.style.transition = 'none';
+        progressBar.style.width = '100%';
+        
+        // After a brief moment, enable transition and start countdown
+        setTimeout(() => {
+          progressBar.style.transition = `width ${duration}ms linear`;
+          progressBar.style.width = '0%';
+        }, 50);
+      }, 10);
+
+      // Auto-hide after specified duration
+      toastTimer = setTimeout(() => hideToast(), duration);
+    }
+
+    // Event listeners for dismissing toast
+    document.addEventListener('click', (e) => {
+      if (currentToast && !currentToast.contains(e.target) && !e.target.closest('.help-icon')) {
+        hideToast();
+      }
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && currentToast) {
+        hideToast();
+      }
+    });
+
+  
+    function loadExample(){
+      const ex = {
+        currentAge: 60, retireAge: 62, endAge: 110, inflation: 2.5, 
+        spendingToday: 95000, spendingDecline: 1.0,
+        spouseAge: 56, spouseRetireAge: 62, 
+        spouseSsMonthly: 1000, spouseSsStart: 66, spouseSsCola: 2.0,
+        spousePenMonthly: 500, spousePenStart: 69, spousePenCola: 0, 
+        spouseTaxSS: 10, spouseTaxPension: 20,
+        salary: 170000, salaryGrowth: 2.0, pretaxPct: 0, rothPct: 0, taxablePct: 35,
+        matchCap: 0, matchRate: 0, 
+        balPre: 600000, balRoth: 0, balTax: 500000,
+        retPre: 3.0, retRoth: 0.0, retTax: 3.0, 
+        ssMonthly: 2500, ssStart: 62, ssCola: 2.0,
+        penMonthly: 3500, penStart: 65, penCola: 0, taxPre: 15, taxTaxable: 0, taxRoth: 0,
+        taxSS: 10, taxPension: 15, order: 'pretax,taxable,roth'
+      };
+      // const ex = {
+      //   currentAge:55, retireAge:65, endAge:85, inflation:2.5, spendingToday:60000, spendingDecline:1.0,
+      //   spouseAge:52, spouseRetireAge:62, spouseSsMonthly:1000, spouseSsStart:62, spouseSsCola:2.0,
+      //   spousePenMonthly:500, spousePenStart:65, spousePenCola:0, spouseTaxSS:10, spouseTaxPension:20,
+      //   salary:100000, salaryGrowth:3.0, pretaxPct:10, rothPct:5, taxablePct:5,
+      //   matchCap:4, matchRate:50, balPre:300000, balRoth:100000, balTax:50000,
+      //   retPre:6.0, retRoth:6.0, retTax:5.5, ssMonthly:2500, ssStart:67, ssCola:2.0,
+      //   penMonthly:0, penStart:65, penCola:0, taxPre:22, taxTaxable:10, taxRoth:0,
+      //   taxSS:10, taxPension:20, order:'taxable,pretax,roth'
+      // };
+      // const ex = {
+      //   currentAge: 54, retireAge: 55, endAge: 85, 
+      //   inflation: 0.0, spendingToday: 50000, spendingDecline: 0.0,
+      //   spouseAge: 52, spouseRetireAge: 62, spouseSsMonthly: 0, spouseSsStart: 62, spouseSsCola: 2.0,
+      //   spousePenMonthly: 0, spousePenStart: 65, spousePenCola: 0, spouseTaxSS: 10, spouseTaxPension: 20,
+      //   salary: 0, salaryGrowth: 3.0, pretaxPct: 10, rothPct: 5, taxablePct: 5,
+      //   matchCap: 4, matchRate: 50, balPre: 1000000, balRoth: 0, balTax: 0,
+      //   retPre: 0.0, retRoth: 0.0, retTax: 0.0, 
+      //   ssMonthly: 0, ssStart: 67, ssCola: 2.0,
+      //   penMonthly: 0, penStart: 65, penCola: 0, 
+      //   taxPre: 0, taxTaxable: 0, taxRoth: 0,
+      //   taxSS: 0, taxPension: 0, order: 'pretax,roth,taxable'
+      // };
+      for(const [k,v] of Object.entries(ex)){ if($(k)) $(k).value = v; }
+    }
+
+    function resetAll(){
+      document.querySelectorAll('input').forEach(i=> i.value = i.defaultValue ?? '');
+      $('order').value = 'taxable,pretax,roth';
+      $('rows').innerHTML = '';
+      $('kpiAge').textContent = '—';
+      $('kpiEndBal').textContent = '—';
+      $('kpiDraw').textContent = '—';
+      $('kpiTax').textContent = '—';
+      drawChart([]);
+    }
+
+    function calc(){
+      const currentAge = num('currentAge');
+      const retireAge  = num('retireAge');
+      const endAge     = num('endAge');
+      const inflation  = pct(num('inflation'));
+      const spendingToday = num('spendingToday');
+      const spendingDecline = pct(num('spendingDecline'));
+
+      // Spouse information
+      const spouseAge = num('spouseAge');
+      const spouseRetireAge = num('spouseRetireAge');
+      const spouseSsMonthly = num('spouseSsMonthly');
+      const spouseSsStart = num('spouseSsStart');
+      const spouseSsCola = pct(num('spouseSsCola'));
+      const spousePenMonthly = num('spousePenMonthly');
+      const spousePenStart = num('spousePenStart');
+      const spousePenCola = pct(num('spousePenCola'));
+      const spouseTaxSS = pct(num('spouseTaxSS'));
+      const spouseTaxPension = pct(num('spouseTaxPension'));
+      const hasSpouse = spouseAge > 0;
+
+      const salary0 = num('salary');
+      const salaryGrowth = pct(num('salaryGrowth'));
+      const pretaxPct = pct(num('pretaxPct'));
+      const rothPct   = pct(num('rothPct'));
+      const taxablePct= pct(num('taxablePct'));
+      const matchCap  = pct(num('matchCap'));
+      const matchRate = pct(num('matchRate'));
+
+      let balPre  = num('balPre');
+      let balRoth = num('balRoth');
+      let balTax  = num('balTax');
+      const retPre  = pct(num('retPre'));
+      const retRoth = pct(num('retRoth'));
+      const retTax  = pct(num('retTax'));
+
+      const ssMonthly = num('ssMonthly');
+      const ssStart   = num('ssStart');
+      const ssCola    = pct(num('ssCola'));
+      const penMonthly = num('penMonthly');
+      const penStart   = num('penStart');
+      const penCola    = pct(num('penCola'));
+
+      const taxPre   = pct(num('taxPre'));
+      const taxTaxable = pct(num('taxTaxable'));
+      const taxRoth = pct(num('taxRoth'));
+      const taxSS   = pct(num('taxSS'));
+      const taxPension = pct(num('taxPension'));
+      const order = $('order').value.split(',').map(s => s.trim()).filter(s => s.length > 0);
+      console.log('Raw order value:', $('order').value);
+      console.log('Parsed order array:', order);
+      
+      // Fallback to default order if parsing failed
+      if (order.length === 0) {
+        order.push('taxable', 'pretax', 'roth');
+        console.log('Using fallback order:', order);
+      }
+
+      if(retireAge <= currentAge || endAge <= retireAge){
+        showToast('Invalid Ages', 'Please ensure: current age < retirement age < plan age.', 'error');
+        return;
+      }
+
+      // Display enhanced tax calculation examples
+      const filingStatus = $('filingStatus').value;
+      const useAgiTax = $('useAgiTax').checked;
+      if (useAgiTax) {
+        displayTaxExamples(filingStatus);
+      }
+
+      const yearsToRetire = retireAge - currentAge;
+      const yearsTotal = endAge - currentAge;
+      let salary = salary0;
+
+      const rows = [];
+      let totalTaxes = 0;
+      let maxDrawdown = { year: null, value: Infinity };
+
+      // Inflate spending to retirement year (nominal first-year)
+      const spendAtRetire = spendingToday * pow1p(inflation, yearsToRetire);
+
+      // Accumulation years
+      for(let y = 0; y < yearsToRetire; y++){
+        const age = currentAge + y;
+        // Contributions this year
+        const cPre   = salary * pretaxPct;
+        const cRoth  = salary * rothPct;
+        const cTax   = salary * taxablePct;
+        const match  = Math.min(pretaxPct, matchCap) * salary * matchRate;
+
+        balPre  = (balPre  + cPre + match) * (1 + retPre);
+        balRoth = (balRoth + cRoth) * (1 + retRoth);
+        balTax  = (balTax  + cTax) * (1 + retTax);
+
+        rows.push({
+          year: new Date().getFullYear() + y,
+          age,
+          salary,
+          contrib: cPre + cRoth + cTax + match,
+          ss: 0, pen: 0, spouseSs: 0, spousePen: 0, spend: 0,
+          wNet: 0, wGross: 0, taxes: 0,
+          balTax, balPre, balRoth,
+          total: balTax + balPre + balRoth
+        });
+
+        salary *= (1 + salaryGrowth);
+      }
+
+      // Retirement years
+      let ssAnnual = ssMonthly * 12 * (retireAge >= ssStart ? pow1p(ssCola, retireAge - ssStart) : 1);
+      let penAnnual = penMonthly * 12 * (retireAge >= penStart ? pow1p(penCola, retireAge - penStart) : 1);
+      
+      // Spouse benefit calculations
+      let spouseSsAnnual = 0;
+      let spousePenAnnual = 0;
+      if (hasSpouse) {
+        const spouseCurrentYear = retireAge - currentAge; // Years from now when primary person retires
+        const spouseAgeAtPrimaryRetirement = spouseAge + spouseCurrentYear;
+        
+        spouseSsAnnual = spouseSsMonthly * 12 * (spouseAgeAtPrimaryRetirement >= spouseSsStart ? 
+          pow1p(spouseSsCola, spouseAgeAtPrimaryRetirement - spouseSsStart) : 1);
+        spousePenAnnual = spousePenMonthly * 12 * (spouseAgeAtPrimaryRetirement >= spousePenStart ? 
+          pow1p(spousePenCola, spouseAgeAtPrimaryRetirement - spousePenStart) : 1);
+      }
+      
+      let spend = spendAtRetire;
+
+      for(let y = yearsToRetire; y < yearsTotal; y++){
+        const age = currentAge + y;
+        const year = new Date().getFullYear() + y;
+
+        // Income sources (apply start ages and COLA each year)
+        const hasSS = age >= ssStart;
+        const hasPen = age >= penStart && penMonthly > 0;
+        const ssGross = hasSS ? ssAnnual : 0;
+        const penGross = hasPen ? penAnnual : 0;
+        
+        // Spouse income sources
+        let spouseSsGross = 0;
+        let spousePenGross = 0;
+        
+        if (hasSpouse) {
+          const spouseCurrentAge = spouseAge + (age - currentAge);
+          const hasSpouseSS = spouseCurrentAge >= spouseSsStart;
+          const hasSpousePen = spouseCurrentAge >= spousePenStart && spousePenMonthly > 0;
+          
+          spouseSsGross = hasSpouseSS ? spouseSsAnnual : 0;
+          spousePenGross = hasSpousePen ? spousePenAnnual : 0;
+        }
+
+        // Calculate total taxable income for AGI-based tax calculation (before SS tax calculation)
+        let totalAGI = penGross + spousePenGross; // Start with pension income
+        
+        // Calculate Social Security taxation
+        const useSSRules = $('useSSRules').checked;
+        const isMarried = $('filingStatus').value === 'married';
+        
+        let ssNet, spouseSsNet;
+        if (useSSRules && ssGross > 0) {
+          // Use proper SS taxation rules based on provisional income
+          const ssTaxableAmount = calculateSSTaxableAmount(ssGross, totalAGI, isMarried);
+          // Calculate AGI for tax rate determination (total income minus standard deduction)
+          const grossIncomeForTax = totalAGI + ssTaxableAmount;
+          const effectiveRate = isMarried 
+            ? getEffectiveTaxRateMarried(calculateAGI(grossIncomeForTax, "married"))
+            : getEffectiveTaxRate(calculateAGI(grossIncomeForTax, "single"));
+          const ssTaxes = ssTaxableAmount * (effectiveRate / 100);
+          ssNet = ssGross - ssTaxes;
+          totalAGI += ssTaxableAmount; // Add taxable portion to AGI
+          console.log(`SS: Gross $${ssGross.toLocaleString()}, Taxable $${ssTaxableAmount.toLocaleString()}, Tax $${ssTaxes.toLocaleString()}, Net $${ssNet.toLocaleString()}`);
+        } else {
+          // Use simple fixed percentage method
+          ssNet = ssGross * (1 - taxSS);
+          totalAGI += ssGross; // Add full amount to AGI for withdrawal calculations
+        }
+        
+        if (useSSRules && spouseSsGross > 0) {
+          const spouseSsTaxableAmount = calculateSSTaxableAmount(spouseSsGross, totalAGI, isMarried);
+          // Calculate AGI for tax rate determination
+          const grossIncomeForTax = totalAGI + spouseSsTaxableAmount;
+          const effectiveRate = isMarried 
+            ? getEffectiveTaxRateMarried(calculateAGI(grossIncomeForTax, "married"))
+            : getEffectiveTaxRate(calculateAGI(grossIncomeForTax, "single"));
+          const spouseSsTaxes = spouseSsTaxableAmount * (effectiveRate / 100);
+          spouseSsNet = spouseSsGross - spouseSsTaxes;
+          totalAGI += spouseSsTaxableAmount;
+        } else {
+          spouseSsNet = spouseSsGross * (1 - spouseTaxSS);
+          totalAGI += spouseSsGross;
+        }
+        
+        const penNet = penGross * (1 - taxPension);
+        const spousePenNet = spousePenGross * (1 - spouseTaxPension);
+
+        // Net spending need after all net incomes
+        let needNet = Math.max(0, spend - (ssNet + penNet + spouseSsNet + spousePenNet));
+        let needGross = 0; // track gross withdrawals
+        let taxesThisYear = 0;
+
+        // Calculate total taxable income for AGI-based tax calculation
+        totalAGI = ssGross + penGross + spouseSsGross + spousePenGross;
+
+        function withdrawFrom(kind, netAmount){
+          console.log(`withdrawFrom called with kind: "${kind}", netAmount: ${netAmount}`);
+          if(netAmount <= 0) return { gross: 0, net: 0 };
+          
+          // Validate kind parameter
+          if (!kind || typeof kind !== 'string') {
+            console.error('Invalid withdrawal kind:', kind);
+            return { gross: 0, net: 0 };
+          }
+          
+          let fixedTaxRate = 0, balRef = 0, setBal;
+          
+          if(kind === 'taxable'){ 
+            fixedTaxRate = taxTaxable; 
+            balRef = balTax; 
+            setBal = (v) => { balTax = v; };
+          } else if(kind === 'pretax'){ 
+            fixedTaxRate = taxPre; 
+            balRef = balPre; 
+            setBal = (v) => { balPre = v; };
+          } else if(kind === 'roth'){   
+            fixedTaxRate = taxRoth; 
+            balRef = balRoth; 
+            setBal = (v) => { balRoth = v; };
+          } else {
+            console.error('Unknown withdrawal kind:', kind);
+            return { gross: 0, net: 0 };
+          }
+
+          // Use AGI-based calculation for pre-tax withdrawals if enabled, fixed rates for others
+          let taxRate = fixedTaxRate;
+          const useAgiCalculation = $('useAgiTax').checked;
+          const filingStatus = $('filingStatus').value;
+          
+          if (kind === 'pretax' && useAgiCalculation) {
+            // Estimate gross withdrawal needed (start with fixed rate estimate)
+            const estimatedGrossWithdrawal = netAmount / (1 - fixedTaxRate);
+            const projectedGrossIncome = totalAGI + estimatedGrossWithdrawal;
+            
+            // Calculate AGI by subtracting standard deduction, then get effective rate
+            const projectedAGI = calculateAGI(projectedGrossIncome, filingStatus);
+            const agiBasedRate = filingStatus === "married" 
+              ? getEffectiveTaxRateMarried(projectedAGI)
+              : getEffectiveTaxRate(projectedAGI);
+            
+            // Convert AGI rate to decimal and use the higher of AGI rate or fixed rate
+            const agiRateDecimal = agiBasedRate / 100;
+            taxRate = Math.max(fixedTaxRate, agiRateDecimal);
+            
+            console.log(`Gross Income: $${projectedGrossIncome.toLocaleString()}, AGI: $${projectedAGI.toLocaleString()}, Filing: ${filingStatus}, AGI Rate: ${agiBasedRate.toFixed(1)}%, Fixed Rate: ${(fixedTaxRate*100).toFixed(1)}%, Using: ${(taxRate*100).toFixed(1)}%`);
+          }
+
+          const grossNeeded = netAmount / (1 - taxRate);
+          const grossTake = Math.min(grossNeeded, balRef);
+          const netReceived = grossTake * (1 - taxRate);
+          const taxPaid = grossTake - netReceived;
+          setBal(balRef - grossTake);
+          taxesThisYear += taxPaid;
+          
+          // Add pre-tax withdrawals to AGI for subsequent calculations
+          if (kind === 'pretax') {
+            totalAGI += grossTake;
+          }
+          
+          return { gross: grossTake, net: netReceived };
+        }
+
+        // Withdraw following order until need met
+        let wGross = 0, wNet = 0;
+        console.log('Withdrawal order:', order);
+        for(const k of order){
+          console.log(`Processing withdrawal kind: "${k}"`);
+          if(needNet <= 0) break;
+          const {gross=0, net=0} = withdrawFrom(k, needNet) || {};
+          needNet = Math.max(0, needNet - net);
+          wGross += gross; wNet += net;
+        }
+
+        // Grow remaining balances
+        balTax  *= (1 + retTax);
+        balPre  *= (1 + retPre);
+        balRoth *= (1 + retRoth);
+
+        const totalBal = balTax + balPre + balRoth;
+        totalTaxes += taxesThisYear;
+        if(totalBal < maxDrawdown.value){ maxDrawdown = { year, value: totalBal }; }
+
+        rows.push({
+          year, age, salary: 0, contrib: 0,
+          ss: ssNet, pen: penNet, spouseSs: spouseSsNet, spousePen: spousePenNet, spend,
+          wNet, wGross, taxes: taxesThisYear,
+          balTax, balPre, balRoth, total: totalBal
+        });
+
+        // Step next year: COLAs
+        if(hasSS) ssAnnual *= (1 + ssCola);
+        if(hasPen) penAnnual *= (1 + penCola);
+        if(hasSpouse) {
+          const spouseCurrentAge = spouseAge + (age - currentAge);
+          if(spouseCurrentAge >= spouseSsStart) spouseSsAnnual *= (1 + spouseSsCola);
+          if(spouseCurrentAge >= spousePenStart && spousePenMonthly > 0) spousePenAnnual *= (1 + spousePenCola);
+        }
+        spend *= (1 + inflation);
+        spend *= (1 - spendingDecline);
+      }
+
+      // Write table
+      const tbody = $('rows');
+      tbody.innerHTML = rows.map(r => `
+        <tr>
+          <td class="neutral">${r.year}</td>
+          <td class="neutral">${r.age}</td>
+          <td class="income">${r.salary? fmt(r.salary): ''}</td>
+          <td class="income">${r.contrib? fmt(r.contrib): ''}</td>
+          <td class="income">${r.ss? fmt(r.ss): ''}</td>
+          <td class="income">${r.pen? fmt(r.pen): ''}</td>
+          <td class="income">${r.spouseSs? fmt(r.spouseSs): ''}</td>
+          <td class="income">${r.spousePen? fmt(r.spousePen): ''}</td>
+          <td class="outgoing">${r.spend? fmt(r.spend): ''}</td>
+          <td class="outgoing">${r.wGross? fmt(r.wGross): ''}</td>
+          <td class="outgoing">${r.taxes? fmt(r.taxes): ''}</td>
+          <td class="income">${r.wNet ? fmt(r.wNet) : ''}</td>
+          <td class="neutral">${fmt(r.balTax)}</td>
+          <td class="neutral">${fmt(r.balPre)}</td>
+          <td class="neutral">${fmt(r.balRoth)}</td>
+          <td class="neutral">${fmt(r.total)}</td>
+        </tr>`).join('');
+
+      // KPIs
+      const last = rows[rows.length - 1];
+      // Find the last age where there's still money, or endAge if money lasts throughout
+      const fundedTo = last.total > 0 ? endAge : rows.reduce((lastGoodAge, r) => r.total > 0 ? r.age : lastGoodAge, currentAge);
+      $('kpiAge').innerHTML = `${fundedTo} <span class="pill ${fundedTo >= endAge ? 'ok':'alert'}">${fundedTo >= endAge ? 'Fully funded' : 'Shortfall'}</span>`;
+      $('kpiEndBal').textContent = fmt(Math.max(0, last.total));
+      $('kpiDraw').textContent = `${maxDrawdown.year ?? '—'}`;
+      $('kpiTax').textContent = fmt(totalTaxes);
+
+      // Chart (total balance)
+      drawChart(rows.map(r => ({ x: r.year, y: r.total })));
+
+      // Save rows for export
+      window.__rows = rows;
+    }
+
+    function drawChart(series){
+      const c = $('chart');
+      const ctx = c.getContext('2d');
+      
+      // Ensure canvas has proper dimensions before drawing
+      const dpr = window.devicePixelRatio || 1;
+      const rect = c.getBoundingClientRect();
+      const width = rect.width * dpr;
+      const height = rect.height * dpr;
+      
+      // Force canvas to correct size if needed
+      if(c.width !== width || c.height !== height) {
+        c.width = width;
+        c.height = height;
+        c.style.width = rect.width + 'px';
+        c.style.height = rect.height + 'px';
+      }
+      
+      ctx.clearRect(0, 0, width, height);
+      if(!series || !series.length){ return; }
+
+      // Padding (in device pixels) - increased left padding for Y-axis labels
+      const pad = { l: 80 * dpr, r: 12 * dpr, t: 12 * dpr, b: 28 * dpr };
+      const xs = series.map(p=>p.x);
+      const ys = series.map(p=>p.y);
+      const xmin = Math.min(...xs), xmax = Math.max(...xs);
+      const ymin = 0, ymax = Math.max(...ys) * 1.1;
+      const xTo = x => pad.l + ( (x - xmin) / (xmax - xmin) ) * (width - pad.l - pad.r);
+      const yTo = y => height - pad.b - ( (y - ymin) / (ymax - ymin) ) * (height - pad.t - pad.b);
+
+      // Axes
+      ctx.strokeStyle = '#22304d'; ctx.lineWidth = 1 * dpr; ctx.beginPath();
+      ctx.moveTo(pad.l, yTo(0)); ctx.lineTo(width - pad.r, yTo(0));
+      ctx.moveTo(pad.l, pad.t); ctx.lineTo(pad.l, height - pad.b); ctx.stroke();
+
+      // Y ticks
+      ctx.fillStyle = '#7c8db5'; ctx.font = `${12 * dpr}px system-ui`;
+      ctx.textAlign = 'right';
+      const steps = 4;
+      for(let i=0;i<=steps;i++){
+        const v = (ymax/steps)*i; const y = yTo(v);
+        ctx.strokeStyle = 'rgba(34,48,77,.4)'; ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(width - pad.r, y); ctx.stroke();
+        ctx.fillText(fmt(v), pad.l - 8 * dpr, y + 4 * dpr);
+      }
+
+      // Line
+      ctx.strokeStyle = '#6ea8fe'; ctx.lineWidth = 2 * dpr; ctx.beginPath();
+      series.forEach((p,i)=>{ const X = xTo(p.x), Y = yTo(p.y); if(i===0) ctx.moveTo(X,Y); else ctx.lineTo(X,Y); });
+      ctx.stroke();
+
+      // Points
+      ctx.fillStyle = '#6ea8fe';
+      series.forEach(p=>{ const X=xTo(p.x), Y=yTo(p.y); ctx.beginPath(); ctx.arc(X,Y,2.5 * dpr,0,Math.PI*2); ctx.fill(); });
+
+      // X labels
+      ctx.fillStyle = '#7c8db5'; ctx.textAlign='center'; ctx.font = `${11 * dpr}px system-ui`;
+      const years = [series[0].x, series[Math.floor(series.length/2)].x, series[series.length-1].x];
+      years.forEach(x => ctx.fillText(String(x), xTo(x), height - 6 * dpr));
+    }
+
+    function exportCSV(){
+      const rows = window.__rows || [];
+      if(!rows.length){ 
+        showToast('No Data', 'Run a calculation first to generate data for export.', 'warning');
+        return; 
+      }
+      const headers = ['Year','Age','Salary','Contrib','SS_Net','Pension_Net','Spouse_SS_Net','Spouse_Pension_Net','Spend','Withdraw_Net','Withdraw_Gross','Taxes','Taxable_Bal','Pretax_Bal','Roth_Bal','Total_Bal'];
+      const csv = [headers.join(',')]
+        .concat(rows.map(r=>[
+          r.year, r.age, r.salary, r.contrib, r.ss, r.pen, r.spouseSs||0, r.spousePen||0, r.spend, r.wNet, r.wGross, r.taxes, r.balTax, r.balPre, r.balRoth, r.total
+        ].map(v => typeof v === 'number' ? Math.round(v*100)/100 : v).join(',')))
+        .join('\n');
+      const blob = new Blob([csv], {type:'text/csv'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'retirement_results.csv';
+      document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+    }
+
+    function exportJSON(){
+      const inputs = {};
+      // Collect all input values
+      document.querySelectorAll('input, select').forEach(input => {
+        if(input.id && input.id !== 'jsonFileInput') {
+          inputs[input.id] = input.value;
+        }
+      });
+      
+      const exportData = {
+        version: '1.0',
+        exportDate: new Date().toISOString(),
+        description: 'Retirement Calculator Scenario',
+        inputs: inputs
+      };
+      
+      const json = JSON.stringify(exportData, null, 2);
+      const blob = new Blob([json], {type:'application/json'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; 
+      a.download = `retirement_scenario_${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+    }
+
+    function importJSON(){
+      const fileInput = $('jsonFileInput');
+      fileInput.click();
+    }
+
+    function handleJSONFile(event){
+      const file = event.target.files[0];
+      if (!file) return;
+      
+      if (!file.name.toLowerCase().endsWith('.json')) {
+        showToast('Invalid File', 'Please select a JSON file.', 'error');
+        return;
+      }
+      
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const data = JSON.parse(e.target.result);
+          
+          // Validate the JSON structure
+          if (!data.inputs || typeof data.inputs !== 'object') {
+            showToast('Invalid Format', 'Invalid JSON file format. Expected retirement calculator scenario data.', 'error');
+            return;
+          }
+          
+          let loadedCount = 0;
+          let totalCount = 0;
+          
+          // Load all input values
+          Object.entries(data.inputs).forEach(([id, value]) => {
+            totalCount++;
+            const element = document.getElementById(id);
+            if(element) {
+              element.value = value;
+              loadedCount++;
+            }
+          });
+          
+          // Show import summary
+          let summary = `Loaded ${loadedCount} of ${totalCount} settings.`;
+          if (data.description) {
+            summary += `\nDescription: ${data.description}`;
+          }
+          if (data.exportDate) {
+            summary += `\nExported: ${new Date(data.exportDate).toLocaleDateString()}`;
+          }
+          
+          showToast('Import Successful', summary, 'success', 7000);
+          calc(); // Automatically recalculate
+          
+        } catch (error) {
+          showToast('Import Error', 'Error reading JSON file: ' + error.message, 'error');
+        }
+      };
+      
+      reader.readAsText(file);
+      // Clear the file input so the same file can be selected again
+      event.target.value = '';
+    }
+
+    // Events
+    $('calcBtn').addEventListener('click', calc);
+    $('csvBtn').addEventListener('click', exportCSV);
+    $('exportJsonBtn').addEventListener('click', exportJSON);
+    $('importJsonBtn').addEventListener('click', importJSON);
+    $('jsonFileInput').addEventListener('change', handleJSONFile);
+    $('demoBtn').addEventListener('click', loadExample);
+    $('clearBtn').addEventListener('click', resetAll);
+
+    // Initialize help icons
+    function initializeHelpIcons() {
+      // Find all help icon placeholders and replace them with actual help icons
+      const placeholders = document.querySelectorAll('.help-icon-placeholder');
+      placeholders.forEach(placeholder => {
+        const fieldId = placeholder.getAttribute('data-field');
+        if (fieldId) {
+          placeholder.innerHTML = createHelpIcon(fieldId);
+        }
+      });
+      
+      // Auto-convert remaining verbose SVG help icons to placeholders (one-time conversion)
+      const existingSvgIcons = document.querySelectorAll('svg.help-icon[onclick*="showHelpToast"]');
+      existingSvgIcons.forEach(svg => {
+        const onclickAttr = svg.getAttribute('onclick');
+        const match = onclickAttr.match(/showHelpToast\(event,\s*['"]([^'"]+)['"]\)/);
+        if (match) {
+          const fieldId = match[1];
+          const placeholder = document.createElement('span');
+          placeholder.className = 'help-icon-placeholder';
+          placeholder.setAttribute('data-field', fieldId);
+          placeholder.innerHTML = createHelpIcon(fieldId);
+          svg.parentNode.replaceChild(placeholder, svg);
+        }
+      });
+    }
+
+    // First render
+    initializeHelpIcons();
+    loadExample();
+    calc();
+  </script>
+
+  <!-- SS Breakdown Popup -->
+  <div id="ssPopup" class="popup-overlay">
+    <div class="popup-content">
+      <div class="popup-header">
+        <h3>Social Security Income Breakdown</h3>
+        <button class="close-btn" onclick="closeSsPopup()">&times;</button>
+      </div>
+      <div class="popup-body" id="ssBreakdownContent">
+        <!-- Content will be populated by JavaScript -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Total Net Income Breakdown Popup (created dynamically) -->
+
+</body>
+</html>
