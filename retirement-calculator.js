@@ -3987,7 +3987,7 @@ function showTotalNetBreakdown(index) {
   }
 
   const data = calculations[index];
-  
+
   // Use SS popup structure for Total Net breakdown
   const ssPopup = document.getElementById("ssPopup");
   if (ssPopup) {
@@ -3998,28 +3998,28 @@ function showTotalNetBreakdown(index) {
       if (popupHeader) {
         popupHeader.textContent = `Total Net Income Breakdown - Age ${data.age}`;
       }
-      
+
       // Update close button - use the actual class name
       const closeBtn = ssPopup.querySelector("button.ss-popup-close");
       if (closeBtn) {
-        closeBtn.onclick = function() {
+        closeBtn.onclick = function () {
           closeTotalNetPopup();
         };
       }
-      
+
       // Store original title and close function to restore later
       if (!ssPopup.dataset.originalTitle) {
         ssPopup.dataset.originalTitle = "Social Security Breakdown";
         ssPopup.dataset.originalClose = "closeSsPopup()";
       }
-      
+
       // Generate full breakdown content
       ssContent.innerHTML = generateTotalNetBreakdownContent(data);
-      
+
       // Set display to flex to override the CSS !important rule
-      ssPopup.style.setProperty('display', 'flex', 'important');
-      ssPopup.style.setProperty('align-items', 'center', 'important');
-      ssPopup.style.setProperty('justify-content', 'center', 'important');
+      ssPopup.style.setProperty("display", "flex", "important");
+      ssPopup.style.setProperty("align-items", "center", "important");
+      ssPopup.style.setProperty("justify-content", "center", "important");
       return;
     }
   }
@@ -4046,7 +4046,7 @@ function showTotalNetBreakdown(index) {
   // Update content
   const content = document.getElementById("totalNetBreakdownContent");
   content.innerHTML = generateTotalNetBreakdownContent(data);
-  
+
   popup.style.display = "block";
 }
 
@@ -4054,9 +4054,8 @@ function showTotalNetBreakdown(index) {
  * Generate the detailed breakdown content for Total Net Income
  */
 function generateTotalNetBreakdownContent(data) {
-  const fmt = (val) => 
-    val == null || val === 0 ? "-" : 
-    `$${Math.round(val).toLocaleString()}`;
+  const fmt = (val) =>
+    val == null || val === 0 ? "-" : `$${Math.round(val).toLocaleString()}`;
 
   let html = `
     <div class="breakdown-section">
@@ -4083,7 +4082,7 @@ function generateTotalNetBreakdownContent(data) {
     `;
   }
 
-  // Spouse Social Security (Net)  
+  // Spouse Social Security (Net)
   if (data.spouseSs > 0) {
     html += `
       <tr>
@@ -4128,7 +4127,9 @@ function generateTotalNetBreakdownContent(data) {
   }
 
   // Tax-Free Income Adjustments (if any)
-  const taxFreeAdjustment = data.totalNetIncome - (data.ss + data.spouseSs + data.pen + data.spousePen + data.wNet);
+  const taxFreeAdjustment =
+    data.totalNetIncome -
+    (data.ss + data.spouseSs + data.pen + data.spousePen + data.wNet);
   if (taxFreeAdjustment > 0) {
     html += `
       <tr>
@@ -4182,7 +4183,9 @@ function generateTotalNetBreakdownContent(data) {
     }
 
     if (data.w401kGross > 0) {
-      const withdrawalTaxes = data.w401kGross - (data.wNet - (data.wSavingsGross || 0) - (data.wRothGross || 0));
+      const withdrawalTaxes =
+        data.w401kGross -
+        (data.wNet - (data.wSavingsGross || 0) - (data.wRothGross || 0));
       html += `
         <tr>
           <td>Pre-Tax 401k/IRA</td>
@@ -4209,7 +4212,13 @@ function generateTotalNetBreakdownContent(data) {
   }
 
   // Summary section
-  const totalGrossIncome = (data.ssGross || 0) + (data.spouseSsGross || 0) + (data.penGross || 0) + (data.spousePenGross || 0) + (data.wGross || 0) + (data.taxableInterest || 0);
+  const totalGrossIncome =
+    (data.ssGross || 0) +
+    (data.spouseSsGross || 0) +
+    (data.penGross || 0) +
+    (data.spousePenGross || 0) +
+    (data.wGross || 0) +
+    (data.taxableInterest || 0);
   const totalTaxes = data.taxes || 0;
   const totalNetIncome = data.totalNetIncome;
 
@@ -4225,12 +4234,16 @@ function generateTotalNetBreakdownContent(data) {
           </tr>
           <tr>
             <td><strong>Total Taxes Paid</strong></td>
-            <td class="amount negative"><strong>-${fmt(totalTaxes)}</strong></td>
+            <td class="amount negative"><strong>-${fmt(
+              totalTaxes
+            )}</strong></td>
             <td>Federal income tax</td>
           </tr>
           <tr class="total-row">
             <td><strong>Total Net Income</strong></td>
-            <td class="amount total"><strong>${fmt(totalNetIncome)}</strong></td>
+            <td class="amount total"><strong>${fmt(
+              totalNetIncome
+            )}</strong></td>
             <td><strong>Available for spending</strong></td>
           </tr>
         </tbody>
@@ -4271,7 +4284,9 @@ function generateTotalNetBreakdownContent(data) {
       html += `
         <tr>
           <td><strong>Effective Tax Rate</strong></td>
-          <td class="amount"><strong>${data.effectiveTaxRate.toFixed(1)}%</strong></td>
+          <td class="amount"><strong>${data.effectiveTaxRate.toFixed(
+            1
+          )}%</strong></td>
           <td>Total taxes ÷ taxable income</td>
         </tr>
       `;
@@ -4306,28 +4321,32 @@ function closeTotalNetPopup() {
     if (popupHeader && ssPopup.dataset.originalTitle) {
       popupHeader.textContent = ssPopup.dataset.originalTitle;
     }
-    
+
     const closeBtn = ssPopup.querySelector("button.ss-popup-close");
     if (closeBtn && ssPopup.dataset.originalClose) {
       // Restore original onclick handler
-      closeBtn.onclick = function() {
+      closeBtn.onclick = function () {
         closeSsPopup();
       };
     }
-    
+
     // Clear the dataset markers
     delete ssPopup.dataset.originalTitle;
     delete ssPopup.dataset.originalClose;
-    
+
     // Close the popup
-    ssPopup.style.setProperty('display', 'none', 'important');
+    ssPopup.style.setProperty("display", "none", "important");
   }
 }
 
 // Close Total Net popup when clicking outside
 document.addEventListener("click", function (event) {
   const ssPopup = document.getElementById("ssPopup");
-  if (ssPopup && (ssPopup.style.display === "flex" || ssPopup.style.display === "block") && event.target === ssPopup) {
+  if (
+    ssPopup &&
+    (ssPopup.style.display === "flex" || ssPopup.style.display === "block") &&
+    event.target === ssPopup
+  ) {
     // Check if this is being used for Total Net (has the dataset markers)
     if (ssPopup.dataset.originalTitle) {
       closeTotalNetPopup();
