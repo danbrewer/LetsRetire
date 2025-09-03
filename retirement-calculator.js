@@ -2444,7 +2444,15 @@ function calc() {
         }</td>
         
         <!-- THE BREAKDOWN -->
-        <td class="income">${r.taxableIncome ? fmt(r.taxableIncome) : ""}</td>
+        <td class="income">${
+          r.taxableIncome
+            ? r.age >= params.retireAge
+              ? `<span class="taxable-income-link" onclick="showTaxableIncomeBreakdown(${index})" title="Click to see breakdown">${fmt(
+                  r.taxableIncome
+                )}</span>`
+              : fmt(r.taxableIncome)
+            : ""
+        }</td>
         <td class="income">${
           r.nonTaxableIncome ? fmt(r.nonTaxableIncome) : ""
         }</td>
@@ -3952,6 +3960,154 @@ function showSsBreakdown(yearIndex) {
 function closeSsPopup() {
   const popup = document.getElementById("ssPopup");
   popup.classList.remove("show");
+}
+
+// Function to show taxable income breakdown popup
+function showTaxableIncomeBreakdown(yearIndex) {
+  const calculation = calculations[yearIndex];
+  if (!calculation) {
+    return; // No data to show
+  }
+
+  const popup = document.getElementById("ssPopup");
+  const content = document.getElementById("ssBreakdownContent");
+
+  // Update popup title
+  const title = popup.querySelector(".ss-popup-title");
+  title.textContent = "Taxable Income Breakdown";
+
+  // Build the breakdown content showing sources of taxable income
+  let breakdownHtml = `
+    <div class="ss-breakdown-item">
+        <span class="ss-breakdown-label">Year:</span>
+        <span class="ss-breakdown-value">${calculation.year}</span>
+    </div>
+    <div class="ss-breakdown-item">
+        <span class="ss-breakdown-label">Age:</span>
+        <span class="ss-breakdown-value">${calculation.age}</span>
+    </div>
+  `;
+
+  let grossTaxableTotal = 0;
+
+  // Add taxable income sources
+  if (calculation.salary && calculation.salary > 0) {
+    breakdownHtml += `
+      <div class="ss-breakdown-item">
+          <span class="ss-breakdown-label">Salary:</span>
+          <span class="ss-breakdown-value">${fmt(calculation.salary)}</span>
+      </div>
+    `;
+    grossTaxableTotal += calculation.salary;
+  }
+
+  if (calculation.taxableInterest && calculation.taxableInterest > 0) {
+    breakdownHtml += `
+      <div class="ss-breakdown-item">
+          <span class="ss-breakdown-label">Taxable Interest:</span>
+          <span class="ss-breakdown-value">${fmt(
+            calculation.taxableInterest
+          )}</span>
+      </div>
+    `;
+    grossTaxableTotal += calculation.taxableInterest;
+  }
+
+  // Social Security gross (before calculating taxable portion)
+  if (calculation.ssGross && calculation.ssGross > 0) {
+    const ssTaxableAmount =
+      calculation.ssBreakdown?.ssTaxableAmount || calculation.ssGross * 0.85; // Estimate if not available
+    breakdownHtml += `
+      <div class="ss-breakdown-item">
+          <span class="ss-breakdown-label">Social Security (Taxable Portion):</span>
+          <span class="ss-breakdown-value">${fmt(ssTaxableAmount)}</span>
+      </div>
+    `;
+    grossTaxableTotal += ssTaxableAmount;
+  }
+
+  // Pension gross (typically fully taxable)
+  if (calculation.penGross && calculation.penGross > 0) {
+    breakdownHtml += `
+      <div class="ss-breakdown-item">
+          <span class="ss-breakdown-label">Pension:</span>
+          <span class="ss-breakdown-value">${fmt(calculation.penGross)}</span>
+      </div>
+    `;
+    grossTaxableTotal += calculation.penGross;
+  }
+
+  // Spouse Social Security gross
+  if (calculation.spouseSsGross && calculation.spouseSsGross > 0) {
+    const spouseSsTaxableAmount =
+      calculation.spouseSsBreakdown?.ssTaxableAmount ||
+      calculation.spouseSsGross * 0.85; // Estimate if not available
+    breakdownHtml += `
+      <div class="ss-breakdown-item">
+          <span class="ss-breakdown-label">Spouse Social Security (Taxable Portion):</span>
+          <span class="ss-breakdown-value">${fmt(spouseSsTaxableAmount)}</span>
+      </div>
+    `;
+    grossTaxableTotal += spouseSsTaxableAmount;
+  }
+
+  // Spouse Pension gross
+  if (calculation.spousePenGross && calculation.spousePenGross > 0) {
+    breakdownHtml += `
+      <div class="ss-breakdown-item">
+          <span class="ss-breakdown-label">Spouse Pension:</span>
+          <span class="ss-breakdown-value">${fmt(
+            calculation.spousePenGross
+          )}</span>
+      </div>
+    `;
+    grossTaxableTotal += calculation.spousePenGross;
+  }
+
+  // Pre-tax withdrawals (401k)
+  if (calculation.w401kGross && calculation.w401kGross > 0) {
+    breakdownHtml += `
+      <div class="ss-breakdown-item">
+          <span class="ss-breakdown-label">401k Withdrawals:</span>
+          <span class="ss-breakdown-value">${fmt(calculation.w401kGross)}</span>
+      </div>
+    `;
+    grossTaxableTotal += calculation.w401kGross;
+  }
+
+  // Add separator and totals
+  breakdownHtml += `
+    <div class="ss-breakdown-item">
+        <span class="ss-breakdown-label"><strong>Gross Taxable Income:</strong></span>
+        <span class="ss-breakdown-value"><strong>${fmt(
+          grossTaxableTotal
+        )}</strong></span>
+    </div>
+  `;
+
+  // Add standard deduction info
+  const filingStatusElement = document.getElementById("filingStatus");
+  const filingStatus = filingStatusElement
+    ? filingStatusElement.value
+    : "single";
+  const standardDeduction = filingStatus === "married" ? 29200 : 14600; // 2024 values
+
+  breakdownHtml += `
+    <div class="ss-breakdown-item">
+        <span class="ss-breakdown-label">Less: Standard Deduction:</span>
+        <span class="ss-breakdown-value">-${fmt(standardDeduction)}</span>
+    </div>
+    <div class="ss-breakdown-item">
+        <span class="ss-breakdown-label"><strong>Net Taxable Income:</strong></span>
+        <span class="ss-breakdown-value"><strong>${fmt(
+          calculation.taxableIncome ||
+            Math.max(0, grossTaxableTotal - standardDeduction)
+        )}</strong></span>
+    </div>
+  `;
+
+  content.innerHTML = breakdownHtml;
+  popup.classList.add("show");
 }
 
 // Close popup when clicking outside
