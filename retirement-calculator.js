@@ -2236,14 +2236,6 @@ function calc() {
     // Note: taxableInterestEarned was calculated earlier before withdrawals
 
     const totalBal = balances.balSavings + balances.balPre + balances.balRoth;
-    const totalGrossIncome =
-      ssGross +
-      penGross +
-      spouseSsGross +
-      spousePenGross +
-      finalWGross +
-      taxableInterestEarned +
-      taxableIncomeAdjustment;
 
     // Track Social Security taxes separately and non-taxable income
     const ssTaxes = ssResults.ssTaxes + spouseSsResults.ssTaxes;
@@ -2272,6 +2264,9 @@ function calc() {
       withdrawalsBySource.pretax +
       taxableInterestEarned +
       taxableIncomeAdjustment;
+
+    // Use grossTaxableIncome for Total Gross column (excludes non-taxable withdrawals)
+    const totalGrossIncome = grossTaxableIncome;
 
     // Taxable income after standard deduction (this is what gets taxed)
     const taxableIncomeAfterDeduction = calculateTaxableIncome(
@@ -2326,14 +2321,7 @@ function calc() {
         spousePenResults.penNet +
         finalWNet +
         taxFreeIncomeAdjustment, // Net income including tax-free adjustments
-      totalGrossIncome:
-        ssGross +
-        penGross +
-        spouseSsGross +
-        spousePenGross +
-        taxableInterestEarned +
-        finalWGross +
-        taxableIncomeAdjustment, // All gross income: SS, pension, spouse benefits, interest, withdrawals, and taxable income adjustments
+      totalGrossIncome: totalGrossIncome, // Use the corrected gross taxable income calculation
       effectiveTaxRate,
       balSavings: balances.balSavings,
       balPre: balances.balPre,
@@ -2446,8 +2434,6 @@ function calc() {
         <td class="income">${r.spouseSs ? fmt(r.spouseSsGross || 0) : ""}</td>
         <td class="income">${r.spousePen ? fmt(r.spousePenGross || 0) : ""}</td>
         <td class="income">${r.w401kGross ? fmt(r.w401kGross) : ""}</td>
-        <td class="income">${r.wSavingsGross ? fmt(r.wSavingsGross) : ""}</td>
-        <td class="income">${r.wRothGross ? fmt(r.wRothGross) : ""}</td>
         <td class="income">${
           r.totalGrossIncome ? fmt(r.totalGrossIncome) : ""
         }</td>
@@ -4350,13 +4336,13 @@ function generateTotalNetBreakdownContent(data) {
     `;
   }
 
-  // Summary section
+  // Summary section - only include taxable gross income sources
   const totalGrossIncome =
     (data.ssGross || 0) +
     (data.spouseSsGross || 0) +
     (data.penGross || 0) +
     (data.spousePenGross || 0) +
-    (data.wGross || 0) +
+    (data.w401kGross || 0) + // Only pre-tax withdrawals, not savings/Roth
     (data.taxableInterest || 0);
   const totalTaxes = data.taxes || 0;
   const totalNetIncome = data.totalNetIncome;
