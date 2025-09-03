@@ -2445,12 +2445,12 @@ function calc() {
         
         <!-- THE BREAKDOWN -->
         <td class="income">${
-          r.taxableIncome
-            ? r.age >= params.retireAge
-              ? `<span class="taxable-income-link" onclick="showTaxableIncomeBreakdown(${index})" title="Click to see breakdown">${fmt(
-                  r.taxableIncome
-                )}</span>`
-              : fmt(r.taxableIncome)
+          r.age >= params.retireAge
+            ? `<span class="taxable-income-link" onclick="showTaxableIncomeBreakdown(${index})" title="Click to see breakdown">${fmt(
+                r.taxableIncome || 0
+              )}</span>`
+            : r.taxableIncome
+            ? fmt(r.taxableIncome)
             : ""
         }</td>
         <td class="income">${
