@@ -2428,9 +2428,11 @@ function calc() {
         <td class="income">${r.wNet ? fmt(r.wNet) : ""}</td>
         <td class="income">${
           r.totalNetIncome
-            ? `<span class="ss-link" onclick="showTotalNetBreakdown(${index})">${fmt(
-                r.totalNetIncome
-              )}</span>`
+            ? r.age >= params.retireAge
+              ? `<span class="ss-link" onclick="showTotalNetBreakdown(${index})">${fmt(
+                  r.totalNetIncome
+                )}</span>`
+              : fmt(r.totalNetIncome)
             : ""
         }</td>
         
@@ -4059,6 +4061,108 @@ function generateTotalNetBreakdownContent(data) {
 
   let html = `
     <div class="breakdown-section">
+      <h4>Gross Income Sources (Before Taxes)</h4>
+      <table class="breakdown-table">
+        <thead>
+          <tr>
+            <th>Source</th>
+            <th>Amount</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+  `;
+
+  // Social Security (Gross)
+  if (data.ssGross > 0) {
+    html += `
+      <tr>
+        <td>Social Security</td>
+        <td class="amount">${fmt(data.ssGross)}</td>
+        <td>Before federal taxation</td>
+      </tr>
+    `;
+  }
+
+  // Spouse Social Security (Gross)
+  if (data.spouseSsGross > 0) {
+    html += `
+      <tr>
+        <td>Spouse Social Security</td>
+        <td class="amount">${fmt(data.spouseSsGross)}</td>
+        <td>Before federal taxation</td>
+      </tr>
+    `;
+  }
+
+  // Pension (Gross)
+  if (data.penGross > 0) {
+    html += `
+      <tr>
+        <td>Pension</td>
+        <td class="amount">${fmt(data.penGross)}</td>
+        <td>Before federal taxation</td>
+      </tr>
+    `;
+  }
+
+  // Spouse Pension (Gross)
+  if (data.spousePenGross > 0) {
+    html += `
+      <tr>
+        <td>Spouse Pension</td>
+        <td class="amount">${fmt(data.spousePenGross)}</td>
+        <td>Before federal taxation</td>
+      </tr>
+    `;
+  }
+
+  // Withdrawals (Gross)
+  if (data.wGross > 0) {
+    html += `
+      <tr>
+        <td>Portfolio Withdrawals</td>
+        <td class="amount">${fmt(data.wGross)}</td>
+        <td>Before taxes and penalties</td>
+      </tr>
+    `;
+  }
+
+  // Taxable Interest
+  if (data.taxableInterest > 0) {
+    html += `
+      <tr>
+        <td>Taxable Interest</td>
+        <td class="amount">${fmt(data.taxableInterest)}</td>
+        <td>Interest income</td>
+      </tr>
+    `;
+  }
+
+  // Calculate and add total for Gross Income Sources
+  const grossIncomeTotal =
+    (data.ssGross || 0) +
+    (data.spouseSsGross || 0) +
+    (data.penGross || 0) +
+    (data.spousePenGross || 0) +
+    (data.wGross || 0) +
+    (data.taxableInterest || 0);
+
+  html += `
+          <tr class="total-row">
+            <td><strong>Total Gross Income</strong></td>
+            <td class="amount total"><strong>${fmt(
+              grossIncomeTotal
+            )}</strong></td>
+            <td><strong>Before all taxes</strong></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  `;
+
+  html += `
+    <div class="breakdown-section">
       <h4>Income Sources (Net After Taxes)</h4>
       <table class="breakdown-table">
         <thead>
@@ -4140,7 +4244,23 @@ function generateTotalNetBreakdownContent(data) {
     `;
   }
 
+  // Calculate and add total for Net Income Sources
+  const netIncomeTotal =
+    (data.ss || 0) +
+    (data.spouseSs || 0) +
+    (data.pen || 0) +
+    (data.spousePen || 0) +
+    (data.wNet || 0) +
+    (taxFreeAdjustment > 0 ? taxFreeAdjustment : 0);
+
   html += `
+          <tr class="total-row">
+            <td><strong>Total Net Income</strong></td>
+            <td class="amount total"><strong>${fmt(
+              netIncomeTotal
+            )}</strong></td>
+            <td><strong>After all taxes</strong></td>
+          </tr>
         </tbody>
       </table>
     </div>
@@ -4165,7 +4285,7 @@ function generateTotalNetBreakdownContent(data) {
     if (data.wSavingsGross > 0) {
       html += `
         <tr>
-          <td>Taxable Savings</td>
+          <td>Savings</td>
           <td class="amount">${fmt(data.wSavingsGross)}</td>
           <td>Tax-free (already taxed)</td>
         </tr>
@@ -4204,7 +4324,26 @@ function generateTotalNetBreakdownContent(data) {
       }
     }
 
+    // Calculate and add total for Withdrawal Breakdown
+    const withdrawalTaxes =
+      data.w401kGross > 0
+        ? data.w401kGross -
+          (data.wNet - (data.wSavingsGross || 0) - (data.wRothGross || 0))
+        : 0;
+    const withdrawalNetTotal =
+      (data.wSavingsGross || 0) +
+      (data.wRothGross || 0) +
+      (data.w401kGross || 0) -
+      (withdrawalTaxes > 0 ? withdrawalTaxes : 0);
+
     html += `
+          <tr class="total-row">
+            <td><strong>Total Net Withdrawals</strong></td>
+            <td class="amount total"><strong>${fmt(
+              withdrawalNetTotal
+            )}</strong></td>
+            <td><strong>After taxes</strong></td>
+          </tr>
           </tbody>
         </table>
       </div>
@@ -4222,25 +4361,51 @@ function generateTotalNetBreakdownContent(data) {
   const totalTaxes = data.taxes || 0;
   const totalNetIncome = data.totalNetIncome;
 
+  // Calculate Total Taxable Income more accurately
+  // Start with fully taxable income (pensions, pre-tax withdrawals, interest)
+  const fullyTaxableIncome =
+    (data.penGross || 0) +
+    (data.spousePenGross || 0) +
+    (data.w401kGross || 0) +
+    (data.taxableInterest || 0);
+
+  // For SS, the taxable portion is typically what was used to calculate ssTaxes
+  // If we have ssTaxes, we can estimate the taxable SS amount
+  const estimatedTaxableSS =
+    (data.ssTaxes || 0) > 0
+      ? // Estimate based on taxes paid vs estimated effective rate
+        Math.min(
+          (data.ssGross || 0) + (data.spouseSsGross || 0),
+          ((data.ssGross || 0) + (data.spouseSsGross || 0)) * 0.85
+        )
+      : 0;
+
+  const totalTaxableIncome = fullyTaxableIncome + estimatedTaxableSS;
+
   html += `
     <div class="breakdown-section summary-section">
       <h4>Summary</h4>
       <table class="breakdown-table">
         <tbody>
           <tr>
-            <td><strong>Total Gross Income</strong></td>
+            <td><strong>Gross Revenue</strong></td>
             <td class="amount"><strong>${fmt(totalGrossIncome)}</strong></td>
             <td>Before taxes</td>
           </tr>
           <tr>
-            <td><strong>Total Taxes Paid</strong></td>
+            <td><strong>Taxable Income</strong></td>
+            <td class="amount"><strong>${fmt(totalTaxableIncome)}</strong></td>
+            <td>Subject to federal tax</td>
+          </tr>
+          <tr>
+            <td><strong>Taxes Paid</strong></td>
             <td class="amount negative"><strong>-${fmt(
               totalTaxes
             )}</strong></td>
             <td>Federal income tax</td>
           </tr>
           <tr class="total-row">
-            <td><strong>Total Net Income</strong></td>
+            <td><strong>Realized Revenue</strong></td>
             <td class="amount total"><strong>${fmt(
               totalNetIncome
             )}</strong></td>
@@ -4302,7 +4467,7 @@ function generateTotalNetBreakdownContent(data) {
   // Add note about calculations
   html += `
     <div class="breakdown-section note">
-      <p><strong>Note:</strong> This breakdown shows how your Total Net Income is calculated from all sources after federal taxes. 
+      <p style="font-size: 0.65em;"><strong>Note:</strong> This breakdown shows how your Total Net Income is calculated from all sources after federal taxes. 
       Amounts may not add exactly due to rounding. Social Security taxation follows IRS provisional income rules.</p>
     </div>
   `;

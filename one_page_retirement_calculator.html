@@ -192,7 +192,7 @@
       overflow-y: auto;
       box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
     }
-    
+
     .ss-popup-header {
       display: flex;
       justify-content: space-between;
@@ -249,6 +249,29 @@
     .ss-breakdown-value {
       color: var(--text);
       font-weight: 500;
+    }
+
+    /* Total row styling for breakdown tables */
+    .total-row td {
+      border-top: 3px double var(--border);
+      padding-top: 12px;
+      font-weight: 600;
+    }
+
+    /* Popup table header styling to obscure scrolling content */
+    .ss-popup-content table thead th {
+      position: sticky;
+      top: -24px;
+      background: var(--card);
+      z-index: 10;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+    
+    /* Ensure popup table headers have solid background */
+    .ss-popup-content .breakdown-table thead th {
+      background: var(--card);
+      backdrop-filter: blur(8px);
+      border-bottom: 2px solid var(--border);
     }
     
     .ss-breakdown-item:last-child .ss-breakdown-label,
