@@ -2266,7 +2266,12 @@ function calc() {
       taxableIncomeAdjustment;
 
     // Use grossTaxableIncome for Total Gross column (excludes non-taxable withdrawals)
-    const totalGrossIncome = grossTaxableIncome;
+    const totalGrossIncome =
+      ssResults.ssNonTaxable +
+      spouseSsResults.ssNonTaxable +
+      penResults.penNonTaxable +
+      spousePenResults.penNonTaxable +
+      grossTaxableIncome;
 
     // Taxable income after standard deduction (this is what gets taxed)
     const taxableIncomeAfterDeduction = calculateTaxableIncome(
