@@ -2454,7 +2454,13 @@ function calc() {
             : ""
         }</td>
         <td class="income">${
-          r.nonTaxableIncome ? fmt(r.nonTaxableIncome) : ""
+          r.nonTaxableIncome
+            ? r.age >= params.retireAge
+              ? `<span class="non-taxable-income-link" onclick="showNonTaxableIncomeBreakdown(${index})" title="Click to see breakdown">${fmt(
+                  r.nonTaxableIncome
+                )}</span>`
+              : fmt(r.nonTaxableIncome)
+            : ""
         }</td>
         
         <!-- THE COST -->
@@ -3974,9 +3980,17 @@ function showTaxableIncomeBreakdown(yearIndex) {
 
   // Update popup title
   const title = popup.querySelector(".ss-popup-title");
-  title.textContent = "Taxable Income Breakdown";
+  if (title) {
+    title.textContent = "Taxable Income Breakdown";
+  }
 
-  // Build the breakdown content showing sources of taxable income
+  // Update close button to use the general close function
+  const closeBtn = popup.querySelector("button.ss-popup-close");
+  if (closeBtn) {
+    closeBtn.onclick = function () {
+      closeSsPopup();
+    };
+  } // Build the breakdown content showing sources of taxable income
   let breakdownHtml = `
     <div class="ss-breakdown-item">
         <span class="ss-breakdown-label">Year:</span>
@@ -4110,19 +4124,183 @@ function showTaxableIncomeBreakdown(yearIndex) {
   popup.classList.add("show");
 }
 
-// Close popup when clicking outside
-document.addEventListener("click", function (event) {
-  const popup = document.getElementById("ssPopup");
-  if (event.target === popup) {
-    closeSsPopup();
+// Function to show non-taxable income breakdown popup
+function showNonTaxableIncomeBreakdown(yearIndex) {
+  const calculation = calculations[yearIndex];
+  if (!calculation) {
+    return; // No data to show
   }
-});
+
+  const popup = document.getElementById("ssPopup");
+  const content = document.getElementById("ssBreakdownContent");
+
+  // Update popup title
+  const title = popup.querySelector(".ss-popup-title");
+  if (title) {
+    title.textContent = "Non-Taxable Income Breakdown";
+  }
+
+  // Update close button to use the general close function
+  const closeBtn = popup.querySelector("button.ss-popup-close");
+  if (closeBtn) {
+    closeBtn.onclick = function () {
+      closeSsPopup();
+    };
+  }
+
+  // Build the breakdown content showing sources of non-taxable income
+  let breakdownHtml = `
+    <div class="ss-breakdown-item">
+        <span class="ss-breakdown-label">Year:</span>
+        <span class="ss-breakdown-value">${calculation.year}</span>
+    </div>
+    <div class="ss-breakdown-item">
+        <span class="ss-breakdown-label">Age:</span>
+        <span class="ss-breakdown-value">${calculation.age}</span>
+    </div>
+  `;
+
+  let nonTaxableTotal = 0;
+
+  // Social Security non-taxable portion
+  if (calculation.ssGross && calculation.ssGross > 0) {
+    const ssNonTaxableAmount =
+      calculation.ssBreakdown?.ssNonTaxable || calculation.ssGross * 0.15; // Estimate if not available
+    if (ssNonTaxableAmount > 0) {
+      breakdownHtml += `
+        <div class="ss-breakdown-item">
+            <span class="ss-breakdown-label">Social Security (Non-Taxable Portion):</span>
+            <span class="ss-breakdown-value">${fmt(ssNonTaxableAmount)}</span>
+        </div>
+      `;
+      nonTaxableTotal += ssNonTaxableAmount;
+    }
+  }
+
+  // Spouse Social Security non-taxable portion
+  if (calculation.spouseSsGross && calculation.spouseSsGross > 0) {
+    const spouseSsNonTaxableAmount =
+      calculation.spouseSsBreakdown?.ssNonTaxable ||
+      calculation.spouseSsGross * 0.15; // Estimate if not available
+    if (spouseSsNonTaxableAmount > 0) {
+      breakdownHtml += `
+        <div class="ss-breakdown-item">
+            <span class="ss-breakdown-label">Spouse Social Security (Non-Taxable Portion):</span>
+            <span class="ss-breakdown-value">${fmt(
+              spouseSsNonTaxableAmount
+            )}</span>
+        </div>
+      `;
+      nonTaxableTotal += spouseSsNonTaxableAmount;
+    }
+  }
+
+  // Pension non-taxable portion (usually none, but could be from Roth 401k)
+  if (
+    calculation.penBreakdown?.penNonTaxable &&
+    calculation.penBreakdown.penNonTaxable > 0
+  ) {
+    breakdownHtml += `
+      <div class="ss-breakdown-item">
+          <span class="ss-breakdown-label">Pension (Non-Taxable Portion):</span>
+          <span class="ss-breakdown-value">${fmt(
+            calculation.penBreakdown.penNonTaxable
+          )}</span>
+      </div>
+    `;
+    nonTaxableTotal += calculation.penBreakdown.penNonTaxable;
+  }
+
+  // Spouse Pension non-taxable portion
+  if (
+    calculation.spousePenBreakdown?.penNonTaxable &&
+    calculation.spousePenBreakdown.penNonTaxable > 0
+  ) {
+    breakdownHtml += `
+      <div class="ss-breakdown-item">
+          <span class="ss-breakdown-label">Spouse Pension (Non-Taxable Portion):</span>
+          <span class="ss-breakdown-value">${fmt(
+            calculation.spousePenBreakdown.penNonTaxable
+          )}</span>
+      </div>
+    `;
+    nonTaxableTotal += calculation.spousePenBreakdown.penNonTaxable;
+  }
+
+  // Savings withdrawals (after-tax money)
+  if (calculation.wSavingsGross && calculation.wSavingsGross > 0) {
+    breakdownHtml += `
+      <div class="ss-breakdown-item">
+          <span class="ss-breakdown-label">Savings Withdrawals:</span>
+          <span class="ss-breakdown-value">${fmt(
+            calculation.wSavingsGross
+          )}</span>
+      </div>
+    `;
+    nonTaxableTotal += calculation.wSavingsGross;
+  }
+
+  // Roth withdrawals (tax-free)
+  if (calculation.wRothGross && calculation.wRothGross > 0) {
+    breakdownHtml += `
+      <div class="ss-breakdown-item">
+          <span class="ss-breakdown-label">Roth Withdrawals:</span>
+          <span class="ss-breakdown-value">${fmt(calculation.wRothGross)}</span>
+      </div>
+    `;
+    nonTaxableTotal += calculation.wRothGross;
+  }
+
+  // Tax-free income adjustments (gifts, inheritance, etc.)
+  if (
+    calculation.taxFreeIncomeAdjustment &&
+    calculation.taxFreeIncomeAdjustment > 0
+  ) {
+    breakdownHtml += `
+      <div class="ss-breakdown-item">
+          <span class="ss-breakdown-label">Tax-Free Income Adjustments:</span>
+          <span class="ss-breakdown-value">${fmt(
+            calculation.taxFreeIncomeAdjustment
+          )}</span>
+      </div>
+    `;
+    nonTaxableTotal += calculation.taxFreeIncomeAdjustment;
+  }
+
+  // Add total
+  breakdownHtml += `
+    <div class="ss-breakdown-item">
+        <span class="ss-breakdown-label"><strong>Total Non-Taxable Income:</strong></span>
+        <span class="ss-breakdown-value"><strong>${fmt(
+          nonTaxableTotal
+        )}</strong></span>
+    </div>
+  `;
+
+  // Add explanatory note
+  breakdownHtml += `
+    <div class="ss-breakdown-item" style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border);">
+        <span class="ss-breakdown-label" style="font-size: 12px; color: var(--muted);">Note:</span>
+        <span class="ss-breakdown-value" style="font-size: 12px; color: var(--muted);">This income is not subject to federal income tax</span>
+    </div>
+  `;
+
+  content.innerHTML = breakdownHtml;
+  popup.classList.add("show");
+}
 
 // Close popup with Escape key
 document.addEventListener("keydown", function (event) {
   if (event.key === "Escape") {
-    closeSsPopup();
-    closeTotalNetPopup();
+    const ssPopup = document.getElementById("ssPopup");
+    if (ssPopup && ssPopup.classList.contains("show")) {
+      // Check if this is being used for Total Net (has the dataset markers)
+      if (ssPopup.dataset.originalTitle) {
+        closeTotalNetPopup();
+      } else {
+        closeSsPopup();
+      }
+    }
   }
 });
 
