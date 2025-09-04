@@ -2341,6 +2341,34 @@ function calc() {
       params.filingStatus
     );
 
+    // Calculate net income and handle overage BEFORE growing balances
+    const grossIncomeFromBenefitsAndWithdrawals =
+      ssGross + spouseSsGross + penGross + spousePenGross + finalWGross;
+    const netIncomeFromTaxableSources =
+      grossIncomeFromBenefitsAndWithdrawals - taxesThisYear;
+    const spendingTarget = actualSpend;
+    const shortfall = Math.max(0, spendingTarget - netIncomeFromTaxableSources);
+
+    // Handle shortfall with additional savings withdrawal
+    let additionalSavingsWithdrawal = Math.min(shortfall, balances.balSavings);
+    if (additionalSavingsWithdrawal > 0) {
+      balances.balSavings -= additionalSavingsWithdrawal;
+      withdrawalsBySource.taxable += additionalSavingsWithdrawal;
+    }
+
+    // Calculate total net income
+    const totalNetIncome =
+      netIncomeFromTaxableSources + additionalSavingsWithdrawal;
+
+    // Update final withdrawal amounts to include any additional savings withdrawal
+    const totalWithdrawals = finalWGross + additionalSavingsWithdrawal;
+
+    // If there's an overage (excess income beyond spending target), add it to savings BEFORE growth
+    const overage = Math.max(0, totalNetIncome - spendingTarget);
+    if (overage > 0) {
+      balances.balSavings += overage;
+    }
+
     // Grow remaining balances
     balances.balSavings *= 1 + params.retTax;
     balances.balPre *= 1 + params.retPre;
@@ -2349,37 +2377,6 @@ function calc() {
     // Note: taxableInterestEarned was calculated earlier before withdrawals
 
     const totalBal = balances.balSavings + balances.balPre + balances.balRoth;
-
-    // Correct RMD strategy: Allow Total Net to exceed spending target when RMD is mandatory
-    // RMDs are mandatory, so if they provide more income than needed, that's extra money
-    const grossIncomeFromBenefitsAndWithdrawals =
-      ssGross + spouseSsGross + penGross + spousePenGross + finalWGross;
-    const netIncomeFromTaxableSources =
-      grossIncomeFromBenefitsAndWithdrawals - taxesThisYear;
-
-    // Calculate the spending target
-    const spendingTarget = actualSpend;
-
-    // Only add savings withdrawals if we have a shortfall (don't cap excess)
-    const shortfall = Math.max(0, spendingTarget - netIncomeFromTaxableSources);
-
-    // Only withdraw from savings if there's a shortfall
-    const additionalSavingsWithdrawal = Math.min(
-      shortfall,
-      balances.balSavings
-    );
-    if (additionalSavingsWithdrawal > 0) {
-      balances.balSavings -= additionalSavingsWithdrawal;
-      // Update withdrawal tracking
-      withdrawalsBySource.taxable += additionalSavingsWithdrawal;
-    }
-
-    // Update final withdrawal amounts to include any additional savings withdrawal
-    const totalWithdrawals = finalWGross + additionalSavingsWithdrawal;
-
-    // Calculate final net income - allow it to exceed spending target if RMD provides excess
-    const totalNetIncome =
-      netIncomeFromTaxableSources + additionalSavingsWithdrawal;
 
     // Debug RMD years to show actual total net income
     if (params.useRMD && age >= 73) {
@@ -2401,11 +2398,11 @@ function calc() {
       );
       console.log(`Final Total Net Income: ${fmt(totalNetIncome)}`);
       if (totalNetIncome > spendingTarget) {
+        const excess = totalNetIncome - spendingTarget;
         console.log(
-          `✓ Total Net exceeds spending target by ${fmt(
-            totalNetIncome - spendingTarget
-          )} (RMD excess)`
+          `✓ Total Net exceeds spending target by ${fmt(excess)} (RMD excess)`
         );
+        console.log(`✓ Adding ${fmt(excess)} to savings account`);
       }
       console.log(`=== END RMD DEBUG ===\n`);
     }
