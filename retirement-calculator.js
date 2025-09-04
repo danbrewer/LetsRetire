@@ -2349,6 +2349,9 @@ function calc() {
     const spendingTarget = actualSpend;
     const shortfall = Math.max(0, spendingTarget - netIncomeFromTaxableSources);
 
+    // Calculate savings breakdown (track starting balance before any changes)
+    const savingsStartBalance = balances.balSavings;
+    
     // Handle shortfall with additional savings withdrawal
     let additionalSavingsWithdrawal = Math.min(shortfall, balances.balSavings);
     if (additionalSavingsWithdrawal > 0) {
@@ -2368,6 +2371,12 @@ function calc() {
     if (overage > 0) {
       balances.balSavings += overage;
     }
+
+    // Add any tax-free income adjustments
+    balances.balSavings += taxFreeIncomeAdjustment;
+
+    // Calculate balance before growth (after all deposits/withdrawals)
+    const savingsBeforeGrowth = balances.balSavings;
 
     // Grow remaining balances
     balances.balSavings *= 1 + params.retTax;
@@ -2543,6 +2552,17 @@ function calc() {
       balPre: balances.balPre,
       balRoth: balances.balRoth,
       total: totalBal,
+      // Add savings breakdown data for popup
+      savingsBreakdown: {
+        startingBalance: savingsStartBalance,
+        withdrawals: withdrawalsBySource.taxable,
+        overageDeposit: overage,
+        taxFreeIncomeDeposit: taxFreeIncomeAdjustment,
+        balanceBeforeGrowth: savingsBeforeGrowth,
+        interestEarned: balances.balSavings - savingsBeforeGrowth, // Actual interest earned
+        endingBalance: balances.balSavings,
+        growthRate: params.retTax * 100,
+      },
       // Add SS breakdown data for popup
       ssBreakdown: {
         ssGross: ssGross,
@@ -2693,7 +2713,11 @@ function calc() {
         }</td>
         
         <!-- THE RESULT -->
-        <td class="neutral">${fmt(r.balSavings)}</td>
+        <td class="neutral">${
+          r.balSavings
+            ? `<span class="savings-balance-link" onclick="showSavingsBreakdown(${index})" title="Click to see savings changes">${fmt(r.balSavings)}</span>`
+            : ""
+        }</td>
         <td class="neutral">${fmt(r.balPre)}</td>
         <td class="neutral">${fmt(r.balRoth)}</td>
         <td class="neutral">${fmt(r.total)}</td>
@@ -5263,12 +5287,110 @@ function closeTotalNetPopup() {
   }
 }
 
+// Savings Breakdown Popup Functions
+function showSavingsBreakdown(yearIndex) {
+  const calculation = calculations[yearIndex];
+  if (!calculation || calculation.balSavings === undefined) {
+    return; // No savings data to show
+  }
+
+  const popup = document.getElementById("ssPopup");
+  const content = document.getElementById("ssBreakdownContent");
+
+  // Get the breakdown data from the calculation
+  const savingsBreakdown = calculation.savingsBreakdown || {};
+
+  // Build the breakdown content
+  let breakdownHtml = `
+    <div class="ss-breakdown-item">
+        <span class="ss-breakdown-label">Year:</span>
+        <span class="ss-breakdown-value">${calculation.year}</span>
+    </div>
+    <div class="ss-breakdown-item">
+        <span class="ss-breakdown-label">Age:</span>
+        <span class="ss-breakdown-value">${calculation.age}</span>
+    </div>
+    `;
+
+  // Show starting balance
+  if (savingsBreakdown.startingBalance !== undefined) {
+    breakdownHtml += `
+    <div style="margin: 16px 0; padding: 12px; background: rgba(110, 168, 254, 0.1); border-radius: 8px;">
+        <strong style="color: var(--accent);">Savings Balance Changes:</strong>
+        <div style="margin-top: 8px;">
+            <div class="ss-breakdown-item" style="border: none; padding: 4px 0;">
+                <span class="ss-breakdown-label">Starting Balance:</span>
+                <span class="ss-breakdown-value">${fmt(savingsBreakdown.startingBalance)}</span>
+            </div>`;
+  }
+
+  // Show withdrawals (negative)
+  if (savingsBreakdown.withdrawals > 0) {
+    breakdownHtml += `
+            <div class="ss-breakdown-item" style="border: none; padding: 4px 0; color: #ff6b6b;">
+                <span class="ss-breakdown-label">Withdrawals:</span>
+                <span class="ss-breakdown-value">-${fmt(savingsBreakdown.withdrawals)}</span>
+            </div>`;
+  }
+
+  // Show overage deposits (positive)
+  if (savingsBreakdown.overageDeposit > 0) {
+    breakdownHtml += `
+            <div class="ss-breakdown-item" style="border: none; padding: 4px 0; color: #51cf66;">
+                <span class="ss-breakdown-label">RMD Overage Deposit:</span>
+                <span class="ss-breakdown-value">+${fmt(savingsBreakdown.overageDeposit)}</span>
+            </div>`;
+  }
+
+  // Show tax-free income deposits (positive)
+  if (savingsBreakdown.taxFreeIncomeDeposit > 0) {
+    breakdownHtml += `
+            <div class="ss-breakdown-item" style="border: none; padding: 4px 0; color: #51cf66;">
+                <span class="ss-breakdown-label">Tax-Free Income:</span>
+                <span class="ss-breakdown-value">+${fmt(savingsBreakdown.taxFreeIncomeDeposit)}</span>
+            </div>`;
+  }
+
+  // Show interest earned
+  if (savingsBreakdown.interestEarned > 0) {
+    breakdownHtml += `
+            <div class="ss-breakdown-item" style="border: none; padding: 4px 0; color: #339af0;">
+                <span class="ss-breakdown-label">Interest Earned (${savingsBreakdown.growthRate.toFixed(1)}%):</span>
+                <span class="ss-breakdown-value">+${fmt(savingsBreakdown.interestEarned)}</span>
+            </div>`;
+  }
+
+  // Show ending balance
+  if (savingsBreakdown.endingBalance !== undefined) {
+    breakdownHtml += `
+            <div class="ss-breakdown-item" style="border-top: 2px solid var(--accent); margin-top: 8px; padding-top: 8px; font-weight: bold;">
+                <span class="ss-breakdown-label">Ending Balance:</span>
+                <span class="ss-breakdown-value">${fmt(savingsBreakdown.endingBalance)}</span>
+            </div>
+        </div>
+    </div>`;
+  }
+
+  content.innerHTML = breakdownHtml;
+
+  // Update popup title
+  const title = popup.querySelector(".ss-popup-header h3");
+  if (title) {
+    title.textContent = `Savings Balance Changes - Year ${calculation.year}`;
+  }
+
+  // Show the popup using the same method as other breakdowns
+  popup.classList.add("show");
+}
+
 // Close Total Net popup when clicking outside
 document.addEventListener("click", function (event) {
   const ssPopup = document.getElementById("ssPopup");
   if (
     ssPopup &&
-    (ssPopup.style.display === "flex" || ssPopup.style.display === "block") &&
+    (ssPopup.style.display === "flex" || 
+     ssPopup.style.display === "block" || 
+     ssPopup.classList.contains("show")) &&
     event.target === ssPopup
   ) {
     // Check if this is being used for Total Net (has the dataset markers)
