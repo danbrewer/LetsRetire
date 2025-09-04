@@ -2350,17 +2350,23 @@ function calc() {
 
     const totalBal = balances.balSavings + balances.balPre + balances.balRoth;
 
-    // Simple strategy: Calculate net income from SS/Pension/401k after taxes, then cover shortfall with savings
+    // Enhanced strategy: Ensure Total Net equals spending target exactly
+    // During RMD years, we may get more income than needed, so cap at spending target
     const grossIncomeFromBenefitsAndWithdrawals =
       ssGross + spouseSsGross + penGross + spousePenGross + finalWGross;
-    const netIncomeAfterTaxes =
+    const netIncomeFromTaxableSources =
       grossIncomeFromBenefitsAndWithdrawals - taxesThisYear;
 
-    // Check if we need additional savings withdrawals to meet spending target
+    // Calculate the spending target
     const spendingTarget = actualSpend;
-    const shortfall = Math.max(0, spendingTarget - netIncomeAfterTaxes);
 
-    // If there's a shortfall and we have savings, withdraw from savings (tax-free)
+    // The Total Net should equal the spending target, no more, no less
+    // If we have excess from RMD, we don't need additional withdrawals
+    // If we have shortfall, we need additional tax-free withdrawals
+    const shortfall = Math.max(0, spendingTarget - netIncomeFromTaxableSources);
+    const excess = Math.max(0, netIncomeFromTaxableSources - spendingTarget);
+
+    // Only withdraw from savings if there's a shortfall
     const additionalSavingsWithdrawal = Math.min(
       shortfall,
       balances.balSavings
@@ -2373,33 +2379,61 @@ function calc() {
 
     // Update final withdrawal amounts to include any additional savings withdrawal
     const totalWithdrawals = finalWGross + additionalSavingsWithdrawal;
-    const totalNetIncome = netIncomeAfterTaxes + additionalSavingsWithdrawal;
+
+    // Calculate final net income - cap at spending target
+    const totalNetIncome = Math.min(
+      spendingTarget,
+      netIncomeFromTaxableSources + additionalSavingsWithdrawal
+    );
+
+    // Debug RMD years to ensure Total Net stays at target
+    if (params.useRMD && age >= 73) {
+      console.log(`\n=== RMD YEAR DEBUG (Age ${age}) ===`);
+      console.log(`Spending target: ${fmt(spendingTarget)}`);
+      console.log(`RMD required: ${fmt(preliminaryRmdAmount)}`);
+      console.log(
+        `Gross income (SS/Pension/Withdrawals): ${fmt(
+          grossIncomeFromBenefitsAndWithdrawals
+        )}`
+      );
+      console.log(`Total taxes: ${fmt(taxesThisYear)}`);
+      console.log(
+        `Net from taxable sources: ${fmt(netIncomeFromTaxableSources)}`
+      );
+      console.log(`Shortfall: ${fmt(shortfall)}`);
+      console.log(`Excess: ${fmt(excess)}`);
+      console.log(
+        `Additional savings withdrawal: ${fmt(additionalSavingsWithdrawal)}`
+      );
+      console.log(`Final Total Net Income (capped): ${fmt(totalNetIncome)}`);
+      console.log(`=== END RMD DEBUG ===\n`);
+    }
 
     // For display purposes: allocate taxes proportionally (only to taxable income sources)
     const ssNetAdjusted =
       ssGross > 0 && grossIncomeFromBenefitsAndWithdrawals > 0
         ? (ssGross / grossIncomeFromBenefitsAndWithdrawals) *
-          netIncomeAfterTaxes
+          netIncomeFromTaxableSources
         : ssGross;
     const spouseSsNetAdjusted =
       spouseSsGross > 0 && grossIncomeFromBenefitsAndWithdrawals > 0
         ? (spouseSsGross / grossIncomeFromBenefitsAndWithdrawals) *
-          netIncomeAfterTaxes
+          netIncomeFromTaxableSources
         : spouseSsGross;
     const penNetAdjusted =
       penGross > 0 && grossIncomeFromBenefitsAndWithdrawals > 0
         ? (penGross / grossIncomeFromBenefitsAndWithdrawals) *
-          netIncomeAfterTaxes
+          netIncomeFromTaxableSources
         : penGross;
     const spousePenNetAdjusted =
       spousePenGross > 0 && grossIncomeFromBenefitsAndWithdrawals > 0
         ? (spousePenGross / grossIncomeFromBenefitsAndWithdrawals) *
-          netIncomeAfterTaxes
+          netIncomeFromTaxableSources
         : spousePenGross;
     const withdrawalNetAdjusted =
       finalWGross > 0 && grossIncomeFromBenefitsAndWithdrawals > 0
         ? (finalWGross / grossIncomeFromBenefitsAndWithdrawals) *
-          netIncomeAfterTaxes
+          netIncomeFromTaxableSources
         : finalWGross;
 
     // Update final withdrawal gross to include savings
