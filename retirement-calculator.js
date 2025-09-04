@@ -2279,10 +2279,11 @@ function calc() {
       params.filingStatus
     );
 
-    // Effective tax rate should be based on taxes paid vs taxable income (after deduction)
+    // Effective tax rate should be based on INCOME taxes only vs taxable income (after deduction)
+    // SS taxes are calculated on gross SS benefits, not on taxable income after deduction
     const effectiveTaxRate =
       taxableIncomeAfterDeduction > 0
-        ? (taxesThisYear / taxableIncomeAfterDeduction) * 100
+        ? (otherTaxes / taxableIncomeAfterDeduction) * 100
         : 0;
 
     return {
@@ -2307,6 +2308,8 @@ function calc() {
       taxes: taxesThisYear,
       ssTaxes: ssTaxes,
       otherTaxes: otherTaxes,
+      penTaxes: penResults.penTaxes + spousePenResults.penTaxes,
+      withdrawalTaxes: finalWithdrawalFunctions.getTaxesThisYear(),
       nonTaxableIncome: totalNonTaxableIncome,
       taxableIncome: taxableIncomeAfterDeduction, // Taxable income after standard deduction (this is what appears in the table)
       taxableInterest: taxableInterestEarned,
@@ -2468,7 +2471,15 @@ function calc() {
           r.ssTaxes !== undefined && r.ssTaxes !== null ? fmt(r.ssTaxes) : ""
         }</td>
         <td class="outgoing">${r.otherTaxes ? fmt(r.otherTaxes) : ""}</td>
-        <td class="outgoing">${r.taxes ? fmt(r.taxes) : ""}</td>
+        <td class="outgoing">${
+          r.age >= params.retireAge
+            ? `<span class="total-taxes-link" onclick="showTotalTaxesBreakdown(${index})" title="Click to see breakdown">${fmt(
+                r.taxes || 0
+              )}</span>`
+            : r.taxes
+            ? fmt(r.taxes)
+            : ""
+        }</td>
         <td class="neutral">${
           r.effectiveTaxRate ? r.effectiveTaxRate.toFixed(1) + "%" : ""
         }</td>
@@ -4282,6 +4293,139 @@ function showNonTaxableIncomeBreakdown(yearIndex) {
     <div class="ss-breakdown-item" style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border);">
         <span class="ss-breakdown-label" style="font-size: 12px; color: var(--muted);">Note:</span>
         <span class="ss-breakdown-value" style="font-size: 12px; color: var(--muted);">This income is not subject to federal income tax</span>
+    </div>
+  `;
+
+  content.innerHTML = breakdownHtml;
+  popup.classList.add("show");
+}
+
+// Function to show total taxes breakdown popup
+function showTotalTaxesBreakdown(yearIndex) {
+  const calculation = calculations[yearIndex];
+  if (!calculation) {
+    return; // No data to show
+  }
+
+  const popup = document.getElementById("ssPopup");
+  const content = document.getElementById("ssBreakdownContent");
+
+  // Update popup title
+  const title = popup.querySelector(".ss-popup-title");
+  if (title) {
+    title.textContent = "Total Taxes Breakdown";
+  }
+
+  // Update close button to use the general close function
+  const closeBtn = popup.querySelector("button.ss-popup-close");
+  if (closeBtn) {
+    closeBtn.onclick = function () {
+      closeSsPopup();
+    };
+  }
+
+  // Build the breakdown content showing sources of taxes
+  let breakdownHtml = `
+    <div class="ss-breakdown-item">
+        <span class="ss-breakdown-label">Year:</span>
+        <span class="ss-breakdown-value">${calculation.year}</span>
+    </div>
+    <div class="ss-breakdown-item">
+        <span class="ss-breakdown-label">Age:</span>
+        <span class="ss-breakdown-value">${calculation.age}</span>
+    </div>
+  `;
+
+  let totalTaxes = 0;
+
+  // Social Security taxes
+  if (calculation.ssTaxes && calculation.ssTaxes > 0) {
+    breakdownHtml += `
+      <div class="ss-breakdown-item">
+          <span class="ss-breakdown-label">Social Security Taxes:</span>
+          <span class="ss-breakdown-value">${fmt(calculation.ssTaxes)}</span>
+      </div>
+    `;
+    totalTaxes += calculation.ssTaxes;
+  }
+
+  // Other taxes (income taxes on pre-tax withdrawals, pensions, etc.)
+  if (calculation.otherTaxes && calculation.otherTaxes > 0) {
+    breakdownHtml += `
+      <div class="ss-breakdown-item">
+          <span class="ss-breakdown-label">Income Taxes:</span>
+          <span class="ss-breakdown-value">${fmt(calculation.otherTaxes)}</span>
+      </div>
+    `;
+    totalTaxes += calculation.otherTaxes;
+
+    // Add breakdown of what income taxes include
+    breakdownHtml += `<div style="margin-left: 20px;">`;
+
+    if (calculation.penTaxes && calculation.penTaxes > 0) {
+      breakdownHtml += `
+        <div class="ss-breakdown-item" style="font-size: 12px; color: var(--muted);">
+            <span class="ss-breakdown-label">• Taxes on pension income</span>
+            <span class="ss-breakdown-value">${fmt(calculation.penTaxes)}</span>
+        </div>
+      `;
+    }
+
+    if (calculation.withdrawalTaxes && calculation.withdrawalTaxes > 0) {
+      breakdownHtml += `
+        <div class="ss-breakdown-item" style="font-size: 12px; color: var(--muted);">
+            <span class="ss-breakdown-label">• Taxes on 401k withdrawals</span>
+            <span class="ss-breakdown-value">${fmt(
+              calculation.withdrawalTaxes
+            )}</span>
+        </div>
+      `;
+    }
+
+    // Calculate other income taxes (like taxable interest)
+    const otherIncomeTaxes =
+      calculation.otherTaxes -
+      (calculation.penTaxes || 0) -
+      (calculation.withdrawalTaxes || 0);
+    if (otherIncomeTaxes > 0) {
+      breakdownHtml += `
+        <div class="ss-breakdown-item" style="font-size: 12px; color: var(--muted);">
+            <span class="ss-breakdown-label">• Taxes on taxable interest</span>
+            <span class="ss-breakdown-value">${fmt(otherIncomeTaxes)}</span>
+        </div>
+      `;
+    }
+
+    breakdownHtml += `</div>`;
+  }
+
+  // Add total
+  breakdownHtml += `
+    <div class="ss-breakdown-item" style="margin-top: 12px; padding-top: 12px; border-top: 2px solid var(--border);">
+        <span class="ss-breakdown-label"><strong>Total Taxes:</strong></span>
+        <span class="ss-breakdown-value"><strong>${fmt(
+          totalTaxes
+        )}</strong></span>
+    </div>
+  `;
+
+  // Add effective tax rate if available
+  if (calculation.effectiveTaxRate) {
+    breakdownHtml += `
+      <div class="ss-breakdown-item">
+          <span class="ss-breakdown-label">Effective Tax Rate:</span>
+          <span class="ss-breakdown-value">${calculation.effectiveTaxRate.toFixed(
+            1
+          )}%</span>
+      </div>
+    `;
+  }
+
+  // Add explanatory note
+  breakdownHtml += `
+    <div class="ss-breakdown-item" style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border);">
+        <span class="ss-breakdown-label" style="font-size: 12px; color: var(--muted);">Note:</span>
+        <span class="ss-breakdown-value" style="font-size: 12px; color: var(--muted);">These are federal taxes only. State taxes not included.</span>
     </div>
   `;
 
