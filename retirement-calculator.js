@@ -2350,8 +2350,8 @@ function calc() {
 
     const totalBal = balances.balSavings + balances.balPre + balances.balRoth;
 
-    // Enhanced strategy: Ensure Total Net equals spending target exactly
-    // During RMD years, we may get more income than needed, so cap at spending target
+    // Correct RMD strategy: Allow Total Net to exceed spending target when RMD is mandatory
+    // RMDs are mandatory, so if they provide more income than needed, that's extra money
     const grossIncomeFromBenefitsAndWithdrawals =
       ssGross + spouseSsGross + penGross + spousePenGross + finalWGross;
     const netIncomeFromTaxableSources =
@@ -2360,11 +2360,8 @@ function calc() {
     // Calculate the spending target
     const spendingTarget = actualSpend;
 
-    // The Total Net should equal the spending target, no more, no less
-    // If we have excess from RMD, we don't need additional withdrawals
-    // If we have shortfall, we need additional tax-free withdrawals
+    // Only add savings withdrawals if we have a shortfall (don't cap excess)
     const shortfall = Math.max(0, spendingTarget - netIncomeFromTaxableSources);
-    const excess = Math.max(0, netIncomeFromTaxableSources - spendingTarget);
 
     // Only withdraw from savings if there's a shortfall
     const additionalSavingsWithdrawal = Math.min(
@@ -2380,13 +2377,11 @@ function calc() {
     // Update final withdrawal amounts to include any additional savings withdrawal
     const totalWithdrawals = finalWGross + additionalSavingsWithdrawal;
 
-    // Calculate final net income - cap at spending target
-    const totalNetIncome = Math.min(
-      spendingTarget,
-      netIncomeFromTaxableSources + additionalSavingsWithdrawal
-    );
+    // Calculate final net income - allow it to exceed spending target if RMD provides excess
+    const totalNetIncome =
+      netIncomeFromTaxableSources + additionalSavingsWithdrawal;
 
-    // Debug RMD years to ensure Total Net stays at target
+    // Debug RMD years to show actual total net income
     if (params.useRMD && age >= 73) {
       console.log(`\n=== RMD YEAR DEBUG (Age ${age}) ===`);
       console.log(`Spending target: ${fmt(spendingTarget)}`);
@@ -2401,11 +2396,17 @@ function calc() {
         `Net from taxable sources: ${fmt(netIncomeFromTaxableSources)}`
       );
       console.log(`Shortfall: ${fmt(shortfall)}`);
-      console.log(`Excess: ${fmt(excess)}`);
       console.log(
         `Additional savings withdrawal: ${fmt(additionalSavingsWithdrawal)}`
       );
-      console.log(`Final Total Net Income (capped): ${fmt(totalNetIncome)}`);
+      console.log(`Final Total Net Income: ${fmt(totalNetIncome)}`);
+      if (totalNetIncome > spendingTarget) {
+        console.log(
+          `✓ Total Net exceeds spending target by ${fmt(
+            totalNetIncome - spendingTarget
+          )} (RMD excess)`
+        );
+      }
       console.log(`=== END RMD DEBUG ===\n`);
     }
 
