@@ -2818,6 +2818,88 @@ function drawChart(series) {
     series[series.length - 1].x,
   ];
   years.forEach((x) => ctx.fillText(String(x), xTo(x), height - 6 * dpr));
+
+  // Store chart data and setup for tooltip functionality
+  c.chartData = {
+    series: series,
+    xTo: xTo,
+    yTo: yTo,
+    width: width,
+    height: height,
+    dpr: dpr,
+    pad: pad,
+  };
+
+  // Setup mouse event handlers for tooltips (only add once)
+  if (!c.hasTooltipHandlers) {
+    const tooltip = document.getElementById("chartTooltip");
+
+    function showTooltip(x, y, point) {
+      const yearDiv = tooltip.querySelector(".year");
+      const balanceDiv = tooltip.querySelector(".balance");
+
+      yearDiv.textContent = `Year ${point.x}`;
+      balanceDiv.textContent = `Balance: ${fmt(point.y)}`;
+
+      tooltip.style.left = x + "px";
+      tooltip.style.top = y + "px";
+      tooltip.classList.add("visible");
+    }
+
+    function hideTooltip() {
+      tooltip.classList.remove("visible");
+    }
+
+    function findNearestPoint(mouseX, mouseY) {
+      if (!c.chartData) return null;
+
+      const { series, xTo, yTo, dpr } = c.chartData;
+      const threshold = 20 * dpr; // 20px hit area
+      let nearest = null;
+      let minDistance = threshold;
+
+      series.forEach((point) => {
+        const pointX = xTo(point.x);
+        const pointY = yTo(point.y);
+        const distance = Math.sqrt(
+          Math.pow(mouseX - pointX, 2) + Math.pow(mouseY - pointY, 2)
+        );
+
+        if (distance < minDistance) {
+          minDistance = distance;
+          nearest = point;
+        }
+      });
+
+      return nearest;
+    }
+
+    c.addEventListener("mousemove", (e) => {
+      const rect = c.getBoundingClientRect();
+      const mouseX = (e.clientX - rect.left) * c.chartData.dpr;
+      const mouseY = (e.clientY - rect.top) * c.chartData.dpr;
+
+      const nearestPoint = findNearestPoint(mouseX, mouseY);
+
+      if (nearestPoint) {
+        // Position tooltip relative to canvas
+        const tooltipX = e.clientX - rect.left + 15;
+        const tooltipY = e.clientY - rect.top - 10;
+        showTooltip(tooltipX, tooltipY, nearestPoint);
+        c.style.cursor = "pointer";
+      } else {
+        hideTooltip();
+        c.style.cursor = "default";
+      }
+    });
+
+    c.addEventListener("mouseleave", () => {
+      hideTooltip();
+      c.style.cursor = "default";
+    });
+
+    c.hasTooltipHandlers = true;
+  }
 }
 
 function exportCSV() {
