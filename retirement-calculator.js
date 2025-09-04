@@ -1591,22 +1591,15 @@ function calc() {
       }
 
       const ssNonTaxable = ssGross - ssTaxableAmount;
-      const grossIncomeForTax = totalTaxableIncome + ssTaxableAmount;
-      const effectiveRate = isMarried
-        ? getEffectiveTaxRateMarried(
-            calculateTaxableIncome(grossIncomeForTax, "married")
-          )
-        : getEffectiveTaxRate(
-            calculateTaxableIncome(grossIncomeForTax, "single")
-          );
-      const ssTaxes = ssTaxableAmount * (effectiveRate / 100);
-      const ssNet = ssGross - ssTaxes;
+
+      // Don't calculate separate SS taxes - the taxable amount will be included in total taxable income
+      const ssNet = ssGross; // SS net is the full gross amount; taxes will be calculated on total income
 
       return {
         ssNet,
         ssTaxableAmount,
         ssNonTaxable,
-        ssTaxes,
+        ssTaxes: 0, // No separate SS taxes - included in total income tax calculation
         calculationDetails: {
           provisionalIncome,
           threshold1,
@@ -1615,7 +1608,7 @@ function calc() {
           tier2Amount,
           excessIncome1: Math.max(0, provisionalIncome - threshold1),
           excessIncome2: Math.max(0, provisionalIncome - threshold2),
-          effectiveRate,
+          effectiveRate: 0, // Will be calculated on total income
           method: "irs-rules",
         },
       };
@@ -1689,15 +1682,16 @@ function calc() {
       // console.log(`Pension Taxable Income Tax Calc: Gross Income: $${grossIncomeForPensionTax.toLocaleString()}, Taxable Income: $${taxableIncomeForPensionTax.toLocaleString()}, Filing: ${params.filingStatus}, Taxable Income Rate: ${taxableIncomeBasedRate.toFixed(1)}%, Fixed Rate: ${(params.taxPension*100).toFixed(1)}%, Using: ${(pensionTaxRate*100).toFixed(1)}%`);
     }
 
-    const penTaxes = penTaxableAmount * pensionTaxRate;
-    const penNet = penGross - penTaxes;
+    // Don't calculate separate pension taxes - will be included in total income tax calculation
+    const penTaxes = 0;
+    const penNet = penGross; // Full gross amount; taxes calculated on total income
 
     return {
       penNet,
       penTaxes,
       penTaxableAmount,
       penNonTaxable,
-      pensionTaxRate,
+      pensionTaxRate: 0, // Will be calculated as part of total income
     };
   }
 
@@ -1788,12 +1782,19 @@ function calc() {
         // console.log(`Gross Income: $${projectedGrossIncome.toLocaleString()}, Taxable Income: $${projectedTaxableIncome.toLocaleString()}, Filing: ${params.filingStatus}, Taxable Income Rate: ${taxableIncomeBasedRate.toFixed(1)}%, Fixed Rate: ${(fixedTaxRate*100).toFixed(1)}%, Using: ${(taxRate*100).toFixed(1)}%`);
       }
 
-      const grossNeeded = netAmount / (1 - taxRate);
-      const grossTake = Math.min(grossNeeded, balRef);
-      const netReceived = grossTake * (1 - taxRate);
-      const taxPaid = grossTake - netReceived;
-      setBal(balRef - grossTake);
-      taxesThisYear += taxPaid;
+      // For pretax withdrawals, don't calculate taxes here - will be part of total income tax
+      let grossTake, netReceived;
+      if (kind === "pretax") {
+        grossTake = Math.min(netAmount, balRef); // Take the net amount requested from gross balance
+        netReceived = grossTake; // No taxes deducted here
+        setBal(balRef - grossTake);
+        // No tax paid here - taxes calculated on total income
+      } else {
+        // For taxable/Roth accounts, no tax impact
+        grossTake = Math.min(netAmount, balRef);
+        netReceived = grossTake;
+        setBal(balRef - grossTake);
+      }
 
       // Track withdrawals by source
       withdrawalsBySource[kind] += grossTake;
@@ -1828,10 +1829,10 @@ function calc() {
         taxRate = Math.max(params.taxPre, taxableIncomeRateDecimal);
       }
 
-      const netReceived = actualGross * (1 - taxRate);
-      const taxPaid = actualGross - netReceived;
+      // For RMD, don't calculate taxes here - will be part of total income tax
+      const netReceived = actualGross; // No taxes deducted here
       balances.balPre -= actualGross;
-      taxesThisYear += taxPaid;
+      // No tax paid here - taxes calculated on total income
       totalTaxableIncomeRef.value += actualGross;
 
       // Track RMD withdrawals as pretax
@@ -2106,11 +2107,8 @@ function calc() {
 
     let finalWGross = 0,
       finalWNet = 0;
-    let taxesThisYear =
-      penResults.penTaxes +
-      spousePenResults.penTaxes +
-      ssResults.ssTaxes +
-      spouseSsResults.ssTaxes;
+    // Start with no taxes - will calculate on total taxable income at the end
+    let taxesThisYear = 0;
 
     // Apply RMDs (final)
     if (params.useRMD && age >= 73 && preliminaryRmdAmount > 0) {
@@ -2225,8 +2223,51 @@ function calc() {
       }
     }
 
-    // Add withdrawal taxes
-    taxesThisYear += finalWithdrawalFunctions.getTaxesThisYear();
+    // Get withdrawal breakdown by source first
+    const withdrawalsBySource =
+      finalWithdrawalFunctions.getWithdrawalsBySource();
+
+    // Recalculate SS taxation using FINAL taxable income (including withdrawals)
+    const finalTaxableIncomeForSS =
+      penResults.penTaxableAmount +
+      spousePenResults.penTaxableAmount +
+      withdrawalsBySource.pretax +
+      taxableInterestEarned +
+      taxableIncomeAdjustment;
+
+    const finalSsResults = calculateSocialSecurityTaxation(
+      params,
+      ssGross,
+      finalTaxableIncomeForSS
+    );
+    const finalSpouseSsResults = calculateSocialSecurityTaxation(
+      params,
+      spouseSsGross,
+      finalTaxableIncomeForSS + finalSsResults.ssTaxableAmount
+    );
+
+    // Calculate total taxes on all taxable income (proper approach)
+    // Total taxable income includes: SS taxable + pension taxable + pretax withdrawals + taxable interest
+    const totalGrossTaxableIncome =
+      penResults.penTaxableAmount +
+      spousePenResults.penTaxableAmount +
+      finalSsResults.ssTaxableAmount +
+      finalSpouseSsResults.ssTaxableAmount +
+      withdrawalsBySource.pretax +
+      taxableInterestEarned +
+      taxableIncomeAdjustment;
+
+    // Calculate total income tax on the combined taxable income
+    taxesThisYear = calculateFederalTax(
+      totalGrossTaxableIncome,
+      params.filingStatus
+    );
+
+    // Also calculate the taxable income after deduction for display purposes
+    const totalTaxableIncomeAfterDeduction = calculateTaxableIncome(
+      totalGrossTaxableIncome,
+      params.filingStatus
+    );
 
     // Grow remaining balances
     balances.balSavings *= 1 + params.retTax;
@@ -2237,18 +2278,79 @@ function calc() {
 
     const totalBal = balances.balSavings + balances.balPre + balances.balRoth;
 
-    // Track Social Security taxes separately and non-taxable income
-    const ssTaxes = ssResults.ssTaxes + spouseSsResults.ssTaxes;
-    const otherTaxes = taxesThisYear - ssTaxes;
+    // Calculate net amounts by allocating total tax proportionally to taxable income sources
+    const totalTaxableFromBenefits =
+      finalSsResults.ssTaxableAmount +
+      finalSpouseSsResults.ssTaxableAmount +
+      penResults.penTaxableAmount +
+      spousePenResults.penTaxableAmount;
+    const totalTaxableFromWithdrawals = withdrawalsBySource.pretax;
+    const totalTaxableFromOther =
+      taxableInterestEarned + taxableIncomeAdjustment;
+    const totalTaxableIncome =
+      totalTaxableFromBenefits +
+      totalTaxableFromWithdrawals +
+      totalTaxableFromOther;
 
-    // Get withdrawal breakdown by source
-    const withdrawalsBySource =
-      finalWithdrawalFunctions.getWithdrawalsBySource();
+    // Allocate taxes proportionally
+    let benefitsTaxes = 0;
+    let withdrawalTaxes = 0;
+    let otherIncomeTaxes = 0;
+
+    if (totalTaxableIncome > 0) {
+      benefitsTaxes =
+        (totalTaxableFromBenefits / totalTaxableIncome) * taxesThisYear;
+      withdrawalTaxes =
+        (totalTaxableFromWithdrawals / totalTaxableIncome) * taxesThisYear;
+      otherIncomeTaxes =
+        (totalTaxableFromOther / totalTaxableIncome) * taxesThisYear;
+    }
+
+    // Calculate net amounts for benefits
+    const ssTaxAllocated =
+      totalTaxableFromBenefits > 0
+        ? ((finalSsResults.ssTaxableAmount +
+            finalSpouseSsResults.ssTaxableAmount) /
+            totalTaxableFromBenefits) *
+          benefitsTaxes
+        : 0;
+    const penTaxAllocated =
+      totalTaxableFromBenefits > 0
+        ? ((penResults.penTaxableAmount + spousePenResults.penTaxableAmount) /
+            totalTaxableFromBenefits) *
+          benefitsTaxes
+        : 0;
+
+    // For display purposes: ssTaxes shows allocated SS taxes, otherTaxes shows non-SS taxes
+    const ssTaxes = ssTaxAllocated;
+    const otherTaxes = taxesThisYear - ssTaxAllocated;
+
+    const ssNetCombined = ssGross + spouseSsGross - ssTaxAllocated;
+    const penNetCombined = penGross + spousePenGross - penTaxAllocated;
+
+    // Proportion the net amounts back to individual/spouse
+    const ssNetAdjusted =
+      ssGross > 0 ? (ssGross / (ssGross + spouseSsGross)) * ssNetCombined : 0;
+    const spouseSsNetAdjusted =
+      spouseSsGross > 0
+        ? (spouseSsGross / (ssGross + spouseSsGross)) * ssNetCombined
+        : 0;
+    const penNetAdjusted =
+      penGross > 0
+        ? (penGross / (penGross + spousePenGross)) * penNetCombined
+        : 0;
+    const spousePenNetAdjusted =
+      spousePenGross > 0
+        ? (spousePenGross / (penGross + spousePenGross)) * penNetCombined
+        : 0;
+
+    // Calculate net withdrawal amount
+    const withdrawalNetAdjusted = finalWGross - withdrawalTaxes;
 
     // Non-taxable income includes SS/pension non-taxable portions + savings withdrawals (already after-tax) + Roth withdrawals
     const totalNonTaxableIncome =
-      ssResults.ssNonTaxable +
-      spouseSsResults.ssNonTaxable +
+      finalSsResults.ssNonTaxable +
+      finalSpouseSsResults.ssNonTaxable +
       penResults.penNonTaxable +
       spousePenResults.penNonTaxable +
       withdrawalsBySource.taxable +
@@ -2267,8 +2369,8 @@ function calc() {
 
     // Use grossTaxableIncome for Total Gross column (excludes non-taxable withdrawals)
     const totalGrossIncome =
-      ssResults.ssNonTaxable +
-      spouseSsResults.ssNonTaxable +
+      finalSsResults.ssNonTaxable +
+      finalSpouseSsResults.ssNonTaxable +
       penResults.penNonTaxable +
       spousePenResults.penNonTaxable +
       grossTaxableIncome;
@@ -2291,12 +2393,12 @@ function calc() {
       age,
       salary: 0,
       contrib: 0,
-      ss: ssResults.ssNet,
-      pen: penResults.penNet,
-      spouseSs: spouseSsResults.ssNet,
-      spousePen: spousePenResults.penNet,
+      ss: ssNetAdjusted,
+      pen: penNetAdjusted,
+      spouseSs: spouseSsNetAdjusted,
+      spousePen: spousePenNetAdjusted,
       spend: actualSpend,
-      wNet: finalWNet,
+      wNet: withdrawalNetAdjusted,
       wGross: finalWGross,
       w401kGross: withdrawalsBySource.pretax,
       wSavingsGross: withdrawalsBySource.taxable,
@@ -2306,28 +2408,28 @@ function calc() {
       spouseSsGross: spouseSsGross,
       spousePenGross: spousePenGross,
       taxes: taxesThisYear,
-      ssTaxes: ssTaxes,
+      ssTaxes: ssTaxAllocated,
       otherTaxes: otherTaxes,
-      penTaxes: penResults.penTaxes + spousePenResults.penTaxes,
-      withdrawalTaxes: finalWithdrawalFunctions.getTaxesThisYear(),
+      penTaxes: penTaxAllocated,
+      withdrawalTaxes: withdrawalTaxes,
       nonTaxableIncome: totalNonTaxableIncome,
       taxableIncome: taxableIncomeAfterDeduction, // Taxable income after standard deduction (this is what appears in the table)
       taxableInterest: taxableInterestEarned,
       totalIncome:
-        ssResults.ssNet +
-        penResults.penNet +
-        spouseSsResults.ssNet +
-        spousePenResults.penNet +
-        finalWNet +
+        ssNetAdjusted +
+        penNetAdjusted +
+        spouseSsNetAdjusted +
+        spousePenNetAdjusted +
+        withdrawalNetAdjusted +
         taxableInterestEarned +
         taxableIncomeAdjustment +
         taxFreeIncomeAdjustment, // Total income including all adjustments
       totalNetIncome:
-        ssResults.ssNet +
-        penResults.penNet +
-        spouseSsResults.ssNet +
-        spousePenResults.penNet +
-        finalWNet +
+        ssNetAdjusted +
+        penNetAdjusted +
+        spouseSsNetAdjusted +
+        spousePenNetAdjusted +
+        withdrawalNetAdjusted +
         taxFreeIncomeAdjustment, // Net income including tax-free adjustments
       totalGrossIncome: totalGrossIncome, // Use the corrected gross taxable income calculation
       effectiveTaxRate,
@@ -2338,11 +2440,11 @@ function calc() {
       // Add SS breakdown data for popup
       ssBreakdown: {
         ssGross: ssGross,
-        ssTaxableAmount: ssResults.ssTaxableAmount,
-        ssNonTaxable: ssResults.ssNonTaxable,
-        ssTaxes: ssResults.ssTaxes,
-        calculationDetails: ssResults.calculationDetails,
-        otherTaxableIncome: totalTaxableIncomeForSS,
+        ssTaxableAmount: finalSsResults.ssTaxableAmount,
+        ssNonTaxable: finalSsResults.ssNonTaxable,
+        ssTaxes: ssTaxAllocated, // Show allocated tax amount
+        calculationDetails: finalSsResults.calculationDetails,
+        otherTaxableIncome: finalTaxableIncomeForSS,
       },
     };
   }
