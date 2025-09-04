@@ -1068,9 +1068,9 @@ function loadExample() {
     currentAge: 60,
     retireAge: 62,
     endAge: 90,
-    inflation: 2.5,
-    spendingToday: 95000,
-    spendingDecline: 1.0,
+    inflation: 0.0,
+    spendingToday: 100000,
+    spendingDecline: 0.0,
     spouseAge: 56,
     spouseRetireAge: 62,
     spouseSsMonthly: 1000,
@@ -1111,6 +1111,53 @@ function loadExample() {
     useSSRules: true,
     useRMD: true,
   };
+  // const ex = {
+  //   currentAge: 60,
+  //   retireAge: 62,
+  //   endAge: 90,
+  //   inflation: 2.5,
+  //   spendingToday: 95000,
+  //   spendingDecline: 1.0,
+  //   spouseAge: 56,
+  //   spouseRetireAge: 62,
+  //   spouseSsMonthly: 1000,
+  //   spouseSsStart: 62,
+  //   spouseSsCola: 0.0,
+  //   spousePenMonthly: 500,
+  //   spousePenStart: 65,
+  //   spousePenCola: 0,
+  //   spouseTaxSS: 10,
+  //   spouseTaxPension: 20,
+  //   salary: 174500,
+  //   salaryGrowth: 2.0,
+  //   pretaxPct: 0,
+  //   rothPct: 0,
+  //   taxablePct: 35,
+  //   matchCap: 0,
+  //   matchRate: 0,
+  //   balPre: 600000,
+  //   balRoth: 0,
+  //   balSavings: 500000,
+  //   retPre: 3.0,
+  //   retRoth: 0.0,
+  //   retTax: 3.0,
+  //   ssMonthly: 2500,
+  //   ssStart: 62,
+  //   ssCola: 2.5,
+  //   penMonthly: 3500,
+  //   penStart: 65,
+  //   penCola: 0,
+  //   taxPre: 15,
+  //   taxTaxable: 0,
+  //   taxRoth: 0,
+  //   taxSS: 10,
+  //   taxPension: 15,
+  //   order: "taxable,pretax,roth",
+  //   filingStatus: "married",
+  //   useAgiTax: true,
+  //   useSSRules: true,
+  //   useRMD: true,
+  // };
   // const ex = {
   //   currentAge:55, retireAge:65, endAge:85, inflation:2.5, spendingToday:60000, spendingDecline:1.0,
   //   spouseAge:52, spouseRetireAge:62, spouseSsMonthly:1000, spouseSsStart:62, spouseSsCola:2.0,
@@ -1782,13 +1829,27 @@ function calc() {
         // console.log(`Gross Income: $${projectedGrossIncome.toLocaleString()}, Taxable Income: $${projectedTaxableIncome.toLocaleString()}, Filing: ${params.filingStatus}, Taxable Income Rate: ${taxableIncomeBasedRate.toFixed(1)}%, Fixed Rate: ${(fixedTaxRate*100).toFixed(1)}%, Using: ${(taxRate*100).toFixed(1)}%`);
       }
 
-      // For pretax withdrawals, don't calculate taxes here - will be part of total income tax
+      // For pretax withdrawals, estimate tax rate and gross up to meet net need
       let grossTake, netReceived;
       if (kind === "pretax") {
-        grossTake = Math.min(netAmount, balRef); // Take the net amount requested from gross balance
-        netReceived = grossTake; // No taxes deducted here
+        // Estimate tax rate for grossing up the withdrawal
+        const projectedGrossIncome = totalTaxableIncomeRef.value + netAmount;
+        const projectedTaxableIncome = calculateTaxableIncome(
+          projectedGrossIncome,
+          params.filingStatus
+        );
+        const taxableIncomeBasedRate =
+          params.filingStatus === "married"
+            ? getEffectiveTaxRateMarried(projectedTaxableIncome)
+            : getEffectiveTaxRate(projectedTaxableIncome);
+        const taxableIncomeRateDecimal = taxableIncomeBasedRate / 100;
+        taxRate = Math.max(params.taxPre, taxableIncomeRateDecimal);
+
+        // Gross up the withdrawal to account for taxes
+        const grossNeeded = netAmount / (1 - taxRate);
+        grossTake = Math.min(grossNeeded, balRef);
+        netReceived = grossTake * (1 - taxRate); // Estimated net after taxes
         setBal(balRef - grossTake);
-        // No tax paid here - taxes calculated on total income
       } else {
         // For taxable/Roth accounts, no tax impact
         grossTake = Math.min(netAmount, balRef);
@@ -1829,10 +1890,21 @@ function calc() {
         taxRate = Math.max(params.taxPre, taxableIncomeRateDecimal);
       }
 
-      // For RMD, don't calculate taxes here - will be part of total income tax
-      const netReceived = actualGross; // No taxes deducted here
+      // For RMD, estimate taxes to provide realistic net amount
+      const projectedGrossIncome = totalTaxableIncomeRef.value + actualGross;
+      const projectedTaxableIncome = calculateTaxableIncome(
+        projectedGrossIncome,
+        params.filingStatus
+      );
+      const taxableIncomeBasedRate =
+        params.filingStatus === "married"
+          ? getEffectiveTaxRateMarried(projectedTaxableIncome)
+          : getEffectiveTaxRate(projectedTaxableIncome);
+      const taxableIncomeRateDecimal = taxableIncomeBasedRate / 100;
+      const rmdTaxRate = Math.max(params.taxPre, taxableIncomeRateDecimal);
+
+      const netReceived = actualGross * (1 - rmdTaxRate); // Estimated net after taxes
       balances.balPre -= actualGross;
-      // No tax paid here - taxes calculated on total income
       totalTaxableIncomeRef.value += actualGross;
 
       // Track RMD withdrawals as pretax
@@ -2278,74 +2350,82 @@ function calc() {
 
     const totalBal = balances.balSavings + balances.balPre + balances.balRoth;
 
-    // Calculate net amounts by allocating total tax proportionally to taxable income sources
-    const totalTaxableFromBenefits =
-      finalSsResults.ssTaxableAmount +
-      finalSpouseSsResults.ssTaxableAmount +
-      penResults.penTaxableAmount +
-      spousePenResults.penTaxableAmount;
-    const totalTaxableFromWithdrawals = withdrawalsBySource.pretax;
-    const totalTaxableFromOther =
-      taxableInterestEarned + taxableIncomeAdjustment;
-    const totalTaxableIncome =
-      totalTaxableFromBenefits +
-      totalTaxableFromWithdrawals +
-      totalTaxableFromOther;
+    // Simple strategy: Calculate net income from SS/Pension/401k after taxes, then cover shortfall with savings
+    const grossIncomeFromBenefitsAndWithdrawals =
+      ssGross + spouseSsGross + penGross + spousePenGross + finalWGross;
+    const netIncomeAfterTaxes =
+      grossIncomeFromBenefitsAndWithdrawals - taxesThisYear;
 
-    // Allocate taxes proportionally
-    let benefitsTaxes = 0;
-    let withdrawalTaxes = 0;
-    let otherIncomeTaxes = 0;
+    // Check if we need additional savings withdrawals to meet spending target
+    const spendingTarget = actualSpend;
+    const shortfall = Math.max(0, spendingTarget - netIncomeAfterTaxes);
 
-    if (totalTaxableIncome > 0) {
-      benefitsTaxes =
-        (totalTaxableFromBenefits / totalTaxableIncome) * taxesThisYear;
-      withdrawalTaxes =
-        (totalTaxableFromWithdrawals / totalTaxableIncome) * taxesThisYear;
-      otherIncomeTaxes =
-        (totalTaxableFromOther / totalTaxableIncome) * taxesThisYear;
+    // If there's a shortfall and we have savings, withdraw from savings (tax-free)
+    const additionalSavingsWithdrawal = Math.min(
+      shortfall,
+      balances.balSavings
+    );
+    if (additionalSavingsWithdrawal > 0) {
+      balances.balSavings -= additionalSavingsWithdrawal;
+      // Update withdrawal tracking
+      withdrawalsBySource.taxable += additionalSavingsWithdrawal;
     }
 
-    // Calculate net amounts for benefits
+    // Update final withdrawal amounts to include any additional savings withdrawal
+    const totalWithdrawals = finalWGross + additionalSavingsWithdrawal;
+    const totalNetIncome = netIncomeAfterTaxes + additionalSavingsWithdrawal;
+
+    // For display purposes: allocate taxes proportionally (only to taxable income sources)
+    const ssNetAdjusted =
+      ssGross > 0 && grossIncomeFromBenefitsAndWithdrawals > 0
+        ? (ssGross / grossIncomeFromBenefitsAndWithdrawals) *
+          netIncomeAfterTaxes
+        : ssGross;
+    const spouseSsNetAdjusted =
+      spouseSsGross > 0 && grossIncomeFromBenefitsAndWithdrawals > 0
+        ? (spouseSsGross / grossIncomeFromBenefitsAndWithdrawals) *
+          netIncomeAfterTaxes
+        : spouseSsGross;
+    const penNetAdjusted =
+      penGross > 0 && grossIncomeFromBenefitsAndWithdrawals > 0
+        ? (penGross / grossIncomeFromBenefitsAndWithdrawals) *
+          netIncomeAfterTaxes
+        : penGross;
+    const spousePenNetAdjusted =
+      spousePenGross > 0 && grossIncomeFromBenefitsAndWithdrawals > 0
+        ? (spousePenGross / grossIncomeFromBenefitsAndWithdrawals) *
+          netIncomeAfterTaxes
+        : spousePenGross;
+    const withdrawalNetAdjusted =
+      finalWGross > 0 && grossIncomeFromBenefitsAndWithdrawals > 0
+        ? (finalWGross / grossIncomeFromBenefitsAndWithdrawals) *
+          netIncomeAfterTaxes
+        : finalWGross;
+
+    // Update final withdrawal gross to include savings
+    const finalWGrossTotal = finalWGross + additionalSavingsWithdrawal;
+    const finalWNetTotal = withdrawalNetAdjusted + additionalSavingsWithdrawal;
+
+    // For tax allocation display purposes
     const ssTaxAllocated =
-      totalTaxableFromBenefits > 0
-        ? ((finalSsResults.ssTaxableAmount +
-            finalSpouseSsResults.ssTaxableAmount) /
-            totalTaxableFromBenefits) *
-          benefitsTaxes
+      grossIncomeFromBenefitsAndWithdrawals > 0
+        ? ((ssGross + spouseSsGross) / grossIncomeFromBenefitsAndWithdrawals) *
+          taxesThisYear
         : 0;
     const penTaxAllocated =
-      totalTaxableFromBenefits > 0
-        ? ((penResults.penTaxableAmount + spousePenResults.penTaxableAmount) /
-            totalTaxableFromBenefits) *
-          benefitsTaxes
+      grossIncomeFromBenefitsAndWithdrawals > 0
+        ? ((penGross + spousePenGross) /
+            grossIncomeFromBenefitsAndWithdrawals) *
+          taxesThisYear
+        : 0;
+    const withdrawalTaxes =
+      grossIncomeFromBenefitsAndWithdrawals > 0
+        ? (finalWGross / grossIncomeFromBenefitsAndWithdrawals) * taxesThisYear
         : 0;
 
     // For display purposes: ssTaxes shows allocated SS taxes, otherTaxes shows non-SS taxes
     const ssTaxes = ssTaxAllocated;
     const otherTaxes = taxesThisYear - ssTaxAllocated;
-
-    const ssNetCombined = ssGross + spouseSsGross - ssTaxAllocated;
-    const penNetCombined = penGross + spousePenGross - penTaxAllocated;
-
-    // Proportion the net amounts back to individual/spouse
-    const ssNetAdjusted =
-      ssGross > 0 ? (ssGross / (ssGross + spouseSsGross)) * ssNetCombined : 0;
-    const spouseSsNetAdjusted =
-      spouseSsGross > 0
-        ? (spouseSsGross / (ssGross + spouseSsGross)) * ssNetCombined
-        : 0;
-    const penNetAdjusted =
-      penGross > 0
-        ? (penGross / (penGross + spousePenGross)) * penNetCombined
-        : 0;
-    const spousePenNetAdjusted =
-      spousePenGross > 0
-        ? (spousePenGross / (penGross + spousePenGross)) * penNetCombined
-        : 0;
-
-    // Calculate net withdrawal amount
-    const withdrawalNetAdjusted = finalWGross - withdrawalTaxes;
 
     // Non-taxable income includes SS/pension non-taxable portions + savings withdrawals (already after-tax) + Roth withdrawals
     const totalNonTaxableIncome =
@@ -2398,8 +2478,8 @@ function calc() {
       spouseSs: spouseSsNetAdjusted,
       spousePen: spousePenNetAdjusted,
       spend: actualSpend,
-      wNet: withdrawalNetAdjusted,
-      wGross: finalWGross,
+      wNet: finalWNetTotal,
+      wGross: finalWGrossTotal,
       w401kGross: withdrawalsBySource.pretax,
       wSavingsGross: withdrawalsBySource.taxable,
       wRothGross: withdrawalsBySource.roth,
@@ -2424,13 +2504,7 @@ function calc() {
         taxableInterestEarned +
         taxableIncomeAdjustment +
         taxFreeIncomeAdjustment, // Total income including all adjustments
-      totalNetIncome:
-        ssNetAdjusted +
-        penNetAdjusted +
-        spouseSsNetAdjusted +
-        spousePenNetAdjusted +
-        withdrawalNetAdjusted +
-        taxFreeIncomeAdjustment, // Net income including tax-free adjustments
+      totalNetIncome: totalNetIncome, // Use calculated total that meets spending target
       totalGrossIncome: totalGrossIncome, // Use the corrected gross taxable income calculation
       effectiveTaxRate,
       balSavings: balances.balSavings,
