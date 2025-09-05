@@ -2034,7 +2034,9 @@ function calc() {
     let spouseSsGross = 0;
     let spousePenGross = 0;
 
-    debugger;
+    if (age == 72) {
+      debugger;
+    }
 
     if (params.hasSpouse) {
       const spouseCurrentAge = params.spouseAge + (age - params.currentAge);
@@ -2487,6 +2489,27 @@ function calc() {
     const finalWGrossTotal = finalWGross + additionalSavingsWithdrawal;
     const finalWNetTotal = withdrawalNetAdjusted + additionalSavingsWithdrawal;
 
+    if (age == 72) {
+      debugger;
+    }
+    // Calculate individual withdrawal net amounts for breakdown
+    const withdrawalBreakdown = {
+      pretax401kGross: withdrawalsBySource.pretax,
+      pretax401kNet:
+        finalWGross > 0
+          ? (withdrawalsBySource.pretax / finalWGross) * withdrawalNetAdjusted
+          : 0,
+      // savingsGross: withdrawalsBySource.taxable,
+      savingsNet: withdrawalsBySource.taxable, // Savings withdrawals are not taxed
+      rothGross: withdrawalsBySource.roth,
+      rothNet:
+        finalWGross > 0
+          ? (withdrawalsBySource.roth / finalWGross) * withdrawalNetAdjusted
+          : withdrawalsBySource.roth,
+      totalGross: finalWGrossTotal,
+      totalNet: finalWNetTotal,
+    };
+
     // For tax allocation display purposes
     const ssTaxAllocated =
       grossIncomeFromBenefitsAndWithdrawals > 0
@@ -2603,6 +2626,8 @@ function calc() {
         endingBalance: balances.balSavings,
         growthRate: params.retTax * 100,
       },
+      // Add withdrawal breakdown data for popup
+      withdrawalBreakdown: withdrawalBreakdown,
       // Add SS breakdown data for popup
       ssBreakdown: {
         ssGross: ssGross,
@@ -2689,7 +2714,13 @@ function calc() {
         <td class="income">${r.pen ? fmt(r.pen) : ""}</td>
         <td class="income">${r.spouseSs ? fmt(r.spouseSs) : ""}</td>
         <td class="income">${r.spousePen ? fmt(r.spousePen) : ""}</td>
-        <td class="income">${r.wNet ? fmt(r.wNet) : ""}</td>
+        <td class="income">${
+          r.wNet
+            ? `<span class="withdrawal-net-link" onclick="showWithdrawalNetBreakdown(${index})">${fmt(
+                r.wNet
+              )}</span>`
+            : ""
+        }</td>
         <td class="income">${
           r.totalNetIncome
             ? r.age >= params.retireAge
@@ -5340,6 +5371,105 @@ function closeTotalNetPopup() {
     // Close the popup
     ssPopup.style.setProperty("display", "none", "important");
   }
+}
+
+// Withdrawal Net Breakdown Popup Functions
+function showWithdrawalNetBreakdown(yearIndex) {
+  const calculation = calculations[yearIndex];
+  if (!calculation || !calculation.wNet || !calculation.withdrawalBreakdown) {
+    return; // No withdrawal data to show
+  }
+
+  const popup = document.getElementById("ssPopup");
+  const content = document.getElementById("ssBreakdownContent");
+
+  // Get the breakdown data from the calculation
+  const withdrawalBreakdown = calculation.withdrawalBreakdown;
+
+  if (calculation.age == 72) {
+    debugger;
+  }
+
+  // Build the breakdown content
+  let breakdownHtml = `
+    <div class="ss-breakdown-item">
+        <span class="ss-breakdown-label">Year:</span>
+        <span class="ss-breakdown-value">${calculation.year}</span>
+    </div>
+    <div class="ss-breakdown-item">
+        <span class="ss-breakdown-label">Age:</span>
+        <span class="ss-breakdown-value">${calculation.age}</span>
+    </div>
+    `;
+
+  // Show withdrawal breakdown
+  breakdownHtml += `
+    <div style="margin: 16px 0; padding: 12px; background: rgba(110, 168, 254, 0.1); border-radius: 8px;">
+        <strong style="color: var(--accent);">Withdrawal Net Breakdown:</strong>
+        <div style="margin-top: 8px;">`;
+
+  // Show 401k withdrawals
+  if (withdrawalBreakdown.pretax401kNet > 0) {
+    breakdownHtml += `
+            <div class="ss-breakdown-item" style="border: none; padding: 4px 0;">
+                <span class="ss-breakdown-label">401k Net:</span>
+                <span class="ss-breakdown-value">${fmt(
+                  withdrawalBreakdown.pretax401kNet
+                )}</span>
+            </div>`;
+  }
+
+  // Show savings withdrawals
+  if (withdrawalBreakdown.savingsNet > 0) {
+    breakdownHtml += `
+            <div class="ss-breakdown-item" style="border: none; padding: 4px 0;">
+                <span class="ss-breakdown-label">Savings Net:</span>
+                <span class="ss-breakdown-value">${fmt(
+                  withdrawalBreakdown.savingsNet
+                )}</span>
+            </div>`;
+  }
+
+  // Show Roth withdrawals
+  if (withdrawalBreakdown.rothNet > 0) {
+    breakdownHtml += `
+            <div class="ss-breakdown-item" style="border: none; padding: 4px 0;">
+                <span class="ss-breakdown-label">Roth Net:</span>
+                <span class="ss-breakdown-value">${fmt(
+                  withdrawalBreakdown.rothNet
+                )}</span>
+            </div>`;
+  }
+
+  breakdownHtml += `
+        </div>
+        <div style="margin-top: 12px; padding-top: 8px; border-top: 1px solid rgba(110, 168, 254, 0.3);">
+            <div class="ss-breakdown-item" style="border: none; padding: 4px 0; font-weight: bold;">
+                <span class="ss-breakdown-label">Total Net Withdrawals:</span>
+                <span class="ss-breakdown-value">${fmt(
+                  withdrawalBreakdown.totalNet
+                )}</span>
+            </div>
+        </div>
+    </div>`;
+
+  // Set popup content
+  content.innerHTML = breakdownHtml;
+
+  // Set popup title
+  const popupHeader = popup.querySelector("h3.ss-popup-title");
+  if (popupHeader) {
+    popupHeader.textContent = `Withdrawal Net Breakdown - Age ${calculation.age}`;
+  }
+
+  // Set up close button to work properly
+  const closeBtn = popup.querySelector("button.ss-popup-close");
+  if (closeBtn) {
+    closeBtn.onclick = closeSsPopup;
+  }
+
+  // Show popup
+  popup.classList.add("show");
 }
 
 // Savings Breakdown Popup Functions
