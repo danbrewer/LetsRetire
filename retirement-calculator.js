@@ -1782,7 +1782,11 @@ function calc() {
    */
   function createWithdrawalFunction(params, balances, totalTaxableIncomeRef) {
     let taxesThisYear = 0;
-    let withdrawalsBySource = { pretax: 0, taxable: 0, roth: 0 };
+    let withdrawalsBySource = {
+      retirementAccount: 0,
+      savingsAccount: 0,
+      roth: 0,
+    };
 
     function withdrawFrom(kind, netAmount) {
       // console.log(`withdrawFrom called with kind: "${kind}", netAmount: ${netAmount}`);
@@ -1873,7 +1877,13 @@ function calc() {
       }
 
       // Track withdrawals by source
-      withdrawalsBySource[kind] += grossTake;
+      if (kind === "pretax") {
+        withdrawalsBySource.retirementAccount += grossTake;
+      } else if (kind === "taxable") {
+        withdrawalsBySource.savingsAccount += grossTake;
+      } else if (kind === "roth") {
+        withdrawalsBySource.roth += grossTake;
+      }
 
       // Add pre-tax withdrawals to Taxable Income for subsequent calculations
       if (kind === "pretax") {
@@ -1922,8 +1932,8 @@ function calc() {
       balances.balPre -= actualGross;
       totalTaxableIncomeRef.value += actualGross;
 
-      // Track RMD withdrawals as pretax
-      withdrawalsBySource.pretax += actualGross;
+      // Track RMD withdrawals as retirement account
+      withdrawalsBySource.retirementAccount += actualGross;
 
       return { gross: actualGross, net: netReceived };
     }
@@ -2188,7 +2198,9 @@ function calc() {
       penResults.penTaxableAmount +
       spousePenResults.penTaxableAmount +
       ssResults.ssTaxableAmount +
-      spouseSsResults.ssTaxableAmount;
+      spouseSsResults.ssTaxableAmount +
+      taxableInterestEarned +
+      taxableIncomeAdjustment;
 
     // Use full net amounts (including non-taxable portions) for spending calculation
     // Calculate base spending need and additional spending need separately
@@ -2341,7 +2353,7 @@ function calc() {
     const finalTaxableIncomeForSS =
       penResults.penTaxableAmount +
       spousePenResults.penTaxableAmount +
-      withdrawalsBySource.pretax +
+      withdrawalsBySource.retirementAccount +
       taxableInterestEarned +
       taxableIncomeAdjustment;
 
@@ -2363,7 +2375,7 @@ function calc() {
       spousePenResults.penTaxableAmount +
       finalSsResults.ssTaxableAmount +
       finalSpouseSsResults.ssTaxableAmount +
-      withdrawalsBySource.pretax +
+      withdrawalsBySource.retirementAccount +
       taxableInterestEarned +
       taxableIncomeAdjustment;
 
@@ -2392,10 +2404,10 @@ function calc() {
 
     if (additionalSavingsWithdrawal > 0) {
       balances.balSavings -= additionalSavingsWithdrawal;
-      withdrawalsBySource.taxable += additionalSavingsWithdrawal;
+      withdrawalsBySource.savingsAccount += additionalSavingsWithdrawal;
     }
 
-    let actualSavingsWithdrawal = withdrawalsBySource.taxable; // Track the actual amount withdrawn from savings
+    let actualSavingsWithdrawal = withdrawalsBySource.savingsAccount; // Track the actual amount withdrawn from savings
 
     // Calculate total net income
     const totalNetIncome =
@@ -2494,13 +2506,14 @@ function calc() {
     }
     // Calculate individual withdrawal net amounts for breakdown
     const withdrawalBreakdown = {
-      pretax401kGross: withdrawalsBySource.pretax,
+      pretax401kGross: withdrawalsBySource.retirementAccount,
       pretax401kNet:
         finalWGross > 0
-          ? (withdrawalsBySource.pretax / finalWGross) * withdrawalNetAdjusted
+          ? (withdrawalsBySource.retirementAccount / finalWGross) *
+            withdrawalNetAdjusted
           : 0,
-      // savingsGross: withdrawalsBySource.taxable,
-      savingsNet: withdrawalsBySource.taxable, // Savings withdrawals are not taxed
+      // savingsGross: withdrawalsBySource.savingsAccount,
+      savingsNet: withdrawalsBySource.savingsAccount, // Savings withdrawals are not taxed
       rothGross: withdrawalsBySource.roth,
       rothNet:
         finalWGross > 0
@@ -2537,7 +2550,7 @@ function calc() {
       finalSpouseSsResults.ssNonTaxable +
       penResults.penNonTaxable +
       spousePenResults.penNonTaxable +
-      withdrawalsBySource.taxable +
+      withdrawalsBySource.savingsAccount +
       withdrawalsBySource.roth +
       taxFreeIncomeAdjustment;
 
@@ -2547,7 +2560,7 @@ function calc() {
       spousePenResults.penTaxableAmount +
       ssResults.ssTaxableAmount +
       spouseSsResults.ssTaxableAmount +
-      withdrawalsBySource.pretax +
+      withdrawalsBySource.retirementAccount +
       taxableInterestEarned +
       taxableIncomeAdjustment;
 
@@ -2584,8 +2597,8 @@ function calc() {
       spend: actualSpend,
       wNet: finalWNetTotal,
       wGross: finalWGrossTotal,
-      w401kGross: withdrawalsBySource.pretax,
-      wSavingsGross: withdrawalsBySource.taxable,
+      w401kGross: withdrawalsBySource.retirementAccount,
+      wSavingsGross: withdrawalsBySource.savingsAccount,
       wRothGross: withdrawalsBySource.roth,
       ssGross: ssGross,
       penGross: penGross,
