@@ -1412,6 +1412,10 @@ function calculateWorkingYearData(params, year, salary, balances) {
   // Get tax-free income adjustments for this age
   const taxFreeIncomeAdjustment = getTaxFreeIncomeOverride(age);
 
+  // Track savings breakdown for working years
+  const savingsStartBalance = balances.balSavings;
+  const taxableInterestEarned = balances.balSavings * params.retTax;
+
   balances.balPre = (balances.balPre + cPre + match) * (1 + params.retPre);
   balances.balRoth = (balances.balRoth + cRoth) * (1 + params.retRoth);
   balances.balSavings =
@@ -1454,6 +1458,17 @@ function calculateWorkingYearData(params, year, salary, balances) {
     balPre: balances.balPre,
     balRoth: balances.balRoth,
     total: balances.balSavings + balances.balPre + balances.balRoth,
+    // Add savings breakdown data for popup
+    savingsBreakdown: {
+      startingBalance: savingsStartBalance,
+      withdrawals: 0, // No withdrawals during working years
+      overageDeposit: 0, // No overage during working years
+      taxFreeIncomeDeposit: taxFreeIncomeAdjustment,
+      regularDeposit: cTax, // Regular taxable savings contribution
+      interestEarned: taxableInterestEarned,
+      endingBalance: balances.balSavings,
+      growthRate: params.retTax * 100,
+    },
     // Add empty SS breakdown for working years
     ssBreakdown: {
       ssGross: 0,
@@ -2007,6 +2022,8 @@ function calc() {
     const age = params.currentAge + year;
     const yearNum = new Date().getFullYear() + year;
 
+    console.log(`\n--- Retirement Year ${year + 1} (Age ${age}) ---`);
+
     // Income sources (gross amounts)
     const hasSS = age >= params.ssStart;
     const hasPen = age >= params.penStart && params.penMonthly > 0;
@@ -2016,6 +2033,8 @@ function calc() {
     // Spouse income sources
     let spouseSsGross = 0;
     let spousePenGross = 0;
+
+    debugger;
 
     if (params.hasSpouse) {
       const spouseCurrentAge = params.spouseAge + (age - params.currentAge);
@@ -2031,6 +2050,9 @@ function calc() {
     // Get income adjustments for this age
     const taxableIncomeAdjustment = getTaxableIncomeOverride(age);
     const taxFreeIncomeAdjustment = getTaxFreeIncomeOverride(age);
+
+    // Calculate savings breakdown (track starting balance BEFORE any adjustments for current year)
+    const savingsStartBalance = balances.balSavings;
 
     // Add tax-free income adjustment to savings balance (not taxable)
     balances.balSavings += taxFreeIncomeAdjustment;
@@ -2049,8 +2071,22 @@ function calc() {
       setSpendingFieldValue(age, spend);
     }
 
-    // STEP 1: Calculate taxable interest that will be earned this year (before withdrawals and growth)
-    const taxableInterestEarned = balances.balSavings * params.retTax;
+    // STEP 1: Calculate estimated withdrawals for more conservative interest calculation
+    // Estimate total withdrawals that will happen during the year
+    const estimatedSavingsWithdrawals = Math.min(
+      Math.max(
+        0,
+        actualSpend - (ssGross + spouseSsGross + penGross + spousePenGross)
+      ),
+      balances.balSavings
+    );
+
+    // Calculate taxable interest on balance AFTER subtracting estimated withdrawals (more conservative)
+    const balanceAfterWithdrawals = Math.max(
+      0,
+      balances.balSavings - estimatedSavingsWithdrawals
+    );
+    const taxableInterestEarned = balanceAfterWithdrawals * params.retTax;
 
     // STEP 2: Calculate pension taxation (straightforward - doesn't depend on SS)
     let totalTaxableIncomeRef = {
@@ -2349,15 +2385,15 @@ function calc() {
     const spendingTarget = actualSpend;
     const shortfall = Math.max(0, spendingTarget - netIncomeFromTaxableSources);
 
-    // Calculate savings breakdown (track starting balance before any changes)
-    const savingsStartBalance = balances.balSavings;
-    
     // Handle shortfall with additional savings withdrawal
     let additionalSavingsWithdrawal = Math.min(shortfall, balances.balSavings);
+
     if (additionalSavingsWithdrawal > 0) {
       balances.balSavings -= additionalSavingsWithdrawal;
       withdrawalsBySource.taxable += additionalSavingsWithdrawal;
     }
+
+    let actualSavingsWithdrawal = withdrawalsBySource.taxable; // Track the actual amount withdrawn from savings
 
     // Calculate total net income
     const totalNetIncome =
@@ -2378,8 +2414,12 @@ function calc() {
     // Calculate balance before growth (after all deposits/withdrawals)
     const savingsBeforeGrowth = balances.balSavings;
 
-    // Grow remaining balances
-    balances.balSavings *= 1 + params.retTax;
+    // Apply conservative growth: interest calculated on current balance
+    // (withdrawals have already been subtracted from balances.balSavings)
+    const savingsGrowth = savingsBeforeGrowth * params.retTax;
+    balances.balSavings += savingsGrowth;
+
+    // Apply normal growth to other account types (withdrawals happen at specific times)
     balances.balPre *= 1 + params.retPre;
     balances.balRoth *= 1 + params.retRoth;
 
@@ -2388,33 +2428,33 @@ function calc() {
     const totalBal = balances.balSavings + balances.balPre + balances.balRoth;
 
     // Debug RMD years to show actual total net income
-    if (params.useRMD && age >= 73) {
-      console.log(`\n=== RMD YEAR DEBUG (Age ${age}) ===`);
-      console.log(`Spending target: ${fmt(spendingTarget)}`);
-      console.log(`RMD required: ${fmt(preliminaryRmdAmount)}`);
-      console.log(
-        `Gross income (SS/Pension/Withdrawals): ${fmt(
-          grossIncomeFromBenefitsAndWithdrawals
-        )}`
-      );
-      console.log(`Total taxes: ${fmt(taxesThisYear)}`);
-      console.log(
-        `Net from taxable sources: ${fmt(netIncomeFromTaxableSources)}`
-      );
-      console.log(`Shortfall: ${fmt(shortfall)}`);
-      console.log(
-        `Additional savings withdrawal: ${fmt(additionalSavingsWithdrawal)}`
-      );
-      console.log(`Final Total Net Income: ${fmt(totalNetIncome)}`);
-      if (totalNetIncome > spendingTarget) {
-        const excess = totalNetIncome - spendingTarget;
-        console.log(
-          `✓ Total Net exceeds spending target by ${fmt(excess)} (RMD excess)`
-        );
-        console.log(`✓ Adding ${fmt(excess)} to savings account`);
-      }
-      console.log(`=== END RMD DEBUG ===\n`);
-    }
+    // if (params.useRMD && age >= 73) {
+    //   console.log(`\n=== RMD YEAR DEBUG (Age ${age}) ===`);
+    //   console.log(`Spending target: ${fmt(spendingTarget)}`);
+    //   console.log(`RMD required: ${fmt(preliminaryRmdAmount)}`);
+    //   console.log(
+    //     `Gross income (SS/Pension/Withdrawals): ${fmt(
+    //       grossIncomeFromBenefitsAndWithdrawals
+    //     )}`
+    //   );
+    //   console.log(`Total taxes: ${fmt(taxesThisYear)}`);
+    //   console.log(
+    //     `Net from taxable sources: ${fmt(netIncomeFromTaxableSources)}`
+    //   );
+    //   console.log(`Shortfall: ${fmt(shortfall)}`);
+    //   console.log(
+    //     `Additional savings withdrawal: ${fmt(additionalSavingsWithdrawal)}`
+    //   );
+    //   console.log(`Final Total Net Income: ${fmt(totalNetIncome)}`);
+    //   if (totalNetIncome > spendingTarget) {
+    //     const excess = totalNetIncome - spendingTarget;
+    //     console.log(
+    //       `✓ Total Net exceeds spending target by ${fmt(excess)} (RMD excess)`
+    //     );
+    //     console.log(`✓ Adding ${fmt(excess)} to savings account`);
+    //   }
+    //   console.log(`=== END RMD DEBUG ===\n`);
+    // }
 
     // For display purposes: allocate taxes proportionally (only to taxable income sources)
     const ssNetAdjusted =
@@ -2555,11 +2595,11 @@ function calc() {
       // Add savings breakdown data for popup
       savingsBreakdown: {
         startingBalance: savingsStartBalance,
-        withdrawals: withdrawalsBySource.taxable,
+        withdrawals: actualSavingsWithdrawal,
         overageDeposit: overage,
         taxFreeIncomeDeposit: taxFreeIncomeAdjustment,
         balanceBeforeGrowth: savingsBeforeGrowth,
-        interestEarned: balances.balSavings - savingsBeforeGrowth, // Actual interest earned
+        interestEarned: savingsGrowth, // Use the conservative growth calculation
         endingBalance: balances.balSavings,
         growthRate: params.retTax * 100,
       },
@@ -2715,7 +2755,9 @@ function calc() {
         <!-- THE RESULT -->
         <td class="neutral">${
           r.balSavings
-            ? `<span class="savings-balance-link" onclick="showSavingsBreakdown(${index})" title="Click to see savings changes">${fmt(r.balSavings)}</span>`
+            ? `<span class="savings-balance-link" onclick="showSavingsBreakdown(${index})" title="Click to see savings changes">${fmt(
+                r.balSavings
+              )}</span>`
             : ""
         }</td>
         <td class="neutral">${fmt(r.balPre)}</td>
@@ -5320,16 +5362,21 @@ function showSavingsBreakdown(yearIndex) {
         <div style="margin-top: 8px;">
             <div class="ss-breakdown-item" style="border: none; padding: 4px 0;">
                 <span class="ss-breakdown-label">Starting Balance:</span>
-                <span class="ss-breakdown-value">${fmt(savingsBreakdown.startingBalance)}</span>
+                <span class="ss-breakdown-value">${fmt(
+                  savingsBreakdown.startingBalance
+                )}</span>
             </div>`;
   }
 
-  // Show withdrawals (negative)
-  if (savingsBreakdown.withdrawals > 0) {
+  debugger;
+  // Show withdrawals (negative) - always show for debugging
+  if (savingsBreakdown.withdrawals !== undefined) {
     breakdownHtml += `
             <div class="ss-breakdown-item" style="border: none; padding: 4px 0; color: #ff6b6b;">
                 <span class="ss-breakdown-label">Withdrawals:</span>
-                <span class="ss-breakdown-value">-${fmt(savingsBreakdown.withdrawals)}</span>
+                <span class="ss-breakdown-value">-${fmt(
+                  savingsBreakdown.withdrawals
+                )}</span>
             </div>`;
   }
 
@@ -5338,7 +5385,20 @@ function showSavingsBreakdown(yearIndex) {
     breakdownHtml += `
             <div class="ss-breakdown-item" style="border: none; padding: 4px 0; color: #51cf66;">
                 <span class="ss-breakdown-label">RMD Overage Deposit:</span>
-                <span class="ss-breakdown-value">+${fmt(savingsBreakdown.overageDeposit)}</span>
+                <span class="ss-breakdown-value">+${fmt(
+                  savingsBreakdown.overageDeposit
+                )}</span>
+            </div>`;
+  }
+
+  // Show regular deposits (positive) - for working years
+  if (savingsBreakdown.regularDeposit > 0) {
+    breakdownHtml += `
+            <div class="ss-breakdown-item" style="border: none; padding: 4px 0; color: #51cf66;">
+                <span class="ss-breakdown-label">Regular Savings:</span>
+                <span class="ss-breakdown-value">+${fmt(
+                  savingsBreakdown.regularDeposit
+                )}</span>
             </div>`;
   }
 
@@ -5347,16 +5407,22 @@ function showSavingsBreakdown(yearIndex) {
     breakdownHtml += `
             <div class="ss-breakdown-item" style="border: none; padding: 4px 0; color: #51cf66;">
                 <span class="ss-breakdown-label">Tax-Free Income:</span>
-                <span class="ss-breakdown-value">+${fmt(savingsBreakdown.taxFreeIncomeDeposit)}</span>
+                <span class="ss-breakdown-value">+${fmt(
+                  savingsBreakdown.taxFreeIncomeDeposit
+                )}</span>
             </div>`;
   }
 
-  // Show interest earned
-  if (savingsBreakdown.interestEarned > 0) {
+  // Show interest earned - always show for debugging
+  if (savingsBreakdown.interestEarned !== undefined) {
     breakdownHtml += `
             <div class="ss-breakdown-item" style="border: none; padding: 4px 0; color: #339af0;">
-                <span class="ss-breakdown-label">Interest Earned (${savingsBreakdown.growthRate.toFixed(1)}%):</span>
-                <span class="ss-breakdown-value">+${fmt(savingsBreakdown.interestEarned)}</span>
+                <span class="ss-breakdown-label">Interest Earned (${savingsBreakdown.growthRate.toFixed(
+                  1
+                )}%):</span>
+                <span class="ss-breakdown-value">+${fmt(
+                  savingsBreakdown.interestEarned
+                )}</span>
             </div>`;
   }
 
@@ -5365,7 +5431,9 @@ function showSavingsBreakdown(yearIndex) {
     breakdownHtml += `
             <div class="ss-breakdown-item" style="border-top: 2px solid var(--accent); margin-top: 8px; padding-top: 8px; font-weight: bold;">
                 <span class="ss-breakdown-label">Ending Balance:</span>
-                <span class="ss-breakdown-value">${fmt(savingsBreakdown.endingBalance)}</span>
+                <span class="ss-breakdown-value">${fmt(
+                  savingsBreakdown.endingBalance
+                )}</span>
             </div>
         </div>
     </div>`;
@@ -5388,9 +5456,9 @@ document.addEventListener("click", function (event) {
   const ssPopup = document.getElementById("ssPopup");
   if (
     ssPopup &&
-    (ssPopup.style.display === "flex" || 
-     ssPopup.style.display === "block" || 
-     ssPopup.classList.contains("show")) &&
+    (ssPopup.style.display === "flex" ||
+      ssPopup.style.display === "block" ||
+      ssPopup.classList.contains("show")) &&
     event.target === ssPopup
   ) {
     // Check if this is being used for Total Net (has the dataset markers)
