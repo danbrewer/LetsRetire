@@ -2787,7 +2787,7 @@ function calc() {
     );
 
     // Chart (total balance)
-    drawChart(calculations.map((r) => ({ x: r.year, y: r.total })));
+    drawChart(calculations.map((r) => ({ x: r.year, y: r.total, age: r.age })));
 
     // Save rows for export
     window.__rows = rows;
@@ -2813,7 +2813,7 @@ function calc() {
   );
 
   // Chart (total balance)
-  drawChart(calculations.map((r) => ({ x: r.year, y: r.total })));
+  drawChart(calculations.map((r) => ({ x: r.year, y: r.total, age: r.age })));
 
   // Save rows for export
   window.__rows = rows;
@@ -2936,7 +2936,7 @@ function drawChart(series) {
       const yearDiv = tooltip.querySelector(".year");
       const balanceDiv = tooltip.querySelector(".balance");
 
-      yearDiv.textContent = `Year ${point.x}`;
+      yearDiv.textContent = `Year ${point.x} (Age ${point.age})`;
       balanceDiv.textContent = `Balance: ${fmt(point.y)}`;
 
       tooltip.style.left = x + "px";
@@ -2980,9 +2980,22 @@ function drawChart(series) {
       const nearestPoint = findNearestPoint(mouseX, mouseY);
 
       if (nearestPoint) {
-        // Position tooltip relative to canvas
-        const tooltipX = e.clientX - rect.left + 15;
-        const tooltipY = e.clientY - rect.top - 10;
+        // Calculate chart center for conditional positioning
+        const { xTo, pad, width } = c.chartData;
+        const pointX = xTo(nearestPoint.x);
+        const chartCenter = (pad.l + (width - pad.r)) / 2;
+
+        // Position tooltip to avoid clipping
+        let tooltipX, tooltipY;
+        if (pointX < chartCenter) {
+          // Point is on left side - show tooltip to the right
+          tooltipX = e.clientX - rect.left + 15;
+        } else {
+          // Point is on right side - show tooltip to the left
+          tooltipX = e.clientX - rect.left - 150;
+        }
+        tooltipY = e.clientY - rect.top - 10;
+
         showTooltip(tooltipX, tooltipY, nearestPoint);
         c.style.cursor = "pointer";
       } else {
