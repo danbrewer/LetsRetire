@@ -1762,13 +1762,16 @@ function calc() {
       const ssTaxes = ssTaxableAmount * (effRate_simple / 100);
       const ssNet = ssGross - ssTaxes;
 
+      // Calculate provisional income even in simplified mode for display purposes
+      const provisionalIncome = totalTaxableIncome + ssGross * 0.5;
+
       return {
         ssNet,
         ssTaxableAmount,
         ssNonTaxable,
         ssTaxes,
         calculationDetails: {
-          provisionalIncome: 0,
+          provisionalIncome: provisionalIncome,
           threshold1: 0,
           threshold2: 0,
           tier1Amount: 0,
@@ -2693,6 +2696,11 @@ function calc() {
     const provisionalIncome =
       finalSsResults.calculationDetails?.provisionalIncome || 0;
 
+    console.log(
+      `Age ${age}: Provisional Income = ${provisionalIncome}, SS Results:`,
+      finalSsResults.calculationDetails
+    );
+
     // Calculate standard deduction for this year
     const standardDeduction = getStandardDeduction(
       TAX_BASE_YEAR + year,
@@ -2900,7 +2908,13 @@ function calc() {
             : ""
         }</td>
         <td class="income">${
-          r.provisionalIncome ? fmt(r.provisionalIncome) : ""
+          r.provisionalIncome && r.provisionalIncome > 0
+            ? `<span class="provisional-income-link" onclick="showProvisionalIncomeBreakdown(${index})" title="Click to see breakdown">${fmt(
+                r.provisionalIncome
+              )}</span>`
+            : r.provisionalIncome
+            ? fmt(r.provisionalIncome)
+            : ""
         }</td>
         
         <!-- TAX INFORMATION -->
@@ -5184,6 +5198,218 @@ function showNonTaxableIncomeBreakdown(yearIndex) {
   popup.classList.add("show");
 }
 
+// Function to close provisional income popup with special handling for forced styles
+function closeProvisionalIncomePopup() {
+  const popup = document.getElementById("ssPopup");
+  // Remove the show class
+  popup.classList.remove("show");
+  // Clear the forced inline styles
+  popup.style.removeProperty("display");
+  popup.style.removeProperty("z-index");
+  // Clear the provisional income marker
+  delete popup.dataset.provisionalIncome;
+}
+
+// Function to show provisional income breakdown popup
+function showProvisionalIncomeBreakdown(yearIndex) {
+  console.log(
+    "showProvisionalIncomeBreakdown called with yearIndex:",
+    yearIndex
+  );
+
+  const calculation = calculations[yearIndex];
+  if (!calculation) {
+    console.log("No calculation found for yearIndex:", yearIndex);
+    return; // No data to show
+  }
+
+  const popup = document.getElementById("ssPopup");
+  const content = document.getElementById("ssBreakdownContent");
+
+  if (!popup || !content) {
+    console.log("Popup elements not found!");
+    return;
+  }
+
+  // Update popup title
+  const title = popup.querySelector(".ss-popup-title");
+  if (title) {
+    title.textContent = "Provisional Income Breakdown";
+  }
+
+  // Update close button to use a custom close function that handles our forced styles
+  const closeBtn = popup.querySelector("button.ss-popup-close");
+  if (closeBtn) {
+    closeBtn.onclick = function () {
+      closeProvisionalIncomePopup();
+    };
+  }
+
+  // Build the breakdown content showing sources of provisional income
+  let breakdownHtml = `
+    <div class="ss-breakdown-item">
+        <span class="ss-breakdown-label">Year:</span>
+        <span class="ss-breakdown-value">${calculation.year}</span>
+    </div>
+    <div class="ss-breakdown-item">
+        <span class="ss-breakdown-label">Age:</span>
+        <span class="ss-breakdown-value">${calculation.age}</span>
+    </div>
+  `;
+
+  // Get the provisional income details from SS breakdown
+  const ssBreakdown = calculation.ssBreakdown;
+  const provisionalIncomeDetails = ssBreakdown?.calculationDetails;
+
+  if (
+    provisionalIncomeDetails &&
+    provisionalIncomeDetails.provisionalIncome > 0
+  ) {
+    // Calculate components of provisional income
+    const otherTaxableIncome =
+      provisionalIncomeDetails.provisionalIncome - calculation.ssGross * 0.5;
+    const halfSocialSecurity = calculation.ssGross * 0.5;
+
+    breakdownHtml += `
+      <div class="ss-breakdown-section">
+          <h4 style="margin: 16px 0 8px 0; color: var(--accent); font-size: 14px;">Provisional Income Components</h4>
+          
+          <div class="ss-breakdown-item">
+              <span class="ss-breakdown-label">Other Taxable Income:</span>
+              <span class="ss-breakdown-value">${fmt(otherTaxableIncome)}</span>
+          </div>
+          
+          <div class="ss-breakdown-item">
+              <span class="ss-breakdown-label">50% of Social Security Benefits:</span>
+              <span class="ss-breakdown-value">${fmt(halfSocialSecurity)}</span>
+          </div>
+          
+          <div class="ss-breakdown-item total-row">
+              <span class="ss-breakdown-label"><strong>Total Provisional Income:</strong></span>
+              <span class="ss-breakdown-value"><strong>${fmt(
+                provisionalIncomeDetails.provisionalIncome
+              )}</strong></span>
+          </div>
+      </div>
+    `;
+
+    // Add thresholds and taxation explanation
+    const threshold1 = provisionalIncomeDetails.threshold1;
+    const threshold2 = provisionalIncomeDetails.threshold2;
+    const isUsingSSRules = provisionalIncomeDetails.method === "irs-rules";
+    const filingStatus = threshold1 === 32000 ? "married" : "single"; // Infer from threshold
+
+    if (isUsingSSRules) {
+      breakdownHtml += `
+        <div class="ss-breakdown-section">
+            <h4 style="margin: 16px 0 8px 0; color: var(--accent); font-size: 14px;">Social Security Taxation Thresholds</h4>
+            
+            <div class="ss-breakdown-item">
+                <span class="ss-breakdown-label">Filing Status:</span>
+                <span class="ss-breakdown-value">${
+                  filingStatus === "married"
+                    ? "Married Filing Jointly"
+                    : "Single"
+                }</span>
+            </div>
+            
+            <div class="ss-breakdown-item">
+                <span class="ss-breakdown-label">First Threshold (0% → 50% taxable):</span>
+                <span class="ss-breakdown-value">${fmt(threshold1)}</span>
+            </div>
+            
+            <div class="ss-breakdown-item">
+                <span class="ss-breakdown-label">Second Threshold (50% → 85% taxable):</span>
+                <span class="ss-breakdown-value">${fmt(threshold2)}</span>
+            </div>
+            
+            <div class="ss-breakdown-item">
+                <span class="ss-breakdown-label">Your Provisional Income:</span>
+                <span class="ss-breakdown-value">${fmt(
+                  provisionalIncomeDetails.provisionalIncome
+                )}</span>
+            </div>
+        </div>
+      `;
+
+      // Determine which tier applies
+      let tierMessage = "";
+      if (provisionalIncomeDetails.provisionalIncome <= threshold1) {
+        tierMessage =
+          "Your provisional income is below the first threshold, so 0% of your Social Security benefits are taxable.";
+      } else if (provisionalIncomeDetails.provisionalIncome <= threshold2) {
+        tierMessage =
+          "Your provisional income is between the thresholds, so up to 50% of your Social Security benefits may be taxable.";
+      } else {
+        tierMessage =
+          "Your provisional income exceeds the second threshold, so up to 85% of your Social Security benefits may be taxable.";
+      }
+
+      breakdownHtml += `
+        <div class="ss-breakdown-item" style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border);">
+            <span class="ss-breakdown-label" style="font-size: 12px; color: var(--muted);">Impact:</span>
+            <span class="ss-breakdown-value" style="font-size: 12px; color: var(--muted);">${tierMessage}</span>
+        </div>
+      `;
+    } else {
+      // Simplified method explanation
+      breakdownHtml += `
+        <div class="ss-breakdown-section">
+            <h4 style="margin: 16px 0 8px 0; color: var(--accent); font-size: 14px;">Tax Calculation Method</h4>
+            
+            <div class="ss-breakdown-item">
+                <span class="ss-breakdown-label">Method:</span>
+                <span class="ss-breakdown-value">Simplified (Fixed Percentage)</span>
+            </div>
+            
+            <div class="ss-breakdown-item">
+                <span class="ss-breakdown-label">Your Provisional Income:</span>
+                <span class="ss-breakdown-value">${fmt(
+                  provisionalIncomeDetails.provisionalIncome
+                )}</span>
+            </div>
+        </div>
+        
+        <div class="ss-breakdown-item" style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border);">
+            <span class="ss-breakdown-label" style="font-size: 12px; color: var(--muted);">Note:</span>
+            <span class="ss-breakdown-value" style="font-size: 12px; color: var(--muted);">Enable "Proper Social Security Taxation" in settings to see threshold-based taxation</span>
+        </div>
+      `;
+    }
+  } else {
+    breakdownHtml += `
+      <div class="ss-breakdown-item">
+          <span class="ss-breakdown-label">Status:</span>
+          <span class="ss-breakdown-value">No provisional income calculation available</span>
+      </div>
+      <div class="ss-breakdown-item" style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border);">
+          <span class="ss-breakdown-label" style="font-size: 12px; color: var(--muted);">Note:</span>
+          <span class="ss-breakdown-value" style="font-size: 12px; color: var(--muted);">Provisional income is only calculated when receiving Social Security benefits</span>
+      </div>
+    `;
+  }
+
+  content.innerHTML = breakdownHtml;
+
+  // Clear any existing inline styles first
+  popup.style.removeProperty("display");
+  popup.style.removeProperty("z-index");
+
+  // Mark this as a provisional income popup
+  popup.dataset.provisionalIncome = "true";
+
+  // Add the show class and then force display
+  popup.classList.add("show");
+
+  // Use a timeout to ensure the class is applied first, then force the display
+  setTimeout(() => {
+    popup.style.setProperty("display", "flex", "important");
+    popup.style.setProperty("z-index", "999999", "important");
+  }, 10);
+
+  console.log("Popup should now be visible with forced display!");
+}
+
 // Function to show total taxes breakdown popup
 function showTotalTaxesBreakdown(yearIndex) {
   const calculation = calculations[yearIndex];
@@ -5325,6 +5551,8 @@ document.addEventListener("keydown", function (event) {
       // Check if this is being used for Total Net (has the dataset markers)
       if (ssPopup.dataset.originalTitle) {
         closeTotalNetPopup();
+      } else if (ssPopup.dataset.provisionalIncome) {
+        closeProvisionalIncomePopup();
       } else {
         closeSsPopup();
       }
@@ -6067,7 +6295,7 @@ document.addEventListener("click", function (event) {
 
     // Don't close if clicking on popup trigger links
     const isPopupTrigger = event.target.closest(
-      ".ss-link, .withdrawal-net-link, .savings-balance-link, .taxable-income-link, .non-taxable-income-link, .total-taxes-link"
+      ".ss-link, .withdrawal-net-link, .savings-balance-link, .taxable-income-link, .non-taxable-income-link, .total-taxes-link, .provisional-income-link"
     );
 
     if (
@@ -6078,6 +6306,8 @@ document.addEventListener("click", function (event) {
       // Check if this is being used for Total Net (has the dataset markers)
       if (ssPopup.dataset.originalTitle) {
         closeTotalNetPopup();
+      } else if (ssPopup.dataset.provisionalIncome) {
+        closeProvisionalIncomePopup();
       } else {
         closeSsPopup();
       }
