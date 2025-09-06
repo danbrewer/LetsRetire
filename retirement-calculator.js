@@ -1968,7 +1968,7 @@ function calc() {
       "taxable",
       targetNetPerSource
     );
-    totalGross += savingsResult.gross;
+    // Don't add savings to totalGross - savings withdrawals are not taxable income
     totalNet += savingsResult.net;
 
     // Then try to get equal net amount from pretax (401k)
@@ -1989,7 +1989,7 @@ function calc() {
           "taxable",
           remaining
         );
-        totalGross += additionalSavings.gross;
+        // Don't add savings to totalGross - savings withdrawals are not taxable income
         totalNet += additionalSavings.net;
       }
 
@@ -2044,9 +2044,9 @@ function calc() {
     let spouseSsGross = 0;
     let spousePenGross = 0;
 
-    if (age == 72) {
-      debugger;
-    }
+    // if (age == 72) {
+    //   debugger;
+    // }
 
     if (params.hasSpouse) {
       const spouseCurrentAge = params.spouseAge + (age - params.currentAge);
@@ -2227,6 +2227,7 @@ function calc() {
       totalTaxableIncomeRef
     );
 
+    // Final withdrawal amounts
     let finalWGross = 0,
       finalWNet = 0;
     // Start with no taxes - will calculate on total taxable income at the end
@@ -2234,18 +2235,19 @@ function calc() {
 
     // Apply RMDs (final)
     if (params.useRMD && age >= 73 && preliminaryRmdAmount > 0) {
+      //debugger;
       const rmdWithdrawal =
         finalWithdrawalFunctions.withdrawRMD(preliminaryRmdAmount);
-      let remainingNeed = Math.max(0, totalNeedNet - rmdWithdrawal.net);
+      let remainingNeedNet = Math.max(0, totalNeedNet - rmdWithdrawal.net);
       finalWGross += rmdWithdrawal.gross;
       finalWNet += rmdWithdrawal.net;
       // console.log(`RMD at age ${age}: Required $${preliminaryRmdAmount.toLocaleString()}, Withdrew $${rmdWithdrawal.gross.toLocaleString()} gross, $${rmdWithdrawal.net.toLocaleString()} net`);
 
       // Handle remaining withdrawals after RMD
-      if (remainingNeed > 0) {
+      if (remainingNeedNet > 0) {
         // Handle additional spending first with tax-optimized approach
         let remainingAdditionalNeed = Math.min(
-          remainingNeed,
+          remainingNeedNet,
           additionalSpendNeed
         );
         if (remainingAdditionalNeed > 0) {
@@ -2254,9 +2256,9 @@ function calc() {
             "taxable",
             remainingAdditionalNeed
           );
-          finalWGross += savingsWithdrawal.gross;
+          // Don't add savings to finalWGross - savings withdrawals are not taxable income
           finalWNet += savingsWithdrawal.net;
-          remainingNeed -= savingsWithdrawal.net;
+          remainingNeedNet -= savingsWithdrawal.net;
 
           const stillNeedForAdditional = Math.max(
             0,
@@ -2270,25 +2272,26 @@ function calc() {
             );
             finalWGross += pretaxWithdrawal.gross;
             finalWNet += pretaxWithdrawal.net;
-            remainingNeed -= pretaxWithdrawal.net;
+            remainingNeedNet -= pretaxWithdrawal.net;
           }
         }
 
         // Handle remaining base spending with normal withdrawal order
-        if (remainingNeed > 0) {
+        if (remainingNeedNet > 0) {
           if (params.order[0] === "50/50") {
             const result = withdraw50_50(
               finalWithdrawalFunctions,
-              remainingNeed
+              remainingNeedNet
             );
             finalWGross += result.totalGross;
             finalWNet += result.totalNet;
           } else {
             for (const k of params.order) {
-              if (remainingNeed <= 0) break;
+              if (remainingNeedNet <= 0) break;
               const { gross = 0, net = 0 } =
-                finalWithdrawalFunctions.withdrawFrom(k, remainingNeed) || {};
-              remainingNeed = Math.max(0, remainingNeed - net);
+                finalWithdrawalFunctions.withdrawFrom(k, remainingNeedNet) ||
+                {};
+              remainingNeedNet = Math.max(0, remainingNeedNet - net);
               finalWGross += gross;
               finalWNet += net;
             }
@@ -2297,7 +2300,7 @@ function calc() {
       }
     } else {
       // No RMD - handle all withdrawals
-      let remainingNeed = totalNeedNet;
+      let remainingNeedNet = totalNeedNet;
 
       // Handle additional spending first with tax-optimized approach
       if (additionalSpendNeed > 0) {
@@ -2306,9 +2309,9 @@ function calc() {
           "taxable",
           additionalSpendNeed
         );
-        finalWGross += savingsWithdrawal.gross;
+        // Don't add savings to finalWGross - savings withdrawals are not taxable income
         finalWNet += savingsWithdrawal.net;
-        remainingNeed -= savingsWithdrawal.net;
+        remainingNeedNet -= savingsWithdrawal.net;
 
         const remainingAdditional = Math.max(
           0,
@@ -2322,22 +2325,25 @@ function calc() {
           );
           finalWGross += pretaxWithdrawal.gross;
           finalWNet += pretaxWithdrawal.net;
-          remainingNeed -= pretaxWithdrawal.net;
+          remainingNeedNet -= pretaxWithdrawal.net;
         }
       }
 
       // Handle remaining base spending with normal withdrawal order
-      if (remainingNeed > 0) {
+      if (remainingNeedNet > 0) {
         if (params.order[0] === "50/50") {
-          const result = withdraw50_50(finalWithdrawalFunctions, remainingNeed);
+          const result = withdraw50_50(
+            finalWithdrawalFunctions,
+            remainingNeedNet
+          );
           finalWGross += result.totalGross;
           finalWNet += result.totalNet;
         } else {
           for (const k of params.order) {
-            if (remainingNeed <= 0) break;
+            if (remainingNeedNet <= 0) break;
             const { gross = 0, net = 0 } =
-              finalWithdrawalFunctions.withdrawFrom(k, remainingNeed) || {};
-            remainingNeed = Math.max(0, remainingNeed - net);
+              finalWithdrawalFunctions.withdrawFrom(k, remainingNeedNet) || {};
+            remainingNeedNet = Math.max(0, remainingNeedNet - net);
             finalWGross += gross;
             finalWNet += net;
           }
@@ -2501,9 +2507,9 @@ function calc() {
     const finalWGrossTotal = finalWGross + additionalSavingsWithdrawal;
     const finalWNetTotal = withdrawalNetAdjusted + additionalSavingsWithdrawal;
 
-    if (age == 72) {
-      debugger;
-    }
+    // if (age == 72) {
+    //   debugger;
+    // }
     // Calculate individual withdrawal net amounts for breakdown
     const withdrawalBreakdown = {
       pretax401kGross: withdrawalsBySource.retirementAccount,
@@ -5524,7 +5530,7 @@ function showSavingsBreakdown(yearIndex) {
             </div>`;
   }
 
-  debugger;
+  //debugger;
   // Show withdrawals (negative) - always show for debugging
   if (savingsBreakdown.withdrawals !== undefined) {
     breakdownHtml += `
