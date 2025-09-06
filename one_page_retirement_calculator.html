@@ -141,6 +141,112 @@
     thead th { position: sticky; top: 0; background: #0d172b; z-index: 1; }
     tbody tr:hover { background: rgba(255,255,255,.03); }
 
+    /* Frozen columns: Year and Age ONLY - Solid background approach */
+    
+    /* First row headers (section headers) - Year and Age have rowspan=2 */
+    thead tr.section-headers th:nth-child(1), /* Year */
+    thead tr.section-headers th:nth-child(2)  /* Age */ {
+      position: sticky;
+      top: 0;
+      z-index: 4;
+      background: #0d172b;
+      border-right: 2px solid var(--border);
+    }
+    thead tr.section-headers th:nth-child(1) { 
+      left: 0; 
+      min-width: 70px;
+    }
+    thead tr.section-headers th:nth-child(2) { 
+      left: 70px; 
+      min-width: 60px;
+    }
+    
+    /* Add solid background extensions using pseudo-elements */
+    thead tr.section-headers th:nth-child(1):after {
+      content: '';
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 100%;
+      width: 2px;
+      background: #0d172b;
+      z-index: 1;
+    }
+    thead tr.section-headers th:nth-child(2):after {
+      content: '';
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 100%;
+      width: 2px;
+      background: #0d172b;
+      z-index: 1;
+    }
+    
+    /* Second row headers (column headers) - sticky top only */
+    thead tr.column-headers th {
+      position: sticky;
+      z-index: 3;
+      background: #1fbe34;
+    }
+    
+    /* Body cells - only first two columns (Year and Age) */
+    tbody td:nth-child(1) { /* Year */
+      position: sticky;
+      left: 0;
+      background: #0d172b;
+      z-index: 2;
+      border-right: 2px solid var(--border);
+      min-width: 70px;
+    }
+    tbody td:nth-child(2) { /* Age */
+      position: sticky;
+      left: 70px;
+      background: #0d172b;
+      z-index: 2;
+      border-right: 2px solid var(--border);
+      min-width: 60px;
+    }
+    
+    /* Add solid background extensions for body cells */
+    tbody td:nth-child(1):after {
+      content: '';
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 100%;
+      width: 2px;
+      background: #0d172b;
+      z-index: 1;
+    }
+    tbody td:nth-child(2):after {
+      content: '';
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 100%;
+      width: 2px;
+      background: #0d172b;
+      z-index: 1;
+    }
+    
+    /* Ensure hover state doesn't interfere with frozen columns */
+    tbody tr:hover td:nth-child(1), 
+    tbody tr:hover td:nth-child(2) {
+      background: #0d172b !important;
+    }
+    tbody tr:hover td:nth-child(1):after,
+    tbody tr:hover td:nth-child(2):after {
+      background: #0d172b !important;
+    }
+    
+    /* Ensure all other columns scroll normally */
+    tbody td:nth-child(n+3) {
+      position: relative;
+      left: auto;
+      z-index: auto;
+    }
+
     /* Section header styling */
     .section-headers th {
       background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
@@ -165,7 +271,7 @@
       text-align: center;
       border: 1px solid var(--border);
       font-size: 11px;
-      top: 40px;
+      top: 41px;
       z-index: 1;
     }
     
