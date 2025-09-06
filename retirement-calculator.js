@@ -4889,27 +4889,16 @@ function showTotalNetBreakdown(index) {
         popupHeader.textContent = `Total Net Income Breakdown - Age ${data.age}`;
       }
 
-      // Update close button - use the actual class name
-      const closeBtn = ssPopup.querySelector("button.ss-popup-close");
-      if (closeBtn) {
-        closeBtn.onclick = function () {
-          closeTotalNetPopup();
-        };
-      }
-
-      // Store original title and close function to restore later
+      // Store original title to restore later
       if (!ssPopup.dataset.originalTitle) {
         ssPopup.dataset.originalTitle = "Social Security Breakdown";
-        ssPopup.dataset.originalClose = "closeSsPopup()";
       }
 
       // Generate full breakdown content
       ssContent.innerHTML = generateTotalNetBreakdownContent(data);
 
-      // Set display to flex to override the CSS !important rule
-      ssPopup.style.setProperty("display", "flex", "important");
-      ssPopup.style.setProperty("align-items", "center", "important");
-      ssPopup.style.setProperty("justify-content", "center", "important");
+      // Show popup using the same method as other popups
+      ssPopup.classList.add("show");
       return;
     }
   }
@@ -5369,26 +5358,17 @@ function generateTotalNetBreakdownContent(data) {
 function closeTotalNetPopup() {
   const ssPopup = document.getElementById("ssPopup");
   if (ssPopup) {
-    // Restore original title and close function
+    // Restore original title
     const popupHeader = ssPopup.querySelector("h3.ss-popup-title");
     if (popupHeader && ssPopup.dataset.originalTitle) {
       popupHeader.textContent = ssPopup.dataset.originalTitle;
     }
 
-    const closeBtn = ssPopup.querySelector("button.ss-popup-close");
-    if (closeBtn && ssPopup.dataset.originalClose) {
-      // Restore original onclick handler
-      closeBtn.onclick = function () {
-        closeSsPopup();
-      };
-    }
-
     // Clear the dataset markers
     delete ssPopup.dataset.originalTitle;
-    delete ssPopup.dataset.originalClose;
 
-    // Close the popup
-    ssPopup.style.setProperty("display", "none", "important");
+    // Close the popup using the same method as other popups
+    ssPopup.classList.remove("show");
   }
 }
 
@@ -5479,12 +5459,6 @@ function showWithdrawalNetBreakdown(yearIndex) {
   const popupHeader = popup.querySelector("h3.ss-popup-title");
   if (popupHeader) {
     popupHeader.textContent = `Withdrawal Net Breakdown - Age ${calculation.age}`;
-  }
-
-  // Set up close button to work properly
-  const closeBtn = popup.querySelector("button.ss-popup-close");
-  if (closeBtn) {
-    closeBtn.onclick = closeSsPopup;
   }
 
   // Show popup
@@ -5613,21 +5587,31 @@ function showSavingsBreakdown(yearIndex) {
   popup.classList.add("show");
 }
 
-// Close Total Net popup when clicking outside
+// Close popups when clicking outside
 document.addEventListener("click", function (event) {
   const ssPopup = document.getElementById("ssPopup");
-  if (
-    ssPopup &&
-    (ssPopup.style.display === "flex" ||
-      ssPopup.style.display === "block" ||
-      ssPopup.classList.contains("show")) &&
-    event.target === ssPopup
-  ) {
-    // Check if this is being used for Total Net (has the dataset markers)
-    if (ssPopup.dataset.originalTitle) {
-      closeTotalNetPopup();
-    } else {
-      closeSsPopup();
+
+  // Only handle clicks if popup is currently visible
+  if (ssPopup && ssPopup.classList.contains("show")) {
+    // Check if the click was outside the popup content
+    const popupContent = ssPopup.querySelector(".ss-popup-content");
+
+    // Don't close if clicking on popup trigger links
+    const isPopupTrigger = event.target.closest(
+      ".ss-link, .withdrawal-net-link, .savings-balance-link, .taxable-income-link, .non-taxable-income-link, .total-taxes-link"
+    );
+
+    if (
+      popupContent &&
+      !popupContent.contains(event.target) &&
+      !isPopupTrigger
+    ) {
+      // Check if this is being used for Total Net (has the dataset markers)
+      if (ssPopup.dataset.originalTitle) {
+        closeTotalNetPopup();
+      } else {
+        closeSsPopup();
+      }
     }
   }
 });
