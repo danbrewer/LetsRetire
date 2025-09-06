@@ -3013,8 +3013,10 @@ function drawChart(series) {
     // Insert temp canvas right after the original
     c.parentNode.insertBefore(tempCanvas, c.nextSibling);
 
-    // Draw new content on original canvas
-    drawChartContent(ctx, series, width, height, dpr, c);
+    // Start animated chart draw after a brief delay
+    setTimeout(() => {
+      drawAnimatedChart(ctx, series, width, height, dpr, c);
+    }, 300);
     c.hasContent = true;
 
     // Set up original canvas to be invisible initially
@@ -3037,9 +3039,11 @@ function drawChart(series) {
       }, 300);
     });
   } else {
-    // No existing content, draw immediately
+    // No existing content, start animated draw immediately with delay
     c.style.opacity = "1";
-    drawChartContent(ctx, series, width, height, dpr, c);
+    setTimeout(() => {
+      drawAnimatedChart(ctx, series, width, height, dpr, c);
+    }, 300);
     c.hasContent = series && series.length > 0;
   }
 }
@@ -3143,6 +3147,269 @@ function drawChartContent(
     pad: pad,
   };
 
+  // Setup mouse event handlers for tooltips (only add once)
+  if (!c.hasTooltipHandlers) {
+    const tooltip = document.getElementById("chartTooltip");
+
+    function showTooltip(x, y, point) {
+      const yearDiv = tooltip.querySelector(".year");
+      const balanceDiv = tooltip.querySelector(".balance");
+
+      yearDiv.textContent = `Year ${point.x} (Age ${point.age})`;
+      balanceDiv.textContent = `Balance: ${fmt(point.y)}`;
+
+      tooltip.style.left = x + "px";
+      tooltip.style.top = y + "px";
+      tooltip.classList.add("visible");
+    }
+
+    function hideTooltip() {
+      tooltip.classList.remove("visible");
+    }
+
+    function findNearestPoint(mouseX, mouseY) {
+      if (!c.chartData) return null;
+
+      const { series, xTo, yTo, dpr } = c.chartData;
+      const threshold = 20 * dpr; // 20px hit area
+      let nearest = null;
+      let minDistance = threshold;
+
+      series.forEach((point) => {
+        const pointX = xTo(point.x);
+        const pointY = yTo(point.y);
+        const distance = Math.sqrt(
+          Math.pow(mouseX - pointX, 2) + Math.pow(mouseY - pointY, 2)
+        );
+
+        if (distance < minDistance) {
+          minDistance = distance;
+          nearest = point;
+        }
+      });
+
+      return nearest;
+    }
+
+    c.addEventListener("mousemove", (e) => {
+      const rect = c.getBoundingClientRect();
+      const mouseX = (e.clientX - rect.left) * c.chartData.dpr;
+      const mouseY = (e.clientY - rect.top) * c.chartData.dpr;
+
+      const nearestPoint = findNearestPoint(mouseX, mouseY);
+
+      if (nearestPoint) {
+        // Calculate chart center for conditional positioning
+        const { xTo, pad, width } = c.chartData;
+        const pointX = xTo(nearestPoint.x);
+        const chartCenter = (pad.l + (width - pad.r)) / 2;
+
+        // Position tooltip to avoid clipping
+        let tooltipX, tooltipY;
+        if (pointX < chartCenter) {
+          // Point is on left side - show tooltip to the right
+          tooltipX = e.clientX - rect.left + 15;
+        } else {
+          // Point is on right side - show tooltip to the left
+          tooltipX = e.clientX - rect.left - 150;
+        }
+        tooltipY = e.clientY - rect.top - 10;
+
+        showTooltip(tooltipX, tooltipY, nearestPoint);
+        c.style.cursor = "pointer";
+      } else {
+        hideTooltip();
+        c.style.cursor = "default";
+      }
+    });
+
+    c.addEventListener("mouseleave", () => {
+      hideTooltip();
+      c.style.cursor = "default";
+    });
+
+    c.hasTooltipHandlers = true;
+  }
+}
+
+function drawAnimatedChart(ctx, series, width, height, dpr, c) {
+  if (!series || !series.length) {
+    return;
+  }
+
+  // Animation parameters
+  const animationDuration = 800; // ms
+  const animationSteps = 60; // 60fps
+  const stepDuration = animationDuration / animationSteps;
+  let currentStep = 0;
+
+  // Padding and coordinate calculations (same as static version)
+  const pad = { l: 80 * dpr, r: 12 * dpr, t: 12 * dpr, b: 28 * dpr };
+  const xs = series.map((p) => p.x);
+  const ys = series.map((p) => p.y);
+  const xmin = Math.min(...xs),
+    xmax = Math.max(...xs);
+  const ymin = 0,
+    ymax = Math.max(...ys) * 1.1;
+  const xTo = (x) =>
+    pad.l + ((x - xmin) / (xmax - xmin)) * (width - pad.l - pad.r);
+  const yTo = (y) =>
+    height - pad.b - ((y - ymin) / (ymax - ymin)) * (height - pad.t - pad.b);
+
+  // Store final chart data for tooltips
+  c.chartData = {
+    series: series,
+    xTo: xTo,
+    yTo: yTo,
+    width: width,
+    height: height,
+    dpr: dpr,
+    pad: pad,
+  };
+
+  // Animation function
+  function animateStep() {
+    currentStep++;
+    const progress = Math.min(currentStep / animationSteps, 1);
+
+    // Ease-out animation curve for smooth deceleration
+    const easeProgress = 1 - Math.pow(1 - progress, 3);
+
+    // Clear the canvas
+    ctx.clearRect(0, 0, width, height);
+
+    // Draw static elements (axes, grid, labels)
+    drawStaticChartElements(
+      ctx,
+      width,
+      height,
+      dpr,
+      pad,
+      xTo,
+      yTo,
+      ymax,
+      series
+    );
+
+    // Draw animated line and points
+    drawAnimatedElements(ctx, series, xTo, yTo, dpr, easeProgress);
+
+    if (progress < 1) {
+      requestAnimationFrame(animateStep);
+    } else {
+      // Animation complete, setup tooltips if not already done
+      setupChartTooltips(c);
+    }
+  }
+
+  // Start the animation
+  animateStep();
+}
+
+function drawStaticChartElements(
+  ctx,
+  width,
+  height,
+  dpr,
+  pad,
+  xTo,
+  yTo,
+  ymax,
+  series
+) {
+  // Axes
+  ctx.strokeStyle = "#22304d";
+  ctx.lineWidth = 1 * dpr;
+  ctx.beginPath();
+  ctx.moveTo(pad.l, yTo(0));
+  ctx.lineTo(width - pad.r, yTo(0));
+  ctx.moveTo(pad.l, pad.t);
+  ctx.lineTo(pad.l, height - pad.b);
+  ctx.stroke();
+
+  // Y ticks and grid lines
+  ctx.fillStyle = "#7c8db5";
+  ctx.font = `${12 * dpr}px system-ui`;
+  ctx.textAlign = "right";
+  const steps = 4;
+  for (let i = 0; i <= steps; i++) {
+    const v = (ymax / steps) * i;
+    const y = yTo(v);
+    ctx.strokeStyle = "rgba(34,48,77,.4)";
+    ctx.beginPath();
+    ctx.moveTo(pad.l, y);
+    ctx.lineTo(width - pad.r, y);
+    ctx.stroke();
+    ctx.fillText(fmt(v), pad.l - 8 * dpr, y + 4 * dpr);
+  }
+
+  // X labels
+  ctx.fillStyle = "#7c8db5";
+  ctx.textAlign = "center";
+  ctx.font = `${11 * dpr}px system-ui`;
+  const years = [
+    series[0].x,
+    series[Math.floor(series.length / 2)].x,
+    series[series.length - 1].x,
+  ];
+  years.forEach((x) => ctx.fillText(String(x), xTo(x), height - 6 * dpr));
+}
+
+function drawAnimatedElements(ctx, series, xTo, yTo, dpr, progress) {
+  // Create animated series where each point moves from $0 to its final position
+  const animatedSeries = series.map((point, index) => {
+    // Calculate stagger delay based on total number of points
+    // Limit total stagger to 30% of animation, so all points finish together
+    const maxStaggerDelay = 0.3;
+    const pointDelay =
+      (index / Math.max(1, series.length - 1)) * maxStaggerDelay;
+    const adjustedProgress = Math.max(
+      0,
+      Math.min(1, (progress - pointDelay) / (1 - maxStaggerDelay))
+    );
+
+    return {
+      x: point.x,
+      y: point.y * adjustedProgress, // Animate from 0 to final value
+      age: point.age,
+    };
+  });
+
+  // Draw animated line
+  ctx.strokeStyle = "#6ea8fe";
+  ctx.lineWidth = 2 * dpr;
+  ctx.beginPath();
+  animatedSeries.forEach((p, i) => {
+    const X = xTo(p.x),
+      Y = yTo(p.y);
+    if (i === 0) ctx.moveTo(X, Y);
+    else ctx.lineTo(X, Y);
+  });
+  ctx.stroke();
+
+  // Draw animated points
+  ctx.fillStyle = "#6ea8fe";
+  animatedSeries.forEach((p, index) => {
+    const maxStaggerDelay = 0.3;
+    const pointDelay =
+      (index / Math.max(1, series.length - 1)) * maxStaggerDelay;
+    const pointProgress = Math.max(
+      0,
+      Math.min(1, (progress - pointDelay) / (1 - maxStaggerDelay))
+    );
+
+    if (pointProgress > 0) {
+      const X = xTo(p.x),
+        Y = yTo(p.y);
+      const radius = 2.5 * dpr * pointProgress; // Points grow as they animate
+      ctx.beginPath();
+      ctx.arc(X, Y, radius, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  });
+}
+
+function setupChartTooltips(c) {
   // Setup mouse event handlers for tooltips (only add once)
   if (!c.hasTooltipHandlers) {
     const tooltip = document.getElementById("chartTooltip");
