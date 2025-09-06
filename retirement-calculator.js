@@ -1432,6 +1432,8 @@ function calculateWorkingYearData(params, year, salary, balances) {
     spousePen: 0,
     spend: currentYearSpending,
     wNet: 0,
+    w401kNet: 0,
+    wSavingsRothNet: 0,
     wGross: 0,
     w401kGross: 0,
     wSavingsGross: 0,
@@ -2602,6 +2604,9 @@ function calc() {
       spousePen: spousePenNetAdjusted,
       spend: actualSpend,
       wNet: finalWNetTotal,
+      w401kNet: withdrawalBreakdown.pretax401kNet,
+      wSavingsRothNet:
+        withdrawalBreakdown.savingsNet + withdrawalBreakdown.rothNet,
       wGross: finalWGrossTotal,
       w401kGross: withdrawalsBySource.retirementAccount,
       wSavingsGross: withdrawalsBySource.savingsAccount,
@@ -2734,11 +2739,14 @@ function calc() {
         <td class="income">${r.spouseSs ? fmt(r.spouseSs) : ""}</td>
         <td class="income">${r.spousePen ? fmt(r.spousePen) : ""}</td>
         <td class="income">${
-          r.wNet
+          r.w401kNet
             ? `<span class="withdrawal-net-link" onclick="showWithdrawalNetBreakdown(${index})">${fmt(
-                r.wNet
+                r.w401kNet
               )}</span>`
             : ""
+        }</td>
+        <td class="income">${
+          r.wSavingsRothNet ? fmt(r.wSavingsRothNet) : ""
         }</td>
         <td class="income">${
           r.totalNetIncome
@@ -3081,7 +3089,8 @@ function exportCSV() {
     "Pension_Net",
     "Spouse_SS_Net",
     "Spouse_Pension_Net",
-    "Withdraw_Net",
+    "401k_Net",
+    "Savings_Roth_Net",
     "Total_Net",
     "SS_Gross",
     "Pension_Gross",
@@ -3113,7 +3122,8 @@ function exportCSV() {
           r.pen,
           r.spouseSs || 0,
           r.spousePen || 0,
-          r.wNet,
+          r.w401kNet,
+          r.wSavingsRothNet,
           r.totalNetIncome || 0,
           r.salary || 0,
           r.taxableInterest || 0,
@@ -5375,7 +5385,11 @@ function closeTotalNetPopup() {
 // Withdrawal Net Breakdown Popup Functions
 function showWithdrawalNetBreakdown(yearIndex) {
   const calculation = calculations[yearIndex];
-  if (!calculation || !calculation.wNet || !calculation.withdrawalBreakdown) {
+  if (
+    !calculation ||
+    (!calculation.w401kNet && !calculation.wSavingsRothNet) ||
+    !calculation.withdrawalBreakdown
+  ) {
     return; // No withdrawal data to show
   }
 
