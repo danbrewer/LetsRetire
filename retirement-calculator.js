@@ -5335,42 +5335,51 @@ function showProvisionalIncomeBreakdown(yearIndex) {
       // Determine which tier applies and calculate detailed breakdown
       const provisionalIncome = provisionalIncomeDetails.provisionalIncome;
       const ssGross = calculation.ssGross;
-      
+
       // Calculate the actual taxable SS amount using IRS rules
       let ssTaxableAmount = 0;
       let tier1TaxableAmount = 0; // Amount taxable at 50% rate
       let tier2TaxableAmount = 0; // Amount taxable at 85% rate
       let tierMessage = "";
-      
+
       if (provisionalIncome <= threshold1) {
         // No SS is taxable
         ssTaxableAmount = 0;
-        tierMessage = "Your provisional income is below the first threshold, so 0% of your Social Security benefits are taxable.";
+        tierMessage =
+          "Your provisional income is below the first threshold, so 0% of your Social Security benefits are taxable.";
       } else if (provisionalIncome <= threshold2) {
         // Up to 50% of SS is taxable
         const excessOverThreshold1 = provisionalIncome - threshold1;
         tier1TaxableAmount = Math.min(excessOverThreshold1, ssGross * 0.5);
         ssTaxableAmount = tier1TaxableAmount;
-        tierMessage = "Your provisional income is between the thresholds, so up to 50% of your Social Security benefits may be taxable.";
+        tierMessage =
+          "Your provisional income is between the thresholds, so up to 50% of your Social Security benefits may be taxable.";
       } else {
         // Up to 85% of SS is taxable
         const excessOverThreshold1 = threshold2 - threshold1;
         const excessOverThreshold2 = provisionalIncome - threshold2;
-        
+
         // First calculate the 50% tier (from threshold1 to threshold2)
         tier1TaxableAmount = Math.min(excessOverThreshold1, ssGross * 0.5);
-        
+
         // Then calculate additional 85% tier amount (excess over threshold2)
         // The additional taxable amount is 85% of the excess over threshold2, up to 35% of SS
-        const additionalTaxableFromTier2 = Math.min(excessOverThreshold2 * 0.85, ssGross * 0.35);
+        const additionalTaxableFromTier2 = Math.min(
+          excessOverThreshold2 * 0.85,
+          ssGross * 0.35
+        );
         tier2TaxableAmount = additionalTaxableFromTier2;
-        
+
         // Total taxable amount is tier1 + tier2, but cannot exceed 85% of SS
-        ssTaxableAmount = Math.min(tier1TaxableAmount + tier2TaxableAmount, ssGross * 0.85);
-        
-        tierMessage = "Your provisional income exceeds the second threshold, so up to 85% of your Social Security benefits may be taxable.";
+        ssTaxableAmount = Math.min(
+          tier1TaxableAmount + tier2TaxableAmount,
+          ssGross * 0.85
+        );
+
+        tierMessage =
+          "Your provisional income exceeds the second threshold, so up to 85% of your Social Security benefits may be taxable.";
       }
-      
+
       const ssNonTaxable = ssGross - ssTaxableAmount;
 
       // Add detailed Social Security taxation breakdown
@@ -5384,42 +5393,72 @@ function showProvisionalIncomeBreakdown(yearIndex) {
             </div>
             
             <div class="ss-breakdown-item">
-                <span class="ss-breakdown-label">Excess over first threshold (${fmt(threshold1)}):</span>
-                <span class="ss-breakdown-value">${fmt(Math.max(0, provisionalIncome - threshold1))}</span>
+                <span class="ss-breakdown-label">Excess over first threshold (${fmt(
+                  threshold1
+                )}):</span>
+                <span class="ss-breakdown-value">${fmt(
+                  Math.max(0, provisionalIncome - threshold1)
+                )}</span>
             </div>
             
-            ${provisionalIncome > threshold2 ? `
+            ${
+              provisionalIncome > threshold2
+                ? `
             <div class="ss-breakdown-item">
-                <span class="ss-breakdown-label">Excess over second threshold (${fmt(threshold2)}):</span>
-                <span class="ss-breakdown-value">${fmt(provisionalIncome - threshold2)}</span>
+                <span class="ss-breakdown-label">Excess over second threshold (${fmt(
+                  threshold2
+                )}):</span>
+                <span class="ss-breakdown-value">${fmt(
+                  provisionalIncome - threshold2
+                )}</span>
             </div>
-            ` : ''}
+            `
+                : ""
+            }
             
             <div style="margin: 12px 0; padding: 8px; background: rgba(var(--accent-rgb), 0.1); border-radius: 8px;">
                 <div class="ss-breakdown-item">
                     <span class="ss-breakdown-label">Tier 1 Taxable Amount:</span>
-                    <span class="ss-breakdown-value">${fmt(tier1TaxableAmount)}</span>
+                    <span class="ss-breakdown-value">${fmt(
+                      tier1TaxableAmount
+                    )}</span>
                 </div>
                 <div class="ss-breakdown-item" style="margin-left: 20px; font-size: 12px; color: var(--muted);">
                     <span class="ss-breakdown-label">Calculation: min(excess over threshold1, 50% of SS)</span>
-                    <span class="ss-breakdown-value">min(${fmt(Math.max(0, provisionalIncome - threshold1))}, ${fmt(ssGross * 0.5)}) = ${fmt(tier1TaxableAmount)}</span>
+                    <span class="ss-breakdown-value">min(${fmt(
+                      Math.max(0, provisionalIncome - threshold1)
+                    )}, ${fmt(ssGross * 0.5)}) = ${fmt(
+        tier1TaxableAmount
+      )}</span>
                 </div>
                 
-                ${tier2TaxableAmount > 0 ? `
+                ${
+                  tier2TaxableAmount > 0
+                    ? `
                 <div class="ss-breakdown-item" style="margin-top: 8px;">
                     <span class="ss-breakdown-label">Tier 2 Additional Taxable:</span>
-                    <span class="ss-breakdown-value">${fmt(tier2TaxableAmount)}</span>
+                    <span class="ss-breakdown-value">${fmt(
+                      tier2TaxableAmount
+                    )}</span>
                 </div>
                 <div class="ss-breakdown-item" style="margin-left: 20px; font-size: 12px; color: var(--muted);">
                     <span class="ss-breakdown-label">Calculation: min(85% of excess over threshold2, 35% of SS)</span>
-                    <span class="ss-breakdown-value">min(${fmt((provisionalIncome - threshold2) * 0.85)}, ${fmt(ssGross * 0.35)}) = ${fmt(tier2TaxableAmount)}</span>
+                    <span class="ss-breakdown-value">min(${fmt(
+                      (provisionalIncome - threshold2) * 0.85
+                    )}, ${fmt(ssGross * 0.35)}) = ${fmt(
+                        tier2TaxableAmount
+                      )}</span>
                 </div>
-                ` : ''}
+                `
+                    : ""
+                }
             </div>
             
             <div class="ss-breakdown-item total-row" style="margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border);">
                 <span class="ss-breakdown-label"><strong>Total SS Taxable Amount:</strong></span>
-                <span class="ss-breakdown-value"><strong>${fmt(ssTaxableAmount)}</strong></span>
+                <span class="ss-breakdown-value"><strong>${fmt(
+                  ssTaxableAmount
+                )}</strong></span>
             </div>
             
             <div class="ss-breakdown-item">
@@ -5429,7 +5468,10 @@ function showProvisionalIncomeBreakdown(yearIndex) {
             
             <div class="ss-breakdown-item" style="margin-top: 8px; font-size: 12px; color: var(--muted);">
                 <span class="ss-breakdown-label">Effective SS Tax Rate:</span>
-                <span class="ss-breakdown-value">${(ssTaxableAmount / ssGross * 100).toFixed(1)}%</span>
+                <span class="ss-breakdown-value">${(
+                  (ssTaxableAmount / ssGross) *
+                  100
+                ).toFixed(1)}%</span>
             </div>
         </div>
       `;
