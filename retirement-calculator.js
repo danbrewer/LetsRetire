@@ -1513,6 +1513,11 @@ function calculateWorkingYearData(params, year, salary, balances) {
             )) *
           100
         : 0,
+    provisionalIncome: 0, // No Social Security during working years
+    standardDeduction: getStandardDeduction(
+      TAX_BASE_YEAR + year,
+      params.filingStatus
+    ), // Standard deduction for this tax year
     balSavings: balances.balSavings,
     balPre: balances.balPre,
     balRoth: balances.balRoth,
@@ -2684,6 +2689,16 @@ function calc() {
         ? (taxesThisYear / taxableIncomeAfterDeduction) * 100
         : 0;
 
+    // Calculate provisional income for display
+    const provisionalIncome =
+      finalSsResults.calculationDetails?.provisionalIncome || 0;
+
+    // Calculate standard deduction for this year
+    const standardDeduction = getStandardDeduction(
+      TAX_BASE_YEAR + year,
+      params.filingStatus
+    );
+
     return {
       year: yearNum,
       age,
@@ -2726,6 +2741,8 @@ function calc() {
       totalNetIncome: totalNetIncome, // Use calculated total that meets spending target
       totalGrossIncome: totalGrossIncome, // Use the corrected gross taxable income calculation
       effectiveTaxRate,
+      provisionalIncome, // Provisional income for Social Security taxation
+      standardDeduction, // Standard deduction for this tax year
       balSavings: balances.balSavings,
       balPre: balances.balPre,
       balRoth: balances.balRoth,
@@ -2882,8 +2899,15 @@ function calc() {
               : fmt(r.nonTaxableIncome)
             : ""
         }</td>
+        <td class="income">${
+          r.provisionalIncome ? fmt(r.provisionalIncome) : ""
+        }</td>
         
-        <!-- THE COST -->
+        <!-- TAX INFORMATION -->
+        <td class="neutral">${
+          r.standardDeduction ? fmt(r.standardDeduction) : ""
+        }</td>
+        <td class="neutral">${r.taxableIncome ? fmt(r.taxableIncome) : ""}</td>
         <td class="outgoing">${
           r.ssTaxes !== undefined && r.ssTaxes !== null ? fmt(r.ssTaxes) : ""
         }</td>
@@ -2897,7 +2921,6 @@ function calc() {
             ? fmt(r.taxes)
             : ""
         }</td>
-        <td class="neutral">${r.taxableIncome ? fmt(r.taxableIncome) : ""}</td>
         <td class="neutral">${
           r.effectiveTaxRate ? r.effectiveTaxRate.toFixed(1) + "%" : ""
         }</td>
@@ -3526,10 +3549,12 @@ function exportCSV() {
     "Total_Gross_Income",
     "Taxable_Income_After_Deduction",
     "Non_Taxable_Income",
+    "Provisional_Income",
     "Taxable_Interest",
     "SS_Taxes",
     "Other_Taxes",
     "Total_Taxes",
+    "Standard_Deduction",
     "Effective_Tax_Rate",
     "Savings_Balance",
     "401k_Balance",
@@ -3561,10 +3586,12 @@ function exportCSV() {
           r.totalGrossIncome || 0,
           r.taxableIncome || 0,
           r.nonTaxableIncome || 0,
+          r.provisionalIncome || 0,
           r.taxableInterest || 0,
           r.ssTaxes || 0,
           r.otherTaxes || 0,
           r.taxes,
+          r.standardDeduction || 0,
           r.effectiveTaxRate || 0,
           r.balSavings,
           r.balPre,
