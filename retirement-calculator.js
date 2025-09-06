@@ -42,11 +42,39 @@ const pow1p = (r, n) => Math.pow(1 + r, n);
  * For accurate tax planning, consult a tax professional.
  */
 
-// 2025 Standard Deductions
-const STANDARD_DEDUCTIONS = {
+// Tax calculation base year and standard deductions
+// To update for a new year: Change TAX_BASE_YEAR and update STANDARD_DEDUCTIONS_BASE with current values
+const TAX_BASE_YEAR = 2025;
+const STANDARD_DEDUCTIONS_BASE = {
   single: 15000,
   married: 32600,
 };
+
+/**
+ * Calculate inflation-adjusted standard deduction for a given year
+ *
+ * Tax Policy Assumptions:
+ * - Standard deductions are inflation-indexed annually (since 1986)
+ * - Uses 2.5% annual inflation rate for projections
+ * - Social Security provisional income thresholds remain static at $25K/$32K (unchanged since 1983)
+ *
+ * @param {number} year - The tax year
+ * @param {string} filingStatus - "single" or "married"
+ * @returns {number} Inflation-adjusted standard deduction
+ */
+function getStandardDeduction(year, filingStatus = "single") {
+  const inflationRate = 0.025; // 2.5% annual inflation
+  const yearsFromBase = year - TAX_BASE_YEAR;
+
+  const baseDeduction =
+    STANDARD_DEDUCTIONS_BASE[filingStatus] || STANDARD_DEDUCTIONS_BASE.single;
+
+  // Apply compound inflation adjustment
+  const adjustedDeduction =
+    baseDeduction * Math.pow(1 + inflationRate, yearsFromBase);
+
+  return Math.round(adjustedDeduction);
+}
 const EFFECTIVE_TAX_RATES = {
   // Taxable Income: Effective Rate (%) - Based on 2025 Married Filing Jointly Tax Brackets
   // 10%: $0 – $23,200, 12%: $23,200 – $94,300, 22%: $94,300 – $201,050, 24%: $201,050+
@@ -91,9 +119,20 @@ const EFFECTIVE_TAX_RATES = {
  * @param {string} filingStatus - 'single' or 'married'
  * @returns {number} Adjusted Gross Income (cannot be negative)
  */
-function calculateTaxableIncome(grossIncome, filingStatus = "single") {
-  const standardDeduction =
-    STANDARD_DEDUCTIONS[filingStatus] || STANDARD_DEDUCTIONS.single;
+/**
+ * Calculate taxable income with inflation-adjusted standard deduction
+ *
+ * @param {number} grossIncome - Gross income for the year
+ * @param {string} filingStatus - "single" or "married"
+ * @param {number} year - Tax year for inflation-adjusted deduction
+ * @returns {number} Taxable income after standard deduction
+ */
+function calculateTaxableIncome(
+  grossIncome,
+  filingStatus = "single",
+  year = TAX_BASE_YEAR
+) {
+  const standardDeduction = getStandardDeduction(year, filingStatus);
   return Math.max(0, grossIncome - standardDeduction);
 }
 
@@ -158,9 +197,13 @@ function getEffectiveTaxRateMarried(taxableIncome) {
  * @param {string} filingStatus - 'single' or 'married'
  * @returns {number} Estimated federal tax amount
  */
-function calculateFederalTax(grossIncome, filingStatus = "single") {
+function calculateFederalTax(
+  grossIncome,
+  filingStatus = "single",
+  year = TAX_BASE_YEAR
+) {
   // First calculate Taxable Income by subtracting standard deduction
-  const taxableIncome = calculateTaxableIncome(grossIncome, filingStatus);
+  const taxableIncome = calculateTaxableIncome(grossIncome, filingStatus, year);
 
   // Then get effective rate based on Taxable Income
   const effectiveRate =
@@ -466,7 +509,7 @@ function showHelpToast(event, fieldId) {
     },
     useAgiTax: {
       title: "Taxable Income-Based Tax Calculation",
-      body: "When enabled, uses a progressive tax table based on Adjusted Gross Income (gross income minus standard deduction) for pre-tax withdrawals and pension income. Uses 2025 standard deductions: $15,000 (single) / $32,600 (married). This typically results in more accurate tax rates than fixed percentages, especially for larger withdrawal amounts. Check the browser console for detailed calculations showing gross income → Taxable Income → tax rates.",
+      body: "When enabled, uses a progressive tax table based on Adjusted Gross Income (gross income minus standard deduction) for pre-tax withdrawals and pension income. Uses inflation-adjusted standard deductions starting from 2025 base values: $15,000 (single) / $32,600 (married), adjusted annually for inflation. This typically results in more accurate tax rates than fixed percentages, especially for larger withdrawal amounts. Check the browser console for detailed calculations showing gross income → Taxable Income → tax rates.",
     },
     filingStatus: {
       title: "Tax Filing Status",
@@ -1348,7 +1391,11 @@ function calculateWorkingYearData(params, year, salary, balances) {
     salary - cPre + taxableInterestIncome + taxableIncomeAdjustment;
 
   const workingYearTaxes = params.useAgiTax
-    ? calculateFederalTax(grossTaxableIncome, params.filingStatus)
+    ? calculateFederalTax(
+        grossTaxableIncome,
+        params.filingStatus,
+        TAX_BASE_YEAR + year
+      )
     : grossTaxableIncome * params.taxPre;
 
   // Debug tax calculation for first few years
@@ -1364,7 +1411,8 @@ function calculateWorkingYearData(params, year, salary, balances) {
     if (params.useAgiTax) {
       const taxableIncomeAfterDeduction = calculateTaxableIncome(
         grossTaxableIncome,
-        params.filingStatus
+        params.filingStatus,
+        TAX_BASE_YEAR + year
       );
       const effectiveRate =
         params.filingStatus === "married"
@@ -1444,16 +1492,25 @@ function calculateWorkingYearData(params, year, salary, balances) {
     nonTaxableIncome: taxFreeIncomeAdjustment, // Tax-free income adjustment
     taxableIncome: calculateTaxableIncome(
       grossTaxableIncome,
-      params.filingStatus
+      params.filingStatus,
+      TAX_BASE_YEAR + year
     ), // Working year taxable income after standard deduction
     taxableInterest: taxableInterestIncome, // Track taxable interest earned
     totalIncome: totalGrossIncome + taxableInterestIncome, // Total income for working years including adjustments
     totalNetIncome: afterTaxIncome + taxFreeIncomeAdjustment, // Net income including tax-free adjustments
     totalGrossIncome: totalGrossIncome + taxableInterestIncome, // Gross income for working years including adjustments
     effectiveTaxRate:
-      calculateTaxableIncome(grossTaxableIncome, params.filingStatus) > 0
+      calculateTaxableIncome(
+        grossTaxableIncome,
+        params.filingStatus,
+        TAX_BASE_YEAR + year
+      ) > 0
         ? (workingYearTaxes /
-            calculateTaxableIncome(grossTaxableIncome, params.filingStatus)) *
+            calculateTaxableIncome(
+              grossTaxableIncome,
+              params.filingStatus,
+              TAX_BASE_YEAR + year
+            )) *
           100
         : 0,
     balSavings: balances.balSavings,
@@ -1596,7 +1653,8 @@ function calc() {
   function calculateSocialSecurityTaxation(
     params,
     ssGross,
-    totalTaxableIncome
+    totalTaxableIncome,
+    year = 0
   ) {
     if (!ssGross || ssGross <= 0) {
       return {
@@ -1683,10 +1741,18 @@ function calc() {
       const grossIncomeForTax_simple = totalTaxableIncome + ssTaxableAmount;
       const effRate_simple = isMarried
         ? getEffectiveTaxRateMarried(
-            calculateTaxableIncome(grossIncomeForTax_simple, "married")
+            calculateTaxableIncome(
+              grossIncomeForTax_simple,
+              "married",
+              TAX_BASE_YEAR + year
+            )
           )
         : getEffectiveTaxRate(
-            calculateTaxableIncome(grossIncomeForTax_simple, "single")
+            calculateTaxableIncome(
+              grossIncomeForTax_simple,
+              "single",
+              TAX_BASE_YEAR + year
+            )
           );
       const ssTaxes = ssTaxableAmount * (effRate_simple / 100);
       const ssNet = ssGross - ssTaxes;
@@ -1712,7 +1778,12 @@ function calc() {
   /**
    * Calculate pension taxation for a given year
    */
-  function calculatePensionTaxation(params, penGross, totalTaxableIncome) {
+  function calculatePensionTaxation(
+    params,
+    penGross,
+    totalTaxableIncome,
+    year = 0
+  ) {
     if (!penGross || penGross <= 0) {
       return {
         penNet: 0,
@@ -1733,7 +1804,8 @@ function calc() {
       const grossIncomeForPensionTax = penTaxableAmount + totalTaxableIncome;
       const taxableIncomeForPensionTax = calculateTaxableIncome(
         grossIncomeForPensionTax,
-        params.filingStatus
+        params.filingStatus,
+        TAX_BASE_YEAR + year
       );
       const taxableIncomeBasedRate =
         params.filingStatus === "married"
@@ -1782,7 +1854,12 @@ function calc() {
   /**
    * Create withdrawal function for a specific retirement year
    */
-  function createWithdrawalFunction(params, balances, totalTaxableIncomeRef) {
+  function createWithdrawalFunction(
+    params,
+    balances,
+    totalTaxableIncomeRef,
+    year = 0
+  ) {
     let taxesThisYear = 0;
     let withdrawalsBySource = {
       retirementAccount: 0,
@@ -1837,7 +1914,8 @@ function calc() {
 
         const projectedTaxableIncome = calculateTaxableIncome(
           projectedGrossIncome,
-          params.filingStatus
+          params.filingStatus,
+          TAX_BASE_YEAR + year
         );
         const taxableIncomeBasedRate =
           params.filingStatus === "married"
@@ -1857,7 +1935,8 @@ function calc() {
         const projectedGrossIncome = totalTaxableIncomeRef.value + netAmount;
         const projectedTaxableIncome = calculateTaxableIncome(
           projectedGrossIncome,
-          params.filingStatus
+          params.filingStatus,
+          TAX_BASE_YEAR + year
         );
         const taxableIncomeBasedRate =
           params.filingStatus === "married"
@@ -1907,7 +1986,8 @@ function calc() {
         const projectedGrossIncome = totalTaxableIncomeRef.value + actualGross;
         const projectedTaxableIncome = calculateTaxableIncome(
           projectedGrossIncome,
-          params.filingStatus
+          params.filingStatus,
+          TAX_BASE_YEAR + year
         );
         const taxableIncomeBasedRate =
           params.filingStatus === "married"
@@ -1921,7 +2001,8 @@ function calc() {
       const projectedGrossIncome = totalTaxableIncomeRef.value + actualGross;
       const projectedTaxableIncome = calculateTaxableIncome(
         projectedGrossIncome,
-        params.filingStatus
+        params.filingStatus,
+        TAX_BASE_YEAR + year
       );
       const taxableIncomeBasedRate =
         params.filingStatus === "married"
@@ -2110,11 +2191,12 @@ function calc() {
         taxableInterestEarned +
         taxableIncomeAdjustment,
     };
-    const penResults = calculatePensionTaxation(params, penGross, 0); // Start with no other income
+    const penResults = calculatePensionTaxation(params, penGross, 0, year); // Start with no other income
     const spousePenResults = calculatePensionTaxation(
       params,
       spousePenGross,
-      penResults.penTaxableAmount
+      penResults.penTaxableAmount,
+      year
     );
 
     // Update taxable income reference to include only taxable portions plus taxable interest
@@ -2138,7 +2220,8 @@ function calc() {
     const preliminaryWithdrawalFunctions = createWithdrawalFunction(
       params,
       balancesCopy,
-      totalTaxableIncomeCopy
+      totalTaxableIncomeCopy,
+      year
     );
 
     // Apply RMDs first (preliminary)
@@ -2186,12 +2269,14 @@ function calc() {
     const ssResults = calculateSocialSecurityTaxation(
       params,
       ssGross,
-      totalTaxableIncomeForSS
+      totalTaxableIncomeForSS,
+      year
     );
     const spouseSsResults = calculateSocialSecurityTaxation(
       params,
       spouseSsGross,
-      totalTaxableIncomeForSS + ssResults.ssTaxableAmount
+      totalTaxableIncomeForSS + ssResults.ssTaxableAmount,
+      year
     );
 
     // STEP 6: Recalculate final withdrawals with correct SS net amounts
@@ -2226,7 +2311,8 @@ function calc() {
     const finalWithdrawalFunctions = createWithdrawalFunction(
       params,
       balances,
-      totalTaxableIncomeRef
+      totalTaxableIncomeRef,
+      year
     );
 
     // Final withdrawal amounts
@@ -2368,12 +2454,14 @@ function calc() {
     const finalSsResults = calculateSocialSecurityTaxation(
       params,
       ssGross,
-      finalTaxableIncomeForSS
+      finalTaxableIncomeForSS,
+      year
     );
     const finalSpouseSsResults = calculateSocialSecurityTaxation(
       params,
       spouseSsGross,
-      finalTaxableIncomeForSS + finalSsResults.ssTaxableAmount
+      finalTaxableIncomeForSS + finalSsResults.ssTaxableAmount,
+      year
     );
 
     // Calculate total taxes on all taxable income (proper approach)
@@ -2390,13 +2478,15 @@ function calc() {
     // Calculate total income tax on the combined taxable income
     taxesThisYear = calculateFederalTax(
       totalGrossTaxableIncome,
-      params.filingStatus
+      params.filingStatus,
+      TAX_BASE_YEAR + year
     );
 
     // Also calculate the taxable income after deduction for display purposes
     const totalTaxableIncomeAfterDeduction = calculateTaxableIncome(
       totalGrossTaxableIncome,
-      params.filingStatus
+      params.filingStatus,
+      TAX_BASE_YEAR + year
     );
 
     // Calculate net income and handle overage BEFORE growing balances
@@ -2583,7 +2673,8 @@ function calc() {
     // Taxable income after standard deduction (this is what gets taxed)
     const taxableIncomeAfterDeduction = calculateTaxableIncome(
       grossTaxableIncome,
-      params.filingStatus
+      params.filingStatus,
+      TAX_BASE_YEAR + year
     );
 
     // Effective tax rate should be based on TOTAL taxes vs taxable income
@@ -4547,11 +4638,14 @@ function showTaxableIncomeBreakdown(yearIndex) {
   const filingStatus = filingStatusElement
     ? filingStatusElement.value
     : "single";
-  const standardDeduction = filingStatus === "married" ? 29200 : 14600; // 2024 values
+
+  // Use inflation-adjusted standard deduction for the calculation year
+  const calculationYear = TAX_BASE_YEAR + yearIndex;
+  const standardDeduction = getStandardDeduction(calculationYear, filingStatus);
 
   breakdownHtml += `
     <div class="ss-breakdown-item">
-        <span class="ss-breakdown-label">Less: Standard Deduction:</span>
+        <span class="ss-breakdown-label">Less: Standard Deduction (${calculationYear}):</span>
         <span class="ss-breakdown-value">-${fmt(standardDeduction)}</span>
     </div>
     <div class="ss-breakdown-item">
