@@ -2586,11 +2586,11 @@ function calc() {
       params.filingStatus
     );
 
-    // Effective tax rate should be based on INCOME taxes only vs taxable income (after deduction)
-    // SS taxes are calculated on gross SS benefits, not on taxable income after deduction
+    // Effective tax rate should be based on TOTAL taxes vs taxable income
+    // This includes both income taxes and SS taxes for a complete picture
     const effectiveTaxRate =
       taxableIncomeAfterDeduction > 0
-        ? (otherTaxes / taxableIncomeAfterDeduction) * 100
+        ? (taxesThisYear / taxableIncomeAfterDeduction) * 100
         : 0;
 
     return {
@@ -2806,6 +2806,7 @@ function calc() {
             ? fmt(r.taxes)
             : ""
         }</td>
+        <td class="neutral">${r.taxableIncome ? fmt(r.taxableIncome) : ""}</td>
         <td class="neutral">${
           r.effectiveTaxRate ? r.effectiveTaxRate.toFixed(1) + "%" : ""
         }</td>
@@ -3105,6 +3106,7 @@ function exportCSV() {
     "SS_Taxes",
     "Other_Taxes",
     "Total_Taxes",
+    "Taxable_Income_Tax",
     "Effective_Tax_Rate",
     "Savings_Bal",
     "401k_Bal",
@@ -3140,6 +3142,7 @@ function exportCSV() {
           r.ssTaxes || 0,
           r.otherTaxes || 0,
           r.taxes,
+          r.taxableIncome || 0,
           r.effectiveTaxRate || 0,
           r.balSavings,
           r.balPre,
