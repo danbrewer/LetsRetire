@@ -2990,7 +2990,72 @@ function drawChart(series) {
     c.style.height = rect.height + "px";
   }
 
-  ctx.clearRect(0, 0, width, height);
+  // Check if we should animate (has existing content)
+  const hasExistingContent = c.hasContent && series && series.length > 0;
+
+  if (hasExistingContent) {
+    // Create a temporary canvas with the old content for smooth transition
+    const tempCanvas = document.createElement("canvas");
+    const tempCtx = tempCanvas.getContext("2d");
+    tempCanvas.width = c.width;
+    tempCanvas.height = c.height;
+    tempCanvas.style.position = "absolute";
+    tempCanvas.style.top = c.offsetTop + "px";
+    tempCanvas.style.left = c.offsetLeft + "px";
+    tempCanvas.style.width = c.style.width;
+    tempCanvas.style.height = c.style.height;
+    tempCanvas.style.pointerEvents = "none";
+    tempCanvas.style.zIndex = "1000";
+
+    // Copy current canvas content to temp canvas
+    tempCtx.drawImage(c, 0, 0);
+
+    // Insert temp canvas right after the original
+    c.parentNode.insertBefore(tempCanvas, c.nextSibling);
+
+    // Draw new content on original canvas
+    drawChartContent(ctx, series, width, height, dpr, c);
+    c.hasContent = true;
+
+    // Set up original canvas to be invisible initially
+    c.style.transition = "opacity 0.3s ease";
+    c.style.opacity = "0";
+
+    // Set up temp canvas to fade out
+    tempCanvas.style.transition = "opacity 0.2s ease";
+
+    // Start the transition
+    requestAnimationFrame(() => {
+      c.style.opacity = "1";
+      tempCanvas.style.opacity = "0";
+
+      // Remove temp canvas after transition
+      setTimeout(() => {
+        if (tempCanvas.parentNode) {
+          tempCanvas.parentNode.removeChild(tempCanvas);
+        }
+      }, 300);
+    });
+  } else {
+    // No existing content, draw immediately
+    c.style.opacity = "1";
+    drawChartContent(ctx, series, width, height, dpr, c);
+    c.hasContent = series && series.length > 0;
+  }
+}
+
+function drawChartContent(
+  ctx,
+  series,
+  width,
+  height,
+  dpr,
+  c,
+  skipClear = false
+) {
+  if (!skipClear) {
+    ctx.clearRect(0, 0, width, height);
+  }
   if (!series || !series.length) {
     return;
   }
