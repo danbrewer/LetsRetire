@@ -3016,8 +3016,7 @@ function drawChart(series) {
     // Start animated chart draw after a brief delay
     setTimeout(() => {
       drawAnimatedChart(ctx, series, width, height, dpr, c);
-    }, 300);
-    c.hasContent = true;
+    }, 50);
 
     // Set up original canvas to be invisible initially
     c.style.transition = "opacity 0.3s ease";
@@ -3044,7 +3043,6 @@ function drawChart(series) {
     setTimeout(() => {
       drawAnimatedChart(ctx, series, width, height, dpr, c);
     }, 300);
-    c.hasContent = series && series.length > 0;
   }
 }
 
@@ -3238,10 +3236,8 @@ function drawAnimatedChart(ctx, series, width, height, dpr, c) {
   }
 
   // Animation parameters
-  const animationDuration = 800; // ms
-  const animationSteps = 60; // 60fps
-  const stepDuration = animationDuration / animationSteps;
-  let currentStep = 0;
+  const animationDuration = 300; // ms - reduced for snappier animation
+  let startTime = null;
 
   // Padding and coordinate calculations (same as static version)
   const pad = { l: 80 * dpr, r: 12 * dpr, t: 12 * dpr, b: 28 * dpr };
@@ -3268,9 +3264,11 @@ function drawAnimatedChart(ctx, series, width, height, dpr, c) {
   };
 
   // Animation function
-  function animateStep() {
-    currentStep++;
-    const progress = Math.min(currentStep / animationSteps, 1);
+  function animateStep(currentTime) {
+    if (!startTime) startTime = currentTime;
+
+    const elapsedTime = currentTime - startTime;
+    const progress = Math.min(elapsedTime / animationDuration, 1);
 
     // Ease-out animation curve for smooth deceleration
     const easeProgress = 1 - Math.pow(1 - progress, 3);
@@ -3297,13 +3295,14 @@ function drawAnimatedChart(ctx, series, width, height, dpr, c) {
     if (progress < 1) {
       requestAnimationFrame(animateStep);
     } else {
-      // Animation complete, setup tooltips if not already done
+      // Animation complete, mark content as available and setup tooltips
+      c.hasContent = series && series.length > 0;
       setupChartTooltips(c);
     }
   }
 
   // Start the animation
-  animateStep();
+  requestAnimationFrame(animateStep);
 }
 
 function drawStaticChartElements(
