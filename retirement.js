@@ -3,12 +3,12 @@
 function taxableSS(ssBenefit, otherIncome, taxExemptInterest = 0) {
   const provisional = otherIncome + 0.5 * ssBenefit + taxExemptInterest;
   console.log("*** Social Security Benefits Taxation ***");
-  console.log(`Social Security Income: $${ssBenefit.toFixed(0)}`);
-  console.log("Provisional income is 1/2 SS  + Other Income");
-  console.log(`1/2 of SS: $${(0.5 * ssBenefit).toFixed(0)}`);
-  console.log(`401k Withdrawal: $${otherIncome.toFixed(0)}`);
+  console.log(`. Social Security Income: $${ssBenefit.toFixed(0)}`);
+  console.log(". Provisional income is 1/2 SS  + Other Income");
+  console.log(`. 1/2 of SS: $${(0.5 * ssBenefit).toFixed(0)}`);
+  console.log(`. 401k Withdrawal: $${otherIncome.toFixed(0)}`);
   console.log(
-    `Provisional Income: $${otherIncome.toFixed(0)} + $${(
+    `. Provisional Income: $${otherIncome.toFixed(0)} + $${(
       0.5 * ssBenefit
     ).toFixed(0)} = $${provisional.toFixed(0)}`
   );
@@ -103,6 +103,11 @@ function grossFromNetWithSS(targetNet, opts) {
     const taxableSSAmt = taxableSS(ssBenefit, withdrawal, taxExemptInterest);
     const AGI = withdrawal + taxableSSAmt + taxExemptInterest;
     const taxable = Math.max(0, AGI - standardDeduction);
+    console.log(
+      `Total income is $${(ssBenefit + withdrawal + taxExemptInterest).toFixed(
+        0
+      )}.`
+    );
     console.log(`Taxable 401k withdrawal is $${withdrawal.toFixed(0)}.`);
     console.log(`Taxable SS amount is $${taxableSSAmt.toFixed(0)}.`);
     console.log(
@@ -159,11 +164,12 @@ function grossFromNetWithSS(targetNet, opts) {
       `===== Iteration ${i}: lo=$${lo.toFixed(0)}, hi=$${hi.toFixed(0)} ======`
     );
     const mid = (lo + hi) / 2;
-    console.log(`Guestimate withdrawal: $${mid}`);
+    console.log(`Guestimate withdrawal: $${mid.toFixed(0)}`);
     const net = netOf(mid);
+    if (Math.round(net) == Math.round(targetNet)) break;
     if (net < targetNet) lo = mid;
     else hi = mid;
-    if (hi - lo < precision) break;
+    if (Math.round(hi - lo) <= precision) break;
   }
 
   return {
