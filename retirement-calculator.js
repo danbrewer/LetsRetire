@@ -236,28 +236,28 @@ function getMarginalTaxRate(
   return ((newTax - currentTax) / additionalIncome) * 100;
 }
 
-/**
- * Display tax calculation examples for reference
- * @param {string} filingStatus - 'single' or 'married'
- */
-function displayTaxExamples(filingStatus = "single") {
-  // console.log(`\n=== Tax Rate Examples (${filingStatus} filer) ===`);
-  // console.log(`Standard Deduction: $${STANDARD_DEDUCTIONS[filingStatus].toLocaleString()}`);
-  const testGrossIncomes = [25000, 50000, 75000, 100000, 150000, 200000];
+// /**
+//  * Display tax calculation examples for reference
+//  * @param {string} filingStatus - 'single' or 'married'
+//  */
+// function displayTaxExamples(filingStatus = "single") {
+//   // console.log(`\n=== Tax Rate Examples (${filingStatus} filer) ===`);
+//   // console.log(`Standard Deduction: $${STANDARD_DEDUCTIONS[filingStatus].toLocaleString()}`);
+//   const testGrossIncomes = [25000, 50000, 75000, 100000, 150000, 200000];
 
-  testGrossIncomes.forEach((grossIncome) => {
-    const taxableIncome = calculateTaxableIncome(grossIncome, filingStatus);
-    const effectiveRate =
-      filingStatus === "married"
-        ? getEffectiveTaxRateMarried(taxableIncome)
-        : getEffectiveTaxRate(taxableIncome);
-    const taxAmount = calculateFederalTax(grossIncome, filingStatus);
-    const marginalRate = getMarginalTaxRate(grossIncome, 1000, filingStatus);
+//   testGrossIncomes.forEach((grossIncome) => {
+//     const taxableIncome = calculateTaxableIncome(grossIncome, filingStatus);
+//     const effectiveRate =
+//       filingStatus === "married"
+//         ? getEffectiveTaxRateMarried(taxableIncome)
+//         : getEffectiveTaxRate(taxableIncome);
+//     const taxAmount = calculateFederalTax(grossIncome, filingStatus);
+//     const marginalRate = getMarginalTaxRate(grossIncome, 1000, filingStatus);
 
-    // console.log(`Gross $${grossIncome.toLocaleString()} → Taxable Income $${taxableIncome.toLocaleString()}: Effective ${effectiveRate.toFixed(1)}%, Tax $${Math.round(taxAmount).toLocaleString()}, Marginal ${marginalRate.toFixed(1)}%`);
-  });
-  // console.log("=================================\n");
-}
+//     // console.log(`Gross $${grossIncome.toLocaleString()} → Taxable Income $${taxableIncome.toLocaleString()}: Effective ${effectiveRate.toFixed(1)}%, Tax $${Math.round(taxAmount).toLocaleString()}, Marginal ${marginalRate.toFixed(1)}%`);
+//   });
+//   // console.log("=================================\n");
+// }
 
 // Social Security taxation calculation based on provisional income
 function calculateSSTaxableAmount(
@@ -267,8 +267,8 @@ function calculateSSTaxableAmount(
 ) {
   if (ssGross <= 0) return 0;
 
-  // Calculate provisional income: Taxable Income + non-taxable interest + 50% of SS benefits
-  // For simplicity, we'll assume no non-taxable interest
+  // Calculate provisional income:
+  // All taxable Income + 50% of SS benefits
   const provisionalIncome = otherTaxableIncome + ssGross * 0.5;
 
   // Set thresholds based on filing status
@@ -514,10 +514,6 @@ function showHelpToast(event, fieldId) {
     filingStatus: {
       title: "Tax Filing Status",
       body: "Your tax filing status affects Social Security taxation thresholds and Taxable Income-based tax calculations. Single filers have lower thresholds for SS taxation than married filing jointly.",
-    },
-    useSSRules: {
-      title: "Proper Social Security Taxation",
-      body: "When enabled, uses actual IRS rules for Social Security taxation based on 'provisional income' rather than simple fixed percentages. SS taxation depends on your total income and can range from 0% to 85% of benefits being taxable.",
     },
     useRMD: {
       title: "Required Minimum Distribution Rules",
@@ -1143,15 +1139,14 @@ function loadExample() {
     penMonthly: 3500,
     penStart: 65,
     penCola: 0,
-    taxPre: 15,
-    taxTaxable: 0,
-    taxRoth: 0,
-    taxSS: 10,
-    taxPension: 15,
+    // taxPre: 15,
+    // taxTaxable: 0,
+    // taxRoth: 0,
+    // taxSS: 10,
+    // taxPension: 15,
     order: "taxable,pretax,roth",
     filingStatus: "married",
-    useAgiTax: true,
-    useSSRules: true,
+    // useAgiTax: true,
     useRMD: true,
   };
   // const ex = {
@@ -1198,7 +1193,6 @@ function loadExample() {
   //   order: "taxable,pretax,roth",
   //   filingStatus: "married",
   //   useAgiTax: true,
-  //   useSSRules: true,
   //   useRMD: true,
   // };
   // const ex = {
@@ -1294,7 +1288,7 @@ function parseInputParameters() {
     balSavings: num("balSavings"),
     retPre: pct(num("retPre")),
     retRoth: pct(num("retRoth")),
-    retTax: pct(num("retTax")),
+    rateOfSavings: pct(num("retTax")),
 
     // Income sources
     ssMonthly: num("ssMonthly"),
@@ -1305,14 +1299,13 @@ function parseInputParameters() {
     penCola: pct(num("penCola")),
 
     // Tax rates and settings
-    taxPre: pct(num("taxPre")),
-    taxTaxable: pct(num("taxTaxable")),
-    taxRoth: pct(num("taxRoth")),
-    taxSS: pct(num("taxSS")),
-    taxPension: pct(num("taxPension")),
+    // taxPre: pct(num("taxPre")),
+    // taxTaxable: pct(num("taxTaxable")),
+    // taxRoth: pct(num("taxRoth")),
+    // taxSS: pct(num("taxSS")),
+    // taxPension: pct(num("taxPension")),
     filingStatus: $("filingStatus").value,
-    useAgiTax: $("useAgiTax").checked,
-    useSSRules: $("useSSRules").checked,
+    useAgiTax: true, //$("useAgiTax").checked,
     useRMD: $("useRMD").checked,
   };
 
@@ -1322,7 +1315,7 @@ function parseInputParameters() {
     .map((s) => s.trim())
     .filter((s) => s.length > 0);
   if (params.order.length === 0) {
-    params.order = ["taxable", "pretax", "roth"];
+    params.order = ["savings", "pretax", "roth"];
     // console.log('Using fallback withdrawal order:', params.order);
   }
 
@@ -1382,7 +1375,7 @@ function calculateWorkingYearData(params, year, salary, balances) {
     Math.min(actualPrePct, params.matchCap) * salary * params.matchRate;
 
   // Calculate taxes on working income including taxable interest
-  const taxableInterestIncome = balances.balSavings * params.retTax;
+  const taxableInterestIncome = balances.balSavings * params.rateOfSavings;
 
   // Get taxable income adjustments for this age
   const taxableIncomeAdjustment = getTaxableIncomeOverride(age);
@@ -1390,13 +1383,14 @@ function calculateWorkingYearData(params, year, salary, balances) {
   let grossTaxableIncome =
     salary - cPre + taxableInterestIncome + taxableIncomeAdjustment;
 
-  const workingYearTaxes = params.useAgiTax
-    ? calculateFederalTax(
-        grossTaxableIncome,
-        params.filingStatus,
-        TAX_BASE_YEAR + year
-      )
-    : grossTaxableIncome * params.taxPre;
+  const workingYearTaxes =
+    //params.useAgiTax ?
+    calculateFederalTax(
+      grossTaxableIncome,
+      params.filingStatus,
+      TAX_BASE_YEAR + year
+    );
+  // : grossTaxableIncome * params.taxPre;
 
   // Debug tax calculation for first few years
   if (year < 3) {
@@ -1462,13 +1456,13 @@ function calculateWorkingYearData(params, year, salary, balances) {
 
   // Track savings breakdown for working years
   const savingsStartBalance = balances.balSavings;
-  const taxableInterestEarned = balances.balSavings * params.retTax;
+  const taxableInterestEarned = balances.balSavings * params.rateOfSavings;
 
   balances.balPre = (balances.balPre + cPre + match) * (1 + params.retPre);
   balances.balRoth = (balances.balRoth + cRoth) * (1 + params.retRoth);
   balances.balSavings =
     (balances.balSavings + cTax + taxFreeIncomeAdjustment) *
-    (1 + params.retTax);
+    (1 + params.rateOfSavings);
 
   return {
     age,
@@ -1531,7 +1525,7 @@ function calculateWorkingYearData(params, year, salary, balances) {
       regularDeposit: cTax, // Regular taxable savings contribution
       interestEarned: taxableInterestEarned,
       endingBalance: balances.balSavings,
-      growthRate: params.retTax * 100,
+      growthRate: params.rateOfSavings * 100,
     },
     // Add empty SS breakdown for working years
     ssBreakdown: {
@@ -1576,10 +1570,10 @@ function calc() {
     lastCurrentAge = params.currentAge;
   }
 
-  // Display enhanced tax calculation examples
-  if (params.useAgiTax) {
-    displayTaxExamples(params.filingStatus);
-  }
+  // Log to console enhanced tax calculation examples
+  // if (params.useAgiTax) {
+  //   displayTaxExamples(params.filingStatus);
+  // }
 
   // Initialize balances object for tracking
   const balances = {
@@ -1658,7 +1652,7 @@ function calc() {
   function calculateSocialSecurityTaxation(
     params,
     ssGross,
-    totalTaxableIncome,
+    otherTaxableIncome,
     year = 0
   ) {
     if (!ssGross || ssGross <= 0) {
@@ -1680,123 +1674,85 @@ function calc() {
 
     const isMarried = params.filingStatus === "married";
 
-    if (params.useSSRules) {
-      // Use proper SS taxation rules based on provisional income
-      // Calculate provisional income: Taxable Income + non-taxable interest + 50% of SS benefits
-      const provisionalIncome = totalTaxableIncome + ssGross * 0.5;
+    // Use proper SS taxation rules based on provisional income
+    // Calculate provisional income: Taxable Income + non-taxable interest + 50% of SS benefits
+    const provisionalIncome = otherTaxableIncome + ssGross * 0.5;
 
-      // Set thresholds based on filing status
-      const threshold1 = isMarried ? 32000 : 25000; // 0% to 50% transition
-      const threshold2 = isMarried ? 44000 : 34000; // 50% to 85% transition
+    // Set thresholds based on filing status
+    const threshold1 = isMarried ? 32000 : 25000; // 50% taxable inflection point
+    const threshold2 = isMarried ? 44000 : 34000; // 85% taxable inflection point
 
-      let ssTaxableAmount = 0;
-      let tier1Amount = 0;
-      let tier2Amount = 0;
+    let ssTaxableDollars = 0;
+    let tier1TaxableDollars = 0;
+    let tier2TaxableDollars = 0;
 
-      if (provisionalIncome <= threshold1) {
-        // No SS benefits are taxable
-        ssTaxableAmount = 0;
-        tier1Amount = 0;
-        tier2Amount = 0;
-      } else if (provisionalIncome <= threshold2) {
-        // Up to 50% of SS benefits are taxable
-        const excessIncome = provisionalIncome - threshold1;
-        tier1Amount = Math.min(ssGross * 0.5, excessIncome * 0.5);
-        tier2Amount = 0;
-        ssTaxableAmount = tier1Amount;
-      } else {
-        // Up to 85% of SS benefits are taxable
-        // First calculate tier 1 amount (same as if we were in tier 1)
-        const tier1ExcessIncome = threshold2 - threshold1; // Full range of tier 1
-        tier1Amount = Math.min(ssGross * 0.5, tier1ExcessIncome * 0.5);
-
-        // Then calculate tier 2 amount
-        const tier2ExcessIncome = provisionalIncome - threshold2;
-        tier2Amount = Math.min(ssGross * 0.35, tier2ExcessIncome * 0.85); // Additional 35% (85% - 50%)
-
-        ssTaxableAmount = Math.min(ssGross * 0.85, tier1Amount + tier2Amount);
-      }
-
-      const ssNonTaxable = ssGross - ssTaxableAmount;
-
-      // Don't calculate separate SS taxes - the taxable amount will be included in total taxable income
-      const ssNet = ssGross; // SS net is the full gross amount; taxes will be calculated on total income
-
-      return {
-        ssNet,
-        ssTaxableAmount,
-        ssNonTaxable,
-        ssTaxes: 0, // No separate SS taxes - included in total income tax calculation
-        calculationDetails: {
-          provisionalIncome,
-          threshold1,
-          threshold2,
-          tier1Amount,
-          tier2Amount,
-          excessIncome1: Math.max(0, provisionalIncome - threshold1),
-          excessIncome2: Math.max(0, provisionalIncome - threshold2),
-          effectiveRate: 0, // Will be calculated on total income
-          method: "irs-rules",
-        },
-      };
+    if (provisionalIncome <= threshold1) {
+      // No SS benefits are taxable
+      ssTaxableDollars = 0;
+      tier1TaxableDollars = 0;
+      tier2TaxableDollars = 0;
+    } else if (provisionalIncome <= threshold2) {
+      // Up to 50% of SS benefits are taxable
+      const incomeInExcessOfTier1 = provisionalIncome - threshold1;
+      tier1TaxableDollars = Math.min(
+        ssGross * 0.5,
+        incomeInExcessOfTier1 * 0.5
+      );
+      tier2TaxableDollars = 0;
+      ssTaxableDollars = tier1TaxableDollars;
     } else {
-      // Use simple fixed percentage method
-      const ssTaxableAmount = ssGross * 0.85;
-      const ssNonTaxable = ssGross * 0.15; // 15% is non-taxable
-      const grossIncomeForTax_simple = totalTaxableIncome + ssTaxableAmount;
-      const effRate_simple = isMarried
-        ? getEffectiveTaxRateMarried(
-            calculateTaxableIncome(
-              grossIncomeForTax_simple,
-              "married",
-              TAX_BASE_YEAR + year
-            )
-          )
-        : getEffectiveTaxRate(
-            calculateTaxableIncome(
-              grossIncomeForTax_simple,
-              "single",
-              TAX_BASE_YEAR + year
-            )
-          );
-      const ssTaxes = ssTaxableAmount * (effRate_simple / 100);
-      const ssNet = ssGross - ssTaxes;
+      // Up to 85% of SS benefits are taxable
+      // First calculate tier 1 amount (same as if we were in tier 1)
+      const provIncomeInExcessOfTier1 = threshold2 - threshold1; // 50% of dollars in tier1 are taxable
+      tier1TaxableDollars = Math.min(
+        ssGross * 0.5,
+        provIncomeInExcessOfTier1 * 0.5
+      );
 
-      // Calculate provisional income even in simplified mode for display purposes
-      const provisionalIncome = totalTaxableIncome + ssGross * 0.5;
+      // Then calculate tier 2 amount
+      const provIncomeInExcessOfTier2 = provisionalIncome - threshold2;
+      tier2TaxableDollars = Math.min(
+        ssGross * 0.85,
+        provIncomeInExcessOfTier2 * 0.85
+      );
 
-      return {
-        ssNet,
-        ssTaxableAmount,
-        ssNonTaxable,
-        ssTaxes,
-        calculationDetails: {
-          provisionalIncome: provisionalIncome,
-          threshold1: 0,
-          threshold2: 0,
-          tier1Amount: 0,
-          tier2Amount: 0,
-          effectiveRate: effRate_simple,
-          method: "simplified",
-        },
-      };
+      ssTaxableDollars = Math.min(
+        ssGross * 0.85,
+        tier1TaxableDollars + tier2TaxableDollars
+      );
     }
+
+    const ssNonTaxable = ssGross - ssTaxableDollars;
+
+    // Don't calculate separate SS taxes - the taxable SS amount will be included in total taxable income
+    return {
+      ssGross,
+      ssTaxableAmount: ssTaxableDollars,
+      ssNonTaxable,
+      ssTaxes: 0, // No separate SS taxes - included in total income tax calculation
+      calculationDetails: {
+        provisionalIncome,
+        threshold1,
+        threshold2,
+        tier1Amount: tier1TaxableDollars,
+        tier2Amount: tier2TaxableDollars,
+        excessIncome1: Math.max(0, provisionalIncome - threshold1),
+        excessIncome2: Math.max(0, provisionalIncome - threshold2),
+        effectiveRate: 0, // Will be calculated on total income
+        method: "irs-rules",
+      },
+    };
   }
 
   /**
    * Calculate pension taxation for a given year
    */
-  function calculatePensionTaxation(
-    params,
-    penGross,
-    totalTaxableIncome,
-    year = 0
-  ) {
+  function buildPensionTracker(params, penGross, totalTaxableIncome, year = 0) {
     if (!penGross || penGross <= 0) {
       return {
-        penNet: 0,
+        penGross: 0,
         penTaxes: 0,
-        penTaxableAmount: 0,
+        penNet: 0,
         penNonTaxable: 0,
         pensionTaxRate: 0,
       };
@@ -1806,34 +1762,35 @@ function calc() {
     const penTaxableAmount = penGross; // 100% taxable
     const penNonTaxable = 0; // 0% non-taxable
 
-    let pensionTaxRate = params.taxPension;
+    // let pensionTaxRate = params.taxPension;
 
-    if (params.useAgiTax) {
-      const grossIncomeForPensionTax = penTaxableAmount + totalTaxableIncome;
-      const taxableIncomeForPensionTax = calculateTaxableIncome(
-        grossIncomeForPensionTax,
-        params.filingStatus,
-        TAX_BASE_YEAR + year
-      );
-      const taxableIncomeBasedRate =
-        params.filingStatus === "married"
-          ? getEffectiveTaxRateMarried(taxableIncomeForPensionTax)
-          : getEffectiveTaxRate(taxableIncomeForPensionTax);
+    // // Override pensionTaxRate with Taxable Income-based calculation if enabled
+    // if (params.useAgiTax) {
+    //   const grossIncomeForPensionTax = penTaxableAmount + totalTaxableIncome;
+    //   const taxableIncomeForPensionTax = calculateTaxableIncome(
+    //     grossIncomeForPensionTax,
+    //     params.filingStatus,
+    //     TAX_BASE_YEAR + year
+    //   );
+    //   const taxableIncomeBasedRate =
+    //     params.filingStatus === "married"
+    //       ? getEffectiveTaxRateMarried(taxableIncomeForPensionTax)
+    //       : getEffectiveTaxRate(taxableIncomeForPensionTax);
 
-      const taxableIncomeRateDecimal = taxableIncomeBasedRate / 100;
-      pensionTaxRate = Math.max(params.taxPension, taxableIncomeRateDecimal);
+    //   const taxableIncomeRateDecimal = taxableIncomeBasedRate / 100;
+    //   pensionTaxRate = Math.max(params.taxPension, taxableIncomeRateDecimal);
 
-      // console.log(`Pension Taxable Income Tax Calc: Gross Income: $${grossIncomeForPensionTax.toLocaleString()}, Taxable Income: $${taxableIncomeForPensionTax.toLocaleString()}, Filing: ${params.filingStatus}, Taxable Income Rate: ${taxableIncomeBasedRate.toFixed(1)}%, Fixed Rate: ${(params.taxPension*100).toFixed(1)}%, Using: ${(pensionTaxRate*100).toFixed(1)}%`);
-    }
+    //   // console.log(`Pension Taxable Income Tax Calc: Gross Income: $${grossIncomeForPensionTax.toLocaleString()}, Taxable Income: $${taxableIncomeForPensionTax.toLocaleString()}, Filing: ${params.filingStatus}, Taxable Income Rate: ${taxableIncomeBasedRate.toFixed(1)}%, Fixed Rate: ${(params.taxPension*100).toFixed(1)}%, Using: ${(pensionTaxRate*100).toFixed(1)}%`);
+    // }
 
     // Don't calculate separate pension taxes - will be included in total income tax calculation
     const penTaxes = 0;
     const penNet = penGross; // Full gross amount; taxes calculated on total income
 
     return {
-      penNet,
+      penGross,
       penTaxes,
-      penTaxableAmount,
+      penNet,
       penNonTaxable,
       pensionTaxRate: 0, // Will be calculated as part of total income
     };
@@ -1875,9 +1832,9 @@ function calc() {
       roth: 0,
     };
 
-    function withdrawFrom(kind, netAmount) {
+    function withdrawFrom(kind, desiredNetAmount) {
       // console.log(`withdrawFrom called with kind: "${kind}", netAmount: ${netAmount}`);
-      if (netAmount <= 0) return { gross: 0, net: 0 };
+      if (desiredNetAmount <= 0) return { gross: 0, net: 0 };
 
       // Validate kind parameter
       if (!kind || typeof kind !== "string") {
@@ -1885,24 +1842,21 @@ function calc() {
         return { gross: 0, net: 0 };
       }
 
-      let fixedTaxRate = 0,
-        balRef = 0,
+      // Determine balance reference and setter function
+      let balRef = 0,
         setBal;
 
-      if (kind === "taxable") {
-        fixedTaxRate = params.taxTaxable;
+      if (kind === "savings") {
         balRef = balances.balSavings;
         setBal = (v) => {
           balances.balSavings = v;
         };
       } else if (kind === "pretax") {
-        fixedTaxRate = params.taxPre;
         balRef = balances.balPre;
         setBal = (v) => {
           balances.balPre = v;
         };
       } else if (kind === "roth") {
-        fixedTaxRate = params.taxRoth;
         balRef = balances.balRoth;
         setBal = (v) => {
           balances.balRoth = v;
@@ -1913,12 +1867,11 @@ function calc() {
       }
 
       // Use Taxable Income-based calculation for pre-tax withdrawals if enabled
-      let taxRate = fixedTaxRate;
+      let taxRate = 0;
 
       if (kind === "pretax" && params.useAgiTax) {
-        const estimatedGrossWithdrawal = netAmount / (1 - fixedTaxRate);
-        const projectedGrossIncome =
-          totalTaxableIncomeRef.value + estimatedGrossWithdrawal;
+        // const estimatedGrossWithdrawal = desiredNetAmount / (1 - fixedTaxRate);
+        const projectedGrossIncome = totalTaxableIncomeRef.value; // + estimatedGrossWithdrawal;
 
         const projectedTaxableIncome = calculateTaxableIncome(
           projectedGrossIncome,
@@ -1931,7 +1884,7 @@ function calc() {
             : getEffectiveTaxRate(projectedTaxableIncome);
 
         const taxableIncomeRateDecimal = taxableIncomeBasedRate / 100;
-        taxRate = Math.max(fixedTaxRate, taxableIncomeRateDecimal);
+        taxRate = taxableIncomeRateDecimal; // Math.max(fixedTaxRate, taxableIncomeRateDecimal);
 
         // console.log(`Gross Income: $${projectedGrossIncome.toLocaleString()}, Taxable Income: $${projectedTaxableIncome.toLocaleString()}, Filing: ${params.filingStatus}, Taxable Income Rate: ${taxableIncomeBasedRate.toFixed(1)}%, Fixed Rate: ${(fixedTaxRate*100).toFixed(1)}%, Using: ${(taxRate*100).toFixed(1)}%`);
       }
@@ -1940,7 +1893,8 @@ function calc() {
       let grossTake, netReceived;
       if (kind === "pretax") {
         // Estimate tax rate for grossing up the withdrawal
-        const projectedGrossIncome = totalTaxableIncomeRef.value + netAmount;
+        const projectedGrossIncome =
+          totalTaxableIncomeRef.value + desiredNetAmount;
         const projectedTaxableIncome = calculateTaxableIncome(
           projectedGrossIncome,
           params.filingStatus,
@@ -1951,16 +1905,16 @@ function calc() {
             ? getEffectiveTaxRateMarried(projectedTaxableIncome)
             : getEffectiveTaxRate(projectedTaxableIncome);
         const taxableIncomeRateDecimal = taxableIncomeBasedRate / 100;
-        taxRate = Math.max(params.taxPre, taxableIncomeRateDecimal);
+        taxRate = taxableIncomeRateDecimal; // Math.max(params.taxPre, taxableIncomeRateDecimal);
 
         // Gross up the withdrawal to account for taxes
-        const grossNeeded = netAmount / (1 - taxRate);
+        const grossNeeded = desiredNetAmount / (1 - taxRate);
         grossTake = Math.min(grossNeeded, balRef);
         netReceived = grossTake * (1 - taxRate); // Estimated net after taxes
         setBal(balRef - grossTake);
       } else {
         // For taxable/Roth accounts, no tax impact
-        grossTake = Math.min(netAmount, balRef);
+        grossTake = Math.min(desiredNetAmount, balRef);
         netReceived = grossTake;
         setBal(balRef - grossTake);
       }
@@ -1968,7 +1922,7 @@ function calc() {
       // Track withdrawals by source
       if (kind === "pretax") {
         withdrawalsBySource.retirementAccount += grossTake;
-      } else if (kind === "taxable") {
+      } else if (kind === "savings") {
         withdrawalsBySource.savingsAccount += grossTake;
       } else if (kind === "roth") {
         withdrawalsBySource.roth += grossTake;
@@ -1988,9 +1942,10 @@ function calc() {
 
       const actualGross = Math.min(grossAmount, balances.balPre);
 
-      let taxRate = params.taxPre;
+      let taxRate = 0; //params.taxPre;
 
-      if (params.useAgiTax) {
+      // if (params.useAgiTax)
+      {
         const projectedGrossIncome = totalTaxableIncomeRef.value + actualGross;
         const projectedTaxableIncome = calculateTaxableIncome(
           projectedGrossIncome,
@@ -2002,7 +1957,7 @@ function calc() {
             ? getEffectiveTaxRateMarried(projectedTaxableIncome)
             : getEffectiveTaxRate(projectedTaxableIncome);
         const taxableIncomeRateDecimal = taxableIncomeBasedRate / 100;
-        taxRate = Math.max(params.taxPre, taxableIncomeRateDecimal);
+        taxRate = taxableIncomeRateDecimal; // Math.max(params.taxPre, taxableIncomeRateDecimal);
       }
 
       // For RMD, estimate taxes to provide realistic net amount
@@ -2017,7 +1972,7 @@ function calc() {
           ? getEffectiveTaxRateMarried(projectedTaxableIncome)
           : getEffectiveTaxRate(projectedTaxableIncome);
       const taxableIncomeRateDecimal = taxableIncomeBasedRate / 100;
-      const rmdTaxRate = Math.max(params.taxPre, taxableIncomeRateDecimal);
+      const rmdTaxRate = taxableIncomeRateDecimal; // Math.max(params.taxPre, taxableIncomeRateDecimal);
 
       const netReceived = actualGross * (1 - rmdTaxRate); // Estimated net after taxes
       balances.balPre -= actualGross;
@@ -2056,7 +2011,7 @@ function calc() {
     // Try to withdraw equal net amounts from both sources
     // Start with savings (no tax impact)
     const savingsResult = withdrawalFunctions.withdrawFrom(
-      "taxable",
+      "savings",
       targetNetPerSource
     );
     // Don't add savings to totalGross - savings withdrawals are not taxable income
@@ -2077,7 +2032,7 @@ function calc() {
       // Try savings first for any remaining amount
       if (remaining > 0) {
         const additionalSavings = withdrawalFunctions.withdrawFrom(
-          "taxable",
+          "savings",
           remaining
         );
         // Don't add savings to totalGross - savings withdrawals are not taxable income
@@ -2162,57 +2117,54 @@ function calc() {
 
     // Get spending need (with additional spending)
     const additionalSpending = getSpendingOverride(age);
-    const actualSpend = spend + (additionalSpending || 0);
-
     if (additionalSpending !== null && additionalSpending > 0) {
       console.log(
         `Age ${age}: Adding extra spending $${additionalSpending.toLocaleString()} to base $${spend.toLocaleString()} = total $${actualSpend.toLocaleString()}`
       );
     }
-
     if (additionalSpending === null) {
       setSpendingFieldValue(age, spend);
     }
 
-    // STEP 1: Calculate estimated withdrawals for more conservative interest calculation
+    // Add the additional spend to spend and track as actualSpend
+    const actualSpend = spend + (additionalSpending || 0);
+
+    // STEP 1: Calculate estimated withdrawals for
+    // more conservative interest calculation
     // Estimate total withdrawals that will happen during the year
+    let estimatedSpendShortfall =
+      actualSpend - (ssGross + spouseSsGross + penGross + spousePenGross);
+
+    if (estimatedSpendShortfall < 0) {
+      estimatedSpendShortfall = 0;
+    }
+
     const estimatedSavingsWithdrawals = Math.min(
-      Math.max(
-        0,
-        actualSpend - (ssGross + spouseSsGross + penGross + spousePenGross)
-      ),
+      estimatedSpendShortfall,
       balances.balSavings
     );
 
     // Calculate taxable interest on balance AFTER subtracting estimated withdrawals (more conservative)
-    const balanceAfterWithdrawals = Math.max(
+    const savingsBalanceAfterWithdrawals = Math.max(
       0,
       balances.balSavings - estimatedSavingsWithdrawals
     );
-    const taxableInterestEarned = balanceAfterWithdrawals * params.retTax;
+    const taxableInterestEarned =
+      savingsBalanceAfterWithdrawals * params.rateOfSavings;
 
-    // STEP 2: Calculate pension taxation (straightforward - doesn't depend on SS)
+    // STEP 2: Track pensions
+    const penResults = buildPensionTracker(penGross);
+    const spousePenResults = buildPensionTracker(spousePenGross);
+
+    // Track taxable income reference to include only
+    // taxable portions plus taxable interest
     let totalTaxableIncomeRef = {
       value:
-        penGross +
-        spousePenGross +
+        penResults.penGross +
+        spousePenResults.penGross +
         taxableInterestEarned +
         taxableIncomeAdjustment,
     };
-    const penResults = calculatePensionTaxation(params, penGross, 0, year); // Start with no other income
-    const spousePenResults = calculatePensionTaxation(
-      params,
-      spousePenGross,
-      penResults.penTaxableAmount,
-      year
-    );
-
-    // Update taxable income reference to include only taxable portions plus taxable interest
-    totalTaxableIncomeRef.value =
-      penResults.penTaxableAmount +
-      spousePenResults.penTaxableAmount +
-      taxableInterestEarned +
-      taxableIncomeAdjustment;
 
     // STEP 3: Estimate initial withdrawal need (before SS taxation)
     // Use net amounts (after tax) for spending calculation
@@ -2225,6 +2177,10 @@ function calc() {
     let balancesCopy = { ...balances }; // Work with copy for estimation
     let totalTaxableIncomeCopy = { value: totalTaxableIncomeRef.value };
 
+    // createWithdrawalFunction is a utility to generate withdrawal functions
+    // for each account type (e.g., savings, 401k, IRA)
+    // It returns an object containing withdrawal functions for each account type
+    // Each function takes a gross withdrawal amount and returns the net amount after taxes
     const preliminaryWithdrawalFunctions = createWithdrawalFunction(
       params,
       balancesCopy,
@@ -2290,8 +2246,8 @@ function calc() {
     // STEP 6: Recalculate final withdrawals with correct SS net amounts
     // Only include taxable portions in taxable income reference
     totalTaxableIncomeRef.value =
-      penResults.penTaxableAmount +
-      spousePenResults.penTaxableAmount +
+      penResults.penGross +
+      spousePenResults.penGross +
       ssResults.ssTaxableAmount +
       spouseSsResults.ssTaxableAmount +
       taxableInterestEarned +
@@ -2349,7 +2305,7 @@ function calc() {
         if (remainingAdditionalNeed > 0) {
           // For additional spending, prioritize Savings first, then 401k
           const savingsWithdrawal = finalWithdrawalFunctions.withdrawFrom(
-            "taxable",
+            "savings",
             remainingAdditionalNeed
           );
           // Don't add savings to finalWGross - savings withdrawals are not taxable income
@@ -2402,7 +2358,7 @@ function calc() {
       if (additionalSpendNeed > 0) {
         // For additional spending, prioritize Savings first, then 401k
         const savingsWithdrawal = finalWithdrawalFunctions.withdrawFrom(
-          "taxable",
+          "savings",
           additionalSpendNeed
         );
         // Don't add savings to finalWGross - savings withdrawals are not taxable income
@@ -2453,8 +2409,8 @@ function calc() {
 
     // Recalculate SS taxation using FINAL taxable income (including withdrawals)
     const finalTaxableIncomeForSS =
-      penResults.penTaxableAmount +
-      spousePenResults.penTaxableAmount +
+      penResults.penGross +
+      spousePenResults.penGross +
       withdrawalsBySource.retirementAccount +
       taxableInterestEarned +
       taxableIncomeAdjustment;
@@ -2475,8 +2431,8 @@ function calc() {
     // Calculate total taxes on all taxable income (proper approach)
     // Total taxable income includes: SS taxable + pension taxable + pretax withdrawals + taxable interest
     const totalGrossTaxableIncome =
-      penResults.penTaxableAmount +
-      spousePenResults.penTaxableAmount +
+      penResults.penGross +
+      spousePenResults.penGross +
       finalSsResults.ssTaxableAmount +
       finalSpouseSsResults.ssTaxableAmount +
       withdrawalsBySource.retirementAccount +
@@ -2536,7 +2492,7 @@ function calc() {
 
     // Apply conservative growth: interest calculated on current balance
     // (withdrawals have already been subtracted from balances.balSavings)
-    const savingsGrowth = savingsBeforeGrowth * params.retTax;
+    const savingsGrowth = savingsBeforeGrowth * params.rateOfSavings;
     balances.balSavings += savingsGrowth;
 
     // Apply normal growth to other account types (withdrawals happen at specific times)
@@ -2662,8 +2618,8 @@ function calc() {
 
     // Gross taxable income includes pre-tax withdrawals + taxable interest earned + taxable portions of benefits + taxable income adjustments
     const grossTaxableIncome =
-      penResults.penTaxableAmount +
-      spousePenResults.penTaxableAmount +
+      penResults.penGross +
+      spousePenResults.penGross +
       ssResults.ssTaxableAmount +
       spouseSsResults.ssTaxableAmount +
       withdrawalsBySource.retirementAccount +
@@ -2764,7 +2720,7 @@ function calc() {
         balanceBeforeGrowth: savingsBeforeGrowth,
         interestEarned: savingsGrowth, // Use the conservative growth calculation
         endingBalance: balances.balSavings,
-        growthRate: params.retTax * 100,
+        growthRate: params.rateOfSavings * 100,
       },
       // Add withdrawal breakdown data for popup
       withdrawalBreakdown: withdrawalBreakdown,
@@ -4205,7 +4161,7 @@ function generatePDFReport() {
       { key: "Roth Accounts:", value: `${(params.retRoth * 100).toFixed(1)}%` },
       {
         key: "Taxable Accounts:",
-        value: `${(params.retTax * 100).toFixed(1)}%`,
+        value: `${(params.rateOfSavings * 100).toFixed(1)}%`,
       },
       // Future investment types can be added here
     ];
@@ -4849,21 +4805,12 @@ function showSsBreakdown(yearIndex) {
 
   // Add taxation method explanation
   const params = parseInputParameters();
-  if (params.useSSRules) {
-    breakdownHtml += `
+  breakdownHtml += `
         <div style="margin-top: 16px; padding: 12px; background: rgba(110, 168, 254, 0.1); border-radius: 8px; font-size: 12px; color: var(--muted);">
         <strong>About IRS SS Rules:</strong><br/>
         Social Security taxation is based on "provisional income" which includes your taxable income plus 50% of your SS benefits. The percentage of SS benefits that become taxable depends on income thresholds that vary by filing status.
         </div>
     `;
-  } else {
-    breakdownHtml += `
-        <div style="margin-top: 16px; padding: 12px; background: rgba(110, 168, 254, 0.1); border-radius: 8px; font-size: 12px; color: var(--muted);">
-        <strong>About Simplified Method:</strong><br/>
-        Using simplified assumption that 85% of SS benefits are taxable regardless of income level. This provides a conservative estimate but may not reflect actual taxation.
-        </div>
-    `;
-  }
 
   content.innerHTML = breakdownHtml;
   popup.classList.add("show");
