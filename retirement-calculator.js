@@ -507,10 +507,6 @@ function showHelpToast(event, fieldId) {
       title: "Withdrawal Order Strategy",
       body: "The order in which you'll withdraw from different account types. The default strategy withdraws from Savings first, then 401k, then Roth to optimize taxes. The 50/50 strategy takes equal net amounts from savings and 401k accounts (after Social Security and pension income), automatically grossing up the 401k withdrawal to account for taxes.",
     },
-    useAgiTax: {
-      title: "Taxable Income-Based Tax Calculation",
-      body: "When enabled, uses a progressive tax table based on Adjusted Gross Income (gross income minus standard deduction) for pre-tax withdrawals and pension income. Uses inflation-adjusted standard deductions starting from 2025 base values: $15,000 (single) / $32,600 (married), adjusted annually for inflation. This typically results in more accurate tax rates than fixed percentages, especially for larger withdrawal amounts. Check the browser console for detailed calculations showing gross income → Taxable Income → tax rates.",
-    },
     filingStatus: {
       title: "Tax Filing Status",
       body: "Your tax filing status affects Social Security taxation thresholds and Taxable Income-based tax calculations. Single filers have lower thresholds for SS taxation than married filing jointly.",
@@ -1146,7 +1142,6 @@ function loadExample() {
     // taxPension: 15,
     order: "taxable,pretax,roth",
     filingStatus: "married",
-    // useAgiTax: true,
     useRMD: true,
   };
   // const ex = {
@@ -1192,7 +1187,6 @@ function loadExample() {
   //   taxPension: 15,
   //   order: "taxable,pretax,roth",
   //   filingStatus: "married",
-  //   useAgiTax: true,
   //   useRMD: true,
   // };
   // const ex = {
@@ -1305,7 +1299,6 @@ function parseInputParameters() {
     // taxSS: pct(num("taxSS")),
     // taxPension: pct(num("taxPension")),
     filingStatus: $("filingStatus").value,
-    useAgiTax: true, //$("useAgiTax").checked,
     useRMD: $("useRMD").checked,
   };
 
@@ -1383,13 +1376,11 @@ function calculateWorkingYearData(params, year, salary, balances) {
   let grossTaxableIncome =
     salary - cPre + taxableInterestIncome + taxableIncomeAdjustment;
 
-  const workingYearTaxes =
-    //params.useAgiTax ?
-    calculateFederalTax(
-      grossTaxableIncome,
-      params.filingStatus,
-      TAX_BASE_YEAR + year
-    );
+  const workingYearTaxes = calculateFederalTax(
+    grossTaxableIncome,
+    params.filingStatus,
+    TAX_BASE_YEAR + year
+  );
   // : grossTaxableIncome * params.taxPre;
 
   // Debug tax calculation for first few years
@@ -1401,24 +1392,19 @@ function calculateWorkingYearData(params, year, salary, balances) {
     // console.log(`Taxable interest income: ${fmt(taxableInterestIncome)}`);
     // console.log(`Gross Taxable Income: ${fmt(grossTaxableIncome)}`);
     // console.log(`Filing Status: ${params.filingStatus}`);
-    // console.log(`Use Taxable Income Tax: ${params.useAgiTax}`);
-    if (params.useAgiTax) {
-      const taxableIncomeAfterDeduction = calculateTaxableIncome(
-        grossTaxableIncome,
-        params.filingStatus,
-        TAX_BASE_YEAR + year
-      );
-      const effectiveRate =
-        params.filingStatus === "married"
-          ? getEffectiveTaxRateMarried(taxableIncomeAfterDeduction)
-          : getEffectiveTaxRate(taxableIncomeAfterDeduction);
-      // console.log(`Taxable Income (after standard deduction): ${fmt(taxableIncomeAfterDeduction)}`);
-      // console.log(`Effective Tax Rate: ${effectiveRate.toFixed(1)}%`);
-      // console.log(`Calculated Federal Tax: ${fmt(workingYearTaxes)}`);
-    } else {
-      // console.log(`Using fixed tax rate: ${(params.taxPre * 100).toFixed(1)}%`);
-      // console.log(`Calculated Tax: ${fmt(workingYearTaxes)}`);
-    }
+    const taxableIncomeAfterDeduction = calculateTaxableIncome(
+      grossTaxableIncome,
+      params.filingStatus,
+      TAX_BASE_YEAR + year
+    );
+    const effectiveRate =
+      params.filingStatus === "married"
+        ? getEffectiveTaxRateMarried(taxableIncomeAfterDeduction)
+        : getEffectiveTaxRate(taxableIncomeAfterDeduction);
+    // console.log(`Taxable Income (after standard deduction): ${fmt(taxableIncomeAfterDeduction)}`);
+    // console.log(`Effective Tax Rate: ${effectiveRate.toFixed(1)}%`);
+    // console.log(`Calculated Federal Tax: ${fmt(workingYearTaxes)}`);
+
     // console.log(`=== END TAX DEBUG ===\n`);
   }
 
@@ -1569,11 +1555,6 @@ function calc() {
     regenerateTaxFreeIncomeFields();
     lastCurrentAge = params.currentAge;
   }
-
-  // Log to console enhanced tax calculation examples
-  // if (params.useAgiTax) {
-  //   displayTaxExamples(params.filingStatus);
-  // }
 
   // Initialize balances object for tracking
   const balances = {
@@ -1762,27 +1743,6 @@ function calc() {
     const penTaxableAmount = penGross; // 100% taxable
     const penNonTaxable = 0; // 0% non-taxable
 
-    // let pensionTaxRate = params.taxPension;
-
-    // // Override pensionTaxRate with Taxable Income-based calculation if enabled
-    // if (params.useAgiTax) {
-    //   const grossIncomeForPensionTax = penTaxableAmount + totalTaxableIncome;
-    //   const taxableIncomeForPensionTax = calculateTaxableIncome(
-    //     grossIncomeForPensionTax,
-    //     params.filingStatus,
-    //     TAX_BASE_YEAR + year
-    //   );
-    //   const taxableIncomeBasedRate =
-    //     params.filingStatus === "married"
-    //       ? getEffectiveTaxRateMarried(taxableIncomeForPensionTax)
-    //       : getEffectiveTaxRate(taxableIncomeForPensionTax);
-
-    //   const taxableIncomeRateDecimal = taxableIncomeBasedRate / 100;
-    //   pensionTaxRate = Math.max(params.taxPension, taxableIncomeRateDecimal);
-
-    //   // console.log(`Pension Taxable Income Tax Calc: Gross Income: $${grossIncomeForPensionTax.toLocaleString()}, Taxable Income: $${taxableIncomeForPensionTax.toLocaleString()}, Filing: ${params.filingStatus}, Taxable Income Rate: ${taxableIncomeBasedRate.toFixed(1)}%, Fixed Rate: ${(params.taxPension*100).toFixed(1)}%, Using: ${(pensionTaxRate*100).toFixed(1)}%`);
-    // }
-
     // Don't calculate separate pension taxes - will be included in total income tax calculation
     const penTaxes = 0;
     const penNet = penGross; // Full gross amount; taxes calculated on total income
@@ -1869,7 +1829,7 @@ function calc() {
       // Use Taxable Income-based calculation for pre-tax withdrawals if enabled
       let taxRate = 0;
 
-      if (kind === "pretax" && params.useAgiTax) {
+      if (kind === "pretax") {
         // const estimatedGrossWithdrawal = desiredNetAmount / (1 - fixedTaxRate);
         const projectedGrossIncome = totalTaxableIncomeRef.value; // + estimatedGrossWithdrawal;
 
@@ -1913,7 +1873,7 @@ function calc() {
         netReceived = grossTake * (1 - taxRate); // Estimated net after taxes
         setBal(balRef - grossTake);
       } else {
-        // For taxable/Roth accounts, no tax impact
+        // For Savings/Roth accounts, there is no tax impact to consider; simply withdraw the desired amount
         grossTake = Math.min(desiredNetAmount, balRef);
         netReceived = grossTake;
         setBal(balRef - grossTake);
@@ -1944,7 +1904,6 @@ function calc() {
 
       let taxRate = 0; //params.taxPre;
 
-      // if (params.useAgiTax)
       {
         const projectedGrossIncome = totalTaxableIncomeRef.value + actualGross;
         const projectedTaxableIncome = calculateTaxableIncome(
@@ -4477,12 +4436,12 @@ function generatePDFReport() {
       const values = [
         calc.year.toString(),
         calc.age.toString(),
-        calc.spend ? "$" + (calc.spend / 1000).toFixed(0) + "k" : "",
-        calc.ss ? "$" + (calc.ss / 1000).toFixed(0) + "k" : "",
-        calc.pen ? "$" + (calc.pen / 1000).toFixed(0) + "k" : "",
-        calc.wNet ? "$" + (calc.wNet / 1000).toFixed(0) + "k" : "",
-        calc.taxes ? "$" + (calc.taxes / 1000).toFixed(0) + "k" : "",
-        "$" + (calc.total / 1000).toFixed(0) + "k",
+        calc.spend ? "$" + (calc.spend / 1000).toFixed(2) + "k" : "",
+        calc.ss ? "$" + (calc.ss / 1000).toFixed(2) + "k" : "",
+        calc.pen ? "$" + (calc.pen / 1000).toFixed(2) + "k" : "",
+        calc.wNet ? "$" + (calc.wNet / 1000).toFixed(2) + "k" : "",
+        calc.taxes ? "$" + (calc.taxes / 1000).toFixed(2) + "k" : "",
+        "$" + (calc.total / 1000).toFixed(2) + "k",
       ];
 
       xPos = 20;
