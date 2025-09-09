@@ -1830,8 +1830,7 @@ function calc() {
       let taxRate = 0;
 
       if (kind === "pretax") {
-        // const estimatedGrossWithdrawal = desiredNetAmount / (1 - fixedTaxRate);
-        const projectedGrossIncome = totalTaxableIncomeRef.value; // + estimatedGrossWithdrawal;
+        const projectedGrossIncome = totalTaxableIncomeRef.value;
 
         const projectedTaxableIncome = calculateTaxableIncome(
           projectedGrossIncome,
