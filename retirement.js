@@ -49,7 +49,7 @@ function taxableSS(ssBenefit, otherIncome) {
       ).round(2)}).`
     );
     console.log(
-      `. Amount of SS that is taxable is $${Math.min(
+      `Amount of SS that is taxable is $${Math.min(
         0.5 * ssBenefit,
         0.5 * (provisional - base1)
       ).round(2)}.`
