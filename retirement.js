@@ -8,43 +8,50 @@ Number.prototype.round = function (decimals = 0) {
 
 function taxableSS(ssBenefit, otherIncome) {
   const provisional = otherIncome + 0.5 * ssBenefit;
-  console.log("*** Social Security Benefits Taxation ***");
-  console.log(`. Social Security Income: $${ssBenefit.round(2)}`);
-  console.log(". Provisional income is 1/2 SS  + Other Income");
-  console.log(`. 1/2 of SS: $${(0.5 * ssBenefit).round(2)}`);
-  console.log(`. 401k Withdrawal: $${otherIncome.round(2)}`);
+  //   console.log("*** Social Security Benefits Taxation ***");
+  console.log(`Social Security Income: $${ssBenefit.round(2)}`);
   console.log(
-    `. Provisional Income: $${otherIncome.round(2)} + $${(
-      0.5 * ssBenefit
-    ).round(2)} = $${provisional.round(2)}`
+    `. Provisional income is defined as 1/2 SS  + Other Taxable Income`
+  );
+  console.log(`. 1/2 of SS: $${(0.5 * ssBenefit).round(2)}`);
+  console.log(`. Other Taxable Income: $${otherIncome.round(2)}`);
+  console.log(
+    `. Provisional Income is $${provisional.round(2)} ($${otherIncome.round(
+      2
+    )} + $${(0.5 * ssBenefit).round(2)})`
   );
 
   const base1 = 32000;
   const base2 = 44000;
+  console.log(`Tier 1 threshold: $${base1}`);
+  console.log(`Tier 2 threshold: $${base2}`);
 
   if (provisional <= base1) {
     console.log(
-      "Provisional income is below $32,000. No Social Security benefits are taxable."
+      `. Provisional income is below Tier 1 ($${base1}). No Social Security benefits are taxable.`
     );
     return 0;
   }
 
   if (provisional <= base2) {
     console.log(
-      `Provisional income is ${provisional.round(
-        0
-      )}, between $32,000 and $44,000. Up to 50% of Social Security benefits may be taxable.`
+      `. Provisional income exceeds Tier 1 ($${base1}) by $${(
+        provisional - base1
+      ).round(2)}.`
     );
+    console.log(`. Provisional income is ${provisional.round(0)}`);
+
+    console.log(`. Taxable SS amount is the lesser of:`);
+    console.log(`   50% of SS benefit ($${(0.5 * ssBenefit).round(2)})`);
+    console.log(`     -- or --`);
     console.log(
-      `Taxable SS amount is the lesser of 50% of SS benefit ($${(
-        0.5 * ssBenefit
-      ).round(2)}) or 50% of the amount over $32,000 ($${(
+      `   50% of the amount over the Tier1 threshold ($${(
         0.5 *
         (provisional - base1)
       ).round(2)}).`
     );
     console.log(
-      `Amount of SS that is taxable is $${Math.min(
+      `. Amount of SS that is taxable is $${Math.min(
         0.5 * ssBenefit,
         0.5 * (provisional - base1)
       ).round(2)}.`
@@ -54,35 +61,39 @@ function taxableSS(ssBenefit, otherIncome) {
 
   const excessOverBase2 = provisional - base2;
   console.log(
-    `Provisional income is $${provisional.round(
-      0
-    )}, which is $${excessOverBase2.round(
-      0
-    )} in excess of $44,000. 85% of this excess is $${(
-      0.85 * excessOverBase2
-    ).round(2)}.`
+    `. Provisional income exceeds Tier 1 in its entirety: $${base2 - base1}.`
   );
   console.log(
-    `Taxable amount is the lesser of 85% of SS benefit ($${(
-      0.85 * ssBenefit
-    ).round(2)}) or $6000 + the 85% of the excess over $44,000 ($${(
+    `. Provisional income exceeds Tier 2 threshold ($${base2}) by $${excessOverBase2.round(
+      2
+    )}`
+  );
+  //   console.log(
+  //     `. Provisional income is $${provisional.round(
+  //       0
+  //     )}, which is $${excessOverBase2.round(
+  //       0
+  //     )} in excess of $44,000. 85% of this excess is $${(
+  //       0.85 * excessOverBase2
+  //     ).round(2)}.`
+  //   );
+  console.log(`. Taxable amount of SS is the lesser of:`);
+  console.log(`    85% of total SS benefit ($${(0.85 * ssBenefit).round(2)})`);
+  console.log(`     -- or ---`);
+  console.log(
+    `    50% of excess over Tier 1 ($6000) + 85% of the excess over Tier 2 ($${(
       0.85 * excessOverBase2
     ).round(2)}).`
   );
-  console.log(
-    `Amount of SS that is taxable is $${Math.min(
-      0.85 * ssBenefit,
-      0.5 * (base2 - base1) + 0.85 * excessOverBase2
-    ).round(2)}.`
-  );
-  return Math.min(
+  const taxableSSAmount = Math.min(
     0.85 * ssBenefit,
     0.5 * (base2 - base1) + 0.85 * excessOverBase2
   );
+  console.log(`Amount of SS that is taxable is $${taxableSSAmount.round(2)}.`);
+  return taxableSSAmount;
 }
 
 function taxFromBrackets(taxable, brackets) {
-  console.log("*** Tax Calculation ***");
   let tax = 0,
     prev = 0;
   for (const { upto, rate } of brackets) {
@@ -91,12 +102,11 @@ function taxFromBrackets(taxable, brackets) {
     if (taxable <= upto) break;
     prev = upto;
   }
-  console.log(`Total taxable income is $${taxable.round(2)}.`);
   console.log(`Total tax calculated is $${tax.round(2)}.`);
   return tax;
 }
 
-function reverseCalculate401kWithdrawlToHitTargetNet(targetAmount, opts) {
+function reverseCalculate401kWithdrawalToHitNetTargetOf(targetAmount, opts) {
   const {
     otherTaxableIncome,
     ssBenefit,
@@ -105,20 +115,26 @@ function reverseCalculate401kWithdrawlToHitTargetNet(targetAmount, opts) {
     precision = 0.01, // within 1 cent
   } = opts;
 
-  function calculateNetWhenOtherIncomeIs(otherIncome) {
-    const taxableSSAmt = taxableSS(ssBenefit, otherIncome);
-    const grossTaxableIncome = otherIncome + taxableSSAmt;
+  function calculateNetWhenTaxableIncomeIs(guestimateFor401k, taxableIncome) {
+    console.log(`*** calculateNetWhenTaxableIncomeIs ***`);
+    console.log(
+      `Calculating net income when other taxable income is $${taxableIncome.round(
+        2
+      )}.`
+    );
+    const totalTaxableIncome = guestimateFor401k + taxableIncome;
+    const taxableSSAmt = taxableSS(ssBenefit, totalTaxableIncome);
+    const grossTaxableIncome = totalTaxableIncome + taxableSSAmt;
     const actualTaxableIncome = Math.max(
       0,
       grossTaxableIncome - standardDeduction
     );
-    console.log(`Total income is $${(ssBenefit + otherIncome).round(2)}.`);
-    console.log(`Other income is $${otherIncome.round(2)}.`);
+    console.log(`Other taxable income is $${totalTaxableIncome.round(2)}.`);
     console.log(`Taxable SS amount is $${taxableSSAmt.round(2)}.`);
     console.log(
       `Gross taxable income is $${grossTaxableIncome.round(
         0
-      )}. (${otherIncome.round(2)} + ${taxableSSAmt.round(2)})`
+      )}. (${totalTaxableIncome.round(2)} + ${taxableSSAmt.round(2)})`
     );
     console.log(`Standard deduction is $${standardDeduction.round(2)}.`);
     console.log(`Actual taxable income is $${actualTaxableIncome.round(2)}.`);
@@ -127,14 +143,12 @@ function reverseCalculate401kWithdrawlToHitTargetNet(targetAmount, opts) {
 
     console.log(
       `Total income from all sources is $${(
-        otherIncome +
-        ssBenefit +
-        savings
+        totalTaxableIncome + ssBenefit
       ).round(2)}.`
     );
     console.log(`Taxes owed are $${tax.round(2)}.`);
 
-    const netIncome = otherIncome + ssBenefit + savings - tax;
+    const netIncome = totalTaxableIncome + ssBenefit - tax;
 
     console.log(`Net income after taxes is $${netIncome.round(2)}.`);
 
@@ -153,7 +167,7 @@ function reverseCalculate401kWithdrawlToHitTargetNet(targetAmount, opts) {
         ? "\x1b[34m"
         : "\x1b[32m"; // Red for too high, Blue for too low, Green for just right
     console.log(
-      `With other income is $${otherIncome.round(
+      `When 401k withdrawal is $${guestimateFor401k.round(
         0
       )} then the net income will be $${netIncome.round(
         0
@@ -166,8 +180,8 @@ function reverseCalculate401kWithdrawlToHitTargetNet(targetAmount, opts) {
   }
 
   //   debugger;
-  if (opts.otherTaxableIncome) {
-    let net = calculateNetWhenOtherIncomeIs(opts.otherTaxableIncome);
+  if (otherTaxableIncome) {
+    let net = calculateNetWhenTaxableIncomeIs(0, otherTaxableIncome);
     if (net.netIncome.round(2) > targetAmount.round(2)) {
       console.log(`Other income makes it unnecessary to withdraw from 401k`);
       console.log(`Net income with other income is $${net.netIncome.round(2)}`);
@@ -183,13 +197,17 @@ function reverseCalculate401kWithdrawlToHitTargetNet(targetAmount, opts) {
     hi = targetAmount * 2,
     net;
   for (let i = 0; i < 80; i++) {
+    console.log();
     console.log(
       `===== Iteration ${i}: lo=$${lo.round(2)}, hi=$${hi.round(2)} ======`
     );
     const guestimate401kWithdrawal = (lo + hi) / 2;
-    console.log(`Guestimate withdrawal: $${guestimate401kWithdrawal.round(2)}`);
-    net = calculateNetWhenOtherIncomeIs(
-      guestimate401kWithdrawal + otherTaxableIncome
+    console.log(
+      `Guestimate 401k withdrawal: $${guestimate401kWithdrawal.round(2)}`
+    );
+    net = calculateNetWhenTaxableIncomeIs(
+      guestimate401kWithdrawal,
+      otherTaxableIncome
     );
     if (net.netIncome.round(2) == targetAmount.round(2)) break;
     if (net.netIncome < targetAmount) lo = guestimate401kWithdrawal;
@@ -217,7 +235,7 @@ if (!targetNetStr || !ssBenefitStr) {
   process.exit(1);
 }
 
-const targetNet = parseFloat(targetNetStr);
+const netTarget = parseFloat(targetNetStr);
 const ssBenefit = parseFloat(ssBenefitStr);
 const savings = parseFloat(savingsStr || "0");
 const otherTaxableIncome = parseFloat(otherTaxableIncomeStr || "0");
@@ -230,10 +248,11 @@ const brackets = [
   { upto: Infinity, rate: 0.24 },
 ];
 
-const targetWithoutSavings = targetNet - savings;
+// Remove savings because it is not taxable
+const targetLessSavings = netTarget - savings;
 
-const result = reverseCalculate401kWithdrawlToHitTargetNet(
-  targetWithoutSavings,
+const result = reverseCalculate401kWithdrawalToHitNetTargetOf(
+  targetLessSavings,
   {
     otherTaxableIncome,
     ssBenefit,
@@ -241,17 +260,13 @@ const result = reverseCalculate401kWithdrawlToHitTargetNet(
     brackets,
   }
 );
-
+console.log();
 console.log("====================================");
 console.log("*** Retirement Income Summary ***");
 console.log("====================================");
 console.log();
-console.log("Target Net Income:          $", targetNet.toFixed(0));
+console.log("Target Net Income:          $", netTarget.toFixed(0));
 console.log();
-// console.log(
-//   "Total Income (incl SS):     $",
-//   (otherTaxableIncome + ssBenefit).round(2)
-// );
 console.log("Social Security Benefit:    $", ssBenefit.toFixed(0));
 console.log("+ other Taxable Income:     $", otherTaxableIncome.toFixed(0));
 console.log(
@@ -265,14 +280,15 @@ console.log(
 );
 console.log("- Taxes:                    $", result.tax.toFixed(0));
 console.log("=======================================");
+console.log("Net income:                 $", result.net.toFixed(0));
+console.log("+ savings contribution:     $", savings.toFixed(0));
 console.log(
-  "Net income:                 $",
+  "Final spend:                $",
   (
     otherTaxableIncome +
     ssBenefit +
+    savings +
     result.withdrawalNeeded -
     result.tax
   ).toFixed(0)
 );
-console.log("+ savings contribution:     $", savings.toFixed(0));
-console.log("Net income:                 $", result.net.toFixed(0));
