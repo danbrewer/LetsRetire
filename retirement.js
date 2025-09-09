@@ -39,8 +39,6 @@ function taxableSS(ssBenefit, otherIncome) {
         provisional - base1
       ).round(2)}.`
     );
-    console.log(`. Provisional income is ${provisional.round(0)}`);
-
     console.log(`. Taxable SS amount is the lesser of:`);
     console.log(`   50% of SS benefit ($${(0.5 * ssBenefit).round(2)})`);
     console.log(`     -- or --`);
