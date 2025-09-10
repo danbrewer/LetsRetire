@@ -1140,7 +1140,7 @@ function loadExample() {
     // taxRoth: 0,
     // taxSS: 10,
     // taxPension: 15,
-    order: "taxable,pretax,roth",
+    order: "savings,pretax,roth",
     filingStatus: "married",
     useRMD: true,
   };

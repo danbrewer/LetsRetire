@@ -273,68 +273,23 @@ function determine401kWithdrawalToHitNetTargetOf(targetAmount, opts) {
   };
 }
 
-// ---------------- CLI ----------------
+// ---------------- MODULE EXPORTS ----------------
 
-// Grab args: node retirement.js 100000 32307 [savings] [otherTaxableIncomeStr]
-const [, , targetNetStr, ssBenefitStr, savingsStr, otherTaxableIncomeStr] =
-  process.argv;
-
-if (!targetNetStr || !ssBenefitStr) {
-  console.error(
-    "Usage: node retirement.js <targetNet> <ssBenefit> [taxExemptSavings]"
-  );
-  process.exit(1);
+// Only export as module if we're in Node.js environment
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = {
+    log,
+    determineTaxablePortionOfSocialSecurity,
+    determineTaxUsingBrackets,
+    calculateNetWhen401kIncomeIs,
+    determine401kWithdrawalToHitNetTargetOf,
+    // Export some common tax brackets and standard deductions for convenience
+    getTaxBrackets2024MFJ: () => [
+      { upto: 23200, rate: 0.1 },
+      { upto: 94300, rate: 0.12 },
+      { upto: 201050, rate: 0.22 },
+      { upto: Infinity, rate: 0.24 },
+    ],
+    getStandardDeduction2024MFJ: () => 29200,
+  };
 }
-
-const netTarget = parseFloat(targetNetStr);
-const ssBenefit = parseFloat(ssBenefitStr);
-const savings = parseFloat(savingsStr || "0");
-const otherTaxableIncome = parseFloat(otherTaxableIncomeStr || "0");
-
-// Example 2024 MFJ brackets
-const brackets = [
-  { upto: 23200, rate: 0.1 },
-  { upto: 94300, rate: 0.12 },
-  { upto: 201050, rate: 0.22 },
-  { upto: Infinity, rate: 0.24 },
-];
-
-// Remove savings because it is not taxable
-const targetLessSavings = netTarget - savings;
-
-const result = determine401kWithdrawalToHitNetTargetOf(targetLessSavings, {
-  otherTaxableIncome,
-  ssBenefit,
-  standardDeduction: 29200, // MFJ 2024 demo
-  brackets,
-});
-
-log.info();
-log.info("====================================");
-log.info("*** Retirement Income Summary ***");
-log.info("====================================");
-log.info();
-log.info("Target Net Income:          $", netTarget.toFixed(0));
-log.info();
-log.info("Social Security Benefit:    $", ssBenefit.toFixed(0));
-log.info("+ other Taxable Income:     $", otherTaxableIncome.toFixed(0));
-log.info("+ 401k Withdrawal Needed:   $", result.withdrawalNeeded.toFixed(0));
-log.info("---------------------------------------");
-log.info(
-  "Total Income:               $",
-  (otherTaxableIncome + ssBenefit + result.withdrawalNeeded).toFixed(0)
-);
-log.info("- Taxes:                    $", result.tax.toFixed(0));
-log.info("=======================================");
-log.info("Net income:                 $", result.net.toFixed(0));
-log.info("+ savings contribution:     $", savings.toFixed(0));
-log.info(
-  "Final spend:                $",
-  (
-    otherTaxableIncome +
-    ssBenefit +
-    savings +
-    result.withdrawalNeeded -
-    result.tax
-  ).toFixed(0)
-);
