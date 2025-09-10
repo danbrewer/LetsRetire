@@ -208,7 +208,7 @@ function calculateFederalTax(
 
   // Then get effective rate based on Taxable Income
   const effectiveRate =
-    filingStatus === "married"
+    filingStatus === FILING_STATUS.MARRIED_FILING_JOINTLY
       ? getEffectiveTaxRateMarried(taxableIncome)
       : getEffectiveTaxRate(taxableIncome);
 
@@ -1137,7 +1137,7 @@ function loadExample() {
     penStart: 65,
     penCola: 0,
     order: "savings,pretax,roth",
-    filingStatus: "married",
+    filingStatus: FILING_STATUS.MARRIED_FILING_JOINTLY,
     useRMD: true,
   };
   // const ex = {
@@ -1388,7 +1388,7 @@ function calculateWorkingYearData(params, year, salary, balances) {
       TAX_BASE_YEAR + year
     );
     const effectiveRate =
-      params.filingStatus === "married"
+      params.filingStatus === FILING_STATUS.MARRIED_FILING_JOINTLY
         ? getEffectiveTaxRateMarried(taxableIncomeAfterDeduction)
         : getEffectiveTaxRate(taxableIncomeAfterDeduction);
     // console.log(`Taxable Income (after standard deduction): ${fmt(taxableIncomeAfterDeduction)}`);
@@ -1643,7 +1643,8 @@ function calc() {
       };
     }
 
-    const isMarried = params.filingStatus === "married";
+    const isMarried =
+      params.filingStatus === FILING_STATUS.MARRIED_FILING_JOINTLY;
 
     // Use proper SS taxation rules based on provisional income
     // Calculate provisional income: Taxable Income + non-taxable interest + 50% of SS benefits
@@ -1828,7 +1829,7 @@ function calc() {
           TAX_BASE_YEAR + year
         );
         const taxableIncomeBasedRate =
-          params.filingStatus === "married"
+          params.filingStatus === FILING_STATUS.MARRIED_FILING_JOINTLY
             ? getEffectiveTaxRateMarried(projectedTaxableIncome)
             : getEffectiveTaxRate(projectedTaxableIncome);
 
@@ -1850,7 +1851,7 @@ function calc() {
           TAX_BASE_YEAR + year
         );
         const taxableIncomeBasedRate =
-          params.filingStatus === "married"
+          params.filingStatus === FILING_STATUS.MARRIED_FILING_JOINTLY
             ? getEffectiveTaxRateMarried(projectedTaxableIncome)
             : getEffectiveTaxRate(projectedTaxableIncome);
         const taxableIncomeRateDecimal = taxableIncomeBasedRate / 100;
@@ -1901,7 +1902,7 @@ function calc() {
           TAX_BASE_YEAR + year
         );
         const taxableIncomeBasedRate =
-          params.filingStatus === "married"
+          params.filingStatus === FILING_STATUS.MARRIED_FILING_JOINTLY
             ? getEffectiveTaxRateMarried(projectedTaxableIncome)
             : getEffectiveTaxRate(projectedTaxableIncome);
         const taxableIncomeRateDecimal = taxableIncomeBasedRate / 100;
@@ -1916,7 +1917,7 @@ function calc() {
         TAX_BASE_YEAR + year
       );
       const taxableIncomeBasedRate =
-        params.filingStatus === "married"
+        params.filingStatus === FILING_STATUS.MARRIED_FILING_JOINTLY
           ? getEffectiveTaxRateMarried(projectedTaxableIncome)
           : getEffectiveTaxRate(projectedTaxableIncome);
       const taxableIncomeRateDecimal = taxableIncomeBasedRate / 100;
@@ -5192,7 +5193,10 @@ function showProvisionalIncomeBreakdown(yearIndex) {
     const threshold1 = provisionalIncomeDetails.threshold1;
     const threshold2 = provisionalIncomeDetails.threshold2;
     const isUsingSSRules = provisionalIncomeDetails.method === "irs-rules";
-    const filingStatus = threshold1 === 32000 ? "married" : "single"; // Infer from threshold
+    const filingStatus =
+      threshold1 === 32000
+        ? FILING_STATUS.MARRIED_FILING_JOINTLY
+        : FILING_STATUS.SINGLE; // Infer from threshold
 
     if (isUsingSSRules) {
       breakdownHtml += `
@@ -5202,7 +5206,7 @@ function showProvisionalIncomeBreakdown(yearIndex) {
             <div class="ss-breakdown-item">
                 <span class="ss-breakdown-label">Filing Status:</span>
                 <span class="ss-breakdown-value">${
-                  filingStatus === "married"
+                  filingStatus === FILING_STATUS.MARRIED_FILING_JOINTLY
                     ? "Married Filing Jointly"
                     : "Single"
                 }</span>
