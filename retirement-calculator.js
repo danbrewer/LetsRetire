@@ -1,5 +1,14 @@
 // retirement-calculator.js
 
+if (
+  typeof module !== "undefined" &&
+  module.exports &&
+  typeof require === "function"
+) {
+  // Running in Node.js
+  const fs = require("retirement.js");
+}
+
 // --- Added by patch: 2025 elective deferral limits (401k/Roth 401k) ---
 const EMPLOYEE_401K_LIMIT_2025 = 23000; // elective deferral
 const EMPLOYEE_401K_CATCHUP_50 = 7500; // catch-up age 50+
@@ -912,8 +921,10 @@ function calculateWorkingYearData(inputs, year, salary, balances) {
   const age = inputs.currentAge + year;
 
   // Calculate current year living expenses (retirement spending adjusted to current year)
-  const currentYearSpending =
-    inputs.spendingToday * compoundedRate(inputs.inflation, year);
+  const currentYearSpending = inputs.spendingToday.adjustedForInflation(
+    inputs.inflation,
+    year
+  ); // * compoundedRate(inputs.inflation, year);
 
   // Desired contributions this year
   let desiredPre = salary * inputs.pretaxPct;
@@ -1086,9 +1097,6 @@ function calculateWorkingYearData(inputs, year, salary, balances) {
     },
   };
 }
-
-// Global variable to store calculations for popup access
-let calculations = [];
 
 function calc() {
   // Enhanced retirement calculator with realistic working year modeling
@@ -2303,184 +2311,6 @@ function calc() {
   }
 
   console.log("Calculations: ", calculations);
-
-  /**
-   * Generate final summary, write table, and update KPIs
-   */
-  function generateOutputAndSummary(inputs, rows, totalTaxes, maxDrawdown) {
-    // Write table
-    const tbody = $("rows");
-    tbody.innerHTML = calculations
-      .map(
-        (r, index) => `
-        <tr>
-        <td class="neutral">${r.year}</td>
-        <td class="neutral">${r.age}</td>
-        
-        <!-- THE NEED -->
-        <td class="outgoing">${r.spend ? fmt(r.spend) : ""}</td>
-        
-        <!-- NET INCOME (what you actually receive) -->
-        <td class="income">${
-          r.ss
-            ? `<span class="ss-link" onclick="showSsBreakdown(${index})">${fmt(
-                r.ss
-              )}</span>`
-            : ""
-        }</td>
-        <td class="income">${r.pen ? fmt(r.pen) : ""}</td>
-        <td class="income">${r.spouseSs ? fmt(r.spouseSs) : ""}</td>
-        <td class="income">${r.spousePen ? fmt(r.spousePen) : ""}</td>
-        <td class="income">${
-          r.w401kNet
-            ? `<span class="withdrawal-net-link" onclick="showWithdrawalNetBreakdown(${index})">${fmt(
-                r.w401kNet
-              )}</span>`
-            : ""
-        }</td>
-        <td class="income">${
-          r.wSavingsRothNet ? fmt(r.wSavingsRothNet) : ""
-        }</td>
-        <td class="income">${
-          r.totalNetIncome
-            ? r.age >= inputs.retireAge
-              ? `<span class="ss-link" onclick="showTotalNetBreakdown(${index})">${fmt(
-                  r.totalNetIncome
-                )}</span>`
-              : fmt(r.totalNetIncome)
-            : ""
-        }</td>
-        
-        <!-- GROSS INCOME (before taxes/deductions) -->
-        <td class="income">${r.salary ? fmt(r.salary) : ""}</td>
-        <td class="income">${
-          r.taxableInterest ? fmt(r.taxableInterest) : ""
-        }</td>
-        <td class="income">${r.ss ? fmt(r.ssGross || 0) : ""}</td>
-        <td class="income">${r.pen ? fmt(r.penGross || 0) : ""}</td>
-        <td class="income">${r.spouseSs ? fmt(r.spouseSsGross || 0) : ""}</td>
-        <td class="income">${r.spousePen ? fmt(r.spousePenGross || 0) : ""}</td>
-        <td class="income">${r.w401kGross ? fmt(r.w401kGross) : ""}</td>
-        <td class="income">${
-          r.totalGrossIncome ? fmt(r.totalGrossIncome) : ""
-        }</td>
-        
-        <!-- THE BREAKDOWN -->
-        <td class="income">${
-          r.age >= inputs.retireAge
-            ? `<span class="taxable-income-link" onclick="showTaxableIncomeBreakdown(${index})" title="Click to see breakdown">${fmt(
-                r.taxableIncome || 0
-              )}</span>`
-            : r.taxableIncome
-            ? fmt(r.taxableIncome)
-            : ""
-        }</td>
-        <td class="income">${
-          r.nonTaxableIncome
-            ? r.age >= inputs.retireAge
-              ? `<span class="non-taxable-income-link" onclick="showNonTaxableIncomeBreakdown(${index})" title="Click to see breakdown">${fmt(
-                  r.nonTaxableIncome
-                )}</span>`
-              : fmt(r.nonTaxableIncome)
-            : ""
-        }</td>
-        <td class="income">${
-          r.provisionalIncome && r.provisionalIncome > 0
-            ? `<span class="provisional-income-link" onclick="showProvisionalIncomeBreakdown(${index})" title="Click to see breakdown">${fmt(
-                r.provisionalIncome
-              )}</span>`
-            : r.provisionalIncome
-            ? fmt(r.provisionalIncome)
-            : ""
-        }</td>
-        
-        <!-- TAX INFORMATION -->
-        <td class="neutral">${
-          r.standardDeduction ? fmt(r.standardDeduction) : ""
-        }</td>
-        <td class="neutral">${r.taxableIncome ? fmt(r.taxableIncome) : ""}</td>
-        <td class="outgoing">${
-          r.ssTaxes !== undefined && r.ssTaxes !== null ? fmt(r.ssTaxes) : ""
-        }</td>
-        <td class="outgoing">${r.otherTaxes ? fmt(r.otherTaxes) : ""}</td>
-        <td class="outgoing">${
-          r.age >= inputs.retireAge
-            ? `<span class="total-taxes-link" onclick="showTotalTaxesBreakdown(${index})" title="Click to see breakdown">${fmt(
-                r.taxes || 0
-              )}</span>`
-            : r.taxes
-            ? fmt(r.taxes)
-            : ""
-        }</td>
-        <td class="neutral">${
-          r.effectiveTaxRate ? r.effectiveTaxRate.toFixed(1) + "%" : ""
-        }</td>
-        
-        <!-- THE RESULT -->
-        <td class="neutral">${
-          r.balSavings
-            ? `<span class="savings-balance-link" onclick="showSavingsBreakdown(${index})" title="Click to see savings changes">${fmt(
-                r.balSavings
-              )}</span>`
-            : ""
-        }</td>
-        <td class="neutral">${fmt(r.balPre)}</td>
-        <td class="neutral">${fmt(r.balRoth)}</td>
-        <td class="neutral">${fmt(r.total)}</td>
-        </tr>`
-      )
-      .join("");
-
-    // KPIs
-    const last = calculations[calculations.length - 1];
-    // Find the last age where there's still money, or endAge if money lasts throughout
-    const fundedTo =
-      last.total > 0
-        ? inputs.endAge
-        : calculations.reduce(
-            (lastGoodAge, r) => (r.total > 0 ? r.age : lastGoodAge),
-            inputs.currentAge
-          );
-    $("kpiAge").innerHTML = `${fundedTo} <span class="pill ${
-      fundedTo >= inputs.endAge ? "ok" : "alert"
-    }">${fundedTo >= inputs.endAge ? "Fully funded" : "Shortfall"}</span>`;
-    $("kpiEndBal").textContent = fmt(Math.max(0, last.total));
-    $("kpiDraw").textContent = `${inputs.retireAge}`;
-    $("kpiTax").textContent = fmt(
-      inputs.balPre + inputs.balRoth + inputs.balSavings
-    );
-
-    // Chart (total balance)
-    drawChart(calculations.map((r) => ({ x: r.year, y: r.total, age: r.age })));
-
-    // Save rows for export
-    window.__rows = rows;
-  }
-
-  // Key Performance Indicators
-  const last = calculations[calculations.length - 1];
-  // Find the last age where there's still money, or endAge if money lasts throughout
-  const fundedTo =
-    last.total > 0
-      ? endAge
-      : calculations.reduce(
-          (lastGoodAge, r) => (r.total > 0 ? r.age : lastGoodAge),
-          currentAge
-        );
-  $("kpiAge").innerHTML = `${fundedTo} <span class="pill ${
-    fundedTo >= endAge ? "ok" : "alert"
-  }">${fundedTo >= endAge ? "Fully funded" : "Shortfall"}</span>`;
-  $("kpiEndBal").textContent = fmt(Math.max(0, last.total));
-  $("kpiDraw").textContent = `${retireAge}`;
-  $("kpiTax").textContent = fmt(
-    num("balPre") + num("balRoth") + num("balSavings")
-  );
-
-  // Chart (total balance)
-  drawChart(calculations.map((r) => ({ x: r.year, y: r.total, age: r.age })));
-
-  // Save rows for export
-  window.__rows = rows;
 
   // Generate final output
   generateOutputAndSummary(inputs, rows, totalTaxes, maxDrawdown);
