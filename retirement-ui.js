@@ -2266,3 +2266,162 @@ function generateOutputAndSummary(inputs, rows) {
   // Save rows for export
   window.__rows = rows;
 }
+
+function updateTaxFreeIncomeFieldsDisplayMode() {
+  const useCurrentYear = $("useTaxFreeCurrentYearValues").checked;
+  const currentAge = num("currentAge");
+  const endAge = num("endAge");
+
+  if (currentAge <= 0 || endAge <= currentAge) return;
+
+  for (let age = currentAge; age <= endAge; age++) {
+    const field = document.getElementById(`taxFreeIncome_${age}`);
+    if (!field) continue;
+
+    const currentValue = parseFloat(field.value) || 0;
+    const storedCurrentYearValue =
+      parseFloat(field.getAttribute("data-current-year-value")) || 0;
+
+    if (useCurrentYear) {
+      // Switch to current year mode
+      field.placeholder = "Current year $";
+
+      if (currentValue > 0 && !storedCurrentYearValue) {
+        field.setAttribute("data-current-year-value", currentValue);
+      }
+
+      // Update tooltip to show inflation calculation
+      if (field.value && !isNaN(field.value)) {
+        const displayValue = parseFloat(field.value);
+        const inflatedValue = applyInflationToIncomeValue(displayValue, age);
+        field.setAttribute(
+          "title",
+          `Current year value: $${displayValue.toLocaleString()} → Inflated to age ${age}: $${inflatedValue.toLocaleString()}`
+        );
+      }
+    } else {
+      // Switch to inflated mode
+      field.placeholder = "0";
+
+      // Clear the stored current year value and tooltips
+      field.removeAttribute("data-current-year-value");
+      field.removeAttribute("title");
+    }
+  }
+
+  calc();
+}
+
+function loadExample() {
+  const ex = {
+    currentAge: 60,
+    retireAge: 62,
+    endAge: 90,
+    inflation: 0.0,
+    spendingToday: 100000,
+    spendingDecline: 0.0,
+    spouseAge: 56,
+    spouseRetireAge: 62,
+    spouseSsMonthly: 1000,
+    spouseSsStart: 62,
+    spouseSsCola: 0.0,
+    spousePenMonthly: 500,
+    spousePenStart: 65,
+    spousePenCola: 0,
+    spouseTaxSS: 10,
+    spouseTaxPension: 20,
+    salary: 174500,
+    salaryGrowth: 2.0,
+    pretaxPct: 0,
+    rothPct: 0,
+    taxablePct: 35,
+    matchCap: 0,
+    matchRate: 0,
+    balPre: 600000,
+    balRoth: 0,
+    balSavings: 500000,
+    retPre: 3.0,
+    retRoth: 0.0,
+    retTax: 3.0,
+    ssMonthly: 2500,
+    ssStart: 62,
+    ssCola: 2.5,
+    penMonthly: 3500,
+    penStart: 65,
+    penCola: 0,
+    order: "savings,pretax,roth",
+    filingStatus: FILING_STATUS.MARRIED_FILING_JOINTLY,
+    useRMD: true,
+  };
+  // const ex = {
+  //   currentAge: 60,
+  //   retireAge: 62,
+  //   endAge: 90,
+  //   inflation: 2.5,
+  //   spendingToday: 95000,
+  //   spendingDecline: 1.0,
+  //   spouseAge: 56,
+  //   spouseRetireAge: 62,
+  //   spouseSsMonthly: 1000,
+  //   spouseSsStart: 62,
+  //   spouseSsCola: 0.0,
+  //   spousePenMonthly: 500,
+  //   spousePenStart: 65,
+  //   spousePenCola: 0,
+  //   spouseTaxSS: 10,
+  //   spouseTaxPension: 20,
+  //   salary: 174500,
+  //   salaryGrowth: 2.0,
+  //   pretaxPct: 0,
+  //   rothPct: 0,
+  //   taxablePct: 35,
+  //   matchCap: 0,
+  //   matchRate: 0,
+  //   balPre: 600000,
+  //   balRoth: 0,
+  //   balSavings: 500000,
+  //   retPre: 3.0,
+  //   retRoth: 0.0,
+  //   retTax: 3.0,
+  //   ssMonthly: 2500,
+  //   ssStart: 62,
+  //   ssCola: 2.5,
+  //   penMonthly: 3500,
+  //   penStart: 65,
+  //   penCola: 0,
+  //   taxPre: 15,
+  //   taxTaxable: 0,
+  //   taxRoth: 0,
+  //   taxSS: 10,
+  //   taxPension: 15,
+  //   order: "taxable,pretax,roth",
+  //   filingStatus: "married",
+  //   useRMD: true,
+  // };
+  // const ex = {
+  //   currentAge:55, retireAge:65, endAge:85, inflation:2.5, spendingToday:60000, spendingDecline:1.0,
+  //   spouseAge:52, spouseRetireAge:62, spouseSsMonthly:1000, spouseSsStart:62, spouseSsCola:2.0,
+  //   spousePenMonthly:500, spousePenStart:65, spousePenCola:0, spouseTaxSS:10, spouseTaxPension:20,
+  //   salary:100000, salaryGrowth:3.0, pretaxPct:10, rothPct:5, taxablePct:5,
+  //   matchCap:4, matchRate:50, balPre:300000, balRoth:100000, balSavings:50000,
+  //   retPre:6.0, retRoth:6.0, retTax:5.5, ssMonthly:2500, ssStart:67, ssCola:2.0,
+  //   penMonthly:0, penStart:65, penCola:0, taxPre:22, taxTaxable:10, taxRoth:0,
+  //   taxSS:10, taxPension:20, order:'taxable,pretax,roth'
+  // };
+  // const ex = {
+  //   currentAge: 54, retireAge: 55, endAge: 85,
+  //   inflation: 0.0, spendingToday: 50000, spendingDecline: 0.0,
+  //   spouseAge: 52, spouseRetireAge: 62, spouseSsMonthly: 0, spouseSsStart: 62, spouseSsCola: 2.0,
+  //   spousePenMonthly: 0, spousePenStart: 65, spousePenCola: 0, spouseTaxSS: 10, spouseTaxPension: 20,
+  //   salary: 0, salaryGrowth: 3.0, pretaxPct: 10, rothPct: 5, taxablePct: 5,
+  //   matchCap: 4, matchRate: 50, balPre: 1000000, balRoth: 0, balSavings: 0,
+  //   retPre: 0.0, retRoth: 0.0, retTax: 0.0,
+  //   ssMonthly: 0, ssStart: 67, ssCola: 2.0,
+  //   penMonthly: 0, penStart: 65, penCola: 0,
+  //   taxPre: 0, taxTaxable: 0, taxRoth: 0,
+  //   taxSS: 0, taxPension: 0, order: 'pretax,roth,taxable'
+  // };
+  for (const [k, v] of Object.entries(ex)) {
+    if ($(k)) $(k).value = v;
+  }
+}
