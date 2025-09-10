@@ -2,8 +2,9 @@
 const {
   log,
   determine401kWithdrawalToHitNetTargetOf,
-  getTaxBrackets2024MFJ,
-  getStandardDeduction2024MFJ,
+  getTaxBrackets,
+  getStandardDeduction,
+  FILING_STATUS,
 } = require("./retirement.js");
 
 // ---------------- CLI ----------------
@@ -23,10 +24,11 @@ const netTarget = parseFloat(targetNetStr);
 const ssBenefit = parseFloat(ssBenefitStr);
 const savings = parseFloat(savingsStr || "0");
 const otherTaxableIncome = parseFloat(otherTaxableIncomeStr || "0");
+const filingStatus = FILING_STATUS.MARRIED_FILING_JOINTLY;
 
 // Use 2024 MFJ brackets from module
-const brackets = getTaxBrackets2024MFJ();
-const standardDeduction = getStandardDeduction2024MFJ();
+const brackets = getTaxBrackets(filingStatus);
+const standardDeduction = getStandardDeduction(filingStatus);
 
 // Remove savings because it is not taxable
 const targetLessSavings = netTarget - savings;

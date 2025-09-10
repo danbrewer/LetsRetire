@@ -75,6 +75,7 @@ function getStandardDeduction(year, filingStatus = "single") {
 
   return Math.round(adjustedDeduction);
 }
+
 const EFFECTIVE_TAX_RATES = {
   // Taxable Income: Effective Rate (%) - Based on 2025 Married Filing Jointly Tax Brackets
   // 10%: $0 – $23,200, 12%: $23,200 – $94,300, 22%: $94,300 – $201,050, 24%: $201,050+
@@ -1135,11 +1136,6 @@ function loadExample() {
     penMonthly: 3500,
     penStart: 65,
     penCola: 0,
-    // taxPre: 15,
-    // taxTaxable: 0,
-    // taxRoth: 0,
-    // taxSS: 10,
-    // taxPension: 15,
     order: "savings,pretax,roth",
     filingStatus: "married",
     useRMD: true,
@@ -1291,13 +1287,7 @@ function parseInputParameters() {
     penMonthly: num("penMonthly"),
     penStart: num("penStart"),
     penCola: pct(num("penCola")),
-
     // Tax rates and settings
-    // taxPre: pct(num("taxPre")),
-    // taxTaxable: pct(num("taxTaxable")),
-    // taxRoth: pct(num("taxRoth")),
-    // taxSS: pct(num("taxSS")),
-    // taxPension: pct(num("taxPension")),
     filingStatus: $("filingStatus").value,
     useRMD: $("useRMD").checked,
   };

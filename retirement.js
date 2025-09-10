@@ -273,6 +273,56 @@ function determine401kWithdrawalToHitNetTargetOf(targetAmount, opts) {
   };
 }
 
+// 2025 Federal Income Tax Brackets
+// Source: IRS inflation adjustments (effective Jan 1, 2025)
+
+const TAX_TABLES_2025 = {
+  single: [
+    { rate: 0.1, upTo: 11600 },
+    { rate: 0.12, upTo: 47150 },
+    { rate: 0.22, upTo: 100525 },
+    { rate: 0.24, upTo: 191950 },
+    { rate: 0.32, upTo: 243725 },
+    { rate: 0.35, upTo: 609350 },
+    { rate: 0.37, upTo: Infinity },
+  ],
+  mfj: [
+    { rate: 0.1, upTo: 23200 },
+    { rate: 0.12, upTo: 94300 },
+    { rate: 0.22, upTo: 201050 },
+    { rate: 0.24, upTo: 383900 },
+    { rate: 0.32, upTo: 487450 },
+    { rate: 0.35, upTo: 731200 },
+    { rate: 0.37, upTo: Infinity },
+  ],
+};
+
+function getTaxBrackets(filingStatus) {
+  if (filingStatus === FILING_STATUS.MARRIED_FILING_JOINTLY) {
+    return TAX_TABLES_2025.mfj;
+  } else {
+    return TAX_TABLES_2025.single;
+  }
+}
+
+const STANDARD_DEDUCTION_2025 = {
+  single: 14600,
+  mfj: 29200,
+};
+
+const FILING_STATUS = {
+  SINGLE: "single",
+  MARRIED_FILING_JOINTLY: "married",
+};
+
+function getStandardDeduction(filingStatus) {
+  if (filingStatus === FILING_STATUS.MARRIED_FILING_JOINTLY) {
+    return STANDARD_DEDUCTION_2025.mfj;
+  } else {
+    return STANDARD_DEDUCTION_2025.single;
+  }
+}
+
 // ---------------- MODULE EXPORTS ----------------
 
 // Only export as module if we're in Node.js environment
@@ -284,12 +334,8 @@ if (typeof module !== "undefined" && module.exports) {
     calculateNetWhen401kIncomeIs,
     determine401kWithdrawalToHitNetTargetOf,
     // Export some common tax brackets and standard deductions for convenience
-    getTaxBrackets2024MFJ: () => [
-      { upto: 23200, rate: 0.1 },
-      { upto: 94300, rate: 0.12 },
-      { upto: 201050, rate: 0.22 },
-      { upto: Infinity, rate: 0.24 },
-    ],
-    getStandardDeduction2024MFJ: () => 29200,
+    getTaxBrackets,
+    getStandardDeduction,
+    FILING_STATUS,
   };
 }
