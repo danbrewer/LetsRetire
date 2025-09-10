@@ -1243,7 +1243,7 @@ function resetAll() {
  */
 function parseInputParameters() {
   // Basic parameters
-  const params = {
+  const inputs = {
     currentAge: num("currentAge"),
     retireAge: num("retireAge"),
     endAge: num("endAge"),
@@ -1293,32 +1293,31 @@ function parseInputParameters() {
   };
 
   // Parse withdrawal order
-  params.order = $("order")
+  inputs.order = $("order")
     .value.split(",")
     .map((s) => s.trim())
     .filter((s) => s.length > 0);
-  if (params.order.length === 0) {
-    params.order = ["savings", "pretax", "roth"];
-    // console.log('Using fallback withdrawal order:', params.order);
+  if (inputs.order.length === 0) {
+    inputs.order = ["savings", "pretax", "roth"];
   }
 
   // Derived values
-  params.hasSpouse = params.spouseAge > 0;
-  params.yearsToRetire = params.retireAge - params.currentAge;
-  params.yearsTotal = params.endAge - params.currentAge;
-  params.spendAtRetire =
-    params.spendingToday * pow1p(params.inflation, params.yearsToRetire);
+  inputs.hasSpouse = inputs.spouseAge > 0;
+  inputs.yearsToRetire = inputs.retireAge - inputs.currentAge;
+  inputs.yearsTotal = inputs.endAge - inputs.currentAge;
+  inputs.spendAtRetire =
+    inputs.spendingToday * pow1p(inputs.inflation, inputs.yearsToRetire);
 
-  return params;
+  return inputs;
 }
 
 /**
  * Validate that the input parameters are valid
  */
-function validateInputs(params) {
+function validateInputs(inputs) {
   if (
-    params.retireAge <= params.currentAge ||
-    params.endAge <= params.retireAge
+    inputs.retireAge <= inputs.currentAge ||
+    inputs.endAge <= inputs.retireAge
   ) {
     showToast(
       "Invalid Ages",
@@ -1333,16 +1332,16 @@ function validateInputs(params) {
 /**
  * Calculate one year of accumulation phase (working years)
  */
-function calculateWorkingYearData(params, year, salary, balances) {
-  const age = params.currentAge + year;
+function calculateWorkingYearData(inputs, year, salary, balances) {
+  const age = inputs.currentAge + year;
 
   // Calculate current year living expenses (retirement spending adjusted to current year)
   const currentYearSpending =
-    params.spendingToday * pow1p(params.inflation, year);
+    inputs.spendingToday * pow1p(inputs.inflation, year);
 
   // Desired contributions this year
-  let desiredPre = salary * params.pretaxPct;
-  let desiredRoth = salary * params.rothPct;
+  let desiredPre = salary * inputs.pretaxPct;
+  let desiredRoth = salary * inputs.rothPct;
 
   // 401k/Roth 401k elective deferral cap (employee-only)
   let electiveLimit =
@@ -1355,10 +1354,10 @@ function calculateWorkingYearData(params, year, salary, balances) {
   // Employer match based on actual pre-tax contribution %, capped by matchCap
   const actualPrePct = salary > 0 ? cPre / salary : 0;
   const match =
-    Math.min(actualPrePct, params.matchCap) * salary * params.matchRate;
+    Math.min(actualPrePct, inputs.matchCap) * salary * inputs.matchRate;
 
   // Calculate taxes on working income including taxable interest
-  const taxableInterestIncome = balances.balSavings * params.rateOfSavings;
+  const taxableInterestIncome = balances.balSavings * inputs.rateOfSavings;
 
   // Get taxable income adjustments for this age
   const taxableIncomeAdjustment = getTaxableIncomeOverride(age);
@@ -1368,10 +1367,9 @@ function calculateWorkingYearData(params, year, salary, balances) {
 
   const workingYearTaxes = calculateFederalTax(
     grossTaxableIncome,
-    params.filingStatus,
+    inputs.filingStatus,
     TAX_BASE_YEAR + year
   );
-  // : grossTaxableIncome * params.taxPre;
 
   // Debug tax calculation for first few years
   if (year < 3) {
@@ -1381,14 +1379,14 @@ function calculateWorkingYearData(params, year, salary, balances) {
     // console.log(`Taxable balance (start of year): ${fmt(balances.balSavings)}`);
     // console.log(`Taxable interest income: ${fmt(taxableInterestIncome)}`);
     // console.log(`Gross Taxable Income: ${fmt(grossTaxableIncome)}`);
-    // console.log(`Filing Status: ${params.filingStatus}`);
+    // console.log(`Filing Status: ${inputs.filingStatus}`);
     const taxableIncomeAfterDeduction = calculateTaxableIncome(
       grossTaxableIncome,
-      params.filingStatus,
+      inputs.filingStatus,
       TAX_BASE_YEAR + year
     );
     const effectiveRate =
-      params.filingStatus === FILING_STATUS.MARRIED_FILING_JOINTLY
+      inputs.filingStatus === FILING_STATUS.MARRIED_FILING_JOINTLY
         ? getEffectiveTaxRateMarried(taxableIncomeAfterDeduction)
         : getEffectiveTaxRate(taxableIncomeAfterDeduction);
     // console.log(`Taxable Income (after standard deduction): ${fmt(taxableIncomeAfterDeduction)}`);
@@ -1407,7 +1405,7 @@ function calculateWorkingYearData(params, year, salary, balances) {
     0,
     availableForSpendingAndSavings - currentYearSpending
   );
-  const desiredTaxableSavings = salary * params.taxablePct;
+  const desiredTaxableSavings = salary * inputs.taxablePct;
   const cTax = Math.min(desiredTaxableSavings, remainingAfterSpending);
 
   // Debug working year calculations (show for first few years)
@@ -1432,13 +1430,13 @@ function calculateWorkingYearData(params, year, salary, balances) {
 
   // Track savings breakdown for working years
   const savingsStartBalance = balances.balSavings;
-  const taxableInterestEarned = balances.balSavings * params.rateOfSavings;
+  const taxableInterestEarned = balances.balSavings * inputs.rateOfSavings;
 
-  balances.balPre = (balances.balPre + cPre + match) * (1 + params.retPre);
-  balances.balRoth = (balances.balRoth + cRoth) * (1 + params.retRoth);
+  balances.balPre = (balances.balPre + cPre + match) * (1 + inputs.retPre);
+  balances.balRoth = (balances.balRoth + cRoth) * (1 + inputs.retRoth);
   balances.balSavings =
     (balances.balSavings + cTax + taxFreeIncomeAdjustment) *
-    (1 + params.rateOfSavings);
+    (1 + inputs.rateOfSavings);
 
   return {
     age,
@@ -1462,7 +1460,7 @@ function calculateWorkingYearData(params, year, salary, balances) {
     nonTaxableIncome: taxFreeIncomeAdjustment, // Tax-free income adjustment
     taxableIncome: calculateTaxableIncome(
       grossTaxableIncome,
-      params.filingStatus,
+      inputs.filingStatus,
       TAX_BASE_YEAR + year
     ), // Working year taxable income after standard deduction
     taxableInterest: taxableInterestIncome, // Track taxable interest earned
@@ -1472,13 +1470,13 @@ function calculateWorkingYearData(params, year, salary, balances) {
     effectiveTaxRate:
       calculateTaxableIncome(
         grossTaxableIncome,
-        params.filingStatus,
+        inputs.filingStatus,
         TAX_BASE_YEAR + year
       ) > 0
         ? (workingYearTaxes /
             calculateTaxableIncome(
               grossTaxableIncome,
-              params.filingStatus,
+              inputs.filingStatus,
               TAX_BASE_YEAR + year
             )) *
           100
@@ -1486,7 +1484,7 @@ function calculateWorkingYearData(params, year, salary, balances) {
     provisionalIncome: 0, // No Social Security during working years
     standardDeduction: getStandardDeduction(
       TAX_BASE_YEAR + year,
-      params.filingStatus
+      inputs.filingStatus
     ), // Standard deduction for this tax year
     balSavings: balances.balSavings,
     balPre: balances.balPre,
@@ -1501,7 +1499,7 @@ function calculateWorkingYearData(params, year, salary, balances) {
       regularDeposit: cTax, // Regular taxable savings contribution
       interestEarned: taxableInterestEarned,
       endingBalance: balances.balSavings,
-      growthRate: params.rateOfSavings * 100,
+      growthRate: inputs.rateOfSavings * 100,
     },
     // Add empty SS breakdown for working years
     ssBreakdown: {
@@ -1518,52 +1516,52 @@ let calculations = [];
 
 function calc() {
   // Enhanced retirement calculator with realistic working year modeling
-  const params = parseInputParameters();
+  const inputs = parseInputParameters();
 
-  if (!validateInputs(params)) {
+  if (!validateInputs(inputs)) {
     return;
   }
 
   // Auto-regenerate spending override fields only if ages have changed
   if (
-    params.retireAge > 0 &&
-    params.endAge > params.retireAge &&
-    (lastRetireAge !== params.retireAge || lastEndAge !== params.endAge)
+    inputs.retireAge > 0 &&
+    inputs.endAge > inputs.retireAge &&
+    (lastRetireAge !== inputs.retireAge || lastEndAge !== inputs.endAge)
   ) {
     regenerateSpendingFields();
-    lastRetireAge = params.retireAge;
-    lastEndAge = params.endAge;
+    lastRetireAge = inputs.retireAge;
+    lastEndAge = inputs.endAge;
   }
 
   // Auto-regenerate income adjustment fields only if ages have changed
   if (
-    params.currentAge > 0 &&
-    params.endAge > params.currentAge &&
-    (lastCurrentAge !== params.currentAge || lastEndAge !== params.endAge)
+    inputs.currentAge > 0 &&
+    inputs.endAge > inputs.currentAge &&
+    (lastCurrentAge !== inputs.currentAge || lastEndAge !== inputs.endAge)
   ) {
     regenerateTaxableIncomeFields();
     regenerateTaxFreeIncomeFields();
-    lastCurrentAge = params.currentAge;
+    lastCurrentAge = inputs.currentAge;
   }
 
   // Initialize balances object for tracking
   const balances = {
-    balPre: params.balPre,
-    balRoth: params.balRoth,
-    balSavings: params.balSavings,
+    balPre: inputs.balPre,
+    balRoth: inputs.balRoth,
+    balSavings: inputs.balSavings,
   };
 
   // Reset calculations array
   calculations = [];
 
-  let currentSalary = params.startingSalary;
+  let currentSalary = inputs.startingSalary;
   let totalTaxes = 0;
   let maxDrawdown = { year: null, value: Infinity };
 
   // Working years
-  for (let y = 0; y < params.yearsToRetire; y++) {
+  for (let y = 0; y < inputs.yearsToRetire; y++) {
     const yearData = calculateWorkingYearData(
-      params,
+      inputs,
       y,
       currentSalary,
       balances
@@ -1578,7 +1576,7 @@ function calc() {
     totalTaxes += yearData.taxes;
 
     // Update salary for next year
-    currentSalary *= 1 + params.salaryGrowth;
+    currentSalary *= 1 + inputs.salaryGrowth;
   }
 
   // console.log('Working years: ', calculations);
@@ -1586,30 +1584,30 @@ function calc() {
   /**
    * Calculate spouse benefit amounts at the time of primary person's retirement
    */
-  function calculateSpouseBenefits(params) {
+  function calculateSpouseBenefits(inputs) {
     let spouseSsAnnual = 0;
     let spousePenAnnual = 0;
 
-    if (params.hasSpouse) {
-      const spouseCurrentYear = params.retireAge - params.currentAge; // Years from now when primary person retires
-      const spouseAgeAtPrimaryRetirement = params.spouseAge + spouseCurrentYear;
+    if (inputs.hasSpouse) {
+      const spouseCurrentYear = inputs.retireAge - inputs.currentAge; // Years from now when primary person retires
+      const spouseAgeAtPrimaryRetirement = inputs.spouseAge + spouseCurrentYear;
 
       spouseSsAnnual =
-        params.spouseSsMonthly *
+        inputs.spouseSsMonthly *
         12 *
-        (spouseAgeAtPrimaryRetirement >= params.spouseSsStart
+        (spouseAgeAtPrimaryRetirement >= inputs.spouseSsStart
           ? pow1p(
-              params.spouseSsCola,
-              spouseAgeAtPrimaryRetirement - params.spouseSsStart
+              inputs.spouseSsCola,
+              spouseAgeAtPrimaryRetirement - inputs.spouseSsStart
             )
           : 1);
       spousePenAnnual =
-        params.spousePenMonthly *
+        inputs.spousePenMonthly *
         12 *
-        (spouseAgeAtPrimaryRetirement >= params.spousePenStart
+        (spouseAgeAtPrimaryRetirement >= inputs.spousePenStart
           ? pow1p(
-              params.spousePenCola,
-              spouseAgeAtPrimaryRetirement - params.spousePenStart
+              inputs.spousePenCola,
+              spouseAgeAtPrimaryRetirement - inputs.spousePenStart
             )
           : 1);
     }
@@ -1621,7 +1619,7 @@ function calc() {
    * Calculate Social Security taxation for a given year
    */
   function calculateSocialSecurityTaxation(
-    params,
+    inputs,
     ssGross,
     otherTaxableIncome,
     year = 0
@@ -1644,7 +1642,7 @@ function calc() {
     }
 
     const isMarried =
-      params.filingStatus === FILING_STATUS.MARRIED_FILING_JOINTLY;
+      inputs.filingStatus === FILING_STATUS.MARRIED_FILING_JOINTLY;
 
     // Use proper SS taxation rules based on provisional income
     // Calculate provisional income: Taxable Income + non-taxable interest + 50% of SS benefits
@@ -1719,7 +1717,7 @@ function calc() {
   /**
    * Calculate pension taxation for a given year
    */
-  function buildPensionTracker(params, penGross, totalTaxableIncome, year = 0) {
+  function buildPensionTracker(inputs, penGross, totalTaxableIncome, year = 0) {
     if (!penGross || penGross <= 0) {
       return {
         penGross: 0,
@@ -1749,29 +1747,29 @@ function calc() {
 
   // Setup retirement years; calculate initial benefit amounts
   let ssAnnual =
-    params.ssMonthly *
+    inputs.ssMonthly *
     12 *
-    (params.retireAge >= params.ssStart
-      ? pow1p(params.ssCola, params.retireAge - params.ssStart)
+    (inputs.retireAge >= inputs.ssStart
+      ? pow1p(inputs.ssCola, inputs.retireAge - inputs.ssStart)
       : 1);
   let penAnnual =
-    params.penMonthly *
+    inputs.penMonthly *
     12 *
-    (params.retireAge >= params.penStart
-      ? pow1p(params.penCola, params.retireAge - params.penStart)
+    (inputs.retireAge >= inputs.penStart
+      ? pow1p(inputs.penCola, inputs.retireAge - inputs.penStart)
       : 1);
 
-  const spouseBenefits = calculateSpouseBenefits(params);
+  const spouseBenefits = calculateSpouseBenefits(inputs);
   let spouseSsAnnual = spouseBenefits.spouseSsAnnual;
   let spousePenAnnual = spouseBenefits.spousePenAnnual;
 
-  let spend = params.spendAtRetire;
+  let spend = inputs.spendAtRetire;
 
   /**
    * Create withdrawal function for a specific retirement year
    */
   function createWithdrawalFunction(
-    params,
+    inputs,
     balances,
     totalTaxableIncomeRef,
     year = 0
@@ -1825,18 +1823,16 @@ function calc() {
 
         const projectedTaxableIncome = calculateTaxableIncome(
           projectedGrossIncome,
-          params.filingStatus,
+          inputs.filingStatus,
           TAX_BASE_YEAR + year
         );
         const taxableIncomeBasedRate =
-          params.filingStatus === FILING_STATUS.MARRIED_FILING_JOINTLY
+          inputs.filingStatus === FILING_STATUS.MARRIED_FILING_JOINTLY
             ? getEffectiveTaxRateMarried(projectedTaxableIncome)
             : getEffectiveTaxRate(projectedTaxableIncome);
 
         const taxableIncomeRateDecimal = taxableIncomeBasedRate / 100;
-        taxRate = taxableIncomeRateDecimal; // Math.max(fixedTaxRate, taxableIncomeRateDecimal);
-
-        // console.log(`Gross Income: $${projectedGrossIncome.toLocaleString()}, Taxable Income: $${projectedTaxableIncome.toLocaleString()}, Filing: ${params.filingStatus}, Taxable Income Rate: ${taxableIncomeBasedRate.toFixed(1)}%, Fixed Rate: ${(fixedTaxRate*100).toFixed(1)}%, Using: ${(taxRate*100).toFixed(1)}%`);
+        taxRate = taxableIncomeRateDecimal;
       }
 
       // For pretax withdrawals, estimate tax rate and gross up to meet net need
@@ -1847,15 +1843,15 @@ function calc() {
           totalTaxableIncomeRef.value + desiredNetAmount;
         const projectedTaxableIncome = calculateTaxableIncome(
           projectedGrossIncome,
-          params.filingStatus,
+          inputs.filingStatus,
           TAX_BASE_YEAR + year
         );
         const taxableIncomeBasedRate =
-          params.filingStatus === FILING_STATUS.MARRIED_FILING_JOINTLY
+          inputs.filingStatus === FILING_STATUS.MARRIED_FILING_JOINTLY
             ? getEffectiveTaxRateMarried(projectedTaxableIncome)
             : getEffectiveTaxRate(projectedTaxableIncome);
         const taxableIncomeRateDecimal = taxableIncomeBasedRate / 100;
-        taxRate = taxableIncomeRateDecimal; // Math.max(params.taxPre, taxableIncomeRateDecimal);
+        taxRate = taxableIncomeRateDecimal;
 
         // Gross up the withdrawal to account for taxes
         const grossNeeded = desiredNetAmount / (1 - taxRate);
@@ -1892,36 +1888,36 @@ function calc() {
 
       const actualGross = Math.min(grossAmount, balances.balPre);
 
-      let taxRate = 0; //params.taxPre;
+      let taxRate = 0;
 
       {
         const projectedGrossIncome = totalTaxableIncomeRef.value + actualGross;
         const projectedTaxableIncome = calculateTaxableIncome(
           projectedGrossIncome,
-          params.filingStatus,
+          inputs.filingStatus,
           TAX_BASE_YEAR + year
         );
         const taxableIncomeBasedRate =
-          params.filingStatus === FILING_STATUS.MARRIED_FILING_JOINTLY
+          inputs.filingStatus === FILING_STATUS.MARRIED_FILING_JOINTLY
             ? getEffectiveTaxRateMarried(projectedTaxableIncome)
             : getEffectiveTaxRate(projectedTaxableIncome);
         const taxableIncomeRateDecimal = taxableIncomeBasedRate / 100;
-        taxRate = taxableIncomeRateDecimal; // Math.max(params.taxPre, taxableIncomeRateDecimal);
+        taxRate = taxableIncomeRateDecimal;
       }
 
       // For RMD, estimate taxes to provide realistic net amount
       const projectedGrossIncome = totalTaxableIncomeRef.value + actualGross;
       const projectedTaxableIncome = calculateTaxableIncome(
         projectedGrossIncome,
-        params.filingStatus,
+        inputs.filingStatus,
         TAX_BASE_YEAR + year
       );
       const taxableIncomeBasedRate =
-        params.filingStatus === FILING_STATUS.MARRIED_FILING_JOINTLY
+        inputs.filingStatus === FILING_STATUS.MARRIED_FILING_JOINTLY
           ? getEffectiveTaxRateMarried(projectedTaxableIncome)
           : getEffectiveTaxRate(projectedTaxableIncome);
       const taxableIncomeRateDecimal = taxableIncomeBasedRate / 100;
-      const rmdTaxRate = taxableIncomeRateDecimal; // Math.max(params.taxPre, taxableIncomeRateDecimal);
+      const rmdTaxRate = taxableIncomeRateDecimal;
 
       const netReceived = actualGross * (1 - rmdTaxRate); // Estimated net after taxes
       balances.balPre -= actualGross;
@@ -2018,20 +2014,20 @@ function calc() {
    * Calculate a given retirement year with proper SS taxation based on total income
    */
   function calculateRetirementYearData(
-    params,
+    inputs,
     year,
     balances,
     benefitAmounts,
     spend
   ) {
-    const age = params.currentAge + year;
+    const age = inputs.currentAge + year;
     const yearNum = new Date().getFullYear() + year;
 
     console.log(`\n--- Retirement Year ${year + 1} (Age ${age}) ---`);
 
     // Income sources (gross amounts)
-    const hasSS = age >= params.ssStart;
-    const hasPen = age >= params.penStart && params.penMonthly > 0;
+    const hasSS = age >= inputs.ssStart;
+    const hasPen = age >= inputs.penStart && inputs.penMonthly > 0;
     const ssGross = hasSS ? benefitAmounts.ssAnnual : 0;
     const penGross = hasPen ? benefitAmounts.penAnnual : 0;
 
@@ -2043,12 +2039,12 @@ function calc() {
     //   debugger;
     // }
 
-    if (params.hasSpouse) {
-      const spouseCurrentAge = params.spouseAge + (age - params.currentAge);
-      const hasSpouseSS = spouseCurrentAge >= params.spouseSsStart;
+    if (inputs.hasSpouse) {
+      const spouseCurrentAge = inputs.spouseAge + (age - inputs.currentAge);
+      const hasSpouseSS = spouseCurrentAge >= inputs.spouseSsStart;
       const hasSpousePen =
-        spouseCurrentAge >= params.spousePenStart &&
-        params.spousePenMonthly > 0;
+        spouseCurrentAge >= inputs.spousePenStart &&
+        inputs.spousePenMonthly > 0;
 
       spouseSsGross = hasSpouseSS ? benefitAmounts.spouseSsAnnual : 0;
       spousePenGross = hasSpousePen ? benefitAmounts.spousePenAnnual : 0;
@@ -2099,7 +2095,7 @@ function calc() {
       balances.balSavings - estimatedSavingsWithdrawals
     );
     const taxableInterestEarned =
-      savingsBalanceAfterWithdrawals * params.rateOfSavings;
+      savingsBalanceAfterWithdrawals * inputs.rateOfSavings;
 
     // STEP 2: Track pensions
     const penResults = buildPensionTracker(penGross);
@@ -2131,7 +2127,7 @@ function calc() {
     // It returns an object containing withdrawal functions for each account type
     // Each function takes a gross withdrawal amount and returns the net amount after taxes
     const preliminaryWithdrawalFunctions = createWithdrawalFunction(
-      params,
+      inputs,
       balancesCopy,
       totalTaxableIncomeCopy,
       year
@@ -2140,7 +2136,7 @@ function calc() {
     // Apply RMDs first (preliminary)
     let preliminaryRmdAmount = 0;
 
-    if (params.useRMD && age >= 73) {
+    if (inputs.useRMD && age >= 73) {
       preliminaryRmdAmount = calculateRMD(age, balancesCopy.balPre);
       if (preliminaryRmdAmount > 0) {
         const rmdWithdrawal =
@@ -2153,7 +2149,7 @@ function calc() {
     }
 
     // Then regular withdrawals (preliminary)
-    if (params.order[0] === "50/50") {
+    if (inputs.order[0] === "50/50") {
       // Special 50/50 strategy: equal net amounts from savings and 401k
       if (preliminaryNeedNet > 0) {
         const fiftyFiftyResults = withdraw50_50(
@@ -2167,7 +2163,7 @@ function calc() {
       }
     } else {
       // Standard withdrawal order strategy
-      for (const k of params.order) {
+      for (const k of inputs.order) {
         if (preliminaryNeedNet <= 0) break;
         const { gross = 0, net = 0 } =
           preliminaryWithdrawalFunctions.withdrawFrom(k, preliminaryNeedNet) ||
@@ -2180,13 +2176,13 @@ function calc() {
     // The totalTaxableIncomeCopy.value now contains only truly taxable income: pensions + pre-tax withdrawals + taxable interest
     const totalTaxableIncomeForSS = totalTaxableIncomeCopy.value;
     const ssResults = calculateSocialSecurityTaxation(
-      params,
+      inputs,
       ssGross,
       totalTaxableIncomeForSS,
       year
     );
     const spouseSsResults = calculateSocialSecurityTaxation(
-      params,
+      inputs,
       spouseSsGross,
       totalTaxableIncomeForSS + ssResults.ssTaxableAmount,
       year
@@ -2222,7 +2218,7 @@ function calc() {
     }
 
     const finalWithdrawalFunctions = createWithdrawalFunction(
-      params,
+      inputs,
       balances,
       totalTaxableIncomeRef,
       year
@@ -2235,7 +2231,7 @@ function calc() {
     let taxesThisYear = 0;
 
     // Apply RMDs (final)
-    if (params.useRMD && age >= 73 && preliminaryRmdAmount > 0) {
+    if (inputs.useRMD && age >= 73 && preliminaryRmdAmount > 0) {
       //debugger;
       const rmdWithdrawal =
         finalWithdrawalFunctions.withdrawRMD(preliminaryRmdAmount);
@@ -2279,7 +2275,7 @@ function calc() {
 
         // Handle remaining base spending with normal withdrawal order
         if (remainingNeedNet > 0) {
-          if (params.order[0] === "50/50") {
+          if (inputs.order[0] === "50/50") {
             const result = withdraw50_50(
               finalWithdrawalFunctions,
               remainingNeedNet
@@ -2287,7 +2283,7 @@ function calc() {
             finalWGross += result.totalGross;
             finalWNet += result.totalNet;
           } else {
-            for (const k of params.order) {
+            for (const k of inputs.order) {
               if (remainingNeedNet <= 0) break;
               const { gross = 0, net = 0 } =
                 finalWithdrawalFunctions.withdrawFrom(k, remainingNeedNet) ||
@@ -2332,7 +2328,7 @@ function calc() {
 
       // Handle remaining base spending with normal withdrawal order
       if (remainingNeedNet > 0) {
-        if (params.order[0] === "50/50") {
+        if (inputs.order[0] === "50/50") {
           const result = withdraw50_50(
             finalWithdrawalFunctions,
             remainingNeedNet
@@ -2340,7 +2336,7 @@ function calc() {
           finalWGross += result.totalGross;
           finalWNet += result.totalNet;
         } else {
-          for (const k of params.order) {
+          for (const k of inputs.order) {
             if (remainingNeedNet <= 0) break;
             const { gross = 0, net = 0 } =
               finalWithdrawalFunctions.withdrawFrom(k, remainingNeedNet) || {};
@@ -2365,13 +2361,13 @@ function calc() {
       taxableIncomeAdjustment;
 
     const finalSsResults = calculateSocialSecurityTaxation(
-      params,
+      inputs,
       ssGross,
       finalTaxableIncomeForSS,
       year
     );
     const finalSpouseSsResults = calculateSocialSecurityTaxation(
-      params,
+      inputs,
       spouseSsGross,
       finalTaxableIncomeForSS + finalSsResults.ssTaxableAmount,
       year
@@ -2391,14 +2387,14 @@ function calc() {
     // Calculate total income tax on the combined taxable income
     taxesThisYear = calculateFederalTax(
       totalGrossTaxableIncome,
-      params.filingStatus,
+      inputs.filingStatus,
       TAX_BASE_YEAR + year
     );
 
     // Also calculate the taxable income after deduction for display purposes
     const totalTaxableIncomeAfterDeduction = calculateTaxableIncome(
       totalGrossTaxableIncome,
-      params.filingStatus,
+      inputs.filingStatus,
       TAX_BASE_YEAR + year
     );
 
@@ -2441,19 +2437,19 @@ function calc() {
 
     // Apply conservative growth: interest calculated on current balance
     // (withdrawals have already been subtracted from balances.balSavings)
-    const savingsGrowth = savingsBeforeGrowth * params.rateOfSavings;
+    const savingsGrowth = savingsBeforeGrowth * inputs.rateOfSavings;
     balances.balSavings += savingsGrowth;
 
     // Apply normal growth to other account types (withdrawals happen at specific times)
-    balances.balPre *= 1 + params.retPre;
-    balances.balRoth *= 1 + params.retRoth;
+    balances.balPre *= 1 + inputs.retPre;
+    balances.balRoth *= 1 + inputs.retRoth;
 
     // Note: taxableInterestEarned was calculated earlier before withdrawals
 
     const totalBal = balances.balSavings + balances.balPre + balances.balRoth;
 
     // Debug RMD years to show actual total net income
-    // if (params.useRMD && age >= 73) {
+    // if (inputs.useRMD && age >= 73) {
     //   console.log(`\n=== RMD YEAR DEBUG (Age ${age}) ===`);
     //   console.log(`Spending target: ${fmt(spendingTarget)}`);
     //   console.log(`RMD required: ${fmt(preliminaryRmdAmount)}`);
@@ -2586,7 +2582,7 @@ function calc() {
     // Taxable income after standard deduction (this is what gets taxed)
     const taxableIncomeAfterDeduction = calculateTaxableIncome(
       grossTaxableIncome,
-      params.filingStatus,
+      inputs.filingStatus,
       TAX_BASE_YEAR + year
     );
 
@@ -2609,7 +2605,7 @@ function calc() {
     // Calculate standard deduction for this year
     const standardDeduction = getStandardDeduction(
       TAX_BASE_YEAR + year,
-      params.filingStatus
+      inputs.filingStatus
     );
 
     return {
@@ -2669,7 +2665,7 @@ function calc() {
         balanceBeforeGrowth: savingsBeforeGrowth,
         interestEarned: savingsGrowth, // Use the conservative growth calculation
         endingBalance: balances.balSavings,
-        growthRate: params.rateOfSavings * 100,
+        growthRate: inputs.rateOfSavings * 100,
       },
       // Add withdrawal breakdown data for popup
       withdrawalBreakdown: withdrawalBreakdown,
@@ -2686,7 +2682,7 @@ function calc() {
   }
 
   // Retirement years
-  for (let y = params.yearsToRetire; y < params.yearsTotal; y++) {
+  for (let y = inputs.yearsToRetire; y < inputs.yearsTotal; y++) {
     const benefitAmounts = {
       ssAnnual,
       penAnnual,
@@ -2695,7 +2691,7 @@ function calc() {
     };
 
     const yearData = calculateRetirementYearData(
-      params,
+      inputs,
       y,
       balances,
       benefitAmounts,
@@ -2711,23 +2707,23 @@ function calc() {
 
     // Step next year: Apply COLAs to benefits
     const age = yearData.age;
-    if (age >= params.ssStart) ssAnnual *= 1 + params.ssCola;
-    if (age >= params.penStart && params.penMonthly > 0)
-      penAnnual *= 1 + params.penCola;
+    if (age >= inputs.ssStart) ssAnnual *= 1 + inputs.ssCola;
+    if (age >= inputs.penStart && inputs.penMonthly > 0)
+      penAnnual *= 1 + inputs.penCola;
 
-    if (params.hasSpouse) {
-      const spouseCurrentAge = params.spouseAge + (age - params.currentAge);
-      if (spouseCurrentAge >= params.spouseSsStart)
-        spouseSsAnnual *= 1 + params.spouseSsCola;
+    if (inputs.hasSpouse) {
+      const spouseCurrentAge = inputs.spouseAge + (age - inputs.currentAge);
+      if (spouseCurrentAge >= inputs.spouseSsStart)
+        spouseSsAnnual *= 1 + inputs.spouseSsCola;
       if (
-        spouseCurrentAge >= params.spousePenStart &&
-        params.spousePenMonthly > 0
+        spouseCurrentAge >= inputs.spousePenStart &&
+        inputs.spousePenMonthly > 0
       )
-        spousePenAnnual *= 1 + params.spousePenCola;
+        spousePenAnnual *= 1 + inputs.spousePenCola;
     }
 
-    spend *= 1 + params.inflation;
-    spend *= 1 - params.spendingDecline;
+    spend *= 1 + inputs.inflation;
+    spend *= 1 - inputs.spendingDecline;
   }
 
   console.log("Calculations: ", calculations);
@@ -2735,7 +2731,7 @@ function calc() {
   /**
    * Generate final summary, write table, and update KPIs
    */
-  function generateOutputAndSummary(params, rows, totalTaxes, maxDrawdown) {
+  function generateOutputAndSummary(inputs, rows, totalTaxes, maxDrawdown) {
     // Write table
     const tbody = $("rows");
     tbody.innerHTML = calculations
@@ -2771,7 +2767,7 @@ function calc() {
         }</td>
         <td class="income">${
           r.totalNetIncome
-            ? r.age >= params.retireAge
+            ? r.age >= inputs.retireAge
               ? `<span class="ss-link" onclick="showTotalNetBreakdown(${index})">${fmt(
                   r.totalNetIncome
                 )}</span>`
@@ -2795,7 +2791,7 @@ function calc() {
         
         <!-- THE BREAKDOWN -->
         <td class="income">${
-          r.age >= params.retireAge
+          r.age >= inputs.retireAge
             ? `<span class="taxable-income-link" onclick="showTaxableIncomeBreakdown(${index})" title="Click to see breakdown">${fmt(
                 r.taxableIncome || 0
               )}</span>`
@@ -2805,7 +2801,7 @@ function calc() {
         }</td>
         <td class="income">${
           r.nonTaxableIncome
-            ? r.age >= params.retireAge
+            ? r.age >= inputs.retireAge
               ? `<span class="non-taxable-income-link" onclick="showNonTaxableIncomeBreakdown(${index})" title="Click to see breakdown">${fmt(
                   r.nonTaxableIncome
                 )}</span>`
@@ -2832,7 +2828,7 @@ function calc() {
         }</td>
         <td class="outgoing">${r.otherTaxes ? fmt(r.otherTaxes) : ""}</td>
         <td class="outgoing">${
-          r.age >= params.retireAge
+          r.age >= inputs.retireAge
             ? `<span class="total-taxes-link" onclick="showTotalTaxesBreakdown(${index})" title="Click to see breakdown">${fmt(
                 r.taxes || 0
               )}</span>`
@@ -2864,18 +2860,18 @@ function calc() {
     // Find the last age where there's still money, or endAge if money lasts throughout
     const fundedTo =
       last.total > 0
-        ? params.endAge
+        ? inputs.endAge
         : calculations.reduce(
             (lastGoodAge, r) => (r.total > 0 ? r.age : lastGoodAge),
-            params.currentAge
+            inputs.currentAge
           );
     $("kpiAge").innerHTML = `${fundedTo} <span class="pill ${
-      fundedTo >= params.endAge ? "ok" : "alert"
-    }">${fundedTo >= params.endAge ? "Fully funded" : "Shortfall"}</span>`;
+      fundedTo >= inputs.endAge ? "ok" : "alert"
+    }">${fundedTo >= inputs.endAge ? "Fully funded" : "Shortfall"}</span>`;
     $("kpiEndBal").textContent = fmt(Math.max(0, last.total));
-    $("kpiDraw").textContent = `${params.retireAge}`;
+    $("kpiDraw").textContent = `${inputs.retireAge}`;
     $("kpiTax").textContent = fmt(
-      params.balPre + params.balRoth + params.balSavings
+      inputs.balPre + inputs.balRoth + inputs.balSavings
     );
 
     // Chart (total balance)
@@ -2911,7 +2907,7 @@ function calc() {
   window.__rows = rows;
 
   // Generate final output
-  generateOutputAndSummary(params, rows, totalTaxes, maxDrawdown);
+  generateOutputAndSummary(inputs, rows, totalTaxes, maxDrawdown);
 }
 
 function drawChart(series) {
@@ -3694,7 +3690,7 @@ function generatePDFReport() {
   try {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
-    const params = parseInputParameters();
+    const inputs = parseInputParameters();
 
     // Color scheme
     const colors = {
@@ -3800,12 +3796,12 @@ function generatePDFReport() {
     const last = calculations[calculations.length - 1];
     const fundedTo =
       last.total > 0
-        ? params.endAge
+        ? inputs.endAge
         : calculations.reduce(
             (lastGoodAge, r) => (r.total > 0 ? r.age : lastGoodAge),
-            params.currentAge
+            inputs.currentAge
           );
-    const isFullyFunded = fundedTo >= params.endAge;
+    const isFullyFunded = fundedTo >= inputs.endAge;
 
     // Status box - smaller and with custom drawn symbols
     const statusColor = isFullyFunded ? colors.success : colors.danger;
@@ -3862,27 +3858,27 @@ function generatePDFReport() {
     doc.setTextColor(0, 0, 0);
 
     // Key metrics in a nice layout
-    yPos = addKeyValuePair("Current Age:", `${params.currentAge} years`, yPos);
+    yPos = addKeyValuePair("Current Age:", `${inputs.currentAge} years`, yPos);
     yPos = addKeyValuePair(
       "Planned Retirement Age:",
-      `${params.retireAge} years`,
+      `${inputs.retireAge} years`,
       yPos
     );
     yPos = addKeyValuePair(
       "Plan Duration:",
-      `${params.endAge - params.currentAge} years total`,
+      `${inputs.endAge - inputs.currentAge} years total`,
       yPos
     );
     yPos = addKeyValuePair(
       "Years to Retirement:",
-      `${params.retireAge - params.currentAge} years`,
+      `${inputs.retireAge - inputs.currentAge} years`,
       yPos
     );
     yPos += 5;
 
     yPos = addKeyValuePair(
       "Current Total Assets:",
-      fmt(params.balPre + params.balRoth + params.balSavings),
+      fmt(inputs.balPre + inputs.balRoth + inputs.balSavings),
       yPos,
       0,
       colors.primary
@@ -3904,28 +3900,28 @@ function generatePDFReport() {
       80
     );
 
-    const totalAssets = params.balPre + params.balRoth + params.balSavings;
-    const pretaxPct = ((params.balPre / totalAssets) * 100).toFixed(1);
-    const rothPct = ((params.balRoth / totalAssets) * 100).toFixed(1);
-    const savingsPct = ((params.balSavings / totalAssets) * 100).toFixed(1);
+    const totalAssets = inputs.balPre + inputs.balRoth + inputs.balSavings;
+    const pretaxPct = ((inputs.balPre / totalAssets) * 100).toFixed(1);
+    const rothPct = ((inputs.balRoth / totalAssets) * 100).toFixed(1);
+    const savingsPct = ((inputs.balSavings / totalAssets) * 100).toFixed(1);
 
     yPos = addKeyValuePair(
       "Pre-tax (401k/IRA):",
-      `${fmt(params.balPre)} (${pretaxPct}%)`,
+      `${fmt(inputs.balPre)} (${pretaxPct}%)`,
       yPos,
       0,
       colors.primary
     );
     yPos = addKeyValuePair(
       "Roth IRA/401k:",
-      `${fmt(params.balRoth)} (${rothPct}%)`,
+      `${fmt(inputs.balRoth)} (${rothPct}%)`,
       yPos,
       0,
       colors.success
     );
     yPos = addKeyValuePair(
       "Taxable Savings:",
-      `${fmt(params.balSavings)} (${savingsPct}%)`,
+      `${fmt(inputs.balSavings)} (${savingsPct}%)`,
       yPos,
       0,
       colors.warning
@@ -3938,17 +3934,17 @@ function generatePDFReport() {
     yPos += 10;
 
     // Pre-tax bar
-    const pretaxBarWidth = barWidth * (params.balPre / totalAssets);
+    const pretaxBarWidth = barWidth * (inputs.balPre / totalAssets);
     doc.setFillColor(colors.primary[0], colors.primary[1], colors.primary[2]);
     doc.rect(barStartX, yPos, pretaxBarWidth, barHeight, "F");
 
     // Roth bar
-    const rothBarWidth = barWidth * (params.balRoth / totalAssets);
+    const rothBarWidth = barWidth * (inputs.balRoth / totalAssets);
     doc.setFillColor(colors.success[0], colors.success[1], colors.success[2]);
     doc.rect(barStartX + pretaxBarWidth, yPos, rothBarWidth, barHeight, "F");
 
     // Savings bar
-    const savingsBarWidth = barWidth * (params.balSavings / totalAssets);
+    const savingsBarWidth = barWidth * (inputs.balSavings / totalAssets);
     doc.setFillColor(colors.warning[0], colors.warning[1], colors.warning[2]);
     doc.rect(
       barStartX + pretaxBarWidth + rothBarWidth,
@@ -4077,23 +4073,23 @@ function generatePDFReport() {
 
     yPos = addKeyValuePair(
       "Current Annual Spending:",
-      fmt(params.spendingToday),
+      fmt(inputs.spendingToday),
       yPos
     );
     yPos = addKeyValuePair(
       "Inflation Rate:",
-      `${(params.inflation * 100).toFixed(1)}%`,
+      `${(inputs.inflation * 100).toFixed(1)}%`,
       yPos
     );
     yPos = addKeyValuePair(
       "Annual Spending Decline:",
-      `${(params.spendingDecline * 100).toFixed(1)}%`,
+      `${(inputs.spendingDecline * 100).toFixed(1)}%`,
       yPos
     );
-    yPos = addKeyValuePair("Current Salary:", fmt(params.startingSalary), yPos);
+    yPos = addKeyValuePair("Current Salary:", fmt(inputs.startingSalary), yPos);
     yPos = addKeyValuePair(
       "Salary Growth Rate:",
-      `${(params.salaryGrowth * 100).toFixed(1)}%`,
+      `${(inputs.salaryGrowth * 100).toFixed(1)}%`,
       yPos
     );
     yPos += 10;
@@ -4105,12 +4101,12 @@ function generatePDFReport() {
     const investmentItems = [
       {
         key: "Pre-tax Accounts:",
-        value: `${(params.retPre * 100).toFixed(1)}%`,
+        value: `${(inputs.retPre * 100).toFixed(1)}%`,
       },
-      { key: "Roth Accounts:", value: `${(params.retRoth * 100).toFixed(1)}%` },
+      { key: "Roth Accounts:", value: `${(inputs.retRoth * 100).toFixed(1)}%` },
       {
         key: "Taxable Accounts:",
-        value: `${(params.rateOfSavings * 100).toFixed(1)}%`,
+        value: `${(inputs.rateOfSavings * 100).toFixed(1)}%`,
       },
       // Future investment types can be added here
     ];
@@ -4153,33 +4149,33 @@ function generatePDFReport() {
 
     yPos = addKeyValuePair(
       "Social Security (Annual):",
-      fmt(params.ssMonthly * 12),
+      fmt(inputs.ssMonthly * 12),
       yPos
     );
-    yPos = addKeyValuePair("SS Starting Age:", `${params.ssStart}`, yPos, 5);
+    yPos = addKeyValuePair("SS Starting Age:", `${inputs.ssStart}`, yPos, 5);
     yPos = addKeyValuePair(
       "SS COLA:",
-      `${(params.ssCola * 100).toFixed(1)}%`,
+      `${(inputs.ssCola * 100).toFixed(1)}%`,
       yPos,
       5
     );
     yPos += 3;
 
-    if (params.penMonthly > 0) {
+    if (inputs.penMonthly > 0) {
       yPos = addKeyValuePair(
         "Pension (Annual):",
-        fmt(params.penMonthly * 12),
+        fmt(inputs.penMonthly * 12),
         yPos
       );
       yPos = addKeyValuePair(
         "Pension Starting Age:",
-        `${params.penStart}`,
+        `${inputs.penStart}`,
         yPos,
         5
       );
       yPos = addKeyValuePair(
         "Pension COLA:",
-        `${(params.penCola * 100).toFixed(1)}%`,
+        `${(inputs.penCola * 100).toFixed(1)}%`,
         yPos,
         5
       );
@@ -4187,7 +4183,7 @@ function generatePDFReport() {
       yPos = addKeyValuePair("Pension:", "None", yPos);
     }
 
-    if (params.hasSpouse) {
+    if (inputs.hasSpouse) {
       yPos += 5;
       addColoredRect(15, yPos - 3, 180, 20, colors.light, 0.3);
 
@@ -4198,16 +4194,16 @@ function generatePDFReport() {
       doc.setFontSize(10);
       doc.setFont(undefined, "normal");
       yPos += 12;
-      yPos = addKeyValuePair("Spouse Age:", `${params.spouseAge}`, yPos, 5);
+      yPos = addKeyValuePair("Spouse Age:", `${inputs.spouseAge}`, yPos, 5);
       yPos = addKeyValuePair(
         "Spouse SS (Annual):",
-        fmt(params.spouseSsMonthly * 12),
+        fmt(inputs.spouseSsMonthly * 12),
         yPos,
         5
       );
       yPos = addKeyValuePair(
         "Spouse Pension (Annual):",
-        fmt(params.spousePenMonthly * 12),
+        fmt(inputs.spousePenMonthly * 12),
         yPos,
         5
       );
@@ -4218,7 +4214,7 @@ function generatePDFReport() {
 
     // Detailed Analysis (will add page break if needed)
     // Working Years Summary
-    const workingYears = calculations.filter((c) => c.age < params.retireAge);
+    const workingYears = calculations.filter((c) => c.age < inputs.retireAge);
     if (workingYears.length > 0) {
       yPos = addSectionHeader(
         "Working Years Analysis",
@@ -4268,7 +4264,7 @@ function generatePDFReport() {
 
     // Retirement Years Summary
     const retirementYears = calculations.filter(
-      (c) => c.age >= params.retireAge
+      (c) => c.age >= inputs.retireAge
     );
     if (retirementYears.length > 0) {
       yPos = addSectionHeader(
@@ -4377,8 +4373,8 @@ function generatePDFReport() {
     // Show key years with alternating row colors
     const keyYears = calculations.filter((calc, index) => {
       const isEveryFifthYear = index % 5 === 0;
-      const isLastWorkingYear = calc.age === params.retireAge - 1;
-      const isFirstRetirementYear = calc.age === params.retireAge;
+      const isLastWorkingYear = calc.age === inputs.retireAge - 1;
+      const isFirstRetirementYear = calc.age === inputs.retireAge;
       const isLastYear = index === calculations.length - 1;
       const isFirstYear = index === 0;
       return (
@@ -4419,7 +4415,7 @@ function generatePDFReport() {
       }
 
       // Highlight retirement transition
-      if (calc.age === params.retireAge) {
+      if (calc.age === inputs.retireAge) {
         addColoredRect(15, yPos - 3, 180, 8, colors.warning, 0.2);
       }
 
@@ -4753,7 +4749,7 @@ function showSsBreakdown(yearIndex) {
     `;
 
   // Add taxation method explanation
-  const params = parseInputParameters();
+  const inputs = parseInputParameters();
   breakdownHtml += `
         <div style="margin-top: 16px; padding: 12px; background: rgba(110, 168, 254, 0.1); border-radius: 8px; font-size: 12px; color: var(--muted);">
         <strong>About IRS SS Rules:</strong><br/>
