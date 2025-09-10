@@ -18,7 +18,7 @@ const fmt = (n) =>
     currency: "USD",
     maximumFractionDigits: 0,
   });
-const pow1p = (r, n) => Math.pow(1 + r, n);
+const compoundedRate = (r, n) => Math.pow(1 + r, n);
 
 /**
  * Effective Tax Rate Table and Standard Deductions
@@ -1306,7 +1306,8 @@ function parseInputParameters() {
   inputs.yearsToRetire = inputs.retireAge - inputs.currentAge;
   inputs.yearsTotal = inputs.endAge - inputs.currentAge;
   inputs.spendAtRetire =
-    inputs.spendingToday * pow1p(inputs.inflation, inputs.yearsToRetire);
+    inputs.spendingToday *
+    compoundedRate(inputs.inflation, inputs.yearsToRetire);
 
   return inputs;
 }
@@ -1337,7 +1338,7 @@ function calculateWorkingYearData(inputs, year, salary, balances) {
 
   // Calculate current year living expenses (retirement spending adjusted to current year)
   const currentYearSpending =
-    inputs.spendingToday * pow1p(inputs.inflation, year);
+    inputs.spendingToday * compoundedRate(inputs.inflation, year);
 
   // Desired contributions this year
   let desiredPre = salary * inputs.pretaxPct;
@@ -1596,7 +1597,7 @@ function calc() {
         inputs.spouseSsMonthly *
         12 *
         (spouseAgeAtPrimaryRetirement >= inputs.spouseSsStart
-          ? pow1p(
+          ? compoundedRate(
               inputs.spouseSsCola,
               spouseAgeAtPrimaryRetirement - inputs.spouseSsStart
             )
@@ -1605,7 +1606,7 @@ function calc() {
         inputs.spousePenMonthly *
         12 *
         (spouseAgeAtPrimaryRetirement >= inputs.spousePenStart
-          ? pow1p(
+          ? compoundedRate(
               inputs.spousePenCola,
               spouseAgeAtPrimaryRetirement - inputs.spousePenStart
             )
@@ -1750,13 +1751,13 @@ function calc() {
     inputs.ssMonthly *
     12 *
     (inputs.retireAge >= inputs.ssStart
-      ? pow1p(inputs.ssCola, inputs.retireAge - inputs.ssStart)
+      ? compoundedRate(inputs.ssCola, inputs.retireAge - inputs.ssStart)
       : 1);
   let penAnnual =
     inputs.penMonthly *
     12 *
     (inputs.retireAge >= inputs.penStart
-      ? pow1p(inputs.penCola, inputs.retireAge - inputs.penStart)
+      ? compoundedRate(inputs.penCola, inputs.retireAge - inputs.penStart)
       : 1);
 
   const spouseBenefits = calculateSpouseBenefits(inputs);
