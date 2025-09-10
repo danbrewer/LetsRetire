@@ -6,7 +6,8 @@ if (
   typeof require === "function"
 ) {
   // Running in Node.js
-  const fs = require("retirement.js");
+  // const fs = require("retirement.js");
+  const { FILING_STATUS } = require("./retirement");
 }
 
 // --- Added by patch: 2025 elective deferral limits (401k/Roth 401k) ---
@@ -62,7 +63,7 @@ const STANDARD_DEDUCTIONS_BASE = {
  * @param {string} filingStatus - "single" or "married"
  * @returns {number} Inflation-adjusted standard deduction
  */
-function getStandardDeduction(year, filingStatus = "single") {
+function getStandardDeduction(year, filingStatus = FILING_STATUS.SINGLE) {
   const inflationRate = 0.025; // 2.5% annual inflation
   const yearsFromBase = year - TAX_BASE_YEAR;
 
