@@ -6,6 +6,11 @@ Number.prototype.round = function (decimals = 0) {
   return Math.round(this * factor) / factor;
 };
 
+Number.prototype.adjustedForInflation = function (inflationRate, years) {
+  const adjustedValue = this * Math.pow(1 + inflationRate, years);
+  return adjustedValue;
+};
+
 // Global logging level (adjust at runtime)
 LOG_LEVEL = 4; // 1=ERROR, 2=WARN, 3=INFO, 4=DEBUG
 
@@ -137,9 +142,15 @@ function determineTaxablePortionOfSocialSecurity(ssGross, otherIncome) {
   };
 }
 
-function determineTaxUsingBrackets(taxableIncome, brackets) {
+function determineTaxUsingBrackets(
+  taxableIncome,
+  brackets,
+  inflationRate,
+  yearNum
+) {
   let tax = 0,
     prev = 0;
+
   for (const { upto, rate } of brackets) {
     const slice = Math.min(taxableIncome, upto) - prev;
     if (slice > 0) tax += slice * rate;
@@ -337,5 +348,7 @@ if (typeof module !== "undefined" && module.exports) {
     getTaxBrackets,
     getStandardDeduction,
     FILING_STATUS,
+    round: Number.prototype.round,
+    adjustedForInflation: Number.prototype.adjustedForInflation,
   };
 }
