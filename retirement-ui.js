@@ -2061,11 +2061,11 @@ function parseInputParameters() {
 
   // Derived values
   inputs.hasSpouse = inputs.spouseAge > 0;
-  inputs.yearsToRetire = inputs.retireAge - inputs.currentAge;
-  inputs.yearsTotal = inputs.endAge - inputs.currentAge;
+  inputs.totalWorkingYears = inputs.retireAge - inputs.currentAge;
+  inputs.totalLivingYears = inputs.endAge - inputs.currentAge;
   inputs.spendAtRetire =
     inputs.spendingToday *
-    compoundedRate(inputs.inflation, inputs.yearsToRetire);
+    compoundedRate(inputs.inflation, inputs.totalWorkingYears);
 
   return validateInputs(inputs) ? inputs : null;
 }

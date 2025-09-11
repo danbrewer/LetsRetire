@@ -1648,7 +1648,7 @@ function calc() {
   let maxDrawdown = { year: null, value: Infinity };
 
   // Working years
-  for (let y = 0; y < inputs.yearsToRetire; y++) {
+  for (let y = 0; y < inputs.totalWorkingYears; y++) {
     const yearData = calculateWorkingYearData(
       inputs,
       y,
@@ -1678,14 +1678,13 @@ function calc() {
   let spend = inputs.spendAtRetire;
 
   // Retirement years
-  for (let y = inputs.yearsToRetire; y < inputs.yearsTotal; y++) {
+  for (let y = inputs.totalWorkingYears; y < inputs.totalLivingYears; y++) {
     const benefitAmounts = {
       ssAnnual,
       penAnnual,
       spouseSsAnnual,
       spousePenAnnual,
     };
-
     const yearData = calculateRetirementYearData(
       inputs,
       y,
