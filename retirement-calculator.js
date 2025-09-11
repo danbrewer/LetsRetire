@@ -853,8 +853,9 @@ function calculateRetirementYearData(
   console.log(`\n--- Retirement Year ${year + 1} (Age ${age}) ---`);
 
   // Income sources (gross amounts)
-  const hasSS = age >= inputs.ssStart;
-  const hasPen = age >= inputs.penStart && inputs.penMonthly > 0;
+  const hasSS = age >= inputs.ssStartAge;
+  const hasPen = age >= inputs.penStartAge && inputs.penMonthly > 0;
+
   const ssGross = hasSS ? benefitAmounts.ssAnnual : 0;
   const penGross = hasPen ? benefitAmounts.penAnnual : 0;
 
@@ -1577,17 +1578,19 @@ function withdraw50_50(withdrawalFunctions, totalNetNeeded) {
 
 // Function to calculate initial benefit amounts for retirement
 function calculateInitialBenefitAmounts(inputs) {
+  const age = inputs.retireAge - inputs.ssStartAge;
+
   let ssAnnual =
     inputs.ssMonthly *
     12 *
-    (inputs.retireAge >= inputs.ssStart
-      ? compoundedRate(inputs.ssCola, inputs.retireAge - inputs.ssStart)
+    (inputs.retireAge >= inputs.ssStartAge
+      ? compoundedRate(inputs.ssCola, inputs.retireAge - inputs.ssStartAge)
       : 1);
   let penAnnual =
     inputs.penMonthly *
     12 *
-    (inputs.retireAge >= inputs.penStart
-      ? compoundedRate(inputs.penCola, inputs.retireAge - inputs.penStart)
+    (inputs.retireAge >= inputs.penStartAge
+      ? compoundedRate(inputs.penCola, inputs.retireAge - inputs.penStartAge)
       : 1);
 
   const spouseBenefits = calculateSpouseBenefits(inputs);
@@ -1700,8 +1703,8 @@ function calc() {
 
     // Step next year: Apply COLAs to benefits
     const age = yearData.age;
-    if (age >= inputs.ssStart) ssAnnual *= 1 + inputs.ssCola;
-    if (age >= inputs.penStart && inputs.penMonthly > 0)
+    if (age >= inputs.ssStartAge) ssAnnual *= 1 + inputs.ssCola;
+    if (age >= inputs.penStartAge && inputs.penMonthly > 0)
       penAnnual *= 1 + inputs.penCola;
 
     if (inputs.hasSpouse) {

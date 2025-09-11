@@ -1557,7 +1557,7 @@ function generatePDFReport() {
       fmt(inputs.ssMonthly * 12),
       yPos
     );
-    yPos = addKeyValuePair("SS Starting Age:", `${inputs.ssStart}`, yPos, 5);
+    yPos = addKeyValuePair("SS Starting Age:", `${inputs.ssStartAge}`, yPos, 5);
     yPos = addKeyValuePair(
       "SS COLA:",
       `${(inputs.ssCola * 100).toFixed(1)}%`,
@@ -1574,7 +1574,7 @@ function generatePDFReport() {
       );
       yPos = addKeyValuePair(
         "Pension Starting Age:",
-        `${inputs.penStart}`,
+        `${inputs.penStartAge}`,
         yPos,
         5
       );
@@ -2004,6 +2004,8 @@ function parseInputParameters() {
   const inputs = {
     currentAge: num("currentAge"),
     retireAge: num("retireAge"),
+    ssStartAge: num("ssStart"),
+    penStartAge: num("penStart"),
     endAge: num("endAge"),
     inflation: pct(num("inflation")),
     spendingToday: num("spendingToday"),
@@ -2040,10 +2042,8 @@ function parseInputParameters() {
 
     // Income sources
     ssMonthly: num("ssMonthly"),
-    ssStart: num("ssStart"),
     ssCola: pct(num("ssCola")),
     penMonthly: num("penMonthly"),
-    penStart: num("penStart"),
     penCola: pct(num("penCola")),
     // Tax rates and settings
     filingStatus: $("filingStatus").value,
