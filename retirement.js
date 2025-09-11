@@ -151,11 +151,11 @@ function determineTaxUsingBrackets(
   let tax = 0,
     prev = 0;
 
-  for (const { upto, rate } of brackets) {
-    const slice = Math.min(taxableIncome, upto) - prev;
+  for (const { upTo, rate } of brackets) {
+    const slice = Math.min(taxableIncome, upTo) - prev;
     if (slice > 0) tax += slice * rate;
-    if (taxableIncome <= upto) break;
-    prev = upto;
+    if (taxableIncome <= upTo) break;
+    prev = upTo;
   }
   log.info(`Total tax calculated is $${tax.round(2)}.`);
 
