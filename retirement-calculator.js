@@ -842,15 +842,16 @@ function createWithdrawalFunction(
  */
 function calculateRetirementYearData(
   inputs,
-  year,
+  retirementYear,
   balances,
   benefitAmounts,
   spend
 ) {
-  const age = inputs.currentAge + year;
-  const yearNum = new Date().getFullYear() + year;
+  const age = inputs.retireAge + retirementYear;
+  const yearNum =
+    new Date().getFullYear() + inputs.totalWorkingYears + retirementYear;
 
-  console.log(`\n--- Retirement Year ${year + 1} (Age ${age}) ---`);
+  console.log(`\n--- Retirement Year ${retirementYear + 1} (Age ${age}) ---`);
 
   // Income sources (gross amounts)
   const hasSS = age >= inputs.ssStartAge;
@@ -926,8 +927,18 @@ function calculateRetirementYearData(
     savingsBalanceAfterWithdrawals * inputs.rateOfSavings;
 
   // STEP 2: Track pensions
-  const penResults = buildPensionTracker(penGross);
-  const spousePenResults = buildPensionTracker(spousePenGross);
+  const penResults = buildPensionTracker(
+    inputs,
+    penGross,
+    taxableInterestEarned + taxableIncomeAdjustment,
+    yearNum
+  );
+  const spousePenResults = buildPensionTracker(
+    inputs,
+    spousePenGross,
+    taxableInterestEarned + taxableIncomeAdjustment,
+    yearNum
+  );
 
   // Track taxable income reference to include only
   // taxable portions plus taxable interest
@@ -958,7 +969,7 @@ function calculateRetirementYearData(
     inputs,
     balancesCopy,
     totalTaxableIncomeCopy,
-    year
+    yearNum
   );
 
   // Apply RMDs first (preliminary)
@@ -1004,13 +1015,13 @@ function calculateRetirementYearData(
     inputs,
     ssGross,
     totalTaxableIncomeForSS,
-    year
+    yearNum
   );
   const spouseSsResults = calculateSocialSecurityTaxation(
     inputs,
     spouseSsGross,
     totalTaxableIncomeForSS + ssResults.ssTaxableAmount,
-    year
+    yearNum
   );
 
   // STEP 6: Recalculate final withdrawals with correct SS net amounts
@@ -1046,7 +1057,7 @@ function calculateRetirementYearData(
     inputs,
     balances,
     totalTaxableIncomeRef,
-    year
+    yearNum
   );
 
   // Final withdrawal amounts
@@ -1187,13 +1198,13 @@ function calculateRetirementYearData(
     inputs,
     ssGross,
     finalTaxableIncomeForSS,
-    year
+    yearNum
   );
   const finalSpouseSsResults = calculateSocialSecurityTaxation(
     inputs,
     spouseSsGross,
     finalTaxableIncomeForSS + finalSsResults.ssTaxableAmount,
-    year
+    yearNum
   );
 
   // Calculate total taxes on all taxable income (proper approach)
@@ -1211,14 +1222,14 @@ function calculateRetirementYearData(
   taxesThisYear = calculateFederalTax(
     totalGrossTaxableIncome,
     inputs.filingStatus,
-    TAX_BASE_YEAR + year
+    yearNum
   );
 
   // Also calculate the taxable income after deduction for display purposes
   const totalTaxableIncomeAfterDeduction = calculateTaxableIncome(
     totalGrossTaxableIncome,
     inputs.filingStatus,
-    TAX_BASE_YEAR + year
+    yearNum
   );
 
   // Calculate net income and handle overage BEFORE growing balances
@@ -1405,7 +1416,7 @@ function calculateRetirementYearData(
   const taxableIncomeAfterDeduction = calculateTaxableIncome(
     grossTaxableIncome,
     inputs.filingStatus,
-    TAX_BASE_YEAR + year
+    yearNum
   );
 
   // Effective tax rate should be based on TOTAL taxes vs taxable income
@@ -1425,10 +1436,7 @@ function calculateRetirementYearData(
   );
 
   // Calculate standard deduction for this year
-  const standardDeduction = getStandardDeduction(
-    TAX_BASE_YEAR + year,
-    inputs.filingStatus
-  );
+  const standardDeduction = getStandardDeduction(yearNum, inputs.filingStatus);
 
   return {
     year: yearNum,
@@ -1677,8 +1685,13 @@ function calc() {
 
   let spend = inputs.spendAtRetire;
 
+  // debugger;
   // Retirement years
-  for (let y = inputs.totalWorkingYears; y < inputs.totalLivingYears; y++) {
+  for (
+    let retirementYear = 0;
+    retirementYear < inputs.totalLivingYears - inputs.totalWorkingYears;
+    retirementYear++
+  ) {
     const benefitAmounts = {
       ssAnnual,
       penAnnual,
@@ -1687,7 +1700,7 @@ function calc() {
     };
     const yearData = calculateRetirementYearData(
       inputs,
-      y,
+      retirementYear,
       balances,
       benefitAmounts,
       spend
