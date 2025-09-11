@@ -31,9 +31,9 @@ const brackets = getTaxBrackets(filingStatus);
 const standardDeduction = getStandardDeduction(filingStatus);
 
 // Remove savings because it is not taxable
-const targetLessSavings = netTarget - savings;
+const target_LessSavings = netTarget - savings;
 
-const result = determine401kWithdrawalToHitNetTargetOf(targetLessSavings, {
+const result = determine401kWithdrawalToHitNetTargetOf(target_LessSavings, {
   otherTaxableIncome,
   ssBenefit,
   standardDeduction,
