@@ -1,10 +1,6 @@
 // retirement-calculator.js
 
-if (
-  typeof module !== "undefined" &&
-  module.exports &&
-  typeof require === "function"
-) {
+if (typeof require === "function") {
   // Running in Node.js
   // const fs = require("retirement.js");
   const { FILING_STATUS } = require("./retirement");
@@ -507,13 +503,345 @@ function calculateWorkingYearData(inputs, year, salary, balances) {
   };
 }
 
+/**
+ * Calculate spouse benefit amounts at the time of primary person's retirement
+ */
+function calculateSpouseBenefits(inputs) {
+  let spouseSsAnnual = 0;
+  let spousePenAnnual = 0;
+
+  if (inputs.hasSpouse) {
+    const spouseCurrentYear = inputs.retireAge - inputs.currentAge; // Years from now when primary person retires
+    const spouseAgeAtPrimaryRetirement = inputs.spouseAge + spouseCurrentYear;
+
+    spouseSsAnnual = inputs.spouseSsMonthly * 12;
+    // spouseSsColaRate = inputs.spouseSsCola;
+
+    // spouseSsAnnual =
+    //   spouseSsAnnual *
+    //   (spouseAgeAtPrimaryRetirement >= inputs.spouseSsStart
+    //     ? compoundedRate(
+    //         spouseSsColaRate,
+    //         spouseAgeAtPrimaryRetirement - inputs.spouseSsStart
+    //       )
+    //     : 1);
+    spousePenAnnual = inputs.spousePenMonthly * 12;
+    //  *
+    // (spouseAgeAtPrimaryRetirement >= inputs.spousePenStart
+    //   ? compoundedRate(
+    //       inputs.spousePenCola,
+    //       spouseAgeAtPrimaryRetirement - inputs.spousePenStart
+    //     )
+    //   : 1);
+  }
+
+  return { spouseSsAnnual, spousePenAnnual };
+}
+
+/**
+ * Calculate Social Security taxation for a given year
+ */
+function calculateSocialSecurityTaxation(
+  inputs,
+  ssGross,
+  otherTaxableIncome,
+  year = 0
+) {
+  if (!ssGross || ssGross <= 0) {
+    return {
+      ssNet: 0,
+      ssTaxableAmount: 0,
+      ssNonTaxable: 0,
+      ssTaxes: 0,
+      calculationDetails: {
+        provisionalIncome: 0,
+        threshold1: 0,
+        threshold2: 0,
+        tier1Amount: 0,
+        tier2Amount: 0,
+        method: "none",
+      },
+    };
+  }
+
+  const isMarried =
+    inputs.filingStatus === FILING_STATUS.MARRIED_FILING_JOINTLY;
+
+  // Use proper SS taxation rules based on provisional income
+  // Calculate provisional income: Taxable Income + non-taxable interest + 50% of SS benefits
+  const provisionalIncome = otherTaxableIncome + ssGross * 0.5;
+
+  // Set thresholds based on filing status
+  const threshold1 = isMarried ? 32000 : 25000; // 50% taxable inflection point
+  const threshold2 = isMarried ? 44000 : 34000; // 85% taxable inflection point
+
+  let ssTaxableDollars = 0;
+  let tier1TaxableDollars = 0;
+  let tier2TaxableDollars = 0;
+
+  if (provisionalIncome <= threshold1) {
+    // No SS benefits are taxable
+    ssTaxableDollars = 0;
+    tier1TaxableDollars = 0;
+    tier2TaxableDollars = 0;
+  } else if (provisionalIncome <= threshold2) {
+    // Up to 50% of SS benefits are taxable
+    const incomeInExcessOfTier1 = provisionalIncome - threshold1;
+    tier1TaxableDollars = Math.min(ssGross * 0.5, incomeInExcessOfTier1 * 0.5);
+    tier2TaxableDollars = 0;
+    ssTaxableDollars = tier1TaxableDollars;
+  } else {
+    // Up to 85% of SS benefits are taxable
+    // First calculate tier 1 amount (same as if we were in tier 1)
+    const provIncomeInExcessOfTier1 = threshold2 - threshold1; // 50% of dollars in tier1 are taxable
+    tier1TaxableDollars = Math.min(
+      ssGross * 0.5,
+      provIncomeInExcessOfTier1 * 0.5
+    );
+
+    // Then calculate tier 2 amount
+    const provIncomeInExcessOfTier2 = provisionalIncome - threshold2;
+    tier2TaxableDollars = Math.min(
+      ssGross * 0.85,
+      provIncomeInExcessOfTier2 * 0.85
+    );
+
+    ssTaxableDollars = Math.min(
+      ssGross * 0.85,
+      tier1TaxableDollars + tier2TaxableDollars
+    );
+  }
+
+  const ssNonTaxable = ssGross - ssTaxableDollars;
+
+  // Don't calculate separate SS taxes - the taxable SS amount will be included in total taxable income
+  return {
+    ssGross,
+    ssTaxableAmount: ssTaxableDollars,
+    ssNonTaxable,
+    ssTaxes: 0, // No separate SS taxes - included in total income tax calculation
+    calculationDetails: {
+      provisionalIncome,
+      threshold1,
+      threshold2,
+      tier1Amount: tier1TaxableDollars,
+      tier2Amount: tier2TaxableDollars,
+      excessIncome1: Math.max(0, provisionalIncome - threshold1),
+      excessIncome2: Math.max(0, provisionalIncome - threshold2),
+      effectiveRate: 0, // Will be calculated on total income
+      method: "irs-rules",
+    },
+  };
+}
+
+/**
+ * Calculate pension taxation for a given year
+ */
+function buildPensionTracker(inputs, penGross, totalTaxableIncome, year = 0) {
+  if (!penGross || penGross <= 0) {
+    return {
+      penGross: 0,
+      penTaxes: 0,
+      penNet: 0,
+      penNonTaxable: 0,
+      pensionTaxRate: 0,
+    };
+  }
+
+  // Pensions are typically fully taxable, but we track for consistency
+  const penTaxableAmount = penGross; // 100% taxable
+  const penNonTaxable = 0; // 0% non-taxable
+
+  // Don't calculate separate pension taxes - will be included in total income tax calculation
+  const penTaxes = 0;
+  const penNet = penGross; // Full gross amount; taxes calculated on total income
+
+  return {
+    penGross,
+    penTaxes,
+    penNet,
+    penNonTaxable,
+    pensionTaxRate: 0, // Will be calculated as part of total income
+  };
+}
+
+/**
+ * Create withdrawal function for a specific retirement year
+ */
+function createWithdrawalFunction(
+  inputs,
+  balances,
+  totalTaxableIncomeRef,
+  year = 0
+) {
+  let taxesThisYear = 0;
+  let withdrawalsBySource = {
+    retirementAccount: 0,
+    savingsAccount: 0,
+    roth: 0,
+  };
+
+  function withdrawFrom(kind, desiredNetAmount) {
+    // console.log(`withdrawFrom called with kind: "${kind}", netAmount: ${netAmount}`);
+    if (desiredNetAmount <= 0) return { gross: 0, net: 0 };
+
+    // Validate kind parameter
+    if (!kind || typeof kind !== "string") {
+      console.error("Invalid withdrawal kind:", kind);
+      return { gross: 0, net: 0 };
+    }
+
+    // Determine balance reference and setter function
+    let balRef = 0,
+      setBal;
+
+    if (kind === "savings") {
+      balRef = balances.balSavings;
+      setBal = (v) => {
+        balances.balSavings = v;
+      };
+    } else if (kind === "pretax") {
+      balRef = balances.balPre;
+      setBal = (v) => {
+        balances.balPre = v;
+      };
+    } else if (kind === "roth") {
+      balRef = balances.balRoth;
+      setBal = (v) => {
+        balances.balRoth = v;
+      };
+    } else {
+      console.error("Unknown withdrawal kind:", kind);
+      return { gross: 0, net: 0 };
+    }
+
+    // Use Taxable Income-based calculation for pre-tax withdrawals if enabled
+    let taxRate = 0;
+
+    if (kind === "pretax") {
+      const projectedGrossIncome = totalTaxableIncomeRef.value;
+
+      const projectedTaxableIncome = calculateTaxableIncome(
+        projectedGrossIncome,
+        inputs.filingStatus,
+        TAX_BASE_YEAR + year
+      );
+      const taxableIncomeBasedRate =
+        inputs.filingStatus === FILING_STATUS.MARRIED_FILING_JOINTLY
+          ? getEffectiveTaxRateMarried(projectedTaxableIncome)
+          : getEffectiveTaxRate(projectedTaxableIncome);
+
+      const taxableIncomeRateDecimal = taxableIncomeBasedRate / 100;
+      taxRate = taxableIncomeRateDecimal;
+    }
+
+    // For pretax withdrawals, estimate tax rate and gross up to meet net need
+    let grossTake, netReceived;
+    if (kind === "pretax") {
+      // Estimate tax rate for grossing up the withdrawal
+      const projectedGrossIncome =
+        totalTaxableIncomeRef.value + desiredNetAmount;
+      const projectedTaxableIncome = calculateTaxableIncome(
+        projectedGrossIncome,
+        inputs.filingStatus,
+        TAX_BASE_YEAR + year
+      );
+      const taxableIncomeBasedRate =
+        inputs.filingStatus === FILING_STATUS.MARRIED_FILING_JOINTLY
+          ? getEffectiveTaxRateMarried(projectedTaxableIncome)
+          : getEffectiveTaxRate(projectedTaxableIncome);
+      const taxableIncomeRateDecimal = taxableIncomeBasedRate / 100;
+      taxRate = taxableIncomeRateDecimal;
+
+      // Gross up the withdrawal to account for taxes
+      const grossNeeded = desiredNetAmount / (1 - taxRate);
+      grossTake = Math.min(grossNeeded, balRef);
+      netReceived = grossTake * (1 - taxRate); // Estimated net after taxes
+      setBal(balRef - grossTake);
+    } else {
+      // For Savings/Roth accounts, there is no tax impact to consider; simply withdraw the desired amount
+      grossTake = Math.min(desiredNetAmount, balRef);
+      netReceived = grossTake;
+      setBal(balRef - grossTake);
+    }
+
+    // Track withdrawals by source
+    if (kind === "pretax") {
+      withdrawalsBySource.retirementAccount += grossTake;
+    } else if (kind === "savings") {
+      withdrawalsBySource.savingsAccount += grossTake;
+    } else if (kind === "roth") {
+      withdrawalsBySource.roth += grossTake;
+    }
+
+    // Add pre-tax withdrawals to Taxable Income for subsequent calculations
+    if (kind === "pretax") {
+      totalTaxableIncomeRef.value += grossTake;
+    }
+
+    return { gross: grossTake, net: netReceived };
+  }
+
+  // Special function for RMD withdrawals (gross amount based)
+  function withdrawRMD(grossAmount) {
+    if (grossAmount <= 0 || balances.balPre <= 0) return { gross: 0, net: 0 };
+
+    const actualGross = Math.min(grossAmount, balances.balPre);
+
+    let taxRate = 0;
+
+    {
+      const projectedGrossIncome = totalTaxableIncomeRef.value + actualGross;
+      const projectedTaxableIncome = calculateTaxableIncome(
+        projectedGrossIncome,
+        inputs.filingStatus,
+        TAX_BASE_YEAR + year
+      );
+      const taxableIncomeBasedRate =
+        inputs.filingStatus === FILING_STATUS.MARRIED_FILING_JOINTLY
+          ? getEffectiveTaxRateMarried(projectedTaxableIncome)
+          : getEffectiveTaxRate(projectedTaxableIncome);
+      const taxableIncomeRateDecimal = taxableIncomeBasedRate / 100;
+      taxRate = taxableIncomeRateDecimal;
+    }
+
+    // For RMD, estimate taxes to provide realistic net amount
+    const projectedGrossIncome = totalTaxableIncomeRef.value + actualGross;
+    const projectedTaxableIncome = calculateTaxableIncome(
+      projectedGrossIncome,
+      inputs.filingStatus,
+      TAX_BASE_YEAR + year
+    );
+    const taxableIncomeBasedRate =
+      inputs.filingStatus === FILING_STATUS.MARRIED_FILING_JOINTLY
+        ? getEffectiveTaxRateMarried(projectedTaxableIncome)
+        : getEffectiveTaxRate(projectedTaxableIncome);
+    const taxableIncomeRateDecimal = taxableIncomeBasedRate / 100;
+    const rmdTaxRate = taxableIncomeRateDecimal;
+
+    const netReceived = actualGross * (1 - rmdTaxRate); // Estimated net after taxes
+    balances.balPre -= actualGross;
+    totalTaxableIncomeRef.value += actualGross;
+
+    // Track RMD withdrawals as retirement account
+    withdrawalsBySource.retirementAccount += actualGross;
+
+    return { gross: actualGross, net: netReceived };
+  }
+
+  return {
+    withdrawFrom,
+    withdrawRMD,
+    getTaxesThisYear: () => taxesThisYear,
+    getWithdrawalsBySource: () => withdrawalsBySource,
+  };
+}
+
 function calc() {
   // Enhanced retirement calculator with realistic working year modeling
   const inputs = parseInputParameters();
 
-  if (!inputs) {
-    return;
-  }
+  if (!inputs) return;
 
   // Auto-regenerate spending override fields only if ages have changed
   if (
@@ -572,172 +900,6 @@ function calc() {
     currentSalary *= 1 + inputs.salaryGrowth;
   }
 
-  // console.log('Working years: ', calculations);
-
-  /**
-   * Calculate spouse benefit amounts at the time of primary person's retirement
-   */
-  function calculateSpouseBenefits(inputs) {
-    let spouseSsAnnual = 0;
-    let spousePenAnnual = 0;
-
-    if (inputs.hasSpouse) {
-      const spouseCurrentYear = inputs.retireAge - inputs.currentAge; // Years from now when primary person retires
-      const spouseAgeAtPrimaryRetirement = inputs.spouseAge + spouseCurrentYear;
-
-      spouseSsAnnual =
-        inputs.spouseSsMonthly *
-        12 *
-        (spouseAgeAtPrimaryRetirement >= inputs.spouseSsStart
-          ? compoundedRate(
-              inputs.spouseSsCola,
-              spouseAgeAtPrimaryRetirement - inputs.spouseSsStart
-            )
-          : 1);
-      spousePenAnnual =
-        inputs.spousePenMonthly *
-        12 *
-        (spouseAgeAtPrimaryRetirement >= inputs.spousePenStart
-          ? compoundedRate(
-              inputs.spousePenCola,
-              spouseAgeAtPrimaryRetirement - inputs.spousePenStart
-            )
-          : 1);
-    }
-
-    return { spouseSsAnnual, spousePenAnnual };
-  }
-
-  /**
-   * Calculate Social Security taxation for a given year
-   */
-  function calculateSocialSecurityTaxation(
-    inputs,
-    ssGross,
-    otherTaxableIncome,
-    year = 0
-  ) {
-    if (!ssGross || ssGross <= 0) {
-      return {
-        ssNet: 0,
-        ssTaxableAmount: 0,
-        ssNonTaxable: 0,
-        ssTaxes: 0,
-        calculationDetails: {
-          provisionalIncome: 0,
-          threshold1: 0,
-          threshold2: 0,
-          tier1Amount: 0,
-          tier2Amount: 0,
-          method: "none",
-        },
-      };
-    }
-
-    const isMarried =
-      inputs.filingStatus === FILING_STATUS.MARRIED_FILING_JOINTLY;
-
-    // Use proper SS taxation rules based on provisional income
-    // Calculate provisional income: Taxable Income + non-taxable interest + 50% of SS benefits
-    const provisionalIncome = otherTaxableIncome + ssGross * 0.5;
-
-    // Set thresholds based on filing status
-    const threshold1 = isMarried ? 32000 : 25000; // 50% taxable inflection point
-    const threshold2 = isMarried ? 44000 : 34000; // 85% taxable inflection point
-
-    let ssTaxableDollars = 0;
-    let tier1TaxableDollars = 0;
-    let tier2TaxableDollars = 0;
-
-    if (provisionalIncome <= threshold1) {
-      // No SS benefits are taxable
-      ssTaxableDollars = 0;
-      tier1TaxableDollars = 0;
-      tier2TaxableDollars = 0;
-    } else if (provisionalIncome <= threshold2) {
-      // Up to 50% of SS benefits are taxable
-      const incomeInExcessOfTier1 = provisionalIncome - threshold1;
-      tier1TaxableDollars = Math.min(
-        ssGross * 0.5,
-        incomeInExcessOfTier1 * 0.5
-      );
-      tier2TaxableDollars = 0;
-      ssTaxableDollars = tier1TaxableDollars;
-    } else {
-      // Up to 85% of SS benefits are taxable
-      // First calculate tier 1 amount (same as if we were in tier 1)
-      const provIncomeInExcessOfTier1 = threshold2 - threshold1; // 50% of dollars in tier1 are taxable
-      tier1TaxableDollars = Math.min(
-        ssGross * 0.5,
-        provIncomeInExcessOfTier1 * 0.5
-      );
-
-      // Then calculate tier 2 amount
-      const provIncomeInExcessOfTier2 = provisionalIncome - threshold2;
-      tier2TaxableDollars = Math.min(
-        ssGross * 0.85,
-        provIncomeInExcessOfTier2 * 0.85
-      );
-
-      ssTaxableDollars = Math.min(
-        ssGross * 0.85,
-        tier1TaxableDollars + tier2TaxableDollars
-      );
-    }
-
-    const ssNonTaxable = ssGross - ssTaxableDollars;
-
-    // Don't calculate separate SS taxes - the taxable SS amount will be included in total taxable income
-    return {
-      ssGross,
-      ssTaxableAmount: ssTaxableDollars,
-      ssNonTaxable,
-      ssTaxes: 0, // No separate SS taxes - included in total income tax calculation
-      calculationDetails: {
-        provisionalIncome,
-        threshold1,
-        threshold2,
-        tier1Amount: tier1TaxableDollars,
-        tier2Amount: tier2TaxableDollars,
-        excessIncome1: Math.max(0, provisionalIncome - threshold1),
-        excessIncome2: Math.max(0, provisionalIncome - threshold2),
-        effectiveRate: 0, // Will be calculated on total income
-        method: "irs-rules",
-      },
-    };
-  }
-
-  /**
-   * Calculate pension taxation for a given year
-   */
-  function buildPensionTracker(inputs, penGross, totalTaxableIncome, year = 0) {
-    if (!penGross || penGross <= 0) {
-      return {
-        penGross: 0,
-        penTaxes: 0,
-        penNet: 0,
-        penNonTaxable: 0,
-        pensionTaxRate: 0,
-      };
-    }
-
-    // Pensions are typically fully taxable, but we track for consistency
-    const penTaxableAmount = penGross; // 100% taxable
-    const penNonTaxable = 0; // 0% non-taxable
-
-    // Don't calculate separate pension taxes - will be included in total income tax calculation
-    const penTaxes = 0;
-    const penNet = penGross; // Full gross amount; taxes calculated on total income
-
-    return {
-      penGross,
-      penTaxes,
-      penNet,
-      penNonTaxable,
-      pensionTaxRate: 0, // Will be calculated as part of total income
-    };
-  }
-
   // Setup retirement years; calculate initial benefit amounts
   let ssAnnual =
     inputs.ssMonthly *
@@ -757,178 +919,6 @@ function calc() {
   let spousePenAnnual = spouseBenefits.spousePenAnnual;
 
   let spend = inputs.spendAtRetire;
-
-  /**
-   * Create withdrawal function for a specific retirement year
-   */
-  function createWithdrawalFunction(
-    inputs,
-    balances,
-    totalTaxableIncomeRef,
-    year = 0
-  ) {
-    let taxesThisYear = 0;
-    let withdrawalsBySource = {
-      retirementAccount: 0,
-      savingsAccount: 0,
-      roth: 0,
-    };
-
-    function withdrawFrom(kind, desiredNetAmount) {
-      // console.log(`withdrawFrom called with kind: "${kind}", netAmount: ${netAmount}`);
-      if (desiredNetAmount <= 0) return { gross: 0, net: 0 };
-
-      // Validate kind parameter
-      if (!kind || typeof kind !== "string") {
-        console.error("Invalid withdrawal kind:", kind);
-        return { gross: 0, net: 0 };
-      }
-
-      // Determine balance reference and setter function
-      let balRef = 0,
-        setBal;
-
-      if (kind === "savings") {
-        balRef = balances.balSavings;
-        setBal = (v) => {
-          balances.balSavings = v;
-        };
-      } else if (kind === "pretax") {
-        balRef = balances.balPre;
-        setBal = (v) => {
-          balances.balPre = v;
-        };
-      } else if (kind === "roth") {
-        balRef = balances.balRoth;
-        setBal = (v) => {
-          balances.balRoth = v;
-        };
-      } else {
-        console.error("Unknown withdrawal kind:", kind);
-        return { gross: 0, net: 0 };
-      }
-
-      // Use Taxable Income-based calculation for pre-tax withdrawals if enabled
-      let taxRate = 0;
-
-      if (kind === "pretax") {
-        const projectedGrossIncome = totalTaxableIncomeRef.value;
-
-        const projectedTaxableIncome = calculateTaxableIncome(
-          projectedGrossIncome,
-          inputs.filingStatus,
-          TAX_BASE_YEAR + year
-        );
-        const taxableIncomeBasedRate =
-          inputs.filingStatus === FILING_STATUS.MARRIED_FILING_JOINTLY
-            ? getEffectiveTaxRateMarried(projectedTaxableIncome)
-            : getEffectiveTaxRate(projectedTaxableIncome);
-
-        const taxableIncomeRateDecimal = taxableIncomeBasedRate / 100;
-        taxRate = taxableIncomeRateDecimal;
-      }
-
-      // For pretax withdrawals, estimate tax rate and gross up to meet net need
-      let grossTake, netReceived;
-      if (kind === "pretax") {
-        // Estimate tax rate for grossing up the withdrawal
-        const projectedGrossIncome =
-          totalTaxableIncomeRef.value + desiredNetAmount;
-        const projectedTaxableIncome = calculateTaxableIncome(
-          projectedGrossIncome,
-          inputs.filingStatus,
-          TAX_BASE_YEAR + year
-        );
-        const taxableIncomeBasedRate =
-          inputs.filingStatus === FILING_STATUS.MARRIED_FILING_JOINTLY
-            ? getEffectiveTaxRateMarried(projectedTaxableIncome)
-            : getEffectiveTaxRate(projectedTaxableIncome);
-        const taxableIncomeRateDecimal = taxableIncomeBasedRate / 100;
-        taxRate = taxableIncomeRateDecimal;
-
-        // Gross up the withdrawal to account for taxes
-        const grossNeeded = desiredNetAmount / (1 - taxRate);
-        grossTake = Math.min(grossNeeded, balRef);
-        netReceived = grossTake * (1 - taxRate); // Estimated net after taxes
-        setBal(balRef - grossTake);
-      } else {
-        // For Savings/Roth accounts, there is no tax impact to consider; simply withdraw the desired amount
-        grossTake = Math.min(desiredNetAmount, balRef);
-        netReceived = grossTake;
-        setBal(balRef - grossTake);
-      }
-
-      // Track withdrawals by source
-      if (kind === "pretax") {
-        withdrawalsBySource.retirementAccount += grossTake;
-      } else if (kind === "savings") {
-        withdrawalsBySource.savingsAccount += grossTake;
-      } else if (kind === "roth") {
-        withdrawalsBySource.roth += grossTake;
-      }
-
-      // Add pre-tax withdrawals to Taxable Income for subsequent calculations
-      if (kind === "pretax") {
-        totalTaxableIncomeRef.value += grossTake;
-      }
-
-      return { gross: grossTake, net: netReceived };
-    }
-
-    // Special function for RMD withdrawals (gross amount based)
-    function withdrawRMD(grossAmount) {
-      if (grossAmount <= 0 || balances.balPre <= 0) return { gross: 0, net: 0 };
-
-      const actualGross = Math.min(grossAmount, balances.balPre);
-
-      let taxRate = 0;
-
-      {
-        const projectedGrossIncome = totalTaxableIncomeRef.value + actualGross;
-        const projectedTaxableIncome = calculateTaxableIncome(
-          projectedGrossIncome,
-          inputs.filingStatus,
-          TAX_BASE_YEAR + year
-        );
-        const taxableIncomeBasedRate =
-          inputs.filingStatus === FILING_STATUS.MARRIED_FILING_JOINTLY
-            ? getEffectiveTaxRateMarried(projectedTaxableIncome)
-            : getEffectiveTaxRate(projectedTaxableIncome);
-        const taxableIncomeRateDecimal = taxableIncomeBasedRate / 100;
-        taxRate = taxableIncomeRateDecimal;
-      }
-
-      // For RMD, estimate taxes to provide realistic net amount
-      const projectedGrossIncome = totalTaxableIncomeRef.value + actualGross;
-      const projectedTaxableIncome = calculateTaxableIncome(
-        projectedGrossIncome,
-        inputs.filingStatus,
-        TAX_BASE_YEAR + year
-      );
-      const taxableIncomeBasedRate =
-        inputs.filingStatus === FILING_STATUS.MARRIED_FILING_JOINTLY
-          ? getEffectiveTaxRateMarried(projectedTaxableIncome)
-          : getEffectiveTaxRate(projectedTaxableIncome);
-      const taxableIncomeRateDecimal = taxableIncomeBasedRate / 100;
-      const rmdTaxRate = taxableIncomeRateDecimal;
-
-      const netReceived = actualGross * (1 - rmdTaxRate); // Estimated net after taxes
-      balances.balPre -= actualGross;
-      totalTaxableIncomeRef.value += actualGross;
-
-      // Track RMD withdrawals as retirement account
-      withdrawalsBySource.retirementAccount += actualGross;
-
-      return { gross: actualGross, net: netReceived };
-    }
-
-    return {
-      withdrawFrom,
-      withdrawRMD,
-      getTaxesThisYear: () => taxesThisYear,
-      getWithdrawalsBySource: () => withdrawalsBySource,
-    };
-  }
 
   /**
    * 50/50 Withdrawal Strategy
@@ -1032,12 +1022,12 @@ function calc() {
     //   debugger;
     // }
 
+    spouseSsGross = 0;
+    spousePenGross = 0;
     if (inputs.hasSpouse) {
       const spouseCurrentAge = inputs.spouseAge + (age - inputs.currentAge);
       const hasSpouseSS = spouseCurrentAge >= inputs.spouseSsStart;
-      const hasSpousePen =
-        spouseCurrentAge >= inputs.spousePenStart &&
-        inputs.spousePenMonthly > 0;
+      const hasSpousePen = spouseCurrentAge >= inputs.spousePenStart;
 
       spouseSsGross = hasSpouseSS ? benefitAmounts.spouseSsAnnual : 0;
       spousePenGross = hasSpousePen ? benefitAmounts.spousePenAnnual : 0;
