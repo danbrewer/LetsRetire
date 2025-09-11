@@ -1575,6 +1575,33 @@ function withdraw50_50(withdrawalFunctions, totalNetNeeded) {
   return { totalGross, totalNet };
 }
 
+// Function to calculate initial benefit amounts for retirement
+function calculateInitialBenefitAmounts(inputs) {
+  let ssAnnual =
+    inputs.ssMonthly *
+    12 *
+    (inputs.retireAge >= inputs.ssStart
+      ? compoundedRate(inputs.ssCola, inputs.retireAge - inputs.ssStart)
+      : 1);
+  let penAnnual =
+    inputs.penMonthly *
+    12 *
+    (inputs.retireAge >= inputs.penStart
+      ? compoundedRate(inputs.penCola, inputs.retireAge - inputs.penStart)
+      : 1);
+
+  const spouseBenefits = calculateSpouseBenefits(inputs);
+  let spouseSsAnnual = spouseBenefits.spouseSsAnnual;
+  let spousePenAnnual = spouseBenefits.spousePenAnnual;
+
+  return {
+    ssAnnual,
+    penAnnual,
+    spouseSsAnnual,
+    spousePenAnnual,
+  };
+}
+
 function calc() {
   // Enhanced retirement calculator with realistic working year modeling
   const inputs = parseInputParameters();
@@ -1639,22 +1666,11 @@ function calc() {
   }
 
   // Setup retirement years; calculate initial benefit amounts
-  let ssAnnual =
-    inputs.ssMonthly *
-    12 *
-    (inputs.retireAge >= inputs.ssStart
-      ? compoundedRate(inputs.ssCola, inputs.retireAge - inputs.ssStart)
-      : 1);
-  let penAnnual =
-    inputs.penMonthly *
-    12 *
-    (inputs.retireAge >= inputs.penStart
-      ? compoundedRate(inputs.penCola, inputs.retireAge - inputs.penStart)
-      : 1);
-
-  const spouseBenefits = calculateSpouseBenefits(inputs);
-  let spouseSsAnnual = spouseBenefits.spouseSsAnnual;
-  let spousePenAnnual = spouseBenefits.spousePenAnnual;
+  const initialBenefits = calculateInitialBenefitAmounts(inputs);
+  let ssAnnual = initialBenefits.ssAnnual;
+  let penAnnual = initialBenefits.penAnnual;
+  let spouseSsAnnual = initialBenefits.spouseSsAnnual;
+  let spousePenAnnual = initialBenefits.spousePenAnnual;
 
   let spend = inputs.spendAtRetire;
 
