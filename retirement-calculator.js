@@ -842,16 +842,21 @@ function createWithdrawalFunction(
  */
 function calculateRetirementYearData(
   inputs,
-  retirementYear,
+  yearIndex,
   balances,
   benefitAmounts,
   spend
 ) {
-  const age = inputs.retireAge + retirementYear;
-  const yearNum =
-    new Date().getFullYear() + inputs.totalWorkingYears + retirementYear;
+  // debugger;
+  const age = inputs.retireAge + yearIndex;
+  const retirementYear =
+    new Date().getFullYear() + inputs.totalWorkingYears + yearIndex;
 
-  console.log(`\n--- Retirement Year ${retirementYear + 1} (Age ${age}) ---`);
+  console.log(
+    `\n--- Retirement Year ${
+      yearIndex + 1
+    } (Age ${age}) (Year ${retirementYear}) ---`
+  );
 
   // Income sources (gross amounts)
   const hasSS = age >= inputs.ssStartAge;
@@ -931,13 +936,13 @@ function calculateRetirementYearData(
     inputs,
     penGross,
     taxableInterestEarned + taxableIncomeAdjustment,
-    yearNum
+    retirementYear
   );
   const spousePenResults = buildPensionTracker(
     inputs,
     spousePenGross,
     taxableInterestEarned + taxableIncomeAdjustment,
-    yearNum
+    retirementYear
   );
 
   // Track taxable income reference to include only
@@ -969,7 +974,7 @@ function calculateRetirementYearData(
     inputs,
     balancesCopy,
     totalTaxableIncomeCopy,
-    yearNum
+    retirementYear
   );
 
   // Apply RMDs first (preliminary)
@@ -1015,13 +1020,13 @@ function calculateRetirementYearData(
     inputs,
     ssGross,
     totalTaxableIncomeForSS,
-    yearNum
+    retirementYear
   );
   const spouseSsResults = calculateSocialSecurityTaxation(
     inputs,
     spouseSsGross,
     totalTaxableIncomeForSS + ssResults.ssTaxableAmount,
-    yearNum
+    retirementYear
   );
 
   // STEP 6: Recalculate final withdrawals with correct SS net amounts
@@ -1057,7 +1062,7 @@ function calculateRetirementYearData(
     inputs,
     balances,
     totalTaxableIncomeRef,
-    yearNum
+    retirementYear
   );
 
   // Final withdrawal amounts
@@ -1198,13 +1203,13 @@ function calculateRetirementYearData(
     inputs,
     ssGross,
     finalTaxableIncomeForSS,
-    yearNum
+    retirementYear
   );
   const finalSpouseSsResults = calculateSocialSecurityTaxation(
     inputs,
     spouseSsGross,
     finalTaxableIncomeForSS + finalSsResults.ssTaxableAmount,
-    yearNum
+    retirementYear
   );
 
   // Calculate total taxes on all taxable income (proper approach)
@@ -1222,14 +1227,14 @@ function calculateRetirementYearData(
   taxesThisYear = calculateFederalTax(
     totalGrossTaxableIncome,
     inputs.filingStatus,
-    yearNum
+    retirementYear
   );
 
   // Also calculate the taxable income after deduction for display purposes
   const totalTaxableIncomeAfterDeduction = calculateTaxableIncome(
     totalGrossTaxableIncome,
     inputs.filingStatus,
-    yearNum
+    retirementYear
   );
 
   // Calculate net income and handle overage BEFORE growing balances
@@ -1416,7 +1421,7 @@ function calculateRetirementYearData(
   const taxableIncomeAfterDeduction = calculateTaxableIncome(
     grossTaxableIncome,
     inputs.filingStatus,
-    yearNum
+    retirementYear
   );
 
   // Effective tax rate should be based on TOTAL taxes vs taxable income
@@ -1436,10 +1441,13 @@ function calculateRetirementYearData(
   );
 
   // Calculate standard deduction for this year
-  const standardDeduction = getStandardDeduction(yearNum, inputs.filingStatus);
+  const standardDeduction = getStandardDeduction(
+    retirementYear,
+    inputs.filingStatus
+  );
 
   return {
-    year: yearNum,
+    year: retirementYear,
     age,
     salary: 0,
     contrib: 0,
