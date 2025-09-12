@@ -865,10 +865,61 @@ function calculateRetirementYearData(
   benefitAmounts,
   spend
 ) {
+  // Declare and initialize the result object at the top
+  const result = {
+    year: 0,
+    age: 0,
+    salary: 0,
+    contrib: 0,
+    ss: 0,
+    pen: 0,
+    spouseSs: 0,
+    spousePen: 0,
+    spend: 0,
+    wNet: 0,
+    w401kNet: 0,
+    wSavingsRothNet: 0,
+    wGross: 0,
+    w401kGross: 0,
+    wSavingsGross: 0,
+    wRothGross: 0,
+    ssGross: 0,
+    penGross: 0,
+    spouseSsGross: 0,
+    spousePenGross: 0,
+    taxes: 0,
+    ssTaxes: 0,
+    otherTaxes: 0,
+    penTaxes: 0,
+    withdrawalTaxes: 0,
+    nonTaxableIncome: 0,
+    taxableIncome: 0,
+    taxableInterest: 0,
+    totalIncome: 0,
+    totalNetIncome: 0,
+    totalGrossIncome: 0,
+    effectiveTaxRate: 0,
+    provisionalIncome: 0,
+    standardDeduction: 0,
+    balSavings: 0,
+    balPre: 0,
+    balRoth: 0,
+    total: 0,
+    savingsBreakdown: {},
+    withdrawalBreakdown: {},
+    ssBreakdown: {},
+  };
+
   // debugger;
   const age = inputs.retireAge + yearIndex;
   const retirementYear =
     new Date().getFullYear() + inputs.totalWorkingYears + yearIndex;
+
+  // Set basic values in result object
+  result.year = retirementYear;
+  result.age = age;
+  result.salary = 0;
+  result.contrib = 0;
 
   console.log(
     `\n--- Retirement Year ${
@@ -1419,77 +1470,75 @@ function calculateRetirementYearData(
     inputs.filingStatus
   );
 
-  return {
-    year: retirementYear,
-    age,
-    salary: 0,
-    contrib: 0,
-    ss: ssNetAdjusted,
-    pen: penNetAdjusted,
-    spouseSs: spouseSsNetAdjusted,
-    spousePen: spousePenNetAdjusted,
-    spend: actualSpend,
-    wNet: finalWNetTotal,
-    w401kNet: withdrawalBreakdown.pretax401kNet,
-    wSavingsRothNet:
-      withdrawalBreakdown.savingsNet + withdrawalBreakdown.rothNet,
-    wGross: finalWGrossTotal,
-    w401kGross: withdrawalsBySource.retirementAccount,
-    wSavingsGross: withdrawalsBySource.savingsAccount,
-    wRothGross: withdrawalsBySource.roth,
-    ssGross: ssGross,
-    penGross: penGross,
-    spouseSsGross: spouse.ssGross,
-    spousePenGross: spouse.penGross,
-    taxes: taxesThisYear,
-    ssTaxes: ssTaxAllocated,
-    otherTaxes: otherTaxes,
-    penTaxes: penTaxAllocated,
-    withdrawalTaxes: withdrawalTaxes,
-    nonTaxableIncome: totalNonTaxableIncome,
-    taxableIncome: taxableIncomeAfterDeduction, // Taxable income after standard deduction (this is what appears in the table)
-    taxableInterest: taxableInterestEarned,
-    totalIncome:
-      ssNetAdjusted +
-      penNetAdjusted +
-      spouseSsNetAdjusted +
-      spousePenNetAdjusted +
-      withdrawalNetAdjusted +
-      taxableInterestEarned +
-      taxableIncomeAdjustment +
-      taxFreeIncomeAdjustment, // Total income including all adjustments
-    totalNetIncome: totalNetIncome, // Use calculated total that meets spending target
-    totalGrossIncome: totalGrossIncome, // Use the corrected gross taxable income calculation
-    effectiveTaxRate,
-    provisionalIncome, // Provisional income for Social Security taxation
-    standardDeduction, // Standard deduction for this tax year
-    balSavings: balances.balSavings,
-    balPre: balances.balPre,
-    balRoth: balances.balRoth,
-    total: totalBal,
-    // Add savings breakdown data for popup
-    savingsBreakdown: {
-      startingBalance: savingsStartBalance,
-      withdrawals: actualSavingsWithdrawal,
-      overageDeposit: overage,
-      taxFreeIncomeDeposit: taxFreeIncomeAdjustment,
-      balanceBeforeGrowth: savingsBeforeGrowth,
-      interestEarned: savingsGrowth, // Use the conservative growth calculation
-      endingBalance: balances.balSavings,
-      growthRate: inputs.rateOfSavings * 100,
-    },
-    // Add withdrawal breakdown data for popup
-    withdrawalBreakdown: withdrawalBreakdown,
-    // Add SS breakdown data for popup
-    ssBreakdown: {
-      ssGross: ssGross,
-      ssTaxableAmount: finalSsResults.ssTaxableAmount,
-      ssNonTaxable: finalSsResults.ssNonTaxable,
-      ssTaxes: ssTaxAllocated, // Show allocated tax amount
-      calculationDetails: finalSsResults.calculationDetails,
-      otherTaxableIncome: finalTaxableIncomeForSS,
-    },
+  // Update all the final values in the result object
+  result.ss = ssNetAdjusted;
+  result.pen = penNetAdjusted;
+  result.spouseSs = spouseSsNetAdjusted;
+  result.spousePen = spousePenNetAdjusted;
+  result.spend = actualSpend;
+  result.wNet = finalWNetTotal;
+  result.w401kNet = withdrawalBreakdown.pretax401kNet;
+  result.wSavingsRothNet =
+    withdrawalBreakdown.savingsNet + withdrawalBreakdown.rothNet;
+  result.wGross = finalWGrossTotal;
+  result.w401kGross = withdrawalsBySource.retirementAccount;
+  result.wSavingsGross = withdrawalsBySource.savingsAccount;
+  result.wRothGross = withdrawalsBySource.roth;
+  result.ssGross = ssGross;
+  result.penGross = penGross;
+  result.spouseSsGross = spouse.ssGross;
+  result.spousePenGross = spouse.penGross;
+  result.taxes = taxesThisYear;
+  result.ssTaxes = ssTaxAllocated;
+  result.otherTaxes = otherTaxes;
+  result.penTaxes = penTaxAllocated;
+  result.withdrawalTaxes = withdrawalTaxes;
+  result.nonTaxableIncome = totalNonTaxableIncome;
+  result.taxableIncome = taxableIncomeAfterDeduction;
+  result.taxableInterest = taxableInterestEarned;
+  result.totalIncome =
+    ssNetAdjusted +
+    penNetAdjusted +
+    spouseSsNetAdjusted +
+    spousePenNetAdjusted +
+    withdrawalNetAdjusted +
+    taxableInterestEarned +
+    taxableIncomeAdjustment +
+    taxFreeIncomeAdjustment;
+  result.totalNetIncome = totalNetIncome;
+  result.totalGrossIncome = totalGrossIncome;
+  result.effectiveTaxRate = effectiveTaxRate;
+  result.provisionalIncome = provisionalIncome;
+  result.standardDeduction = standardDeduction;
+  result.balSavings = balances.balSavings;
+  result.balPre = balances.balPre;
+  result.balRoth = balances.balRoth;
+  result.total = totalBal;
+
+  // Add breakdown data
+  result.savingsBreakdown = {
+    startingBalance: savingsStartBalance,
+    withdrawals: actualSavingsWithdrawal,
+    overageDeposit: overage,
+    taxFreeIncomeDeposit: taxFreeIncomeAdjustment,
+    balanceBeforeGrowth: savingsBeforeGrowth,
+    interestEarned: savingsGrowth,
+    endingBalance: balances.balSavings,
+    growthRate: inputs.rateOfSavings * 100,
   };
+
+  result.withdrawalBreakdown = withdrawalBreakdown;
+
+  result.ssBreakdown = {
+    ssGross: ssGross,
+    ssTaxableAmount: finalSsResults.ssTaxableAmount,
+    ssNonTaxable: finalSsResults.ssNonTaxable,
+    ssTaxes: ssTaxAllocated,
+    calculationDetails: finalSsResults.calculationDetails,
+    otherTaxableIncome: finalTaxableIncomeForSS,
+  };
+
+  return result;
 }
 
 /**
