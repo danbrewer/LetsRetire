@@ -6,6 +6,78 @@ Number.prototype.round = function (decimals = 0) {
   return Math.round(this * factor) / factor;
 };
 
+// Add default implementations for UI override functions when not available
+if (typeof getTaxableIncomeOverride === "undefined") {
+  const globalThis = (function () {
+    return (
+      this ||
+      (typeof window !== "undefined"
+        ? window
+        : typeof global !== "undefined"
+        ? global
+        : {})
+    );
+  })();
+
+  globalThis.getTaxableIncomeOverride = function getTaxableIncomeOverride(age) {
+    return 0; // Default to no override
+  };
+}
+
+if (typeof getTaxFreeIncomeOverride === "undefined") {
+  const globalThis = (function () {
+    return (
+      this ||
+      (typeof window !== "undefined"
+        ? window
+        : typeof global !== "undefined"
+        ? global
+        : {})
+    );
+  })();
+
+  globalThis.getTaxFreeIncomeOverride = function getTaxFreeIncomeOverride(age) {
+    return 0; // Default to no override
+  };
+}
+
+if (typeof getSpendingOverride === "undefined") {
+  const globalThis = (function () {
+    return (
+      this ||
+      (typeof window !== "undefined"
+        ? window
+        : typeof global !== "undefined"
+        ? global
+        : {})
+    );
+  })();
+
+  globalThis.getSpendingOverride = function getSpendingOverride(age) {
+    return null; // Default to no override
+  };
+}
+
+if (typeof setSpendingFieldValue === "undefined") {
+  const globalThis = (function () {
+    return (
+      this ||
+      (typeof window !== "undefined"
+        ? window
+        : typeof global !== "undefined"
+        ? global
+        : {})
+    );
+  })();
+
+  globalThis.setSpendingFieldValue = function setSpendingFieldValue(
+    age,
+    value
+  ) {
+    // No-op in non-UI context
+  };
+}
+
 if (typeof require === "function") {
   // Running in Node.js
   const {
@@ -190,7 +262,7 @@ function calculateWorkingYearData(inputs, year, salary, balances) {
   const taxableInterestIncome = balances.balSavings * inputs.rateOfSavings;
 
   // Get taxable income adjustments for this age
-  const taxableIncomeAdjustment = getTaxableIncomeOverride(age);
+  const taxableIncomeAdjustment = getTaxableIncomeOverride(age) || 0;
 
   let grossTaxableIncome =
     salary - cPre + taxableInterestIncome + taxableIncomeAdjustment;
@@ -228,7 +300,7 @@ function calculateWorkingYearData(inputs, year, salary, balances) {
 
   // Update balances
   // Get tax-free income adjustments for this age
-  const taxFreeIncomeAdjustment = getTaxFreeIncomeOverride(age);
+  const taxFreeIncomeAdjustment = getTaxFreeIncomeOverride(age) || 0;
 
   // Track savings breakdown for working years
   const savingsStartBalance = balances.balSavings;
@@ -341,11 +413,7 @@ function calculateSocialSecurityTaxation(
   year = 0
 ) {
   // Use the sophisticated Social Security taxation calculation from retirement.js
-  return determineTaxablePortionOfSocialSecurity(
-    ssGross,
-    otherTaxableIncome,
-    inputs.filingStatus
-  );
+  return determineTaxablePortionOfSocialSecurity(ssGross, otherTaxableIncome);
 }
 
 /**
@@ -639,8 +707,8 @@ function calculateRetirementYearData(
   const spouse = extractSpouseInputs(inputs, age, benefitAmounts);
 
   // Get income adjustments for this age
-  const taxableIncomeAdjustment = getTaxableIncomeOverride(age);
-  const taxFreeIncomeAdjustment = getTaxFreeIncomeOverride(age);
+  const taxableIncomeAdjustment = getTaxableIncomeOverride(age) || 0;
+  const taxFreeIncomeAdjustment = getTaxFreeIncomeOverride(age) || 0;
   // Get spending need (with additional spending)
   const additionalSpending = getSpendingOverride(age);
 
@@ -692,12 +760,21 @@ function calculateRetirementYearData(
 
   // Track taxable income reference to include only
   // taxable portions plus taxable interest
+  // Ensure all components are valid numbers to prevent NaN
+  const penGrossTotal = isNaN(penResults.penGross) ? 0 : penResults.penGross;
+  const spousePenGrossTotal = isNaN(spousePenResults.penGross)
+    ? 0
+    : spousePenResults.penGross;
+  const taxableInterest = isNaN(taxableInterestEarned)
+    ? 0
+    : taxableInterestEarned;
+  const taxableAdjustment = isNaN(taxableIncomeAdjustment)
+    ? 0
+    : taxableIncomeAdjustment;
+
   let totalTaxableIncome = {
     value:
-      penResults.penGross +
-      spousePenResults.penGross +
-      taxableInterestEarned +
-      taxableIncomeAdjustment,
+      penGrossTotal + spousePenGrossTotal + taxableInterest + taxableAdjustment,
   };
 
   // STEP 3: Estimate initial withdrawal need (before SS taxation)
