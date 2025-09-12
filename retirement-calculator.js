@@ -896,7 +896,7 @@ function createWithdrawalFunction(
   };
 }
 
-function extractSpouseInputs(inputs) {
+function extractSpouseInputs(inputs, age, benefitAmounts) {
   const spouse = {
     ssGross: 0,
     penGross: 0,
@@ -993,7 +993,7 @@ function calculateRetirementYearData(
   const ssGross = hasSS ? benefitAmounts.ssAnnual : 0;
   const penGross = hasPen ? benefitAmounts.penAnnual : 0;
 
-  const spouse = extractSpouseInputs(inputs);
+  const spouse = extractSpouseInputs(inputs, age, benefitAmounts);
 
   // Get income adjustments for this age
   const taxableIncomeAdjustment = getTaxableIncomeOverride(age);
@@ -1052,7 +1052,7 @@ function calculateRetirementYearData(
   );
   const spousePenResults = buildPensionTracker(
     inputs,
-    spousePenGross,
+    spouse.penGross,
     taxableInterestEarned + taxableIncomeAdjustment,
     retirementYear
   );
@@ -1416,10 +1416,10 @@ function calculateRetirementYearData(
         netIncomeFromTaxableSources
       : penGross;
   const spousePenNetAdjusted =
-    spousePenGross > 0 && grossIncomeFromBenefitsAndWithdrawals > 0
-      ? (spousePenGross / grossIncomeFromBenefitsAndWithdrawals) *
+    spouse.penGross > 0 && grossIncomeFromBenefitsAndWithdrawals > 0
+      ? (spouse.penGross / grossIncomeFromBenefitsAndWithdrawals) *
         netIncomeFromTaxableSources
-      : spousePenGross;
+      : spouse.penGross;
   const withdrawalNetAdjusted =
     finalWGross > 0 && grossIncomeFromBenefitsAndWithdrawals > 0
       ? (finalWGross / grossIncomeFromBenefitsAndWithdrawals) *
