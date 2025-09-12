@@ -42,8 +42,8 @@ const log = {
 
   info(...args) {
     if (this._shouldLog("INFO")) {
-      const ts = new Date().toTimeString();
-      console.info(`[INFO]  [${ts}]`, ...args);
+      const ts = ""; // ` [${new Date().toTimeString()}]`;
+      console.info(`[INFO]  ${ts}`, ...args);
     }
   },
 
@@ -174,6 +174,7 @@ function calculateNetWhen401kIncomeIs(guestimateFor401k, opts) {
   const { otherTaxableIncome, ssBenefit, standardDeduction, brackets } = opts;
 
   log.info(`*** calculateNetWhen401kIncomeIs ***`);
+  log.info(`Inputs: ${JSON.stringify(opts)}`);
   log.info(
     `Calculating net income when 401k withdrawal is $${guestimateFor401k.round(
       2
