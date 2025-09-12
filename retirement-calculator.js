@@ -893,9 +893,6 @@ function calculateRetirementYearData(
   // Calculate savings breakdown (track starting balance BEFORE any adjustments for current year)
   const savingsStartBalance = balances.balSavings;
 
-  // Add tax-free income adjustment to savings balance (not taxable)
-  balances.balSavings += taxFreeIncomeAdjustment;
-
   if (additionalSpending !== null && additionalSpending > 0) {
     console.log(
       `Age ${age}: Adding extra spending $${additionalSpending.toLocaleString()} to base $${spend.toLocaleString()} = total $${actualSpend.toLocaleString()}`
@@ -930,6 +927,10 @@ function calculateRetirementYearData(
   );
   const taxableInterestEarned =
     savingsBalanceAfterWithdrawals * inputs.rateOfSavings;
+
+  // Add tax-free income adjustment to savings balance (not taxable)
+  // as if it was deposited on 12/31 of the current year
+  balances.balSavings += taxFreeIncomeAdjustment;
 
   // STEP 2: Track pensions
   const penResults = buildPensionTracker(
@@ -1286,35 +1287,6 @@ function calculateRetirementYearData(
   // Note: taxableInterestEarned was calculated earlier before withdrawals
 
   const totalBal = balances.balSavings + balances.balPre + balances.balRoth;
-
-  // Debug RMD years to show actual total net income
-  // if (inputs.useRMD && age >= 73) {
-  //   console.log(`\n=== RMD YEAR DEBUG (Age ${age}) ===`);
-  //   console.log(`Spending target: ${fmt(spendingTarget)}`);
-  //   console.log(`RMD required: ${fmt(preliminaryRmdAmount)}`);
-  //   console.log(
-  //     `Gross income (SS/Pension/Withdrawals): ${fmt(
-  //       grossIncomeFromBenefitsAndWithdrawals
-  //     )}`
-  //   );
-  //   console.log(`Total taxes: ${fmt(taxesThisYear)}`);
-  //   console.log(
-  //     `Net from taxable sources: ${fmt(netIncomeFromTaxableSources)}`
-  //   );
-  //   console.log(`Shortfall: ${fmt(shortfall)}`);
-  //   console.log(
-  //     `Additional savings withdrawal: ${fmt(additionalSavingsWithdrawal)}`
-  //   );
-  //   console.log(`Final Total Net Income: ${fmt(totalNetIncome)}`);
-  //   if (totalNetIncome > spendingTarget) {
-  //     const excess = totalNetIncome - spendingTarget;
-  //     console.log(
-  //       `✓ Total Net exceeds spending target by ${fmt(excess)} (RMD excess)`
-  //     );
-  //     console.log(`✓ Adding ${fmt(excess)} to savings account`);
-  //   }
-  //   console.log(`=== END RMD DEBUG ===\n`);
-  // }
 
   // For display purposes: allocate taxes proportionally (only to taxable income sources)
   const ssNetAdjusted =
