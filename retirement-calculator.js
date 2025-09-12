@@ -931,11 +931,11 @@ function calculateRetirementYearData(
         retirementYear,
         inputs.inflationRate
       ),
+      precision: 0.01, // Precision for binary search convergence
     };
 
     // Calculate taxes with zero 401k withdrawal (just pension/SS income)
     taxCalculation = calculateNetWhen401kIncomeIs(0, opts);
-    console.log("Tax calculation for pension/SS income:", taxCalculation);
   }
 
   // Extract tax information from retirement.js calculations
