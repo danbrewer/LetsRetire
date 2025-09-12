@@ -904,7 +904,39 @@ function calculateRetirementYearData(
 
   // Get withdrawal breakdown and tax information from sophisticated retirement.js functions
   const withdrawalsBySource = withdrawalFunctions.getWithdrawalsBySource();
-  const taxCalculation = withdrawalFunctions.getLastTaxCalculation();
+  let taxCalculation = withdrawalFunctions.getLastTaxCalculation();
+
+  // If no withdrawals were made, we still need to calculate taxes on pension/SS income
+  if (
+    !taxCalculation &&
+    (penGross > 0 || spouse.penGross > 0 || ssGross > 0 || spouse.ssGross > 0)
+  ) {
+    console.log(
+      "No withdrawals made, but calculating taxes on pension/SS income..."
+    );
+    const opts = {
+      otherTaxableIncome:
+        penGrossTotal +
+        spousePenGrossTotal +
+        taxableInterest +
+        taxableAdjustment,
+      ssBenefit: ssGross + spouse.ssGross,
+      standardDeduction: getStandardDeduction(
+        inputs.filingStatus,
+        retirementYear,
+        inputs.inflationRate
+      ),
+      brackets: getTaxBrackets(
+        inputs.filingStatus,
+        retirementYear,
+        inputs.inflationRate
+      ),
+    };
+
+    // Calculate taxes with zero 401k withdrawal (just pension/SS income)
+    taxCalculation = calculateNetWhen401kIncomeIs(0, opts);
+    console.log("Tax calculation for pension/SS income:", taxCalculation);
+  }
 
   // Extract tax information from retirement.js calculations
   let taxesThisYear = 0;
