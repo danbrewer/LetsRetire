@@ -837,6 +837,24 @@ function createWithdrawalFunction(
   };
 }
 
+function extractSpouseInputs(inputs) {
+  const spouse = {
+    ssGross: 0,
+    penGross: 0,
+  };
+
+  if (inputs.hasSpouse) {
+    const spouseCurrentAge = inputs.spouseAge + (age - inputs.currentAge);
+    const hasSpouseSS = spouseCurrentAge >= inputs.spouseSsStart;
+    const hasSpousePen = spouseCurrentAge >= inputs.spousePenStart;
+
+    spouse.ssGross = hasSpouseSS ? benefitAmounts.spouseSsAnnual : 0;
+    spouse.penGross = hasSpousePen ? benefitAmounts.spousePenAnnual : 0;
+  }
+
+  return spouse;
+}
+
 /**
  * Calculate a given retirement year with proper SS taxation based on total income
  */
@@ -865,24 +883,7 @@ function calculateRetirementYearData(
   const ssGross = hasSS ? benefitAmounts.ssAnnual : 0;
   const penGross = hasPen ? benefitAmounts.penAnnual : 0;
 
-  // Spouse income sources
-  let spouseSsGross = 0;
-  let spousePenGross = 0;
-
-  // if (age == 72) {
-  //   debugger;
-  // }
-
-  spouseSsGross = 0;
-  spousePenGross = 0;
-  if (inputs.hasSpouse) {
-    const spouseCurrentAge = inputs.spouseAge + (age - inputs.currentAge);
-    const hasSpouseSS = spouseCurrentAge >= inputs.spouseSsStart;
-    const hasSpousePen = spouseCurrentAge >= inputs.spousePenStart;
-
-    spouseSsGross = hasSpouseSS ? benefitAmounts.spouseSsAnnual : 0;
-    spousePenGross = hasSpousePen ? benefitAmounts.spousePenAnnual : 0;
-  }
+  const spouse = extractSpouseInputs(inputs);
 
   // Get income adjustments for this age
   const taxableIncomeAdjustment = getTaxableIncomeOverride(age);
@@ -909,7 +910,7 @@ function calculateRetirementYearData(
   // more conservative interest calculation
   // Estimate total withdrawals that will happen during the year
   let estimatedSpendShortfall =
-    actualSpend - (ssGross + spouseSsGross + penGross + spousePenGross);
+    actualSpend - (ssGross + spouse.ssGross + penGross + spouse.penGross);
 
   if (estimatedSpendShortfall < 0) {
     estimatedSpendShortfall = 0;
@@ -1025,7 +1026,7 @@ function calculateRetirementYearData(
   );
   const spouseSsResults = calculateSocialSecurityTaxation(
     inputs,
-    spouseSsGross,
+    spouse.ssGross,
     totalTaxableIncomeForSS + ssResults.ssTaxableAmount,
     retirementYear
   );
@@ -1208,7 +1209,7 @@ function calculateRetirementYearData(
   );
   const finalSpouseSsResults = calculateSocialSecurityTaxation(
     inputs,
-    spouseSsGross,
+    spouse.ssGross,
     finalTaxableIncomeForSS + finalSsResults.ssTaxableAmount,
     retirementYear
   );
@@ -1240,7 +1241,7 @@ function calculateRetirementYearData(
 
   // Calculate net income and handle overage BEFORE growing balances
   const grossIncomeFromBenefitsAndWithdrawals =
-    ssGross + spouseSsGross + penGross + spousePenGross + finalWGross;
+    ssGross + spouse.ssGross + penGross + spouse.penGross + finalWGross;
   const netIncomeFromTaxableSources =
     grossIncomeFromBenefitsAndWithdrawals - taxesThisYear;
   const spendingTarget = actualSpend;
@@ -1295,10 +1296,10 @@ function calculateRetirementYearData(
         netIncomeFromTaxableSources
       : ssGross;
   const spouseSsNetAdjusted =
-    spouseSsGross > 0 && grossIncomeFromBenefitsAndWithdrawals > 0
-      ? (spouseSsGross / grossIncomeFromBenefitsAndWithdrawals) *
+    spouse.ssGross > 0 && grossIncomeFromBenefitsAndWithdrawals > 0
+      ? (spouse.ssGross / grossIncomeFromBenefitsAndWithdrawals) *
         netIncomeFromTaxableSources
-      : spouseSsGross;
+      : spouse.ssGross;
   const penNetAdjusted =
     penGross > 0 && grossIncomeFromBenefitsAndWithdrawals > 0
       ? (penGross / grossIncomeFromBenefitsAndWithdrawals) *
@@ -1344,12 +1345,12 @@ function calculateRetirementYearData(
   // For tax allocation display purposes
   const ssTaxAllocated =
     grossIncomeFromBenefitsAndWithdrawals > 0
-      ? ((ssGross + spouseSsGross) / grossIncomeFromBenefitsAndWithdrawals) *
+      ? ((ssGross + spouse.ssGross) / grossIncomeFromBenefitsAndWithdrawals) *
         taxesThisYear
       : 0;
   const penTaxAllocated =
     grossIncomeFromBenefitsAndWithdrawals > 0
-      ? ((penGross + spousePenGross) / grossIncomeFromBenefitsAndWithdrawals) *
+      ? ((penGross + spouse.penGross) / grossIncomeFromBenefitsAndWithdrawals) *
         taxesThisYear
       : 0;
   const withdrawalTaxes =
@@ -1438,8 +1439,8 @@ function calculateRetirementYearData(
     wRothGross: withdrawalsBySource.roth,
     ssGross: ssGross,
     penGross: penGross,
-    spouseSsGross: spouseSsGross,
-    spousePenGross: spousePenGross,
+    spouseSsGross: spouse.ssGross,
+    spousePenGross: spouse.penGross,
     taxes: taxesThisYear,
     ssTaxes: ssTaxAllocated,
     otherTaxes: otherTaxes,
