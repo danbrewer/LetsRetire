@@ -560,7 +560,8 @@ function createWithdrawalFunctions(
 
     // Add pre-tax withdrawals to Taxable Income for subsequent calculations
     if (kind === "pretax") {
-      closuredCopyOfTotalTaxableIncome.value += grossTake;
+      const safeGrossTake = isNaN(grossTake) ? 0 : grossTake;
+      closuredCopyOfTotalTaxableIncome.value += safeGrossTake;
     }
 
     return { gross: grossTake, net: netReceived };
@@ -590,7 +591,8 @@ function createWithdrawalFunctions(
     const netAmount = netResult.netIncome;
 
     closuredCopyOfBalances.balPre -= actualGross;
-    closuredCopyOfTotalTaxableIncome.value += actualGross;
+    const safeActualGross = isNaN(actualGross) ? 0 : actualGross;
+    closuredCopyOfTotalTaxableIncome.value += safeActualGross;
 
     // Track RMD withdrawals as retirement account
     withdrawalsBySource.retirementAccount += actualGross;
@@ -786,7 +788,10 @@ function calculateRetirementYearData(
 
   // STEP 4: Make preliminary withdrawals to estimate total income for SS calculation
   let copyOfBalances = { ...balances }; // Work with copy for estimation
-  let copyOfTotalTaxableIncome = { value: totalTaxableIncome.value };
+  const safeTotalTaxableValue = isNaN(totalTaxableIncome.value)
+    ? 0
+    : totalTaxableIncome.value;
+  let copyOfTotalTaxableIncome = { value: safeTotalTaxableValue };
 
   // createWithdrawalFunction is a utility to generate withdrawal functions
   // for each account type (e.g., savings, 401k, IRA)
@@ -837,7 +842,9 @@ function calculateRetirementYearData(
 
   // STEP 5: Now calculate SS taxation based on total taxable income (excluding non-taxable savings withdrawals)
   // The totalTaxableIncomeCopy.value now contains only truly taxable income: pensions + pre-tax withdrawals + taxable interest
-  const totalTaxableIncomeForSS = copyOfTotalTaxableIncome.value;
+  const totalTaxableIncomeForSS = isNaN(copyOfTotalTaxableIncome.value)
+    ? 0
+    : copyOfTotalTaxableIncome.value;
   const ssResults = calculateSocialSecurityTaxation(
     inputs,
     ssGross,
@@ -853,13 +860,31 @@ function calculateRetirementYearData(
 
   // STEP 6: Recalculate final withdrawals with correct SS net amounts
   // Only include taxable portions in taxable income reference
+  // Ensure all components are valid numbers to prevent NaN
+  const updatedPenGross = isNaN(penResults.penGross) ? 0 : penResults.penGross;
+  const updatedSpousePenGross = isNaN(spousePenResults.penGross)
+    ? 0
+    : spousePenResults.penGross;
+  const updatedSsTaxable = isNaN(ssResults.ssTaxableAmount)
+    ? 0
+    : ssResults.ssTaxableAmount;
+  const updatedSpouseSsTaxable = isNaN(spouseSsResults.ssTaxableAmount)
+    ? 0
+    : spouseSsResults.ssTaxableAmount;
+  const updatedTaxableInterest = isNaN(taxableInterestEarned)
+    ? 0
+    : taxableInterestEarned;
+  const updatedTaxableAdjustment = isNaN(taxableIncomeAdjustment)
+    ? 0
+    : taxableIncomeAdjustment;
+
   totalTaxableIncome.value =
-    penResults.penGross +
-    spousePenResults.penGross +
-    ssResults.ssTaxableAmount +
-    spouseSsResults.ssTaxableAmount +
-    taxableInterestEarned +
-    taxableIncomeAdjustment;
+    updatedPenGross +
+    updatedSpousePenGross +
+    updatedSsTaxable +
+    updatedSpouseSsTaxable +
+    updatedTaxableInterest +
+    updatedTaxableAdjustment;
 
   // Use full net amounts (including non-taxable portions) for spending calculation
   // Calculate base spending need and additional spending need separately
@@ -1014,12 +1039,29 @@ function calculateRetirementYearData(
   const withdrawalsBySource = finalWithdrawalFunctions.getWithdrawalsBySource();
 
   // Recalculate SS taxation using FINAL taxable income (including withdrawals)
+  // Ensure all components are valid numbers to prevent NaN in final SS calculation
+  const finalPenGross = isNaN(penResults.penGross) ? 0 : penResults.penGross;
+  const finalSpousePenGross = isNaN(spousePenResults.penGross)
+    ? 0
+    : spousePenResults.penGross;
+  const finalRetirementWithdrawals = isNaN(
+    withdrawalsBySource.retirementAccount
+  )
+    ? 0
+    : withdrawalsBySource.retirementAccount;
+  const finalTaxableInterest = isNaN(taxableInterestEarned)
+    ? 0
+    : taxableInterestEarned;
+  const finalTaxableAdjustment = isNaN(taxableIncomeAdjustment)
+    ? 0
+    : taxableIncomeAdjustment;
+
   const finalTaxableIncomeForSS =
-    penResults.penGross +
-    spousePenResults.penGross +
-    withdrawalsBySource.retirementAccount +
-    taxableInterestEarned +
-    taxableIncomeAdjustment;
+    finalPenGross +
+    finalSpousePenGross +
+    finalRetirementWithdrawals +
+    finalTaxableInterest +
+    finalTaxableAdjustment;
 
   const finalSsResults = calculateSocialSecurityTaxation(
     inputs,
@@ -1030,20 +1072,46 @@ function calculateRetirementYearData(
   const finalSpouseSsResults = calculateSocialSecurityTaxation(
     inputs,
     spouse.ssGross,
-    finalTaxableIncomeForSS + finalSsResults.ssTaxableAmount,
+    finalTaxableIncomeForSS +
+      (isNaN(finalSsResults.ssTaxableAmount)
+        ? 0
+        : finalSsResults.ssTaxableAmount),
     retirementYear
   );
 
   // Calculate total taxes on all taxable income (proper approach)
   // Total taxable income includes: SS taxable + pension taxable + pretax withdrawals + taxable interest
+  // Ensure all components are valid numbers to prevent NaN
+  const totalPenGross = isNaN(penResults.penGross) ? 0 : penResults.penGross;
+  const totalSpousePenGross = isNaN(spousePenResults.penGross)
+    ? 0
+    : spousePenResults.penGross;
+  const totalSsTaxable = isNaN(finalSsResults.ssTaxableAmount)
+    ? 0
+    : finalSsResults.ssTaxableAmount;
+  const totalSpouseSsTaxable = isNaN(finalSpouseSsResults.ssTaxableAmount)
+    ? 0
+    : finalSpouseSsResults.ssTaxableAmount;
+  const totalRetirementWithdrawals = isNaN(
+    withdrawalsBySource.retirementAccount
+  )
+    ? 0
+    : withdrawalsBySource.retirementAccount;
+  const totalTaxableInterest = isNaN(taxableInterestEarned)
+    ? 0
+    : taxableInterestEarned;
+  const totalTaxableAdjustment = isNaN(taxableIncomeAdjustment)
+    ? 0
+    : taxableIncomeAdjustment;
+
   const totalGrossTaxableIncome =
-    penResults.penGross +
-    spousePenResults.penGross +
-    finalSsResults.ssTaxableAmount +
-    finalSpouseSsResults.ssTaxableAmount +
-    withdrawalsBySource.retirementAccount +
-    taxableInterestEarned +
-    taxableIncomeAdjustment;
+    totalPenGross +
+    totalSpousePenGross +
+    totalSsTaxable +
+    totalSpouseSsTaxable +
+    totalRetirementWithdrawals +
+    totalTaxableInterest +
+    totalTaxableAdjustment;
 
   // Calculate total income tax on the combined taxable income
   taxesThisYear = calculateFederalTax(
@@ -1193,14 +1261,37 @@ function calculateRetirementYearData(
     taxFreeIncomeAdjustment;
 
   // Gross taxable income includes pre-tax withdrawals + taxable interest earned + taxable portions of benefits + taxable income adjustments
+  // Ensure all components are valid numbers to prevent NaN
+  const grossPenGross = isNaN(penResults.penGross) ? 0 : penResults.penGross;
+  const grossSpousePenGross = isNaN(spousePenResults.penGross)
+    ? 0
+    : spousePenResults.penGross;
+  const grossSsTaxable = isNaN(ssResults.ssTaxableAmount)
+    ? 0
+    : ssResults.ssTaxableAmount;
+  const grossSpouseSsTaxable = isNaN(spouseSsResults.ssTaxableAmount)
+    ? 0
+    : spouseSsResults.ssTaxableAmount;
+  const grossRetirementWithdrawals = isNaN(
+    withdrawalsBySource.retirementAccount
+  )
+    ? 0
+    : withdrawalsBySource.retirementAccount;
+  const grossTaxableInterest = isNaN(taxableInterestEarned)
+    ? 0
+    : taxableInterestEarned;
+  const grossTaxableAdjustment = isNaN(taxableIncomeAdjustment)
+    ? 0
+    : taxableIncomeAdjustment;
+
   const grossTaxableIncome =
-    penResults.penGross +
-    spousePenResults.penGross +
-    ssResults.ssTaxableAmount +
-    spouseSsResults.ssTaxableAmount +
-    withdrawalsBySource.retirementAccount +
-    taxableInterestEarned +
-    taxableIncomeAdjustment;
+    grossPenGross +
+    grossSpousePenGross +
+    grossSsTaxable +
+    grossSpouseSsTaxable +
+    grossRetirementWithdrawals +
+    grossTaxableInterest +
+    grossTaxableAdjustment;
 
   // Use grossTaxableIncome for Total Gross column (excludes non-taxable withdrawals)
   const totalGrossIncome =
