@@ -712,6 +712,14 @@ function createWithdrawalFunction(
   totalTaxableIncomeRef,
   year = 0
 ) {
+  // Declare and initialize the result object at the top
+  const result = {
+    withdrawFrom: null,
+    withdrawRMD: null,
+    getTaxesThisYear: null,
+    getWithdrawalsBySource: null,
+  };
+
   let taxesThisYear = 0;
   let withdrawalsBySource = {
     retirementAccount: 0,
@@ -867,12 +875,13 @@ function createWithdrawalFunction(
     return { gross: actualGross, net: netReceived };
   }
 
-  return {
-    withdrawFrom,
-    withdrawRMD,
-    getTaxesThisYear: () => taxesThisYear,
-    getWithdrawalsBySource: () => withdrawalsBySource,
-  };
+  // Populate the result object
+  result.withdrawFrom = withdrawFrom;
+  result.withdrawRMD = withdrawRMD;
+  result.getTaxesThisYear = () => taxesThisYear;
+  result.getWithdrawalsBySource = () => withdrawalsBySource;
+
+  return result;
 }
 
 function extractSpouseInputs(inputs, age, benefitAmounts) {
