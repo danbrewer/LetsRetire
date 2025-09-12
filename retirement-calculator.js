@@ -1,10 +1,29 @@
 // retirement-calculator.js
 
+// Add Number prototype extensions needed by retirement.js functions
+Number.prototype.round = function (decimals = 0) {
+  const factor = Math.pow(10, decimals);
+  return Math.round(this * factor) / factor;
+};
+
 if (typeof require === "function") {
   // Running in Node.js
-  // const fs = require("retirement.js");
-  const { FILING_STATUS } = require("./retirement");
+  const {
+    FILING_STATUS,
+    determineTaxablePortionOfSocialSecurity,
+    determineTaxUsingBrackets,
+    calculateNetWhen401kIncomeIs,
+    determine401kWithdrawalToHitNetTargetOf,
+    getTaxBrackets,
+    getStandardDeduction,
+  } = require("./retirement");
 }
+
+// Constants
+const INFLATION_RATE = 0.025; // 2.5% annual inflation
+const INVESTMENT_RETURN_RATE = 0.07; // 7% annual return
+const COLA_SOCIAL_SECURITY = 0.02; // 2% COLA for Social Security
+const TAX_BASE_YEAR = 2025; // Base year for tax calculations
 
 // --- Added by patch: 2025 elective deferral limits (401k/Roth 401k) ---
 const EMPLOYEE_401K_LIMIT_2025 = 23000; // elective deferral
@@ -18,199 +37,34 @@ let lastCurrentAge = null;
 const compoundedRate = (r, n) => Math.pow(1 + r, n);
 
 /**
- * Effective Tax Rate Table and Standard Deductions
- *
- * This table provides estimated effective federal tax rates for different Taxable Income levels.
- * These rates are based on 2025 tax brackets and include proper
- * standard deduction handling.
- *
- * 2025 Standard Deductions:
- * - Single filers: $15,000 (estimated)
- * - Married filing jointly: $32,600
- *
- * Note: These are simplified estimates and do not account for:
- * - State taxes
- * - Itemized deductions beyond standard deduction
- * - Tax credits
- * - FICA taxes on earned income
- * - Capital gains vs ordinary income distinctions
- * - Additional standard deduction for seniors (65+)
- *
- * For accurate tax planning, consult a tax professional.
+ * Tax calculations now use the sophisticated functions from retirement.js
+ * This provides better accuracy for:
+ * - Social Security taxation using provisional income rules
+ * - Proper tax bracket calculations with standard deductions
+ * - Binary search for optimal 401k withdrawals
+ * - COLA adjustments and inflation-indexed deductions
  */
 
-// Tax calculation base year and standard deductions
-// To update for a new year: Change TAX_BASE_YEAR and update STANDARD_DEDUCTIONS_BASE with current values
-const TAX_BASE_YEAR = 2025;
-const STANDARD_DEDUCTIONS_BASE = {
-  single: 15000,
-  married: 32600,
-};
-
-/**
- * Calculate inflation-adjusted standard deduction for a given year
- *
- * Tax Policy Assumptions:
- * - Standard deductions are inflation-indexed annually (since 1986)
- * - Uses 2.5% annual inflation rate for projections
- * - Social Security provisional income thresholds remain static at $25K/$32K (unchanged since 1983)
- *
- * @param {number} year - The tax year
- * @param {string} filingStatus - "single" or "married"
- * @returns {number} Inflation-adjusted standard deduction
- */
-function getStandardDeduction(year, filingStatus = FILING_STATUS.SINGLE) {
-  const inflationRate = 0.025; // 2.5% annual inflation
-  const yearsFromBase = year - TAX_BASE_YEAR;
-
-  const baseDeduction =
-    STANDARD_DEDUCTIONS_BASE[filingStatus] || STANDARD_DEDUCTIONS_BASE.single;
-
-  // Apply compound inflation adjustment
-  const adjustedDeduction =
-    baseDeduction * Math.pow(1 + inflationRate, yearsFromBase);
-
-  return Math.round(adjustedDeduction);
-}
-
-const EFFECTIVE_TAX_RATES = {
-  // Taxable Income: Effective Rate (%) - Based on 2025 Married Filing Jointly Tax Brackets
-  // 10%: $0 – $23,200, 12%: $23,200 – $94,300, 22%: $94,300 – $201,050, 24%: $201,050+
-  // These rates are applied to Taxable Income (after standard deduction)
-  0: 0.0,
-  5000: 10.0, // $5,000 × 10% = $500 → 10.0%
-  10000: 10.0, // $10,000 × 10% = $1,000 → 10.0%
-  15000: 10.0, // $15,000 × 10% = $1,500 → 10.0%
-  20000: 10.0, // $20,000 × 10% = $2,000 → 10.0%
-  23200: 10.0, // $23,200 × 10% = $2,320 → 10.0%
-  30000: 10.5, // $2,320 + $6,800×12% = $3,136 → 10.5%
-  40000: 10.8, // $2,320 + $16,800×12% = $4,336 → 10.8%
-  50000: 11.1, // $2,320 + $26,800×12% = $5,536 → 11.1%
-  60000: 11.2, // $2,320 + $36,800×12% = $6,736 → 11.2%
-  70000: 11.3, // $2,320 + $46,800×12% = $7,936 → 11.3%
-  74900: 11.4, // $2,320 + $51,700×12% = $8,524 → 11.4% (matches your example)
-  80000: 11.4, // $2,320 + $56,800×12% = $9,136 → 11.4%
-  90000: 11.5, // $2,320 + $66,800×12% = $10,336 → 11.5%
-  94300: 11.5, // $2,320 + $71,100×12% = $10,852 → 11.5%
-  100000: 12.1, // $10,852 + $5,700×22% = $12,106 → 12.1%
-  110000: 12.7, // $10,852 + $15,700×22% = $14,306 → 13.0%
-  120000: 13.5, // $10,852 + $25,700×22% = $16,506 → 13.8%
-  130000: 14.1, // $10,852 + $35,700×22% = $18,706 → 14.4%
-  140000: 14.9, // $10,852 + $45,700×22% = $20,906 → 14.9%
-  150000: 15.5, // $10,852 + $55,700×22% = $23,106 → 15.4%
-  160000: 16.0, // $10,852 + $65,700×22% = $25,306 → 15.8%
-  170000: 16.4, // $10,852 + $75,700×22% = $27,506 → 16.2%
-  180000: 16.9, // $10,852 + $85,700×22% = $29,706 → 16.5%
-  190000: 17.3, // $10,852 + $95,700×22% = $31,906 → 16.8%
-  200000: 17.6, // $10,852 + $105,700×22% = $34,106 → 17.1%
-  201050: 17.7, // $10,852 + $106,750×22% = $34,337 → 17.1%
-  220000: 18.1, // $34,337 + $18,950×24% = $38,885 → 17.7%
-  240000: 18.5, // $34,337 + $38,950×24% = $43,685 → 18.2%
-  260000: 18.9, // $34,337 + $58,950×24% = $48,485 → 18.6%
-  280000: 19.2, // $34,337 + $78,950×24% = $53,285 → 19.0%
-  300000: 19.5, // $34,337 + $98,950×24% = $58,085 → 19.4%
-};
-
-/**
- * Calculate Taxable Income by subtracting standard deduction from gross income
- * @param {number} grossIncome - Total gross income
- * @param {string} filingStatus - 'single' or 'married'
- * @returns {number} Adjusted Gross Income (cannot be negative)
- */
-/**
- * Calculate taxable income with inflation-adjusted standard deduction
- *
- * @param {number} grossIncome - Gross income for the year
- * @param {string} filingStatus - "single" or "married"
- * @param {number} year - Tax year for inflation-adjusted deduction
- * @returns {number} Taxable income after standard deduction
- */
+// Wrapper function for backward compatibility with existing calls
 function calculateTaxableIncome(
   grossIncome,
-  filingStatus = "single",
-  year = TAX_BASE_YEAR
+  filingStatus = FILING_STATUS.SINGLE,
+  year = 2025
 ) {
   const standardDeduction = getStandardDeduction(year, filingStatus);
   return Math.max(0, grossIncome - standardDeduction);
 }
 
-/**
- * Calculate effective tax rate for a given Taxable Income using linear interpolation
- * @param {number} taxableIncome - Adjusted Gross Income
- * @returns {number} Effective tax rate as a percentage (0-100)
- */
-function getEffectiveTaxRate(taxableIncome) {
-  // Handle edge cases
-  if (taxableIncome <= 0) return 0;
-  if (taxableIncome >= 200000) return EFFECTIVE_TAX_RATES[200000];
-
-  // Find the two closest taxable income levels for interpolation
-  const taxableIncomeLevels = Object.keys(EFFECTIVE_TAX_RATES)
-    .map(Number)
-    .sort((a, b) => a - b);
-
-  // Find exact match
-  if (EFFECTIVE_TAX_RATES[taxableIncome] !== undefined) {
-    return EFFECTIVE_TAX_RATES[taxableIncome];
-  }
-
-  // Find interpolation points
-  let lowerAgi = 0;
-  let upperAgi = 200000;
-
-  for (let i = 0; i < taxableIncomeLevels.length - 1; i++) {
-    if (
-      taxableIncome >= taxableIncomeLevels[i] &&
-      taxableIncome <= taxableIncomeLevels[i + 1]
-    ) {
-      lowerAgi = taxableIncomeLevels[i];
-      upperAgi = taxableIncomeLevels[i + 1];
-      break;
-    }
-  }
-
-  // Linear interpolation
-  const lowerRate = EFFECTIVE_TAX_RATES[lowerAgi];
-  const upperRate = EFFECTIVE_TAX_RATES[upperAgi];
-  const ratio = (taxableIncome - lowerAgi) / (upperAgi - lowerAgi);
-
-  return lowerRate + (upperRate - lowerRate) * ratio;
-}
-
-/**
- * Calculate effective tax rate for married filing jointly (approximately 2x the single brackets)
- * @param {number} taxableIncome - Adjusted Gross Income for married couple
- * @returns {number} Effective tax rate as a percentage (0-100)
- */
-function getEffectiveTaxRateMarried(taxableIncome) {
-  // For married filing jointly, use the same rates as single but on the full Taxable Income
-  // The standard deduction is already doubled in calculateTaxableIncome()
-  // The tax brackets for MFJ are roughly 2x single brackets, so rates are similar
-  return getEffectiveTaxRate(taxableIncome);
-}
-
-/**
- * Get tax amount based on gross income and filing status
- * @param {number} grossIncome - Total gross income before standard deduction
- * @param {string} filingStatus - 'single' or 'married'
- * @returns {number} Estimated federal tax amount
- */
+// Wrapper for federal tax calculation using retirement.js functions
 function calculateFederalTax(
   grossIncome,
-  filingStatus = "single",
-  year = TAX_BASE_YEAR
+  filingStatus = FILING_STATUS.SINGLE,
+  year = 2025
 ) {
-  // First calculate Taxable Income by subtracting standard deduction
-  const taxableIncome = calculateTaxableIncome(grossIncome, filingStatus, year);
-
-  // Then get effective rate based on Taxable Income
-  const effectiveRate =
-    filingStatus === FILING_STATUS.MARRIED_FILING_JOINTLY
-      ? getEffectiveTaxRateMarried(taxableIncome)
-      : getEffectiveTaxRate(taxableIncome);
-
-  // Tax is calculated on the Taxable Income, not gross income
-  return taxableIncome * (effectiveRate / 100);
+  const taxBrackets = getTaxBrackets(year, filingStatus);
+  const standardDeduction = getStandardDeduction(year, filingStatus);
+  const taxableIncome = Math.max(0, grossIncome - standardDeduction);
+  return determineTaxUsingBrackets(taxableIncome, taxBrackets);
 }
 
 // Required Minimum Distribution (RMD) calculation
@@ -486,100 +340,12 @@ function calculateSocialSecurityTaxation(
   otherTaxableIncome,
   year = 0
 ) {
-  // Declare and initialize the result object at the top
-  const result = {
-    ssGross: 0,
-    ssTaxableAmount: 0,
-    ssNonTaxable: 0,
-    ssTaxes: 0,
-    calculationDetails: {
-      provisionalIncome: 0,
-      threshold1: 0,
-      threshold2: 0,
-      tier1Amount: 0,
-      tier2Amount: 0,
-      excessIncome1: 0,
-      excessIncome2: 0,
-      effectiveRate: 0,
-      method: "none",
-    },
-  };
-
-  if (!ssGross || ssGross <= 0) {
-    return result;
-  }
-
-  // Set basic values in result object
-  result.ssGross = ssGross;
-
-  const isMarried =
-    inputs.filingStatus === FILING_STATUS.MARRIED_FILING_JOINTLY;
-
-  // Use proper SS taxation rules based on provisional income
-  // Calculate provisional income: Taxable Income + non-taxable interest + 50% of SS benefits
-  const provisionalIncome = otherTaxableIncome + ssGross * 0.5;
-
-  // Set thresholds based on filing status
-  const threshold1 = isMarried ? 32000 : 25000; // 50% taxable inflection point
-  const threshold2 = isMarried ? 44000 : 34000; // 85% taxable inflection point
-
-  let ssTaxableDollars = 0;
-  let tier1TaxableDollars = 0;
-  let tier2TaxableDollars = 0;
-
-  if (provisionalIncome <= threshold1) {
-    // No SS benefits are taxable
-    ssTaxableDollars = 0;
-    tier1TaxableDollars = 0;
-    tier2TaxableDollars = 0;
-  } else if (provisionalIncome <= threshold2) {
-    // Up to 50% of SS benefits are taxable
-    const incomeInExcessOfTier1 = provisionalIncome - threshold1;
-    tier1TaxableDollars = Math.min(ssGross * 0.5, incomeInExcessOfTier1 * 0.5);
-    tier2TaxableDollars = 0;
-    ssTaxableDollars = tier1TaxableDollars;
-  } else {
-    // Up to 85% of SS benefits are taxable
-    // First calculate tier 1 amount (same as if we were in tier 1)
-    const provIncomeInExcessOfTier1 = threshold2 - threshold1; // 50% of dollars in tier1 are taxable
-    tier1TaxableDollars = Math.min(
-      ssGross * 0.5,
-      provIncomeInExcessOfTier1 * 0.5
-    );
-
-    // Then calculate tier 2 amount
-    const provIncomeInExcessOfTier2 = provisionalIncome - threshold2;
-    tier2TaxableDollars = Math.min(
-      ssGross * 0.85,
-      provIncomeInExcessOfTier2 * 0.85
-    );
-
-    ssTaxableDollars = Math.min(
-      ssGross * 0.85,
-      tier1TaxableDollars + tier2TaxableDollars
-    );
-  }
-
-  const ssNonTaxable = ssGross - ssTaxableDollars;
-
-  // Update all the final values in the result object
-  result.ssTaxableAmount = ssTaxableDollars;
-  result.ssNonTaxable = ssNonTaxable;
-  result.ssTaxes = 0; // No separate SS taxes - included in total income tax calculation
-  result.calculationDetails = {
-    provisionalIncome,
-    threshold1,
-    threshold2,
-    tier1Amount: tier1TaxableDollars,
-    tier2Amount: tier2TaxableDollars,
-    excessIncome1: Math.max(0, provisionalIncome - threshold1),
-    excessIncome2: Math.max(0, provisionalIncome - threshold2),
-    effectiveRate: 0, // Will be calculated on total income
-    method: "irs-rules",
-  };
-
-  // Don't calculate separate SS taxes - the taxable SS amount will be included in total taxable income
-  return result;
+  // Use the sophisticated Social Security taxation calculation from retirement.js
+  return determineTaxablePortionOfSocialSecurity(
+    ssGross,
+    otherTaxableIncome,
+    inputs.filingStatus
+  );
 }
 
 /**
@@ -676,51 +442,40 @@ function createWithdrawalFunctions(
       return { gross: 0, net: 0 };
     }
 
-    // Use Taxable Income-based calculation for pre-tax withdrawals if enabled
-    let taxRate = 0;
-
-    if (kind === "pretax") {
-      const projectedGrossIncome = closuredCopyOfTotalTaxableIncome.value;
-
-      const projectedTaxableIncome = calculateTaxableIncome(
-        projectedGrossIncome,
-        inputs.filingStatus,
-        TAX_BASE_YEAR + year
-      );
-      const taxableIncomeBasedRate =
-        inputs.filingStatus === FILING_STATUS.MARRIED_FILING_JOINTLY
-          ? getEffectiveTaxRateMarried(projectedTaxableIncome)
-          : getEffectiveTaxRate(projectedTaxableIncome);
-
-      const taxableIncomeRateDecimal = taxableIncomeBasedRate / 100;
-      taxRate = taxableIncomeRateDecimal;
-    }
-
-    // For pretax withdrawals, estimate tax rate and gross up to meet net need
+    // For pretax withdrawals, use sophisticated tax calculations from retirement.js
     let grossTake, netReceived;
-    if (kind === "pretax") {
-      // Estimate tax rate for grossing up the withdrawal
-      const projectedGrossIncome =
-        closuredCopyOfTotalTaxableIncome.value + desiredNetAmount;
-      const projectedTaxableIncome = calculateTaxableIncome(
-        projectedGrossIncome,
-        inputs.filingStatus,
-        TAX_BASE_YEAR + year
-      );
-      const taxableIncomeBasedRate =
-        inputs.filingStatus === FILING_STATUS.MARRIED_FILING_JOINTLY
-          ? getEffectiveTaxRateMarried(projectedTaxableIncome)
-          : getEffectiveTaxRate(projectedTaxableIncome);
-      const taxableIncomeRateDecimal = taxableIncomeBasedRate / 100;
-      taxRate = taxableIncomeRateDecimal;
 
-      // Gross up the withdrawal to account for taxes
-      const grossNeeded = desiredNetAmount / (1 - taxRate);
-      grossTake = Math.min(grossNeeded, targetedAccountBalance);
-      netReceived = grossTake * (1 - taxRate); // Estimated net after taxes
+    if (kind === "pretax") {
+      // Use binary search optimization from retirement.js for accurate withdrawal calculation
+      // Construct the opts object that these functions expect
+      const opts = {
+        otherTaxableIncome: closuredCopyOfTotalTaxableIncome.value,
+        ssBenefit: 0, // Regular withdrawals don't include Social Security benefits
+        standardDeduction: getStandardDeduction(
+          2025 + year,
+          inputs.filingStatus
+        ),
+        brackets: getTaxBrackets(2025 + year, inputs.filingStatus),
+        precision: 0.01, // Precision for binary search convergence
+      };
+
+      const withdrawalResult = determine401kWithdrawalToHitNetTargetOf(
+        desiredNetAmount,
+        opts
+      );
+
+      grossTake = Math.min(
+        withdrawalResult.withdrawalNeeded,
+        targetedAccountBalance
+      );
+
+      // Calculate actual net using the sophisticated tax calculation
+      const netResult = calculateNetWhen401kIncomeIs(grossTake, opts);
+
+      netReceived = netResult.netIncome;
       updateTargetedAccountBalance(targetedAccountBalance - grossTake);
     } else {
-      // For Savings/Roth accounts, there is no tax impact to consider; simply withdraw the desired amount
+      // For Savings/Roth accounts, there is no tax impact; simply withdraw the desired amount
       grossTake = Math.min(desiredNetAmount, targetedAccountBalance);
       netReceived = grossTake;
       updateTargetedAccountBalance(targetedAccountBalance - grossTake);
@@ -750,45 +505,29 @@ function createWithdrawalFunctions(
 
     const actualGross = Math.min(grossAmount, closuredCopyOfBalances.balPre);
 
-    {
-      const projectedGrossIncome =
-        closuredCopyOfTotalTaxableIncome.value + actualGross;
-      const projectedTaxableIncome = calculateTaxableIncome(
-        projectedGrossIncome,
-        inputs.filingStatus,
-        TAX_BASE_YEAR + year
-      );
-      const taxableIncomeBasedRate =
-        inputs.filingStatus === FILING_STATUS.MARRIED_FILING_JOINTLY
-          ? getEffectiveTaxRateMarried(projectedTaxableIncome)
-          : getEffectiveTaxRate(projectedTaxableIncome);
-      const taxableIncomeRateDecimal = taxableIncomeBasedRate / 100;
-      taxRate = taxableIncomeRateDecimal;
-    }
+    // Calculate net amount using the sophisticated tax calculation from retirement.js
+    // Construct the opts object that calculateNetWhen401kIncomeIs expects
+    const opts = {
+      otherTaxableIncome: closuredCopyOfTotalTaxableIncome.value,
+      ssBenefit: 0, // RMD doesn't include Social Security benefits
+      standardDeduction: getStandardDeduction(
+        TAX_BASE_YEAR + year,
+        inputs.filingStatus
+      ),
+      brackets: getTaxBrackets(TAX_BASE_YEAR + year, inputs.filingStatus),
+      precision: 0.01, // Precision for binary search convergence
+    };
 
-    // For RMD, estimate taxes to provide realistic net amount
-    const projectedGrossIncome =
-      closuredCopyOfTotalTaxableIncome.value + actualGross;
-    const projectedTaxableIncome = calculateTaxableIncome(
-      projectedGrossIncome,
-      inputs.filingStatus,
-      TAX_BASE_YEAR + year
-    );
-    const taxableIncomeBasedRate =
-      inputs.filingStatus === FILING_STATUS.MARRIED_FILING_JOINTLY
-        ? getEffectiveTaxRateMarried(projectedTaxableIncome)
-        : getEffectiveTaxRate(projectedTaxableIncome);
-    const taxableIncomeRateDecimal = taxableIncomeBasedRate / 100;
-    const rmdTaxRate = taxableIncomeRateDecimal;
+    const netResult = calculateNetWhen401kIncomeIs(actualGross, opts);
+    const netAmount = netResult.netIncome;
 
-    const netReceived = actualGross * (1 - rmdTaxRate); // Estimated net after taxes
     closuredCopyOfBalances.balPre -= actualGross;
     closuredCopyOfTotalTaxableIncome.value += actualGross;
 
     // Track RMD withdrawals as retirement account
     withdrawalsBySource.retirementAccount += actualGross;
 
-    return { gross: actualGross, net: netReceived };
+    return { gross: actualGross, net: netAmount };
   }
 
   // Populate the result object
