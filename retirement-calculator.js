@@ -351,7 +351,48 @@ function calculateRMD(age, accountBalance) {
  * Calculate one year of accumulation phase (working years)
  */
 function calculateWorkingYearData(inputs, year, salary, balances) {
+  // Declare and initialize the result object at the top
+  const result = {
+    age: 0,
+    salary: 0,
+    contrib: 0,
+    ss: 0,
+    pen: 0,
+    spouseSs: 0,
+    spousePen: 0,
+    spend: 0,
+    wNet: 0,
+    w401kNet: 0,
+    wSavingsRothNet: 0,
+    wGross: 0,
+    w401kGross: 0,
+    wSavingsGross: 0,
+    wRothGross: 0,
+    taxes: 0,
+    ssTaxes: 0,
+    otherTaxes: 0,
+    nonTaxableIncome: 0,
+    taxableIncome: 0,
+    taxableInterest: 0,
+    totalIncome: 0,
+    totalNetIncome: 0,
+    totalGrossIncome: 0,
+    effectiveTaxRate: 0,
+    provisionalIncome: 0,
+    standardDeduction: 0,
+    balSavings: 0,
+    balPre: 0,
+    balRoth: 0,
+    total: 0,
+    savingsBreakdown: {},
+    ssBreakdown: {},
+  };
+
   const age = inputs.currentAge + year;
+
+  // Set basic values in result object
+  result.age = age;
+  result.salary = salary;
 
   // Calculate current year living expenses (retirement spending adjusted to current year)
   const currentYearSpending = inputs.spendingToday.adjustedForInflation(
@@ -430,91 +471,94 @@ function calculateWorkingYearData(inputs, year, salary, balances) {
     (balances.balSavings + cTax + taxFreeIncomeAdjustment) *
     (1 + inputs.rateOfSavings);
 
-  return {
-    age,
-    salary,
-    contrib: cPre + cRoth + cTax + match,
-    ss: 0,
-    pen: 0,
-    spouseSs: 0,
-    spousePen: 0,
-    spend: currentYearSpending,
-    wNet: 0,
-    w401kNet: 0,
-    wSavingsRothNet: 0,
-    wGross: 0,
-    w401kGross: 0,
-    wSavingsGross: 0,
-    wRothGross: 0,
-    taxes: workingYearTaxes,
-    ssTaxes: 0,
-    otherTaxes: workingYearTaxes,
-    nonTaxableIncome: taxFreeIncomeAdjustment, // Tax-free income adjustment
-    taxableIncome: calculateTaxableIncome(
+  // Update all the final values in the result object
+  result.contrib = cPre + cRoth + cTax + match;
+  result.ss = 0;
+  result.pen = 0;
+  result.spouseSs = 0;
+  result.spousePen = 0;
+  result.spend = currentYearSpending;
+  result.wNet = 0;
+  result.w401kNet = 0;
+  result.wSavingsRothNet = 0;
+  result.wGross = 0;
+  result.w401kGross = 0;
+  result.wSavingsGross = 0;
+  result.wRothGross = 0;
+  result.taxes = workingYearTaxes;
+  result.ssTaxes = 0;
+  result.otherTaxes = workingYearTaxes;
+  result.nonTaxableIncome = taxFreeIncomeAdjustment;
+  result.taxableIncome = calculateTaxableIncome(
+    grossTaxableIncome,
+    inputs.filingStatus,
+    TAX_BASE_YEAR + year
+  );
+  result.taxableInterest = taxableInterestIncome;
+  result.totalIncome = totalGrossIncome + taxableInterestIncome;
+  result.totalNetIncome = afterTaxIncome + taxFreeIncomeAdjustment;
+  result.totalGrossIncome = totalGrossIncome + taxableInterestIncome;
+  result.effectiveTaxRate =
+    calculateTaxableIncome(
       grossTaxableIncome,
       inputs.filingStatus,
       TAX_BASE_YEAR + year
-    ), // Working year taxable income after standard deduction
-    taxableInterest: taxableInterestIncome, // Track taxable interest earned
-    totalIncome: totalGrossIncome + taxableInterestIncome, // Total income for working years including adjustments
-    totalNetIncome: afterTaxIncome + taxFreeIncomeAdjustment, // Net income including tax-free adjustments
-    totalGrossIncome: totalGrossIncome + taxableInterestIncome, // Gross income for working years including adjustments
-    effectiveTaxRate:
-      calculateTaxableIncome(
-        grossTaxableIncome,
-        inputs.filingStatus,
-        TAX_BASE_YEAR + year
-      ) > 0
-        ? (workingYearTaxes /
-            calculateTaxableIncome(
-              grossTaxableIncome,
-              inputs.filingStatus,
-              TAX_BASE_YEAR + year
-            )) *
-          100
-        : 0,
-    provisionalIncome: 0, // No Social Security during working years
-    standardDeduction: getStandardDeduction(
-      TAX_BASE_YEAR + year,
-      inputs.filingStatus
-    ), // Standard deduction for this tax year
-    balSavings: balances.balSavings,
-    balPre: balances.balPre,
-    balRoth: balances.balRoth,
-    total: balances.balSavings + balances.balPre + balances.balRoth,
-    // Add savings breakdown data for popup
-    savingsBreakdown: {
-      startingBalance: savingsStartBalance,
-      withdrawals: 0, // No withdrawals during working years
-      overageDeposit: 0, // No overage during working years
-      taxFreeIncomeDeposit: taxFreeIncomeAdjustment,
-      regularDeposit: cTax, // Regular taxable savings contribution
-      interestEarned: taxableInterestEarned,
-      endingBalance: balances.balSavings,
-      growthRate: inputs.rateOfSavings * 100,
-    },
-    // Add empty SS breakdown for working years
-    ssBreakdown: {
-      ssGross: 0,
-      ssTaxableAmount: 0,
-      ssNonTaxable: 0,
-      ssTaxes: 0,
-    },
+    ) > 0
+      ? (workingYearTaxes /
+          calculateTaxableIncome(
+            grossTaxableIncome,
+            inputs.filingStatus,
+            TAX_BASE_YEAR + year
+          )) *
+        100
+      : 0;
+  result.provisionalIncome = 0;
+  result.standardDeduction = getStandardDeduction(
+    TAX_BASE_YEAR + year,
+    inputs.filingStatus
+  );
+  result.balSavings = balances.balSavings;
+  result.balPre = balances.balPre;
+  result.balRoth = balances.balRoth;
+  result.total = balances.balSavings + balances.balPre + balances.balRoth;
+
+  // Add breakdown data
+  result.savingsBreakdown = {
+    startingBalance: savingsStartBalance,
+    withdrawals: 0,
+    overageDeposit: 0,
+    taxFreeIncomeDeposit: taxFreeIncomeAdjustment,
+    regularDeposit: cTax,
+    interestEarned: taxableInterestEarned,
+    endingBalance: balances.balSavings,
+    growthRate: inputs.rateOfSavings * 100,
   };
+
+  result.ssBreakdown = {
+    ssGross: 0,
+    ssTaxableAmount: 0,
+    ssNonTaxable: 0,
+    ssTaxes: 0,
+  };
+
+  return result;
 }
 
 /**
  * Calculate spouse benefit amounts at the time of primary person's retirement
  */
 function calculateSpouseBenefits(inputs) {
-  let spouseSsAnnual = 0;
-  let spousePenAnnual = 0;
+  // Declare and initialize the result object at the top
+  const result = {
+    spouseSsAnnual: 0,
+    spousePenAnnual: 0,
+  };
 
   if (inputs.hasSpouse) {
     const spouseCurrentYear = inputs.retireAge - inputs.currentAge; // Years from now when primary person retires
     const spouseAgeAtPrimaryRetirement = inputs.spouseAge + spouseCurrentYear;
 
-    spouseSsAnnual = inputs.spouseSsMonthly * 12;
+    result.spouseSsAnnual = inputs.spouseSsMonthly * 12;
     // spouseSsColaRate = inputs.spouseSsCola;
 
     // spouseSsAnnual =
@@ -525,7 +569,7 @@ function calculateSpouseBenefits(inputs) {
     //         spouseAgeAtPrimaryRetirement - inputs.spouseSsStart
     //       )
     //     : 1);
-    spousePenAnnual = inputs.spousePenMonthly * 12;
+    result.spousePenAnnual = inputs.spousePenMonthly * 12;
     //  *
     // (spouseAgeAtPrimaryRetirement >= inputs.spousePenStart
     //   ? compoundedRate(
@@ -535,7 +579,7 @@ function calculateSpouseBenefits(inputs) {
     //   : 1);
   }
 
-  return { spouseSsAnnual, spousePenAnnual };
+  return result;
 }
 
 /**
@@ -547,22 +591,31 @@ function calculateSocialSecurityTaxation(
   otherTaxableIncome,
   year = 0
 ) {
+  // Declare and initialize the result object at the top
+  const result = {
+    ssGross: 0,
+    ssTaxableAmount: 0,
+    ssNonTaxable: 0,
+    ssTaxes: 0,
+    calculationDetails: {
+      provisionalIncome: 0,
+      threshold1: 0,
+      threshold2: 0,
+      tier1Amount: 0,
+      tier2Amount: 0,
+      excessIncome1: 0,
+      excessIncome2: 0,
+      effectiveRate: 0,
+      method: "none",
+    },
+  };
+
   if (!ssGross || ssGross <= 0) {
-    return {
-      ssNet: 0,
-      ssTaxableAmount: 0,
-      ssNonTaxable: 0,
-      ssTaxes: 0,
-      calculationDetails: {
-        provisionalIncome: 0,
-        threshold1: 0,
-        threshold2: 0,
-        tier1Amount: 0,
-        tier2Amount: 0,
-        method: "none",
-      },
-    };
+    return result;
   }
+
+  // Set basic values in result object
+  result.ssGross = ssGross;
 
   const isMarried =
     inputs.filingStatus === FILING_STATUS.MARRIED_FILING_JOINTLY;
@@ -614,39 +667,45 @@ function calculateSocialSecurityTaxation(
 
   const ssNonTaxable = ssGross - ssTaxableDollars;
 
-  // Don't calculate separate SS taxes - the taxable SS amount will be included in total taxable income
-  return {
-    ssGross,
-    ssTaxableAmount: ssTaxableDollars,
-    ssNonTaxable,
-    ssTaxes: 0, // No separate SS taxes - included in total income tax calculation
-    calculationDetails: {
-      provisionalIncome,
-      threshold1,
-      threshold2,
-      tier1Amount: tier1TaxableDollars,
-      tier2Amount: tier2TaxableDollars,
-      excessIncome1: Math.max(0, provisionalIncome - threshold1),
-      excessIncome2: Math.max(0, provisionalIncome - threshold2),
-      effectiveRate: 0, // Will be calculated on total income
-      method: "irs-rules",
-    },
+  // Update all the final values in the result object
+  result.ssTaxableAmount = ssTaxableDollars;
+  result.ssNonTaxable = ssNonTaxable;
+  result.ssTaxes = 0; // No separate SS taxes - included in total income tax calculation
+  result.calculationDetails = {
+    provisionalIncome,
+    threshold1,
+    threshold2,
+    tier1Amount: tier1TaxableDollars,
+    tier2Amount: tier2TaxableDollars,
+    excessIncome1: Math.max(0, provisionalIncome - threshold1),
+    excessIncome2: Math.max(0, provisionalIncome - threshold2),
+    effectiveRate: 0, // Will be calculated on total income
+    method: "irs-rules",
   };
+
+  // Don't calculate separate SS taxes - the taxable SS amount will be included in total taxable income
+  return result;
 }
 
 /**
  * Calculate pension taxation for a given year
  */
 function buildPensionTracker(inputs, penGross, totalTaxableIncome, year = 0) {
+  // Declare and initialize the result object at the top
+  const result = {
+    penGross: 0,
+    penTaxes: 0,
+    penNet: 0,
+    penNonTaxable: 0,
+    pensionTaxRate: 0,
+  };
+
   if (!penGross || penGross <= 0) {
-    return {
-      penGross: 0,
-      penTaxes: 0,
-      penNet: 0,
-      penNonTaxable: 0,
-      pensionTaxRate: 0,
-    };
+    return result;
   }
+
+  // Set basic values in result object
+  result.penGross = penGross;
 
   // Pensions are typically fully taxable, but we track for consistency
   const penTaxableAmount = penGross; // 100% taxable
@@ -656,13 +715,13 @@ function buildPensionTracker(inputs, penGross, totalTaxableIncome, year = 0) {
   const penTaxes = 0;
   const penNet = penGross; // Full gross amount; taxes calculated on total income
 
-  return {
-    penGross,
-    penTaxes,
-    penNet,
-    penNonTaxable,
-    pensionTaxRate: 0, // Will be calculated as part of total income
-  };
+  // Update result object
+  result.penTaxes = penTaxes;
+  result.penNet = penNet;
+  result.penNonTaxable = penNonTaxable;
+  result.pensionTaxRate = 0; // Will be calculated as part of total income
+
+  return result;
 }
 
 /**
@@ -1616,15 +1675,23 @@ function withdraw50_50(withdrawalFunctions, totalNetNeeded) {
 
 // Function to calculate initial benefit amounts for retirement
 function calculateInitialBenefitAmounts(inputs) {
+  // Declare and initialize the result object at the top
+  const result = {
+    ssAnnual: 0,
+    penAnnual: 0,
+    spouseSsAnnual: 0,
+    spousePenAnnual: 0,
+  };
+
   const age = inputs.retireAge - inputs.ssStartAge;
 
-  let ssAnnual =
+  result.ssAnnual =
     inputs.ssMonthly *
     12 *
     (inputs.retireAge >= inputs.ssStartAge
       ? compoundedRate(inputs.ssCola, inputs.retireAge - inputs.ssStartAge)
       : 1);
-  let penAnnual =
+  result.penAnnual =
     inputs.penMonthly *
     12 *
     (inputs.retireAge >= inputs.penStartAge
@@ -1632,15 +1699,10 @@ function calculateInitialBenefitAmounts(inputs) {
       : 1);
 
   const spouseBenefits = calculateSpouseBenefits(inputs);
-  let spouseSsAnnual = spouseBenefits.spouseSsAnnual;
-  let spousePenAnnual = spouseBenefits.spousePenAnnual;
+  result.spouseSsAnnual = spouseBenefits.spouseSsAnnual;
+  result.spousePenAnnual = spouseBenefits.spousePenAnnual;
 
-  return {
-    ssAnnual,
-    penAnnual,
-    spouseSsAnnual,
-    spousePenAnnual,
-  };
+  return result;
 }
 
 function calc() {
