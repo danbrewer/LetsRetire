@@ -552,12 +552,12 @@ function createWithdrawalFunctions(
         ssBenefit: ssBenefits, // Include Social Security benefits in tax calculation
         standardDeduction: getStandardDeduction(
           inputs.filingStatus,
-          TAX_BASE_YEAR + year,
+          year, // year is already the actual year (e.g., 2040)
           inputs.inflationRate
         ),
         brackets: getTaxBrackets(
           inputs.filingStatus,
-          2025 + year,
+          year,
           inputs.inflationRate
         ),
         precision: 0.01, // Precision for binary search convergence
@@ -631,14 +631,10 @@ function createWithdrawalFunctions(
       ssBenefit: ssBenefits, // Include Social Security benefits in RMD tax calculation too
       standardDeduction: getStandardDeduction(
         inputs.filingStatus,
-        TAX_BASE_YEAR + year,
+        year, // year is already the actual year (e.g., 2040)
         inputs.inflationRate
       ),
-      brackets: getTaxBrackets(
-        inputs.filingStatus,
-        TAX_BASE_YEAR + year,
-        inputs.inflationRate
-      ),
+      brackets: getTaxBrackets(inputs.filingStatus, year, inputs.inflationRate),
       precision: 0.01, // Precision for binary search convergence
     };
 
@@ -1116,7 +1112,7 @@ function calculateRetirementYearData(
   // Calculate standard deduction for this year
   const standardDeduction = getStandardDeduction(
     inputs.filingStatus,
-    TAX_BASE_YEAR + retirementYear,
+    retirementYear, // retirementYear is already the actual year (e.g., 2040)
     inputs.inflationRate
   );
 
