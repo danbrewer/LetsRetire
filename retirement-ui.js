@@ -2015,10 +2015,10 @@ function parseInputParameters() {
     spouseAge: num("spouseAge"),
     spouseRetireAge: num("spouseRetireAge"),
     spouseSsMonthly: num("spouseSsMonthly"),
-    spouseSsStart: num("spouseSsStart"),
+    spouseSsStartAge: num("spouseSsStart"),
     spouseSsCola: pct(num("spouseSsCola")),
     spousePenMonthly: num("spousePenMonthly"),
-    spousePenStart: num("spousePenStart"),
+    spousePenStartAge: num("spousePenStart"),
     spousePenCola: pct(num("spousePenCola")),
     spouseTaxSS: pct(num("spouseTaxSS")),
     spouseTaxPension: pct(num("spouseTaxPension")),
@@ -2330,10 +2330,10 @@ function loadExample() {
     spouseAge: 56,
     spouseRetireAge: 62,
     spouseSsMonthly: 1000,
-    spouseSsStart: 62,
+    spouseSsStartAge: 62,
     spouseSsCola: 0.0,
     spousePenMonthly: 500,
-    spousePenStart: 65,
+    spousePenStartAge: 65,
     spousePenCola: 0,
     spouseTaxSS: 10,
     spouseTaxPension: 20,
@@ -2404,29 +2404,6 @@ function loadExample() {
   //   order: "taxable,pretax,roth",
   //   filingStatus: "married",
   //   useRMD: true,
-  // };
-  // const ex = {
-  //   currentAge:55, retireAge:65, endAge:85, inflation:2.5, spendingToday:60000, spendingDecline:1.0,
-  //   spouseAge:52, spouseRetireAge:62, spouseSsMonthly:1000, spouseSsStart:62, spouseSsCola:2.0,
-  //   spousePenMonthly:500, spousePenStart:65, spousePenCola:0, spouseTaxSS:10, spouseTaxPension:20,
-  //   salary:100000, salaryGrowth:3.0, pretaxPct:10, rothPct:5, taxablePct:5,
-  //   matchCap:4, matchRate:50, balPre:300000, balRoth:100000, balSavings:50000,
-  //   retPre:6.0, retRoth:6.0, retTax:5.5, ssMonthly:2500, ssStart:67, ssCola:2.0,
-  //   penMonthly:0, penStart:65, penCola:0, taxPre:22, taxTaxable:10, taxRoth:0,
-  //   taxSS:10, taxPension:20, order:'taxable,pretax,roth'
-  // };
-  // const ex = {
-  //   currentAge: 54, retireAge: 55, endAge: 85,
-  //   inflation: 0.0, spendingToday: 50000, spendingDecline: 0.0,
-  //   spouseAge: 52, spouseRetireAge: 62, spouseSsMonthly: 0, spouseSsStart: 62, spouseSsCola: 2.0,
-  //   spousePenMonthly: 0, spousePenStart: 65, spousePenCola: 0, spouseTaxSS: 10, spouseTaxPension: 20,
-  //   salary: 0, salaryGrowth: 3.0, pretaxPct: 10, rothPct: 5, taxablePct: 5,
-  //   matchCap: 4, matchRate: 50, balPre: 1000000, balRoth: 0, balSavings: 0,
-  //   retPre: 0.0, retRoth: 0.0, retTax: 0.0,
-  //   ssMonthly: 0, ssStart: 67, ssCola: 2.0,
-  //   penMonthly: 0, penStart: 65, penCola: 0,
-  //   taxPre: 0, taxTaxable: 0, taxRoth: 0,
-  //   taxSS: 0, taxPension: 0, order: 'pretax,roth,taxable'
   // };
   for (const [k, v] of Object.entries(ex)) {
     if ($(k)) $(k).value = v;

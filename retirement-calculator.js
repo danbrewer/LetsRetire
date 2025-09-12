@@ -555,28 +555,8 @@ function calculateSpouseBenefits(inputs) {
   };
 
   if (inputs.hasSpouse) {
-    const spouseCurrentYear = inputs.retireAge - inputs.currentAge; // Years from now when primary person retires
-    const spouseAgeAtPrimaryRetirement = inputs.spouseAge + spouseCurrentYear;
-
     result.spouseSsAnnual = inputs.spouseSsMonthly * 12;
-    // spouseSsColaRate = inputs.spouseSsCola;
-
-    // spouseSsAnnual =
-    //   spouseSsAnnual *
-    //   (spouseAgeAtPrimaryRetirement >= inputs.spouseSsStart
-    //     ? compoundedRate(
-    //         spouseSsColaRate,
-    //         spouseAgeAtPrimaryRetirement - inputs.spouseSsStart
-    //       )
-    //     : 1);
     result.spousePenAnnual = inputs.spousePenMonthly * 12;
-    //  *
-    // (spouseAgeAtPrimaryRetirement >= inputs.spousePenStart
-    //   ? compoundedRate(
-    //       inputs.spousePenCola,
-    //       spouseAgeAtPrimaryRetirement - inputs.spousePenStart
-    //     )
-    //   : 1);
   }
 
   return result;
@@ -690,7 +670,7 @@ function calculateSocialSecurityTaxation(
 /**
  * Calculate pension taxation for a given year
  */
-function buildPensionTracker(inputs, penGross, totalTaxableIncome, year = 0) {
+function buildPensionTracker(penGross) {
   // Declare and initialize the result object at the top
   const result = {
     penGross: 0,
@@ -708,7 +688,6 @@ function buildPensionTracker(inputs, penGross, totalTaxableIncome, year = 0) {
   result.penGross = penGross;
 
   // Pensions are typically fully taxable, but we track for consistency
-  const penTaxableAmount = penGross; // 100% taxable
   const penNonTaxable = 0; // 0% non-taxable
 
   // Don't calculate separate pension taxes - will be included in total income tax calculation
@@ -904,8 +883,8 @@ function extractSpouseInputs(inputs, age, benefitAmounts) {
 
   if (inputs.hasSpouse) {
     const spouseCurrentAge = inputs.spouseAge + (age - inputs.currentAge);
-    const hasSpouseSS = spouseCurrentAge >= inputs.spouseSsStart;
-    const hasSpousePen = spouseCurrentAge >= inputs.spousePenStart;
+    const hasSpouseSS = spouseCurrentAge >= inputs.spouseSsStartAge;
+    const hasSpousePen = spouseCurrentAge >= inputs.spousePenStartAge;
 
     spouse.ssGross = hasSpouseSS ? benefitAmounts.spouseSsAnnual : 0;
     spouse.penGross = hasSpousePen ? benefitAmounts.spousePenAnnual : 0;
@@ -1044,22 +1023,12 @@ function calculateRetirementYearData(
   balances.balSavings += taxFreeIncomeAdjustment;
 
   // STEP 2: Track pensions
-  const penResults = buildPensionTracker(
-    inputs,
-    penGross,
-    taxableInterestEarned + taxableIncomeAdjustment,
-    retirementYear
-  );
-  const spousePenResults = buildPensionTracker(
-    inputs,
-    spouse.penGross,
-    taxableInterestEarned + taxableIncomeAdjustment,
-    retirementYear
-  );
+  const penResults = buildPensionTracker(penGross);
+  const spousePenResults = buildPensionTracker(spouse.penGross);
 
   // Track taxable income reference to include only
   // taxable portions plus taxable interest
-  let totalTaxableIncomeRef = {
+  let totalTaxableIncome = {
     value:
       penResults.penGross +
       spousePenResults.penGross +
@@ -1076,7 +1045,7 @@ function calculateRetirementYearData(
 
   // STEP 4: Make preliminary withdrawals to estimate total income for SS calculation
   let balancesCopy = { ...balances }; // Work with copy for estimation
-  let totalTaxableIncomeCopy = { value: totalTaxableIncomeRef.value };
+  let totalTaxableIncomeCopy = { value: totalTaxableIncome.value };
 
   // createWithdrawalFunction is a utility to generate withdrawal functions
   // for each account type (e.g., savings, 401k, IRA)
@@ -1143,7 +1112,7 @@ function calculateRetirementYearData(
 
   // STEP 6: Recalculate final withdrawals with correct SS net amounts
   // Only include taxable portions in taxable income reference
-  totalTaxableIncomeRef.value =
+  totalTaxableIncome.value =
     penResults.penGross +
     spousePenResults.penGross +
     ssResults.ssTaxableAmount +
@@ -1173,7 +1142,7 @@ function calculateRetirementYearData(
   const finalWithdrawalFunctions = createWithdrawalFunction(
     inputs,
     balances,
-    totalTaxableIncomeRef,
+    totalTaxableIncome,
     retirementYear
   );
 
@@ -1813,10 +1782,10 @@ function calc() {
 
     if (inputs.hasSpouse) {
       const spouseCurrentAge = inputs.spouseAge + (age - inputs.currentAge);
-      if (spouseCurrentAge >= inputs.spouseSsStart)
+      if (spouseCurrentAge >= inputs.spouseSsStartAge)
         spouseSsAnnual *= 1 + inputs.spouseSsCola;
       if (
-        spouseCurrentAge >= inputs.spousePenStart &&
+        spouseCurrentAge >= inputs.spousePenStartAge &&
         inputs.spousePenMonthly > 0
       )
         spousePenAnnual *= 1 + inputs.spousePenCola;
