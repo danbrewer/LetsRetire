@@ -56,7 +56,15 @@ const log = {
 };
 
 function determineTaxablePortionOfSocialSecurity(ssGross, otherIncome) {
+  // Declare and initialize the result object at the top
+  const result = {
+    taxableSSAmount: 0,
+    provisionalIncome: 0,
+  };
+
   const provisionalIncome = otherIncome + 0.5 * ssGross;
+  result.provisionalIncome = provisionalIncome;
+
   let taxableSSAmount = 0;
   //   log.info("*** Social Security Benefits Taxation ***");
   log.info(`Social Security Income: $${ssGross.round(2)}`);
@@ -78,10 +86,8 @@ function determineTaxablePortionOfSocialSecurity(ssGross, otherIncome) {
     log.info(
       `. Provisional income is below Tier 1 ($${base1}). No Social Security benefits are taxable.`
     );
-    return {
-      taxableSSAmount,
-      provisionalIncome,
-    };
+    result.taxableSSAmount = taxableSSAmount;
+    return result;
   }
 
   if (provisionalIncome <= base2) {
@@ -108,10 +114,8 @@ function determineTaxablePortionOfSocialSecurity(ssGross, otherIncome) {
 
     taxableSSAmount = Math.min(0.5 * ssGross, 0.5 * amountInExcessOfBase);
 
-    return {
-      taxableSSAmount,
-      provisionalIncome,
-    };
+    result.taxableSSAmount = taxableSSAmount;
+    return result;
   }
 
   const excessOverBase2 = provisionalIncome - base2;
@@ -136,10 +140,9 @@ function determineTaxablePortionOfSocialSecurity(ssGross, otherIncome) {
     0.5 * (base2 - base1) + 0.85 * excessOverBase2
   );
   log.info(`Amount of SS that is taxable is $${taxableSSAmount.round(2)}.`);
-  return {
-    taxableSSAmount,
-    provisionalIncome,
-  };
+
+  result.taxableSSAmount = taxableSSAmount;
+  return result;
 }
 
 function determineTaxUsingBrackets(taxableIncome, brackets, opts) {
@@ -158,6 +161,16 @@ function determineTaxUsingBrackets(taxableIncome, brackets, opts) {
 }
 
 function calculateNetWhen401kIncomeIs(guestimateFor401k, opts) {
+  // Declare and initialize the result object at the top
+  const result = {
+    netIncome: 0,
+    tax: 0,
+    taxableSSAmt: 0,
+    totalTaxableIncome: 0,
+    grossTaxableIncome: 0,
+    actualTaxableIncome: 0,
+  };
+
   const { otherTaxableIncome, ssBenefit, standardDeduction, brackets } = opts;
 
   log.info(`*** calculateNetWhen401kIncomeIs ***`);
@@ -206,29 +219,24 @@ function calculateNetWhen401kIncomeIs(guestimateFor401k, opts) {
 
   log.info(`Net income after taxes is $${netIncome.round(2)}.`);
 
-  return {
-    netIncome,
-    tax,
-    taxableSSAmt: taxableSSResult.taxableSSAmount,
-    totalTaxableIncome: allTaxableIncomeExcludingSS,
-    grossTaxableIncome: grossIncome,
-    actualTaxableIncome: taxableIncome,
-  };
+  // Update all the final values in the result object
+  result.netIncome = netIncome;
+  result.tax = tax;
+  result.taxableSSAmt = taxableSSResult.taxableSSAmount;
+  result.totalTaxableIncome = allTaxableIncomeExcludingSS;
+  result.grossTaxableIncome = grossIncome;
+  result.actualTaxableIncome = taxableIncome;
+
+  return result;
 }
 
 function determine401kWithdrawalToHitNetTargetOf(targetAmount, opts) {
-  //   if (opts.otherTaxableIncome) {
-  //     let net = calculateNetWhen401kIncomeIs(0, opts);
-  //     if (net.netIncome.round(2) > targetAmount.round(2)) {
-  //       log.info(`Other income makes it unnecessary to withdraw from 401k`);
-  //       log.info(`Net income with other income is $${net.netIncome.round(2)}`);
-  //       return {
-  //         net: net.netIncome,
-  //         withdrawalNeeded: 0,
-  //         tax: net.tax,
-  //       };
-  //     }
-  //   }
+  // Declare and initialize the result object at the top
+  const result = {
+    net: 0,
+    withdrawalNeeded: 0,
+    tax: 0,
+  };
 
   let lo = 0,
     hi = targetAmount * 2,
@@ -273,11 +281,12 @@ function determine401kWithdrawalToHitNetTargetOf(targetAmount, opts) {
     if (hi.round(2) - lo.round(2) <= opts.precision) break;
   }
 
-  return {
-    net: net.netIncome,
-    withdrawalNeeded: hi,
-    tax: net.tax,
-  };
+  // Update all the final values in the result object
+  result.net = net.netIncome;
+  result.withdrawalNeeded = hi;
+  result.tax = net.tax;
+
+  return result;
 }
 
 // 2025 Federal Income Tax Brackets
