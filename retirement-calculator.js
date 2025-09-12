@@ -706,10 +706,10 @@ function buildPensionTracker(penGross) {
 /**
  * Create withdrawal function for a specific retirement year
  */
-function createWithdrawalFunction(
+function createWithdrawalFunctions(
   inputs,
-  balances,
-  totalTaxableIncomeRef,
+  closuredCopyOfBalances,
+  closuredCopyOfTotalTaxableIncome,
   year = 0
 ) {
   // Declare and initialize the result object at the top
@@ -738,23 +738,23 @@ function createWithdrawalFunction(
     }
 
     // Determine balance reference and setter function
-    let balRef = 0,
-      setBal;
+    let targetedAccountBalance = 0,
+      updateTargetedAccountBalance;
 
     if (kind === "savings") {
-      balRef = balances.balSavings;
-      setBal = (v) => {
-        balances.balSavings = v;
+      targetedAccountBalance = closuredCopyOfBalances.balSavings;
+      updateTargetedAccountBalance = (v) => {
+        closuredCopyOfBalances.balSavings = v;
       };
     } else if (kind === "pretax") {
-      balRef = balances.balPre;
-      setBal = (v) => {
-        balances.balPre = v;
+      targetedAccountBalance = closuredCopyOfBalances.balPre;
+      updateTargetedAccountBalance = (v) => {
+        closuredCopyOfBalances.balPre = v;
       };
     } else if (kind === "roth") {
-      balRef = balances.balRoth;
-      setBal = (v) => {
-        balances.balRoth = v;
+      targetedAccountBalance = closuredCopyOfBalances.balRoth;
+      updateTargetedAccountBalance = (v) => {
+        closuredCopyOfBalances.balRoth = v;
       };
     } else {
       console.error("Unknown withdrawal kind:", kind);
@@ -765,7 +765,7 @@ function createWithdrawalFunction(
     let taxRate = 0;
 
     if (kind === "pretax") {
-      const projectedGrossIncome = totalTaxableIncomeRef.value;
+      const projectedGrossIncome = closuredCopyOfTotalTaxableIncome.value;
 
       const projectedTaxableIncome = calculateTaxableIncome(
         projectedGrossIncome,
@@ -786,7 +786,7 @@ function createWithdrawalFunction(
     if (kind === "pretax") {
       // Estimate tax rate for grossing up the withdrawal
       const projectedGrossIncome =
-        totalTaxableIncomeRef.value + desiredNetAmount;
+        closuredCopyOfTotalTaxableIncome.value + desiredNetAmount;
       const projectedTaxableIncome = calculateTaxableIncome(
         projectedGrossIncome,
         inputs.filingStatus,
@@ -801,14 +801,14 @@ function createWithdrawalFunction(
 
       // Gross up the withdrawal to account for taxes
       const grossNeeded = desiredNetAmount / (1 - taxRate);
-      grossTake = Math.min(grossNeeded, balRef);
+      grossTake = Math.min(grossNeeded, targetedAccountBalance);
       netReceived = grossTake * (1 - taxRate); // Estimated net after taxes
-      setBal(balRef - grossTake);
+      updateTargetedAccountBalance(targetedAccountBalance - grossTake);
     } else {
       // For Savings/Roth accounts, there is no tax impact to consider; simply withdraw the desired amount
-      grossTake = Math.min(desiredNetAmount, balRef);
+      grossTake = Math.min(desiredNetAmount, targetedAccountBalance);
       netReceived = grossTake;
-      setBal(balRef - grossTake);
+      updateTargetedAccountBalance(targetedAccountBalance - grossTake);
     }
 
     // Track withdrawals by source
@@ -822,7 +822,7 @@ function createWithdrawalFunction(
 
     // Add pre-tax withdrawals to Taxable Income for subsequent calculations
     if (kind === "pretax") {
-      totalTaxableIncomeRef.value += grossTake;
+      closuredCopyOfTotalTaxableIncome.value += grossTake;
     }
 
     return { gross: grossTake, net: netReceived };
@@ -830,14 +830,14 @@ function createWithdrawalFunction(
 
   // Special function for RMD withdrawals (gross amount based)
   function withdrawRMD(grossAmount) {
-    if (grossAmount <= 0 || balances.balPre <= 0) return { gross: 0, net: 0 };
+    if (grossAmount <= 0 || closuredCopyOfBalances.balPre <= 0)
+      return { gross: 0, net: 0 };
 
-    const actualGross = Math.min(grossAmount, balances.balPre);
-
-    let taxRate = 0;
+    const actualGross = Math.min(grossAmount, closuredCopyOfBalances.balPre);
 
     {
-      const projectedGrossIncome = totalTaxableIncomeRef.value + actualGross;
+      const projectedGrossIncome =
+        closuredCopyOfTotalTaxableIncome.value + actualGross;
       const projectedTaxableIncome = calculateTaxableIncome(
         projectedGrossIncome,
         inputs.filingStatus,
@@ -852,7 +852,8 @@ function createWithdrawalFunction(
     }
 
     // For RMD, estimate taxes to provide realistic net amount
-    const projectedGrossIncome = totalTaxableIncomeRef.value + actualGross;
+    const projectedGrossIncome =
+      closuredCopyOfTotalTaxableIncome.value + actualGross;
     const projectedTaxableIncome = calculateTaxableIncome(
       projectedGrossIncome,
       inputs.filingStatus,
@@ -866,8 +867,8 @@ function createWithdrawalFunction(
     const rmdTaxRate = taxableIncomeRateDecimal;
 
     const netReceived = actualGross * (1 - rmdTaxRate); // Estimated net after taxes
-    balances.balPre -= actualGross;
-    totalTaxableIncomeRef.value += actualGross;
+    closuredCopyOfBalances.balPre -= actualGross;
+    closuredCopyOfTotalTaxableIncome.value += actualGross;
 
     // Track RMD withdrawals as retirement account
     withdrawalsBySource.retirementAccount += actualGross;
@@ -1053,17 +1054,17 @@ function calculateRetirementYearData(
   );
 
   // STEP 4: Make preliminary withdrawals to estimate total income for SS calculation
-  let balancesCopy = { ...balances }; // Work with copy for estimation
-  let totalTaxableIncomeCopy = { value: totalTaxableIncome.value };
+  let copyOfBalances = { ...balances }; // Work with copy for estimation
+  let copyOfTotalTaxableIncome = { value: totalTaxableIncome.value };
 
   // createWithdrawalFunction is a utility to generate withdrawal functions
   // for each account type (e.g., savings, 401k, IRA)
   // It returns an object containing withdrawal functions for each account type
   // Each function takes a gross withdrawal amount and returns the net amount after taxes
-  const preliminaryWithdrawalFunctions = createWithdrawalFunction(
+  const preliminaryWithdrawalFunctions = createWithdrawalFunctions(
     inputs,
-    balancesCopy,
-    totalTaxableIncomeCopy,
+    copyOfBalances,
+    copyOfTotalTaxableIncome,
     retirementYear
   );
 
@@ -1071,7 +1072,7 @@ function calculateRetirementYearData(
   let preliminaryRmdAmount = 0;
 
   if (inputs.useRMD && age >= 73) {
-    preliminaryRmdAmount = calculateRMD(age, balancesCopy.balPre);
+    preliminaryRmdAmount = calculateRMD(age, copyOfBalances.balPre);
     if (preliminaryRmdAmount > 0) {
       const rmdWithdrawal =
         preliminaryWithdrawalFunctions.withdrawRMD(preliminaryRmdAmount);
@@ -1105,7 +1106,7 @@ function calculateRetirementYearData(
 
   // STEP 5: Now calculate SS taxation based on total taxable income (excluding non-taxable savings withdrawals)
   // The totalTaxableIncomeCopy.value now contains only truly taxable income: pensions + pre-tax withdrawals + taxable interest
-  const totalTaxableIncomeForSS = totalTaxableIncomeCopy.value;
+  const totalTaxableIncomeForSS = copyOfTotalTaxableIncome.value;
   const ssResults = calculateSocialSecurityTaxation(
     inputs,
     ssGross,
@@ -1148,7 +1149,7 @@ function calculateRetirementYearData(
     );
   }
 
-  const finalWithdrawalFunctions = createWithdrawalFunction(
+  const finalWithdrawalFunctions = createWithdrawalFunctions(
     inputs,
     balances,
     totalTaxableIncome,
