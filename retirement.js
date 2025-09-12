@@ -142,12 +142,7 @@ function determineTaxablePortionOfSocialSecurity(ssGross, otherIncome) {
   };
 }
 
-function determineTaxUsingBrackets(
-  taxableIncome,
-  brackets,
-  inflationRate,
-  yearNum
-) {
+function determineTaxUsingBrackets(taxableIncome, brackets, opts) {
   let tax = 0,
     prev = 0;
 
@@ -178,6 +173,7 @@ function calculateNetWhen401kIncomeIs(guestimateFor401k, opts) {
   );
   const grossIncome =
     allTaxableIncomeExcludingSS + taxableSSResult.taxableSSAmount;
+
   const taxableIncome = Math.max(0, grossIncome - standardDeduction);
   log.info(`Other taxable income is $${otherTaxableIncome.round(2)}.`);
   log.info(`401k withdrawal is $${guestimateFor401k.round(2)}.`);
@@ -197,7 +193,7 @@ function calculateNetWhen401kIncomeIs(guestimateFor401k, opts) {
   log.info(`Standard deduction is $${standardDeduction.round(2)}.`);
   log.info(`Actual taxable income is $${taxableIncome.round(2)}.`);
 
-  const tax = determineTaxUsingBrackets(taxableIncome, brackets);
+  const tax = determineTaxUsingBrackets(taxableIncome, brackets, opts);
 
   log.info(
     `Total income from all sources is $${(
@@ -221,18 +217,18 @@ function calculateNetWhen401kIncomeIs(guestimateFor401k, opts) {
 }
 
 function determine401kWithdrawalToHitNetTargetOf(targetAmount, opts) {
-  if (opts.otherTaxableIncome) {
-    let net = calculateNetWhen401kIncomeIs(0, opts);
-    if (net.netIncome.round(2) > targetAmount.round(2)) {
-      log.info(`Other income makes it unnecessary to withdraw from 401k`);
-      log.info(`Net income with other income is $${net.netIncome.round(2)}`);
-      return {
-        net: net.netIncome,
-        withdrawalNeeded: 0,
-        tax: net.tax,
-      };
-    }
-  }
+  //   if (opts.otherTaxableIncome) {
+  //     let net = calculateNetWhen401kIncomeIs(0, opts);
+  //     if (net.netIncome.round(2) > targetAmount.round(2)) {
+  //       log.info(`Other income makes it unnecessary to withdraw from 401k`);
+  //       log.info(`Net income with other income is $${net.netIncome.round(2)}`);
+  //       return {
+  //         net: net.netIncome,
+  //         withdrawalNeeded: 0,
+  //         tax: net.tax,
+  //       };
+  //     }
+  //   }
 
   let lo = 0,
     hi = targetAmount * 2,
@@ -308,11 +304,17 @@ const TAX_TABLES_2025 = {
   ],
 };
 
-function getTaxBrackets(filingStatus) {
+function getTaxBrackets(filingStatus, year, inflationRate) {
   if (filingStatus === FILING_STATUS.MARRIED_FILING_JOINTLY) {
-    return TAX_TABLES_2025.mfj;
+    return TAX_TABLES_2025.mfj.map((bracket) => ({
+      rate: bracket.rate,
+      upTo: bracket.upTo.adjustedForInflation(inflationRate, year),
+    }));
   } else {
-    return TAX_TABLES_2025.single;
+    return TAX_TABLES_2025.single.map((bracket) => ({
+      rate: bracket.rate,
+      upTo: bracket.upTo.adjustedForInflation(inflationRate, year),
+    }));
   }
 }
 
@@ -326,11 +328,17 @@ const FILING_STATUS = {
   MARRIED_FILING_JOINTLY: "married",
 };
 
-function getStandardDeduction(filingStatus) {
+function getStandardDeduction(filingStatus, year, inflationRate) {
   if (filingStatus === FILING_STATUS.MARRIED_FILING_JOINTLY) {
-    return STANDARD_DEDUCTION_2025.mfj;
+    return STANDARD_DEDUCTION_2025.mfj.adjustedForInflation(
+      inflationRate,
+      year
+    );
   } else {
-    return STANDARD_DEDUCTION_2025.single;
+    return STANDARD_DEDUCTION_2025.single.adjustedForInflation(
+      inflationRate,
+      year
+    );
   }
 }
 

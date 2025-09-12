@@ -41,6 +41,9 @@ function showUsage() {
   console.log(
     "  --year=<number>       Future year for COLA adjustments (default: 0)"
   );
+  console.log(
+    "  --inflationRate=<number>  Future inflation rate (default: 0.0%)"
+  );
   console.log("");
   console.log("Examples:");
   console.log("  node retirement_testing.js --target=100000 --ss=32307");
@@ -68,13 +71,15 @@ const ssBenefit = parseFloat(args.ss);
 const savings = parseFloat(args.savings || "0");
 const otherTaxableIncome = parseFloat(args.other || "0");
 const year = parseInt(args.year || "0");
+const inflationRate = parseFloat(args.inflationRate || "0.0");
 
 if (
   isNaN(netTarget) ||
   isNaN(ssBenefit) ||
   isNaN(savings) ||
   isNaN(otherTaxableIncome) ||
-  isNaN(year)
+  isNaN(year) ||
+  isNaN(inflationRate)
 ) {
   console.error("Error: All parameters must be valid numbers.");
   console.error("");
@@ -84,21 +89,26 @@ if (
 const filingStatus = FILING_STATUS.MARRIED_FILING_JOINTLY;
 
 // Use tax brackets and standard deduction for the specified year (with COLA if year > 0)
-const brackets = getTaxBrackets(filingStatus, year);
-const standardDeduction = getStandardDeduction(filingStatus, year);
+const brackets = getTaxBrackets(filingStatus, year, inflationRate);
+const standardDeduction = getStandardDeduction(
+  filingStatus,
+  year,
+  inflationRate
+);
 
 // Remove savings because it is not taxable
 const target_LessSavings = netTarget - savings;
 
+const opts = {
+  otherTaxableIncome,
+  ssBenefit,
+  standardDeduction,
+  brackets,
+};
+
 const result = determine401kWithdrawalToHitNetTargetOf(
   target_LessSavings,
-  {
-    otherTaxableIncome,
-    ssBenefit,
-    standardDeduction,
-    brackets,
-  },
-  year
+  opts
 );
 
 log.info();
