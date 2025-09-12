@@ -121,9 +121,14 @@ const compoundedRate = (r, n) => Math.pow(1 + r, n);
 function calculateTaxableIncome(
   grossIncome,
   filingStatus = FILING_STATUS.SINGLE,
-  year = 2025
+  year = 2025,
+  inflationRate = 0.025
 ) {
-  const standardDeduction = getStandardDeduction(year, filingStatus);
+  const standardDeduction = getStandardDeduction(
+    filingStatus,
+    year,
+    inflationRate
+  );
   return Math.max(0, grossIncome - standardDeduction);
 }
 
@@ -131,10 +136,15 @@ function calculateTaxableIncome(
 function calculateFederalTax(
   grossIncome,
   filingStatus = FILING_STATUS.SINGLE,
-  year = 2025
+  year = 2025,
+  inflationRate = 0.025
 ) {
-  const taxBrackets = getTaxBrackets(year, filingStatus);
-  const standardDeduction = getStandardDeduction(year, filingStatus);
+  const taxBrackets = getTaxBrackets(filingStatus, year, inflationRate);
+  const standardDeduction = getStandardDeduction(
+    filingStatus,
+    year,
+    inflationRate
+  );
   const taxableIncome = Math.max(0, grossIncome - standardDeduction);
   return determineTaxUsingBrackets(taxableIncome, taxBrackets);
 }
@@ -270,7 +280,8 @@ function calculateWorkingYearData(inputs, year, salary, balances) {
   const workingYearTaxes = calculateFederalTax(
     grossTaxableIncome,
     inputs.filingStatus,
-    TAX_BASE_YEAR + year
+    TAX_BASE_YEAR + year,
+    inputs.inflationRate
   );
 
   // // Debug tax calculation for first few years
@@ -333,7 +344,8 @@ function calculateWorkingYearData(inputs, year, salary, balances) {
   result.taxableIncome = calculateTaxableIncome(
     grossTaxableIncome,
     inputs.filingStatus,
-    TAX_BASE_YEAR + year
+    TAX_BASE_YEAR + year,
+    inputs.inflationRate
   );
   result.taxableInterest = taxableInterestIncome;
   result.totalIncome = totalGrossIncome + taxableInterestIncome;
@@ -343,20 +355,23 @@ function calculateWorkingYearData(inputs, year, salary, balances) {
     calculateTaxableIncome(
       grossTaxableIncome,
       inputs.filingStatus,
-      TAX_BASE_YEAR + year
+      TAX_BASE_YEAR + year,
+      inputs.inflationRate
     ) > 0
       ? (workingYearTaxes /
           calculateTaxableIncome(
             grossTaxableIncome,
             inputs.filingStatus,
-            TAX_BASE_YEAR + year
+            TAX_BASE_YEAR + year,
+            inputs.inflationRate
           )) *
         100
       : 0;
   result.provisionalIncome = 0;
   result.standardDeduction = getStandardDeduction(
+    inputs.filingStatus,
     TAX_BASE_YEAR + year,
-    inputs.filingStatus
+    inputs.inflationRate
   );
   result.balSavings = balances.balSavings;
   result.balPre = balances.balPre;
@@ -516,14 +531,32 @@ function createWithdrawalFunctions(
     if (kind === "pretax") {
       // Use binary search optimization from retirement.js for accurate withdrawal calculation
       // Construct the opts object that these functions expect
+      // Add comprehensive NaN protection for otherTaxableIncome
+      const otherTaxableIncomeValue = isNaN(
+        closuredCopyOfTotalTaxableIncome.value
+      )
+        ? 0
+        : closuredCopyOfTotalTaxableIncome.value;
+
+      if (isNaN(closuredCopyOfTotalTaxableIncome.value)) {
+        console.warn(
+          `[NaN Protection] otherTaxableIncome was NaN, using 0 instead`
+        );
+      }
+
       const opts = {
-        otherTaxableIncome: closuredCopyOfTotalTaxableIncome.value,
+        otherTaxableIncome: otherTaxableIncomeValue,
         ssBenefit: 0, // Regular withdrawals don't include Social Security benefits
         standardDeduction: getStandardDeduction(
-          2025 + year,
-          inputs.filingStatus
+          inputs.filingStatus,
+          TAX_BASE_YEAR + year,
+          inputs.inflationRate
         ),
-        brackets: getTaxBrackets(2025 + year, inputs.filingStatus),
+        brackets: getTaxBrackets(
+          inputs.filingStatus,
+          2025 + year,
+          inputs.inflationRate
+        ),
         precision: 0.01, // Precision for binary search convergence
       };
 
@@ -576,14 +609,32 @@ function createWithdrawalFunctions(
 
     // Calculate net amount using the sophisticated tax calculation from retirement.js
     // Construct the opts object that calculateNetWhen401kIncomeIs expects
+    // Add comprehensive NaN protection for otherTaxableIncome
+    const otherTaxableIncomeValue = isNaN(
+      closuredCopyOfTotalTaxableIncome.value
+    )
+      ? 0
+      : closuredCopyOfTotalTaxableIncome.value;
+
+    if (isNaN(closuredCopyOfTotalTaxableIncome.value)) {
+      console.warn(
+        `[NaN Protection] RMD otherTaxableIncome was NaN, using 0 instead`
+      );
+    }
+
     const opts = {
-      otherTaxableIncome: closuredCopyOfTotalTaxableIncome.value,
+      otherTaxableIncome: otherTaxableIncomeValue,
       ssBenefit: 0, // RMD doesn't include Social Security benefits
       standardDeduction: getStandardDeduction(
+        inputs.filingStatus,
         TAX_BASE_YEAR + year,
-        inputs.filingStatus
+        inputs.inflationRate
       ),
-      brackets: getTaxBrackets(TAX_BASE_YEAR + year, inputs.filingStatus),
+      brackets: getTaxBrackets(
+        inputs.filingStatus,
+        TAX_BASE_YEAR + year,
+        inputs.inflationRate
+      ),
       precision: 0.01, // Precision for binary search convergence
     };
 
@@ -1117,14 +1168,16 @@ function calculateRetirementYearData(
   taxesThisYear = calculateFederalTax(
     totalGrossTaxableIncome,
     inputs.filingStatus,
-    retirementYear
+    TAX_BASE_YEAR + retirementYear,
+    inputs.inflationRate
   );
 
   // Also calculate the taxable income after deduction for display purposes
   const totalTaxableIncomeAfterDeduction = calculateTaxableIncome(
     totalGrossTaxableIncome,
     inputs.filingStatus,
-    retirementYear
+    TAX_BASE_YEAR + retirementYear,
+    inputs.inflationRate
   );
 
   // Calculate net income and handle overage BEFORE growing balances
@@ -1305,7 +1358,8 @@ function calculateRetirementYearData(
   const taxableIncomeAfterDeduction = calculateTaxableIncome(
     grossTaxableIncome,
     inputs.filingStatus,
-    retirementYear
+    TAX_BASE_YEAR + retirementYear,
+    inputs.inflationRate
   );
 
   // Effective tax rate should be based on TOTAL taxes vs taxable income
@@ -1326,8 +1380,9 @@ function calculateRetirementYearData(
 
   // Calculate standard deduction for this year
   const standardDeduction = getStandardDeduction(
-    retirementYear,
-    inputs.filingStatus
+    inputs.filingStatus,
+    TAX_BASE_YEAR + retirementYear,
+    inputs.inflationRate
   );
 
   // Update all the final values in the result object

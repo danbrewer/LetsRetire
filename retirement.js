@@ -62,19 +62,29 @@ function determineTaxablePortionOfSocialSecurity(ssGross, otherIncome) {
     provisionalIncome: 0,
   };
 
-  const provisionalIncome = otherIncome + 0.5 * ssGross;
+  // Ensure inputs are valid numbers to prevent NaN propagation
+  const safeSSGross = isNaN(ssGross) ? 0 : ssGross;
+  const safeOtherIncome = isNaN(otherIncome) ? 0 : otherIncome;
+
+  if (safeSSGross !== ssGross || safeOtherIncome !== otherIncome) {
+    log.warn(
+      `determineTaxablePortionOfSocialSecurity received NaN values: ssGross=${ssGross}, otherIncome=${otherIncome}. Using safe values: ssGross=${safeSSGross}, otherIncome=${safeOtherIncome}`
+    );
+  }
+
+  const provisionalIncome = safeOtherIncome + 0.5 * safeSSGross;
   result.provisionalIncome = provisionalIncome;
 
   let taxableSSAmount = 0;
   //   log.info("*** Social Security Benefits Taxation ***");
-  log.info(`Social Security Income: $${ssGross.round(2)}`);
+  log.info(`Social Security Income: $${safeSSGross.round(2)}`);
   log.info(`. Provisional income is defined as 1/2 SS  + Other Taxable Income`);
-  log.info(`. 1/2 of SS: $${(0.5 * ssGross).round(2)}`);
-  log.info(`. Other Taxable Income: $${otherIncome.round(2)}`);
+  log.info(`. 1/2 of SS: $${(0.5 * safeSSGross).round(2)}`);
+  log.info(`. Other Taxable Income: $${safeOtherIncome.round(2)}`);
   log.info(
     `. Provisional Income is $${provisionalIncome.round(
       2
-    )} ($${otherIncome.round(2)} + $${(0.5 * ssGross).round(2)})`
+    )} ($${safeOtherIncome.round(2)} + $${(0.5 * safeSSGross).round(2)})`
   );
 
   const base1 = 32000;
@@ -98,7 +108,7 @@ function determineTaxablePortionOfSocialSecurity(ssGross, otherIncome) {
       )}.`
     );
     log.info(`. Taxable SS amount is the lesser of:`);
-    log.info(`   50% of SS benefit ($${(0.5 * ssGross).round(2)})`);
+    log.info(`   50% of SS benefit ($${(0.5 * safeSSGross).round(2)})`);
     log.info(`     -- or --`);
     log.info(
       `   50% of the amount over the Tier1 threshold ($${(
@@ -107,12 +117,12 @@ function determineTaxablePortionOfSocialSecurity(ssGross, otherIncome) {
     );
     log.info(
       `Amount of SS that is taxable is $${Math.min(
-        0.5 * ssGross,
+        0.5 * safeSSGross,
         0.5 * amountInExcessOfBase
       ).round(2)}.`
     );
 
-    taxableSSAmount = Math.min(0.5 * ssGross, 0.5 * amountInExcessOfBase);
+    taxableSSAmount = Math.min(0.5 * safeSSGross, 0.5 * amountInExcessOfBase);
 
     result.taxableSSAmount = taxableSSAmount;
     return result;
@@ -128,7 +138,7 @@ function determineTaxablePortionOfSocialSecurity(ssGross, otherIncome) {
     )}`
   );
   log.info(`. Taxable amount of SS is the lesser of:`);
-  log.info(`    85% of total SS benefit ($${(0.85 * ssGross).round(2)})`);
+  log.info(`    85% of total SS benefit ($${(0.85 * safeSSGross).round(2)})`);
   log.info(`     -- or ---`);
   log.info(
     `    50% of excess over Tier 1 ($6000) + 85% of the excess over Tier 2 ($${(
@@ -136,7 +146,7 @@ function determineTaxablePortionOfSocialSecurity(ssGross, otherIncome) {
     ).round(2)}).`
   );
   taxableSSAmount = Math.min(
-    0.85 * ssGross,
+    0.85 * safeSSGross,
     0.5 * (base2 - base1) + 0.85 * excessOverBase2
   );
   log.info(`Amount of SS that is taxable is $${taxableSSAmount.round(2)}.`);
@@ -315,15 +325,19 @@ const TAX_TABLES_2025 = {
 };
 
 function getTaxBrackets(filingStatus, year, inflationRate) {
+  // The year passed is the actual tax year (e.g., 2025, 2026, 2052, etc.)
+  // The adjustedForInflation expects years from the base (2025)
+  const yearsFromBase = year - 2025;
+
   if (filingStatus === FILING_STATUS.MARRIED_FILING_JOINTLY) {
     return TAX_TABLES_2025.mfj.map((bracket) => ({
       rate: bracket.rate,
-      upTo: bracket.upTo.adjustedForInflation(inflationRate, year),
+      upTo: bracket.upTo.adjustedForInflation(inflationRate, yearsFromBase),
     }));
   } else {
     return TAX_TABLES_2025.single.map((bracket) => ({
       rate: bracket.rate,
-      upTo: bracket.upTo.adjustedForInflation(inflationRate, year),
+      upTo: bracket.upTo.adjustedForInflation(inflationRate, yearsFromBase),
     }));
   }
 }
@@ -339,16 +353,68 @@ const FILING_STATUS = {
 };
 
 function getStandardDeduction(filingStatus, year, inflationRate) {
-  if (filingStatus === FILING_STATUS.MARRIED_FILING_JOINTLY) {
-    return STANDARD_DEDUCTION_2025.mfj.adjustedForInflation(
-      inflationRate,
-      year
+  // Handle potential parameter order issues or missing parameters
+  let correctedFilingStatus = filingStatus;
+  let correctedYear = year;
+  let correctedInflationRate = inflationRate;
+
+  // If parameters seem to be in wrong order, try to auto-correct
+  if (typeof filingStatus === "number" && typeof year === "string") {
+    log.warn("Parameter order appears incorrect. Auto-correcting.");
+    correctedFilingStatus = year;
+    correctedYear = filingStatus;
+  }
+
+  // Provide defaults for missing parameters
+  if (correctedInflationRate === undefined || correctedInflationRate === null) {
+    correctedInflationRate = 0.025; // Default 2.5% inflation
+    log.warn(
+      `Missing inflationRate parameter. Using default: ${correctedInflationRate}`
     );
+  }
+
+  if (!correctedFilingStatus) {
+    correctedFilingStatus = FILING_STATUS.SINGLE;
+    log.warn(
+      `Missing filingStatus parameter. Using default: ${correctedFilingStatus}`
+    );
+  }
+
+  if (correctedYear === undefined || correctedYear === null) {
+    correctedYear = 2025;
+    log.warn(`Missing year parameter. Using default: ${correctedYear}`);
+  }
+
+  // The year passed should be the actual tax year (e.g., 2025, 2026, 2052, etc.)
+  // The adjustedForInflation expects years from the base (2025)
+  const yearsFromBase = correctedYear - 2025;
+
+  if (correctedFilingStatus === FILING_STATUS.MARRIED_FILING_JOINTLY) {
+    const baseAmount = STANDARD_DEDUCTION_2025.mfj;
+    const adjusted = baseAmount.adjustedForInflation(
+      correctedInflationRate,
+      yearsFromBase
+    );
+    if (isNaN(adjusted)) {
+      log.error(
+        `Standard deduction calculation resulted in NaN: base=${baseAmount}, yearsFromBase=${yearsFromBase}, inflationRate=${correctedInflationRate}`
+      );
+      return 0;
+    }
+    return adjusted;
   } else {
-    return STANDARD_DEDUCTION_2025.single.adjustedForInflation(
-      inflationRate,
-      year
+    const baseAmount = STANDARD_DEDUCTION_2025.single;
+    const adjusted = baseAmount.adjustedForInflation(
+      correctedInflationRate,
+      yearsFromBase
     );
+    if (isNaN(adjusted)) {
+      log.error(
+        `Standard deduction calculation resulted in NaN: base=${baseAmount}, yearsFromBase=${yearsFromBase}, inflationRate=${correctedInflationRate}`
+      );
+      return 0;
+    }
+    return adjusted;
   }
 }
 

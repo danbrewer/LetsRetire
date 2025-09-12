@@ -312,7 +312,15 @@ function showTaxableIncomeBreakdown(yearIndex) {
 
   // Use inflation-adjusted standard deduction for the calculation year
   const calculationYear = TAX_BASE_YEAR + yearIndex;
-  const standardDeduction = getStandardDeduction(calculationYear, filingStatus);
+  const inflationElement = document.getElementById("inflation");
+  const inflationRate = inflationElement
+    ? parseFloat(inflationElement.value) / 100
+    : 0.025;
+  const standardDeduction = getStandardDeduction(
+    filingStatus,
+    calculationYear,
+    inflationRate
+  );
 
   breakdownHtml += `
     <div class="ss-breakdown-item">
