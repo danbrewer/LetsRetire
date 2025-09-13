@@ -1952,7 +1952,6 @@ function exportTotalNetToJson(index) {
     return;
   }
 
-  debugger;
   const data = calculations[index];
 
   // Helper function to format values (removes null/undefined, keeps numbers)
@@ -1973,7 +1972,7 @@ function exportTotalNetToJson(index) {
 
     grossIncomeSourcesBeforeTaxes: {
       socialSecurity:
-        data.ssBreakdown.ssGross > 0
+        data.ssGross > 0
           ? {
               amount: jsonFmt(data.ssGross),
               notes: "Before federal taxation",
@@ -2106,9 +2105,68 @@ function exportTotalNetToJson(index) {
           }
         : null,
     },
+
+    detailedBreakdowns: {
+      socialSecurityBreakdown:
+        data.ssBreakdown && data.ssBreakdown.ssGross > 0
+          ? {
+              grossAmount: jsonFmt(data.ssBreakdown.ssGross),
+              taxableAmount: jsonFmt(data.ssBreakdown.ssTaxableAmount),
+              nonTaxableAmount: jsonFmt(data.ssBreakdown.ssNonTaxable),
+              taxesPaid: jsonFmt(data.ssBreakdown.ssTaxes),
+              netAmount: jsonFmt(data.ss),
+              notes: "Primary Social Security benefits",
+            }
+          : null,
+
+      spouseSocialSecurityBreakdown:
+        data.spouseSsBreakdown && data.spouseSsBreakdown.ssGross > 0
+          ? {
+              grossAmount: jsonFmt(data.spouseSsBreakdown.ssGross),
+              taxableAmount: jsonFmt(data.spouseSsBreakdown.ssTaxableAmount),
+              nonTaxableAmount: jsonFmt(data.spouseSsBreakdown.ssNonTaxable),
+              taxesPaid: jsonFmt(data.spouseSsBreakdown.ssTaxes),
+              netAmount: jsonFmt(data.spouseSs),
+              notes: "Spouse Social Security benefits",
+            }
+          : null,
+
+      pensionBreakdown:
+        data.pensionBreakdown && data.pensionBreakdown.penGross > 0
+          ? {
+              grossAmount: jsonFmt(data.pensionBreakdown.penGross),
+              taxableAmount: jsonFmt(data.pensionBreakdown.penTaxableAmount),
+              nonTaxableAmount: jsonFmt(data.pensionBreakdown.penNonTaxable),
+              taxesPaid: jsonFmt(data.pensionBreakdown.penTaxes),
+              netAmount: jsonFmt(data.pen),
+              taxRate: parseFloat(
+                (data.pensionBreakdown.pensionTaxRate * 100).toFixed(1)
+              ),
+              notes: "Primary pension income",
+            }
+          : null,
+
+      spousePensionBreakdown:
+        data.spousePensionBreakdown && data.spousePensionBreakdown.penGross > 0
+          ? {
+              grossAmount: jsonFmt(data.spousePensionBreakdown.penGross),
+              taxableAmount: jsonFmt(
+                data.spousePensionBreakdown.penTaxableAmount
+              ),
+              nonTaxableAmount: jsonFmt(
+                data.spousePensionBreakdown.penNonTaxable
+              ),
+              taxesPaid: jsonFmt(data.spousePensionBreakdown.penTaxes),
+              netAmount: jsonFmt(data.spousePen),
+              taxRate: parseFloat(
+                (data.spousePensionBreakdown.pensionTaxRate * 100).toFixed(1)
+              ),
+              notes: "Spouse pension income",
+            }
+          : null,
+    },
   };
 
-  debugger;
   // Add withdrawal breakdown if applicable
   if (data.withdrawalBreakdown && data.withdrawalBreakdown.totalNet > 0) {
     exportData.withdrawalBreakdown = {

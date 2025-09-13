@@ -237,6 +237,9 @@ function calculateWorkingYearData(inputs, year, salary, balances) {
     total: 0,
     savingsBreakdown: {},
     ssBreakdown: {},
+    spouseSsBreakdown: {},
+    pensionBreakdown: {},
+    spousePensionBreakdown: {},
   };
 
   const age = inputs.currentAge + year;
@@ -397,6 +400,29 @@ function calculateWorkingYearData(inputs, year, salary, balances) {
     ssTaxes: 0,
   };
 
+  result.spouseSsBreakdown = {
+    ssGross: 0,
+    ssTaxableAmount: 0,
+    ssNonTaxable: 0,
+    ssTaxes: 0,
+  };
+
+  result.pensionBreakdown = {
+    penGross: 0,
+    penTaxableAmount: 0,
+    penNonTaxable: 0,
+    penTaxes: 0,
+    pensionTaxRate: 0,
+  };
+
+  result.spousePensionBreakdown = {
+    penGross: 0,
+    penTaxableAmount: 0,
+    penNonTaxable: 0,
+    penTaxes: 0,
+    pensionTaxRate: 0,
+  };
+
   return result;
 }
 
@@ -547,7 +573,7 @@ function createWithdrawalFunctions(
         );
       }
 
-      debugger;
+      // debugger;
       const opts = {
         otherTaxableIncome: otherTaxableIncomeValue,
         ssBenefit: ssBenefits, // Include Social Security benefits in tax calculation
@@ -730,6 +756,9 @@ function calculateRetirementYearData(
     savingsBreakdown: {},
     withdrawalBreakdown: {},
     ssBreakdown: {},
+    spouseSsBreakdown: {},
+    pensionBreakdown: {},
+    spousePensionBreakdown: {},
   };
 
   // debugger;
@@ -909,7 +938,7 @@ function calculateRetirementYearData(
   const withdrawalsBySource = withdrawalFunctions.getWithdrawalsBySource();
   let taxCalculation = withdrawalFunctions.getLastTaxCalculation();
 
-  debugger;
+  // debugger;
   // If no withdrawals were made, we still need to calculate taxes on pension/SS income
   if (
     !taxCalculation &&
@@ -1230,13 +1259,55 @@ function calculateRetirementYearData(
 
   result.ssBreakdown = {
     ssGross: ssGross,
-    ssTaxableAmount: totalSsTaxable,
+    ssTaxableAmount:
+      totalSsTaxable * (ssGross / (ssGross + spouse.ssGross || 1)),
     ssNonTaxable: ssNonTaxable,
-    ssTaxes: ssTaxAllocated,
+    ssTaxes: ssTaxAllocated * (ssGross / (ssGross + spouse.ssGross || 1)),
     calculationDetails: null, // Would need to extract from retirement.js if needed
     otherTaxableIncome: taxCalculation
       ? taxCalculation.totalTaxableIncome || 0
       : 0,
+  };
+
+  result.spouseSsBreakdown = {
+    ssGross: spouse.ssGross,
+    ssTaxableAmount:
+      totalSsTaxable * (spouse.ssGross / (ssGross + spouse.ssGross || 1)),
+    ssNonTaxable: spouseSsNonTaxable,
+    ssTaxes:
+      ssTaxAllocated * (spouse.ssGross / (ssGross + spouse.ssGross || 1)),
+    calculationDetails: null, // Would need to extract from retirement.js if needed
+    otherTaxableIncome: taxCalculation
+      ? taxCalculation.totalTaxableIncome || 0
+      : 0,
+  };
+
+  result.pensionBreakdown = {
+    penGross: penGross,
+    penTaxableAmount: penGross, // Pensions are typically fully taxable
+    penNonTaxable: penResults.penNonTaxable || 0,
+    penTaxes: penTaxAllocated * (penGross / (penGross + spouse.penGross || 1)),
+    calculationDetails: null,
+    pensionTaxRate:
+      penGross > 0
+        ? (penTaxAllocated * (penGross / (penGross + spouse.penGross || 1))) /
+          penGross
+        : 0,
+  };
+
+  result.spousePensionBreakdown = {
+    penGross: spouse.penGross,
+    penTaxableAmount: spouse.penGross, // Pensions are typically fully taxable
+    penNonTaxable: spousePenResults.penNonTaxable || 0,
+    penTaxes:
+      penTaxAllocated * (spouse.penGross / (penGross + spouse.penGross || 1)),
+    calculationDetails: null,
+    pensionTaxRate:
+      spouse.penGross > 0
+        ? (penTaxAllocated *
+            (spouse.penGross / (penGross + spouse.penGross || 1))) /
+          spouse.penGross
+        : 0,
   };
 
   return result;
