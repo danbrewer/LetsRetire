@@ -1028,6 +1028,28 @@ function showTotalNetBreakdown(index) {
         ssPopup.dataset.originalTitle = "Social Security Breakdown";
       }
 
+      // Add Export button to SS popup when used for Total Net breakdown
+      let exportBtn = ssPopup.querySelector(".export-btn");
+      if (!exportBtn) {
+        exportBtn = document.createElement("button");
+        exportBtn.className = "export-btn";
+        exportBtn.textContent = "Export JSON";
+        exportBtn.onclick = () => exportTotalNetToJson(index);
+
+        const popupHeaderDiv = ssPopup.querySelector(".ss-popup-header");
+        const closeBtn = ssPopup.querySelector(".ss-popup-close");
+        if (popupHeaderDiv && closeBtn) {
+          popupHeaderDiv.insertBefore(exportBtn, closeBtn);
+        }
+      } else {
+        // Update the onclick for the existing button
+        exportBtn.textContent = "Export JSON";
+        exportBtn.onclick = () => exportTotalNetToJson(index);
+      }
+
+      // Store that we're in Total Net mode
+      ssPopup.dataset.isTotalNetMode = "true";
+
       // Generate full breakdown content
       ssContent.innerHTML = generateTotalNetBreakdownContent(data);
 
@@ -1047,7 +1069,10 @@ function showTotalNetBreakdown(index) {
       <div class="popup-content">
         <div class="popup-header">
           <h3>Total Net Income Breakdown - Age ${data.age}</h3>
-          <button class="close-btn" onclick="closeTotalNetPopup()">&times;</button>
+          <div class="popup-header-buttons">
+            <button class="export-btn" onclick="exportTotalNetBreakdown(${index})">Export JSON</button>
+            <button class="close-btn" onclick="closeTotalNetPopup()">&times;</button>
+          </div>
         </div>
         <div class="popup-body" id="totalNetBreakdownContent">
         </div>
@@ -1498,8 +1523,17 @@ function closeTotalNetPopup() {
       popupHeader.textContent = ssPopup.dataset.originalTitle;
     }
 
+    // Remove Export button if we added it for Total Net mode
+    if (ssPopup.dataset.isTotalNetMode === "true") {
+      const exportBtn = ssPopup.querySelector(".export-btn");
+      if (exportBtn) {
+        exportBtn.remove();
+      }
+    }
+
     // Clear the dataset markers
     delete ssPopup.dataset.originalTitle;
+    delete ssPopup.dataset.isTotalNetMode;
 
     // Close the popup using the same method as other popups
     ssPopup.classList.remove("show");
@@ -1755,3 +1789,386 @@ document.addEventListener("click", function (event) {
     }
   }
 });
+/**
+ * Export Total Net Income Breakdown to CSV
+ */
+function exportTotalNetToJson(index) {
+  if (!calculations || !calculations[index]) {
+    console.error("No calculation data available for index:", index);
+    return;
+  }
+
+  const data = calculations[index];
+
+  // Helper function to format values for CSV (removes formatting, handles nulls)
+  const csvFmt = (val) => {
+    if (val == null || val === 0) return 0;
+    return Math.round(val);
+  };
+
+  // Create CSV content
+  let csvContent = "data:text/csv;charset=utf-8,";
+
+  // Add header with age and year
+  csvContent += `Total Net Income Breakdown - Age ${data.age} (Year ${data.year})\n\n`;
+
+  // Gross Income Sources section
+  csvContent += "Gross Income Sources (Before Taxes)\n";
+  csvContent += "Source,Amount,Notes\n";
+
+  if (data.ssGross > 0) {
+    csvContent += `Social Security,${csvFmt(
+      data.ssGross
+    )},Before federal taxation\n`;
+  }
+  if (data.spouseSsGross > 0) {
+    csvContent += `Spouse Social Security,${csvFmt(
+      data.spouseSsGross
+    )},Before federal taxation\n`;
+  }
+  if (data.penGross > 0) {
+    csvContent += `Pension,${csvFmt(data.penGross)},Before federal taxation\n`;
+  }
+  if (data.spousePenGross > 0) {
+    csvContent += `Spouse Pension,${csvFmt(
+      data.spousePenGross
+    )},Before federal taxation\n`;
+  }
+  if (data.wGross > 0) {
+    csvContent += `Portfolio Withdrawals,${csvFmt(
+      data.wGross
+    )},Before taxes and penalties\n`;
+  }
+  if (data.taxableInterest > 0) {
+    csvContent += `Taxable Interest,${csvFmt(
+      data.taxableInterest
+    )},Interest income\n`;
+  }
+
+  // Calculate total gross income
+  const grossIncomeTotal =
+    (data.ssGross || 0) +
+    (data.spouseSsGross || 0) +
+    (data.penGross || 0) +
+    (data.spousePenGross || 0) +
+    (data.wGross || 0) +
+    (data.taxableInterest || 0);
+
+  csvContent += `Total Gross Income,${csvFmt(
+    grossIncomeTotal
+  )},Before all taxes\n\n`;
+
+  // Income Sources (Net After Taxes) section
+  csvContent += "Income Sources (Net After Taxes)\n";
+  csvContent += "Source,Amount,Notes\n";
+
+  if (data.ss > 0) {
+    csvContent += `Social Security,${csvFmt(data.ss)},After federal taxation\n`;
+  }
+  if (data.spouseSs > 0) {
+    csvContent += `Spouse Social Security,${csvFmt(
+      data.spouseSs
+    )},After federal taxation\n`;
+  }
+  if (data.pen > 0) {
+    csvContent += `Pension,${csvFmt(data.pen)},After federal taxation\n`;
+  }
+  if (data.spousePen > 0) {
+    csvContent += `Spouse Pension,${csvFmt(
+      data.spousePen
+    )},After federal taxation\n`;
+  }
+  if (data.wNet > 0) {
+    csvContent += `Portfolio Withdrawals,${csvFmt(
+      data.wNet
+    )},After taxes and penalties\n`;
+  }
+  if (data.nonTaxableIncome > 0) {
+    csvContent += `Non-Taxable Income,${csvFmt(
+      data.nonTaxableIncome
+    )},Tax-free income sources\n`;
+  }
+
+  csvContent += `Total Net Income,${csvFmt(
+    data.totalNetIncome
+  )},After all taxes\n\n`;
+
+  // Withdrawal Breakdown section (if applicable)
+  if (data.withdrawalBreakdown && data.wNet > 0) {
+    csvContent += "Withdrawal Breakdown\n";
+    csvContent += "Account Type,Gross Amount,Net Amount,Notes\n";
+
+    if (data.withdrawalBreakdown.pretax401kGross > 0) {
+      csvContent += `401k/403b/TSP,${csvFmt(
+        data.withdrawalBreakdown.pretax401kGross
+      )},${csvFmt(
+        data.withdrawalBreakdown.pretax401kNet
+      )},Taxable withdrawal\n`;
+    }
+    if (data.wSavingsGross > 0) {
+      csvContent += `Taxable Savings,${csvFmt(data.wSavingsGross)},${csvFmt(
+        data.wSavingsGross
+      )},Tax-free principal\n`;
+    }
+    if (data.wRothGross > 0) {
+      csvContent += `Roth IRA,${csvFmt(data.wRothGross)},${csvFmt(
+        data.wRothGross
+      )},Tax-free withdrawal\n`;
+    }
+
+    csvContent += `Total Withdrawals,${csvFmt(data.wGross)},${csvFmt(
+      data.wNet
+    )},Combined portfolio withdrawals\n\n`;
+  }
+
+  // Tax Summary
+  csvContent += "Tax Summary\n";
+  csvContent += "Item,Amount,Notes\n";
+  csvContent += `Total Federal Taxes,${csvFmt(
+    data.taxes
+  )},All federal taxes owed\n`;
+  csvContent += `Taxable Income,${csvFmt(
+    data.taxableIncome
+  )},Income subject to federal tax\n`;
+
+  // Create and trigger download
+  const encodedUri = encodeURI(csvContent);
+  const link = document.createElement("a");
+  link.setAttribute("href", encodedUri);
+  link.setAttribute(
+    "download",
+    `retirement_breakdown_age_${data.age}_year_${data.year}.csv`
+  );
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+/**
+ * Export Total Net Income Breakdown to JSON
+ */
+function exportTotalNetToJson(index) {
+  if (!calculations || !calculations[index]) {
+    console.error("No calculation data available for index:", index);
+    return;
+  }
+
+  debugger;
+  const data = calculations[index];
+
+  // Helper function to format values (removes null/undefined, keeps numbers)
+  const jsonFmt = (val) => {
+    if (val == null || val === 0) return 0;
+    return Math.round(val);
+  };
+
+  // Create JSON structure
+  const exportData = {
+    metadata: {
+      title: "Total Net Income Breakdown",
+      age: data.age,
+      year: data.year,
+      exportDate: new Date().toISOString(),
+      calculator: "Retirement Calculator v1.0",
+    },
+
+    grossIncomeSourcesBeforeTaxes: {
+      socialSecurity:
+        data.ssBreakdown.ssGross > 0
+          ? {
+              amount: jsonFmt(data.ssGross),
+              notes: "Before federal taxation",
+            }
+          : null,
+
+      spouseSocialSecurity:
+        data.spouseSsGross > 0
+          ? {
+              amount: jsonFmt(data.spouseSsGross),
+              notes: "Before federal taxation",
+            }
+          : null,
+
+      pension:
+        data.penGross > 0
+          ? {
+              amount: jsonFmt(data.penGross),
+              notes: "Before federal taxation",
+            }
+          : null,
+
+      spousePension:
+        data.spousePenGross > 0
+          ? {
+              amount: jsonFmt(data.spousePenGross),
+              notes: "Before federal taxation",
+            }
+          : null,
+
+      taxablePortfolioWithdrawals:
+        data.wGross > 0
+          ? {
+              amount: jsonFmt(data.wGross),
+              notes: "Before taxes and penalties",
+            }
+          : null,
+
+      taxableInterest:
+        data.taxableInterest > 0
+          ? {
+              amount: jsonFmt(data.taxableInterest),
+              notes: "Interest income",
+            }
+          : null,
+
+      total: {
+        amount: jsonFmt(
+          (data.ssGross || 0) +
+            (data.spouseSsGross || 0) +
+            (data.penGross || 0) +
+            (data.spousePenGross || 0) +
+            (data.wGross || 0) +
+            (data.taxableInterest || 0)
+        ),
+        notes: "Gross income before adjustments",
+      },
+    },
+
+    incomeSourcesNetAfterTaxes: {
+      socialSecurity:
+        data.ss > 0
+          ? {
+              amount: jsonFmt(data.ss),
+              notes: "After federal taxation",
+            }
+          : null,
+
+      spouseSocialSecurity:
+        data.spouseSs > 0
+          ? {
+              amount: jsonFmt(data.spouseSs),
+              notes: "After federal taxation",
+            }
+          : null,
+
+      pension:
+        data.pen > 0
+          ? {
+              amount: jsonFmt(data.pen),
+              notes: "After federal taxation",
+            }
+          : null,
+
+      spousePension:
+        data.spousePen > 0
+          ? {
+              amount: jsonFmt(data.spousePen),
+              notes: "After federal taxation",
+            }
+          : null,
+
+      taxablePortfolioWithdrawals:
+        data.wNet > 0
+          ? {
+              amount: jsonFmt(data.wNet),
+              notes: "After taxes and penalties",
+            }
+          : null,
+
+      // nonTaxableIncome:
+      //   data.nonTaxableIncome > 0
+      //     ? {
+      //         amount: jsonFmt(data.nonTaxableIncome),
+      //         notes: "Tax-free income sources",
+      //       }
+      //     : null,
+
+      total: {
+        amount: jsonFmt(data.totalNetIncome),
+        notes: "After all taxes",
+      },
+    },
+
+    withdrawalBreakdown: null,
+
+    taxSummary: {
+      totalFederalTaxes: {
+        amount: jsonFmt(data.taxes),
+        notes: "All federal taxes owed",
+      },
+      taxableIncome: {
+        amount: jsonFmt(data.taxableIncome),
+        notes: "Income subject to federal tax",
+      },
+      effectiveTaxRate: data.effectiveTaxRate
+        ? {
+            percentage: parseFloat(data.effectiveTaxRate.toFixed(1)),
+            notes: "Total taxes divided by taxable income",
+          }
+        : null,
+    },
+  };
+
+  debugger;
+  // Add withdrawal breakdown if applicable
+  if (data.withdrawalBreakdown && data.withdrawalBreakdown.totalNet > 0) {
+    exportData.withdrawalBreakdown = {
+      taxablePortfolioWithdrawals:
+        data.withdrawalBreakdown.pretax401kGross > 0
+          ? {
+              grossAmount: jsonFmt(data.withdrawalBreakdown.pretax401kGross),
+              netAmount: jsonFmt(data.withdrawalBreakdown.pretax401kNet),
+              notes: "Taxable withdrawal",
+            }
+          : null,
+
+      savings:
+        data.withdrawalBreakdown.savingsNet > 0
+          ? {
+              amount: jsonFmt(data.withdrawalBreakdown.savingsNet),
+              notes: "Tax-free savings",
+            }
+          : null,
+
+      rothIRA:
+        data.withdrawalBreakdown.rothGross > 0
+          ? {
+              gross: jsonFmt(data.withdrawalBreakdown.rothGross),
+              net: jsonFmt(data.withdrawalBreakdown.rothNet),
+              notes: "Tax-free withdrawal",
+            }
+          : null,
+
+      total: {
+        grossAmount: jsonFmt(data.withdrawalBreakdown.totalGross),
+        netAmount: jsonFmt(data.withdrawalBreakdown.totalNet),
+        notes: "Combined portfolio withdrawals",
+      },
+    };
+  }
+
+  // Remove null values for cleaner JSON
+  const cleanData = JSON.parse(
+    JSON.stringify(exportData, (key, value) => {
+      if (value === null) return undefined;
+      return value;
+    })
+  );
+
+  // Create and trigger download
+  const jsonString = JSON.stringify(cleanData, null, 2);
+  const blob = new Blob([jsonString], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+
+  const link = document.createElement("a");
+  link.setAttribute("href", url);
+  link.setAttribute(
+    "download",
+    `retirement_breakdown_age_${data.age}_year_${data.year}.json`
+  );
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+
+  // Clean up the URL object
+  URL.revokeObjectURL(url);
+}
