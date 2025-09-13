@@ -988,18 +988,18 @@ function calculateRetirementYearData(
 
   // Get detailed Social Security calculation results for breakdown objects
   if (ssGross > 0 || spouse.ssGross > 0) {
-    const totalOtherTaxableIncome = 
-      penGrossTotal + 
-      spousePenGrossTotal + 
-      taxableInterest + 
-      taxableAdjustment + 
+    const totalOtherTaxableIncome =
+      penGrossTotal +
+      spousePenGrossTotal +
+      taxableInterest +
+      taxableAdjustment +
       (taxCalculation ? taxCalculation.withdrawalIncome || 0 : 0);
-    
+
     const ssResult = determineTaxablePortionOfSocialSecurity(
-      ssGross + spouse.ssGross, 
+      ssGross + spouse.ssGross,
       totalOtherTaxableIncome
     );
-    
+
     ssCalculationDetails = ssResult.calculationDetails;
   }
 
