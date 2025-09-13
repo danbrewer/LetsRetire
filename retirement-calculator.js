@@ -756,9 +756,7 @@ function calculateRetirementYearData(
     savingsBreakdown: {},
     withdrawalBreakdown: {},
     ssBreakdown: {},
-    spouseSsBreakdown: {},
     pensionBreakdown: {},
-    spousePensionBreakdown: {},
   };
 
   // debugger;
@@ -1281,20 +1279,13 @@ function calculateRetirementYearData(
       totalSsTaxable * (ssGross / (ssGross + spouse.ssGross || 1)),
     ssNonTaxable: ssNonTaxable,
     ssTaxes: ssTaxAllocated * (ssGross / (ssGross + spouse.ssGross || 1)),
-    calculationDetails: ssCalculationDetails, // Detailed calculation methodology from retirement.js
-    otherTaxableIncome: taxCalculation
-      ? taxCalculation.totalTaxableIncome || 0
-      : 0,
-  };
-
-  result.spouseSsBreakdown = {
-    ssGross: spouse.ssGross,
-    ssTaxableAmount:
+    ssSpouseGross: spouse.ssGross,
+    ssSpouseTaxableAmount:
       totalSsTaxable * (spouse.ssGross / (ssGross + spouse.ssGross || 1)),
-    ssNonTaxable: spouseSsNonTaxable,
-    ssTaxes:
+    ssSpouseNonTaxable: spouseSsNonTaxable,
+    ssSpouseTaxes:
       ssTaxAllocated * (spouse.ssGross / (ssGross + spouse.ssGross || 1)),
-    calculationDetails: ssCalculationDetails, // Same calculation methodology applies to spouse
+    calculationDetails: ssCalculationDetails, // Detailed calculation methodology from retirement.js
     otherTaxableIncome: taxCalculation
       ? taxCalculation.totalTaxableIncome || 0
       : 0,
@@ -1305,28 +1296,27 @@ function calculateRetirementYearData(
     penTaxableAmount: penGross, // Pensions are typically fully taxable
     penNonTaxable: penResults.penNonTaxable || 0,
     penTaxes: penTaxAllocated * (penGross / (penGross + spouse.penGross || 1)),
-    calculationDetails: null,
     pensionTaxRate:
       penGross > 0
         ? (penTaxAllocated * (penGross / (penGross + spouse.penGross || 1))) /
           penGross
         : 0,
-  };
-
-  result.spousePensionBreakdown = {
-    penGross: spouse.penGross,
-    penTaxableAmount: spouse.penGross, // Pensions are typically fully taxable
-    penNonTaxable: spousePenResults.penNonTaxable || 0,
-    penTaxes:
+    penSpouseGross: spouse.penGross,
+    penSpouseTaxableAmount: spouse.penGross, // Pensions are typically fully taxable
+    penSpouseNonTaxable: spousePenResults.penNonTaxable || 0,
+    penSpouseTaxes:
       penTaxAllocated * (spouse.penGross / (penGross + spouse.penGross || 1)),
-    calculationDetails: null,
-    pensionTaxRate:
+    pensionSpouseTaxRate:
       spouse.penGross > 0
         ? (penTaxAllocated *
             (spouse.penGross / (penGross + spouse.penGross || 1))) /
           spouse.penGross
         : 0,
+    calculationDetails: null,
   };
+
+  // Dump the result to the console
+  console.log("Retirement Year Result:", result);
 
   return result;
 }
