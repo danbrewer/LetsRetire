@@ -281,7 +281,7 @@ function calculateWorkingYearData(inputs, year, salary, balances) {
     grossTaxableIncome,
     inputs.filingStatus,
     TAX_BASE_YEAR + year,
-    inputs.inflationRate
+    inputs.inflation
   );
 
   // // Debug tax calculation for first few years
@@ -345,7 +345,7 @@ function calculateWorkingYearData(inputs, year, salary, balances) {
     grossTaxableIncome,
     inputs.filingStatus,
     TAX_BASE_YEAR + year,
-    inputs.inflationRate
+    inputs.inflation
   );
   result.taxableInterest = taxableInterestIncome;
   result.totalIncome = totalGrossIncome + taxableInterestIncome;
@@ -356,14 +356,14 @@ function calculateWorkingYearData(inputs, year, salary, balances) {
       grossTaxableIncome,
       inputs.filingStatus,
       TAX_BASE_YEAR + year,
-      inputs.inflationRate
+      inputs.inflation
     ) > 0
       ? (workingYearTaxes /
           calculateTaxableIncome(
             grossTaxableIncome,
             inputs.filingStatus,
             TAX_BASE_YEAR + year,
-            inputs.inflationRate
+            inputs.inflation
           )) *
         100
       : 0;
@@ -371,7 +371,7 @@ function calculateWorkingYearData(inputs, year, salary, balances) {
   result.standardDeduction = getStandardDeduction(
     inputs.filingStatus,
     TAX_BASE_YEAR + year,
-    inputs.inflationRate
+    inputs.inflation
   );
   result.balSavings = balances.balSavings;
   result.balPre = balances.balPre;
@@ -547,19 +547,16 @@ function createWithdrawalFunctions(
         );
       }
 
+      debugger;
       const opts = {
         otherTaxableIncome: otherTaxableIncomeValue,
         ssBenefit: ssBenefits, // Include Social Security benefits in tax calculation
         standardDeduction: getStandardDeduction(
           inputs.filingStatus,
           year, // year is already the actual year (e.g., 2040)
-          inputs.inflationRate
+          inputs.inflation
         ),
-        brackets: getTaxBrackets(
-          inputs.filingStatus,
-          year,
-          inputs.inflationRate
-        ),
+        brackets: getTaxBrackets(inputs.filingStatus, year, inputs.inflation),
         precision: 0.01, // Precision for binary search convergence
       };
 
@@ -632,9 +629,9 @@ function createWithdrawalFunctions(
       standardDeduction: getStandardDeduction(
         inputs.filingStatus,
         year, // year is already the actual year (e.g., 2040)
-        inputs.inflationRate
+        inputs.inflation
       ),
-      brackets: getTaxBrackets(inputs.filingStatus, year, inputs.inflationRate),
+      brackets: getTaxBrackets(inputs.filingStatus, year, inputs.inflation),
       precision: 0.01, // Precision for binary search convergence
     };
 
@@ -906,6 +903,7 @@ function calculateRetirementYearData(
   const withdrawalsBySource = withdrawalFunctions.getWithdrawalsBySource();
   let taxCalculation = withdrawalFunctions.getLastTaxCalculation();
 
+  debugger;
   // If no withdrawals were made, we still need to calculate taxes on pension/SS income
   if (
     !taxCalculation &&
@@ -924,12 +922,12 @@ function calculateRetirementYearData(
       standardDeduction: getStandardDeduction(
         inputs.filingStatus,
         retirementYear,
-        inputs.inflationRate
+        inputs.inflation
       ),
       brackets: getTaxBrackets(
         inputs.filingStatus,
         retirementYear,
-        inputs.inflationRate
+        inputs.inflation
       ),
       precision: 0.01, // Precision for binary search convergence
     };
@@ -1145,7 +1143,7 @@ function calculateRetirementYearData(
   const standardDeduction = getStandardDeduction(
     inputs.filingStatus,
     retirementYear, // retirementYear is already the actual year (e.g., 2040)
-    inputs.inflationRate
+    inputs.inflation
   );
 
   // Update all the final values in the result object

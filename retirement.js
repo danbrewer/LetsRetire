@@ -217,6 +217,7 @@ function calculateNetWhen401kIncomeIs(guestimateFor401k, opts) {
   log.info(`Standard deduction is $${standardDeduction.round(2)}.`);
   log.info(`Actual taxable income is $${taxableIncome.round(2)}.`);
 
+  debugger;
   const tax = determineTaxUsingBrackets(taxableIncome, brackets, opts);
 
   log.info(

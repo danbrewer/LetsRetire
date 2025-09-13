@@ -2067,7 +2067,11 @@ function parseInputParameters() {
     inputs.spendingToday *
     compoundedRate(inputs.inflation, inputs.totalWorkingYears);
 
-  return validateInputs(inputs) ? inputs : null;
+  if (!validateInputs(inputs)) {
+    return null;
+  }
+
+  return inputs;
 }
 
 /**
