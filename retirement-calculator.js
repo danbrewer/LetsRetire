@@ -834,9 +834,15 @@ function calculateRetirementYearData(
   // retirement.js functions handle the complete tax calculation including SS
   const totalBenefitGross =
     penGross + spouse.penGross + ssGross + spouse.ssGross;
-  const baseSpendNeed = Math.max(0, spend - 0); // We'll let withdrawal functions handle all income
+  const baseSpendNeed = Math.max(0, spend - totalBenefitGross); // Subtract benefits from spending need
   const additionalSpendNeed = additionalSpending || 0;
   const totalNeedNet = baseSpendNeed + additionalSpendNeed;
+
+  console.log("Age", age, "Spending Need Debug:");
+  console.log("- spend:", spend);
+  console.log("- totalBenefitGross:", totalBenefitGross);
+  console.log("- baseSpendNeed:", baseSpendNeed);
+  console.log("- totalNeedNet:", totalNeedNet);
 
   // Build complete income picture for withdrawal functions
   const completeIncomeForWithdrawals = {
@@ -980,6 +986,12 @@ function calculateRetirementYearData(
   const totalNetIncome =
     netIncomeFromTaxableSources + additionalSavingsWithdrawal;
 
+  console.log("Age", age, "Net Income Debug:");
+  console.log("- netIncomeFromTaxableSources:", netIncomeFromTaxableSources);
+  console.log("- additionalSavingsWithdrawal:", additionalSavingsWithdrawal);
+  console.log("- totalNetIncome:", totalNetIncome);
+  console.log("- spendingTarget:", spendingTarget);
+
   // Update final withdrawal amounts to include any additional savings withdrawal
   const totalWithdrawals = finalWGross + additionalSavingsWithdrawal;
 
@@ -1060,6 +1072,17 @@ function calculateRetirementYearData(
     totalGross: finalWGrossTotal,
     totalNet: finalWNetTotal,
   };
+
+  console.log("Age", age, "Withdrawal Debug:");
+  console.log(
+    "- withdrawalsBySource.savingsAccount:",
+    withdrawalsBySource.savingsAccount
+  );
+  console.log(
+    "- withdrawalBreakdown.savingsNet:",
+    withdrawalBreakdown.savingsNet
+  );
+  console.log("- withdrawalBreakdown.totalNet:", withdrawalBreakdown.totalNet);
 
   // For tax allocation display purposes
   const ssTaxAllocated =
