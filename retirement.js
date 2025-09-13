@@ -107,7 +107,6 @@ function determineTaxablePortionOfSocialSecurity(ssGross, otherIncome) {
         2
       )}.`
     );
-    log.info(`. Taxable SS amount is the lesser of:`);
     log.info(`   50% of SS benefit ($${(0.5 * safeSSGross).round(2)})`);
     log.info(`     -- or --`);
     log.info(

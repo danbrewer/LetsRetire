@@ -744,9 +744,9 @@ function calculateRetirementYearData(
   result.contrib = 0;
 
   console.log(
-    `\n--- Retirement Year ${
+    `-----------------------------------------------\n--- Retirement Year ${
       yearIndex + 1
-    } (Age ${age}) (Year ${retirementYear}) ---`
+    } (Age ${age}) (Year ${retirementYear}) ---\n-----------------------------------------------`
   );
 
   // Income sources (gross amounts)
