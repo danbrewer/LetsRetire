@@ -976,6 +976,7 @@ function calculateRetirementYearData(
   let totalTaxableIncomeAfterDeduction = 0;
   let totalSsTaxable = 0;
   let provisionalIncome = 0;
+  let ssCalculationDetails = null;
 
   if (taxCalculation) {
     taxesThisYear = taxCalculation.tax || 0;
@@ -983,6 +984,23 @@ function calculateRetirementYearData(
     totalSsTaxable = taxCalculation.taxableSSAmt || 0;
     // Note: retirement.js doesn't currently return provisional income, so we'll need to calculate it
     // or add it to the return values in retirement.js
+  }
+
+  // Get detailed Social Security calculation results for breakdown objects
+  if (ssGross > 0 || spouse.ssGross > 0) {
+    const totalOtherTaxableIncome = 
+      penGrossTotal + 
+      spousePenGrossTotal + 
+      taxableInterest + 
+      taxableAdjustment + 
+      (taxCalculation ? taxCalculation.withdrawalIncome || 0 : 0);
+    
+    const ssResult = determineTaxablePortionOfSocialSecurity(
+      ssGross + spouse.ssGross, 
+      totalOtherTaxableIncome
+    );
+    
+    ssCalculationDetails = ssResult.calculationDetails;
   }
 
   // For Social Security breakdown, we still need some manual calculation since we need separate spouse results
@@ -1263,7 +1281,7 @@ function calculateRetirementYearData(
       totalSsTaxable * (ssGross / (ssGross + spouse.ssGross || 1)),
     ssNonTaxable: ssNonTaxable,
     ssTaxes: ssTaxAllocated * (ssGross / (ssGross + spouse.ssGross || 1)),
-    calculationDetails: null, // Would need to extract from retirement.js if needed
+    calculationDetails: ssCalculationDetails, // Detailed calculation methodology from retirement.js
     otherTaxableIncome: taxCalculation
       ? taxCalculation.totalTaxableIncome || 0
       : 0,
@@ -1276,7 +1294,7 @@ function calculateRetirementYearData(
     ssNonTaxable: spouseSsNonTaxable,
     ssTaxes:
       ssTaxAllocated * (spouse.ssGross / (ssGross + spouse.ssGross || 1)),
-    calculationDetails: null, // Would need to extract from retirement.js if needed
+    calculationDetails: ssCalculationDetails, // Same calculation methodology applies to spouse
     otherTaxableIncome: taxCalculation
       ? taxCalculation.totalTaxableIncome || 0
       : 0,

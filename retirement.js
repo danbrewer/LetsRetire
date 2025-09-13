@@ -60,6 +60,18 @@ function determineTaxablePortionOfSocialSecurity(ssGross, otherIncome) {
   const result = {
     taxableSSAmount: 0,
     provisionalIncome: 0,
+    calculationDetails: {
+      method: "irs-rules",
+      threshold1: 32000,
+      threshold2: 44000,
+      otherTaxableIncome: 0,
+      halfSSBenefit: 0,
+      excessIncome1: 0,
+      excessIncome2: 0,
+      tier1Amount: 0,
+      tier2Amount: 0,
+      effectiveRate: 0,
+    },
   };
 
   // Ensure inputs are valid numbers to prevent NaN propagation
@@ -74,6 +86,10 @@ function determineTaxablePortionOfSocialSecurity(ssGross, otherIncome) {
 
   const provisionalIncome = safeOtherIncome + 0.5 * safeSSGross;
   result.provisionalIncome = provisionalIncome;
+  
+  // Update calculation details
+  result.calculationDetails.otherTaxableIncome = safeOtherIncome;
+  result.calculationDetails.halfSSBenefit = 0.5 * safeSSGross;
 
   let taxableSSAmount = 0;
   //   log.info("*** Social Security Benefits Taxation ***");
@@ -97,11 +113,14 @@ function determineTaxablePortionOfSocialSecurity(ssGross, otherIncome) {
       `. Provisional income is below Tier 1 ($${base1}). No Social Security benefits are taxable.`
     );
     result.taxableSSAmount = taxableSSAmount;
+    result.calculationDetails.effectiveRate = 0;
     return result;
   }
 
   if (provisionalIncome <= base2) {
-    let amountInExcessOfBase = 0.5 * (provisionalIncome - base1);
+    let amountInExcessOfBase = provisionalIncome - base1;
+    let tier1TaxableAmount = 0.5 * amountInExcessOfBase;
+    
     log.info(
       `. Provisional income exceeds Tier 1 ($${base1}) by $${amountInExcessOfBase.round(
         2
@@ -110,18 +129,19 @@ function determineTaxablePortionOfSocialSecurity(ssGross, otherIncome) {
     log.info(`   50% of SS benefit ($${(0.5 * safeSSGross).round(2)})`);
     log.info(`     -- or --`);
     log.info(
-      `   50% of the amount over the Tier1 threshold ($${(
-        0.5 * amountInExcessOfBase
-      ).round(2)}).`
+      `   50% of the amount over the Tier1 threshold ($${tier1TaxableAmount.round(2)}).`
     );
+    
+    taxableSSAmount = Math.min(0.5 * safeSSGross, tier1TaxableAmount);
+    
     log.info(
-      `Amount of SS that is taxable is $${Math.min(
-        0.5 * safeSSGross,
-        0.5 * amountInExcessOfBase
-      ).round(2)}.`
+      `Amount of SS that is taxable is $${taxableSSAmount.round(2)}.`
     );
 
-    taxableSSAmount = Math.min(0.5 * safeSSGross, 0.5 * amountInExcessOfBase);
+    // Update calculation details
+    result.calculationDetails.excessIncome1 = amountInExcessOfBase;
+    result.calculationDetails.tier1Amount = taxableSSAmount;
+    result.calculationDetails.effectiveRate = safeSSGross > 0 ? (taxableSSAmount / safeSSGross) : 0;
 
     result.taxableSSAmount = taxableSSAmount;
     return result;
@@ -144,11 +164,22 @@ function determineTaxablePortionOfSocialSecurity(ssGross, otherIncome) {
       0.85 * excessOverBase2
     ).round(2)}).`
   );
+  
+  let tier1Max = 0.5 * (base2 - base1);
+  let tier2TaxableAmount = 0.85 * excessOverBase2;
+  
   taxableSSAmount = Math.min(
     0.85 * safeSSGross,
-    0.5 * (base2 - base1) + 0.85 * excessOverBase2
+    tier1Max + tier2TaxableAmount
   );
   log.info(`Amount of SS that is taxable is $${taxableSSAmount.round(2)}.`);
+
+  // Update calculation details
+  result.calculationDetails.excessIncome1 = base2 - base1;
+  result.calculationDetails.excessIncome2 = excessOverBase2;
+  result.calculationDetails.tier1Amount = tier1Max;
+  result.calculationDetails.tier2Amount = Math.min(0.85 * safeSSGross - tier1Max, tier2TaxableAmount);
+  result.calculationDetails.effectiveRate = safeSSGross > 0 ? (taxableSSAmount / safeSSGross) : 0;
 
   result.taxableSSAmount = taxableSSAmount;
   return result;
