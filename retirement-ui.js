@@ -2476,7 +2476,7 @@ function getSpendingOverride(age) {
     }
   }
   // console.log(`getSpendingOverride(${age}): No override (field empty or invalid)`);
-  return null; // No override specified
+  return 0; // No override specified
 }
 
 function setSpendingFieldValue(age) {

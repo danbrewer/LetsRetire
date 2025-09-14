@@ -151,8 +151,10 @@ function calculateFederalTax(
 
 // Required Minimum Distribution (RMD) calculation
 // Based on IRS Uniform Lifetime Table for 2024+
-function calculateRMD(age, accountBalance) {
-  if (age < 73 || accountBalance <= 0) return 0;
+function calculateRMD(age, balances) {
+  if (age < 73 || balances.balPre <= 0) return 0;
+
+  const accountBalances = balances.balPre;
 
   // IRS Uniform Lifetime Table (simplified version for common ages)
   const lifeFactor = {
@@ -195,7 +197,7 @@ function calculateRMD(age, accountBalance) {
     factor = Math.max(1.0, lifeFactor[100] - (age - 100) * 0.1);
   }
 
-  return accountBalance / factor;
+  return accountBalances / factor;
 }
 
 /**
@@ -500,7 +502,7 @@ function buildPensionTracker(penGross) {
 function createWithdrawalFunctions(
   inputs,
   closuredCopyOfBalances,
-  closuredCopyOfTotalTaxableIncome,
+  closuredCopyOfOtherFixedTaxableIncome,
   year = 0,
   ssBenefits = 0
 ) {
@@ -555,19 +557,19 @@ function createWithdrawalFunctions(
     }
 
     // For pretax withdrawals, use sophisticated tax calculations from retirement.js
-    let grossTake, netReceived;
+    let desiredWithdrawal, netReceived;
 
     if (kind === "pretax") {
       // Use binary search optimization from retirement.js for accurate withdrawal calculation
       // Construct the opts object that these functions expect
       // Add comprehensive NaN protection for otherTaxableIncome
       const otherTaxableIncomeValue = isNaN(
-        closuredCopyOfTotalTaxableIncome.value
+        closuredCopyOfOtherFixedTaxableIncome.value
       )
         ? 0
-        : closuredCopyOfTotalTaxableIncome.value;
+        : closuredCopyOfOtherFixedTaxableIncome.value;
 
-      if (isNaN(closuredCopyOfTotalTaxableIncome.value)) {
+      if (isNaN(closuredCopyOfOtherFixedTaxableIncome.value)) {
         console.warn(
           `[NaN Protection] otherTaxableIncome was NaN, using 0 instead`
         );
@@ -591,40 +593,41 @@ function createWithdrawalFunctions(
         opts
       );
 
-      grossTake = Math.min(
+      // Only take what is available in the account
+      desiredWithdrawal = Math.min(
         withdrawalResult.withdrawalNeeded,
         targetedAccountBalance
       );
 
       // Calculate actual net using the sophisticated tax calculation
-      const netResult = calculateNetWhen401kIncomeIs(grossTake, opts);
+      const netResult = calculateNetWhen401kIncomeIs(desiredWithdrawal, opts);
       lastTaxCalculation = netResult; // Store detailed tax calculation results
 
       netReceived = netResult.netIncome;
-      updateTargetedAccountBalance(targetedAccountBalance - grossTake);
+      updateTargetedAccountBalance(targetedAccountBalance - desiredWithdrawal);
     } else {
       // For Savings/Roth accounts, there is no tax impact; simply withdraw the desired amount
-      grossTake = Math.min(desiredNetAmount, targetedAccountBalance);
-      netReceived = grossTake;
-      updateTargetedAccountBalance(targetedAccountBalance - grossTake);
+      desiredWithdrawal = Math.min(desiredNetAmount, targetedAccountBalance);
+      netReceived = desiredWithdrawal;
+      updateTargetedAccountBalance(targetedAccountBalance - desiredWithdrawal);
     }
 
     // Track withdrawals by source
     if (kind === "pretax") {
-      withdrawalsBySource.retirementAccount += grossTake;
+      withdrawalsBySource.retirementAccount += desiredWithdrawal;
     } else if (kind === "savings") {
-      withdrawalsBySource.savingsAccount += grossTake;
+      withdrawalsBySource.savingsAccount += desiredWithdrawal;
     } else if (kind === "roth") {
-      withdrawalsBySource.roth += grossTake;
+      withdrawalsBySource.roth += desiredWithdrawal;
     }
 
     // Add pre-tax withdrawals to Taxable Income for subsequent calculations
     if (kind === "pretax") {
-      const safeGrossTake = isNaN(grossTake) ? 0 : grossTake;
-      closuredCopyOfTotalTaxableIncome.value += safeGrossTake;
+      const safeGrossTake = isNaN(desiredWithdrawal) ? 0 : desiredWithdrawal;
+      closuredCopyOfOtherFixedTaxableIncome.value += safeGrossTake;
     }
 
-    return { gross: grossTake, net: netReceived };
+    return { gross: desiredWithdrawal, net: netReceived };
   }
 
   // Special function for RMD withdrawals (gross amount based)
@@ -638,12 +641,12 @@ function createWithdrawalFunctions(
     // Construct the opts object that calculateNetWhen401kIncomeIs expects
     // Add comprehensive NaN protection for otherTaxableIncome
     const otherTaxableIncomeValue = isNaN(
-      closuredCopyOfTotalTaxableIncome.value
+      closuredCopyOfOtherFixedTaxableIncome.value
     )
       ? 0
-      : closuredCopyOfTotalTaxableIncome.value;
+      : closuredCopyOfOtherFixedTaxableIncome.value;
 
-    if (isNaN(closuredCopyOfTotalTaxableIncome.value)) {
+    if (isNaN(closuredCopyOfOtherFixedTaxableIncome.value)) {
       console.warn(
         `[NaN Protection] RMD otherTaxableIncome was NaN, using 0 instead`
       );
@@ -667,7 +670,7 @@ function createWithdrawalFunctions(
 
     closuredCopyOfBalances.balPre -= actualGross;
     const safeActualGross = isNaN(actualGross) ? 0 : actualGross;
-    closuredCopyOfTotalTaxableIncome.value += safeActualGross;
+    closuredCopyOfOtherFixedTaxableIncome.value += safeActualGross;
 
     // Track RMD withdrawals as retirement account
     withdrawalsBySource.retirementAccount += actualGross;
@@ -761,6 +764,10 @@ function calculateRetirementYearData(
 
   // debugger;
   const age = inputs.retireAge + yearIndex;
+
+  // kill the logger for now
+  LOG_LEVEL = 0;
+
   const retirementYear =
     new Date().getFullYear() + inputs.totalWorkingYears + yearIndex;
 
@@ -851,36 +858,53 @@ function calculateRetirementYearData(
     ? 0
     : taxableIncomeAdjustment;
 
-  let totalTaxableIncome = {
-    value:
-      penGrossTotal + spousePenGrossTotal + taxableInterest + taxableAdjustment,
-  };
+  // let totalTaxableIncome = {
+  //   value:
+  //     penGrossTotal + spousePenGrossTotal + taxableInterest + taxableAdjustment,
+  // };
 
   // Calculate spending need from all benefit sources
   // Since pensions are fully taxable, we use gross amounts and let the
   // retirement.js functions handle the complete tax calculation including SS
-  const totalBenefitGross =
-    penGross + spouse.penGross + ssGross + spouse.ssGross;
-  const baseSpendNeed = Math.max(0, spend - totalBenefitGross); // Subtract benefits from spending need
+
+  // Treat RMDs as a separate income source
+  let rmdAmount = 0;
+  if (inputs.useRMD && age >= 73) {
+    rmdAmount = calculateRMD(age, balances);
+    if (rmdAmount > 0) {
+      // const rmdWithdrawal = withdrawalFunctions.withdrawRMD(rmdAmount);
+      // finalWGross += rmdWithdrawal.gross;
+      // finalWNet += rmdWithdrawal.net;
+      console.log(`RMD at age ${age}: $${rmdAmount.toLocaleString()}`);
+    }
+  }
+  const totalIncomeStreamsGross =
+    penGross + spouse.penGross + ssGross + spouse.ssGross + rmdAmount;
+  // const baseSpendNeed = Math.max(0, spend - totalIncomeStreamsGross); // Subtract benefits from spending need
   const additionalSpendNeed = additionalSpending || 0;
-  const totalNeedNet = baseSpendNeed + additionalSpendNeed;
+  const totalNeedNet = spend + additionalSpendNeed;
 
   console.log("Age", age, "Spending Need Debug:");
-  console.log("- spend:", spend);
-  console.log("- totalBenefitGross:", totalBenefitGross);
-  console.log("- baseSpendNeed:", baseSpendNeed);
-  console.log("- totalNeedNet:", totalNeedNet);
+  console.log("- spend                   : ", spend);
+  console.log("- additionalSpending      : ", additionalSpending);
+  console.log("- rmd                     : ", rmdAmount);
+  console.log("- totalNeedNet            : ", totalNeedNet);
+  console.log("- totalIncomeStreamsGross : ", totalIncomeStreamsGross);
 
   // Build complete income picture for withdrawal functions
-  const completeIncomeForWithdrawals = {
+  const otherFixedTaxableIncome = {
     value:
-      penGrossTotal + spousePenGrossTotal + taxableInterest + taxableAdjustment,
+      penGrossTotal +
+      spousePenGrossTotal +
+      taxableInterest +
+      taxableAdjustment +
+      rmdAmount,
   };
 
   const withdrawalFunctions = createWithdrawalFunctions(
     inputs,
     balances,
-    completeIncomeForWithdrawals,
+    otherFixedTaxableIncome,
     retirementYear,
     ssGross + spouse.ssGross // Pass SS benefits to withdrawal functions
   );
@@ -889,47 +913,33 @@ function calculateRetirementYearData(
   let finalWGross = 0,
     finalWNet = 0;
 
-  // Apply RMDs first if required
-  let rmdAmount = 0;
-  if (inputs.useRMD && age >= 73) {
-    rmdAmount = calculateRMD(age, balances.balPre);
-    if (rmdAmount > 0) {
-      const rmdWithdrawal = withdrawalFunctions.withdrawRMD(rmdAmount);
-      finalWGross += rmdWithdrawal.gross;
-      finalWNet += rmdWithdrawal.net;
-      console.log(
-        `RMD at age ${age}: Required $${rmdAmount.toLocaleString()}, Withdrew $${rmdWithdrawal.gross.toLocaleString()} gross, $${rmdWithdrawal.net.toLocaleString()} net`
-      );
-    }
-  }
-
   // Calculate remaining spending need after RMD and other benefits
   // Since retirement.js functions handle all tax calculations including SS,
   // we can calculate the net benefit amounts directly
-  const netBenefitsFromRetirementJs = finalWNet; // Start with what we got from RMD
+  // const netBenefitsFromRetirementJs = finalWNet; // Start with what we got from RMD
 
   let remainingNeedNet = Math.max(
     0,
-    totalNeedNet - netBenefitsFromRetirementJs
+    totalNeedNet // - netBenefitsFromRetirementJs
   );
 
   // Handle remaining withdrawals using the specified order
   if (remainingNeedNet > 0) {
-    if (inputs.order[0] === "50/50") {
-      const result = withdraw50_50(withdrawalFunctions, remainingNeedNet);
-      finalWGross += result.totalGross;
-      finalWNet += result.totalNet;
-    } else {
-      // Standard withdrawal order strategy
-      for (const k of inputs.order) {
-        if (remainingNeedNet <= 0) break;
-        const { gross = 0, net = 0 } =
-          withdrawalFunctions.withdrawFrom(k, remainingNeedNet) || {};
-        remainingNeedNet = Math.max(0, remainingNeedNet - net);
-        finalWGross += gross;
-        finalWNet += net;
-      }
+    // if (inputs.order[0] === "50/50") {
+    //   const result = withdraw50_50(withdrawalFunctions, remainingNeedNet);
+    //   finalWGross += result.totalGross;
+    //   finalWNet += result.totalNet;
+    // } else {
+    // Standard withdrawal order strategy
+    for (const k of inputs.order) {
+      if (remainingNeedNet <= 0) break;
+      const { gross = 0, net = 0 } =
+        withdrawalFunctions.withdrawFrom(k, remainingNeedNet) || {};
+      remainingNeedNet = Math.max(0, remainingNeedNet - net);
+      finalWGross += gross;
+      finalWNet += net;
     }
+    // }
   }
 
   // Get withdrawal breakdown and tax information from sophisticated retirement.js functions
@@ -1092,9 +1102,9 @@ function calculateRetirementYearData(
         netIncomeFromTaxableSources
       : finalWGross;
 
-  // Update final withdrawal gross to include savings
-  const finalWGrossTotal = finalWGross + additionalSavingsWithdrawal;
-  const finalWNetTotal = withdrawalNetAdjusted + additionalSavingsWithdrawal;
+  // // Update final withdrawal gross to include savings
+  // const finalWGrossTotal = finalWGross + additionalSavingsWithdrawal;
+  // const finalWNetTotal = withdrawalNetAdjusted + additionalSavingsWithdrawal;
 
   // if (age == 72) {
   //   debugger;
@@ -1114,8 +1124,8 @@ function calculateRetirementYearData(
       finalWGross > 0
         ? (withdrawalsBySource.roth / finalWGross) * withdrawalNetAdjusted
         : withdrawalsBySource.roth,
-    totalGross: finalWGrossTotal,
-    totalNet: finalWNetTotal,
+    totalGross: finalWGross + additionalSavingsWithdrawal,
+    totalNet: withdrawalNetAdjusted + additionalSavingsWithdrawal,
   };
 
   console.log("Age", age, "Withdrawal Debug:");
@@ -1217,8 +1227,8 @@ function calculateRetirementYearData(
   // Update all the final values in the result object
   result.spend = actualSpend;
 
-  result.wGross = finalWGrossTotal;
-  result.wNet = finalWNetTotal;
+  // result.wGross = finalWGrossTotal;
+  // result.wNet = finalWNetTotal;
   result.w401kGross = withdrawalsBySource.retirementAccount;
   result.wSavingsGross = withdrawalsBySource.savingsAccount;
   result.wRothGross = withdrawalsBySource.roth;
