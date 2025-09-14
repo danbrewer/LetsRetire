@@ -1215,31 +1215,39 @@ function calculateRetirementYearData(
   );
 
   // Update all the final values in the result object
-  result.ss = ssNetAdjusted;
-  result.pen = penNetAdjusted;
-  result.spouseSs = spouseSsNetAdjusted;
-  result.spousePen = spousePenNetAdjusted;
   result.spend = actualSpend;
-  result.wNet = finalWNetTotal;
-  result.w401kNet = withdrawalBreakdown.pretax401kNet;
-  result.wSavingsRothNet =
-    withdrawalBreakdown.savingsNet + withdrawalBreakdown.rothNet;
+
   result.wGross = finalWGrossTotal;
+  result.wNet = finalWNetTotal;
   result.w401kGross = withdrawalsBySource.retirementAccount;
   result.wSavingsGross = withdrawalsBySource.savingsAccount;
   result.wRothGross = withdrawalsBySource.roth;
+  result.w401kNet = withdrawalBreakdown.pretax401kNet;
+  result.wSavingsRothNet =
+    withdrawalBreakdown.savingsNet + withdrawalBreakdown.rothNet;
+
+  result.provisionalIncome = provisionalIncome;
   result.ssGross = ssGross;
-  result.penGross = penGross;
+  result.ss = ssNetAdjusted;
   result.spouseSsGross = spouse.ssGross;
-  result.spousePenGross = spouse.penGross;
-  result.taxes = taxesThisYear;
+  result.spouseSs = spouseSsNetAdjusted;
   result.ssTaxes = ssTaxAllocated;
+
+  result.pen = penNetAdjusted;
+  result.spousePen = spousePenNetAdjusted;
+  result.penGross = penGross;
+  result.spousePenGross = spouse.penGross;
+
+  result.taxes = taxesThisYear;
   result.otherTaxes = otherTaxes;
   result.penTaxes = penTaxAllocated;
   result.withdrawalTaxes = withdrawalTaxes;
   result.nonTaxableIncome = totalNonTaxableIncome;
   result.taxableIncome = totalTaxableIncomeAfterDeduction;
   result.taxableInterest = taxableInterestEarned;
+  result.effectiveTaxRate = effectiveTaxRate;
+  result.standardDeduction = standardDeduction;
+
   result.totalIncome =
     ssNetAdjusted +
     penNetAdjusted +
@@ -1251,9 +1259,7 @@ function calculateRetirementYearData(
     taxFreeIncomeAdjustment;
   result.totalNetIncome = totalNetIncome;
   result.totalGrossIncome = totalGrossIncome;
-  result.effectiveTaxRate = effectiveTaxRate;
-  result.provisionalIncome = provisionalIncome;
-  result.standardDeduction = standardDeduction;
+
   result.balSavings = balances.balSavings;
   result.balPre = balances.balPre;
   result.balRoth = balances.balRoth;
