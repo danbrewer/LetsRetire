@@ -1320,12 +1320,12 @@ function calculateRetirementYearData(
   result.withdrawalBreakdown = withdrawalBreakdown;
 
   result.ssBreakdown = {
-    ssGross: mySsBenefits.gross,
-    ssTaxableAmount:
+    mySsGross: mySsBenefits.gross,
+    mySsTaxableAmount:
       totalSsTaxable *
       (mySsBenefits.gross / (mySsBenefits.gross + spouseSsBenefits.gross || 1)),
-    ssNonTaxable: ssNonTaxable,
-    ssTaxes:
+    mySsNonTaxable: ssNonTaxable,
+    mySsTaxes:
       ssTaxAllocated *
       (mySsBenefits.gross / (mySsBenefits.gross + spouseSsBenefits.gross || 1)),
     ssSpouseGross: spouseSsBenefits.gross,

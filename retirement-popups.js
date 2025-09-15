@@ -25,12 +25,14 @@ function showSsBreakdown(yearIndex) {
     <div class="ss-breakdown-item">
         <span class="ss-breakdown-label">SS Monthly Benefit:</span>
         <span class="ss-breakdown-value">${fmt(
-          (ssBreakdown.ssGross || 0) / 12
+          (ssBreakdown.mySsGross || 0) / 12
         )}</span>
     </div>
     <div class="ss-breakdown-item">
         <span class="ss-breakdown-label">SS Gross Annual:</span>
-        <span class="ss-breakdown-value">${fmt(ssBreakdown.ssGross || 0)}</span>
+        <span class="ss-breakdown-value">${fmt(
+          ssBreakdown.mySsGross || 0
+        )}</span>
     </div>
     `;
 
@@ -49,7 +51,7 @@ function showSsBreakdown(yearIndex) {
             <div class="ss-breakdown-item" style="border: none; padding: 4px 0;">
             <span class="ss-breakdown-label">+ 50% of SS Benefits:</span>
             <span class="ss-breakdown-value">${fmt(
-              (ssBreakdown.ssGross || 0) * 0.5
+              (ssBreakdown.mySsGross || 0) * 0.5
             )}</span>
             </div>
             <div class="ss-breakdown-item" style="border: none; padding: 4px 0; font-weight: 600; border-top: 1px solid var(--border); margin-top: 4px;">
@@ -104,7 +106,7 @@ function showSsBreakdown(yearIndex) {
         details.tier2Amount
       )}<br/>
                 85% of SS benefits: ${fmt(
-                  (ssBreakdown.ssGross || 0) * 0.85
+                  (ssBreakdown.mySsGross || 0) * 0.85
                 )}<br/>
                 Total taxable: min(85% of SS, Tier 1 + Tier 2) = ${fmt(
                   details.tier1Amount + details.tier2Amount
@@ -130,13 +132,13 @@ function showSsBreakdown(yearIndex) {
     <div class="ss-breakdown-item">
         <span class="ss-breakdown-label">Taxable Amount:</span>
         <span class="ss-breakdown-value">${fmt(
-          ssBreakdown.ssTaxableAmount || 0
+          ssBreakdown.mySsTaxableAmount || 0
         )}</span>
     </div>
     <div class="ss-breakdown-item">
         <span class="ss-breakdown-label">Non-Taxable Amount:</span>
         <span class="ss-breakdown-value">${fmt(
-          ssBreakdown.ssNonTaxable || 0
+          ssBreakdown.mySsNonTaxable || 0
         )}</span>
     </div>
     <div class="ss-breakdown-item">
@@ -147,7 +149,9 @@ function showSsBreakdown(yearIndex) {
     </div>
     <div class="ss-breakdown-item">
         <span class="ss-breakdown-label">Federal Taxes:</span>
-        <span class="ss-breakdown-value">${fmt(ssBreakdown.ssTaxes || 0)}</span>
+        <span class="ss-breakdown-value">${fmt(
+          ssBreakdown.mySsTaxes || 0
+        )}</span>
     </div>
     <div class="ss-breakdown-item">
         <span class="ss-breakdown-label">Net Amount (Take Home):</span>
@@ -2141,12 +2145,12 @@ function exportTotalNetToJson(index) {
 
     detailedBreakdowns: {
       socialSecurityBreakdown:
-        calculation.ssBreakdown && calculation.ssBreakdown.ssGross > 0
+        calculation.ssBreakdown && calculation.ssBreakdown.mySsGross > 0
           ? {
-              grossAmount: jsonFmt(calculation.ssBreakdown.ssGross),
-              taxableAmount: jsonFmt(calculation.ssBreakdown.ssTaxableAmount),
-              nonTaxableAmount: jsonFmt(calculation.ssBreakdown.ssNonTaxable),
-              taxesPaid: jsonFmt(calculation.ssBreakdown.ssTaxes),
+              grossAmount: jsonFmt(calculation.ssBreakdown.mySsGross),
+              taxableAmount: jsonFmt(calculation.ssBreakdown.mySsTaxableAmount),
+              nonTaxableAmount: jsonFmt(calculation.ssBreakdown.mySsNonTaxable),
+              taxesPaid: jsonFmt(calculation.ssBreakdown.mySsTaxes),
               netAmount: jsonFmt(calculation.ss),
               notes: "Primary Social Security benefits",
             }
