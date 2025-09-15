@@ -209,13 +209,8 @@ function calculateWorkingYearData(inputs, year, salary, balances) {
     age: 0,
     salary: 0,
     contrib: 0,
-    ss: 0,
-    pen: 0,
-    spouseSs: 0,
-    spousePen: 0,
     spend: 0,
     withdrawals: {},
-    ssTaxes: 0,
     totalIncome: 0,
     totalNetIncome: 0,
     totalGrossIncome: 0,
@@ -725,30 +720,26 @@ function calculateRetirementYearData(
     pen: 0,
     spousePen: 0,
     spend: 0,
-    withdrawals: {},
 
-    ss: 0,
-    ssGross: 0,
     penGross: 0,
-    spouseSs: 0,
-    spouseSsGross: 0,
     spousePenGross: 0,
-    ssTaxes: 0,
 
-    totalIncome: 0,
-    totalNetIncome: 0,
-    totalGrossIncome: 0,
-    provisionalIncome: 0,
     standardDeduction: 0,
     balSavings: 0,
     balPre: 0,
     balRoth: 0,
     total: 0,
+
+    withdrawals: {},
+    taxes: {},
+    ss: {},
+    totals: {},
+    bal: {},
+
     savingsBreakdown: {},
     withdrawalBreakdown: {},
     ssBreakdown: {},
     pensionBreakdown: {},
-    taxes: {},
   };
 
   const taxes = {
@@ -759,6 +750,35 @@ function calculateRetirementYearData(
     taxableIncome: 0,
     taxableInterest: 0,
     effectiveTaxRate: 0,
+  };
+
+  const ss = {
+    mySs: 0,
+    mySsGross: 0,
+    spouseSs: 0,
+    spouseSsGross: 0,
+    taxes: 0,
+    provisionalIncome: 0,
+  };
+
+  const pen = {
+    myPen: 0,
+    myPenGross: 0,
+    spousePen: 0,
+    spousePenGross: 0,
+    taxes: 0,
+  };
+
+  const totals = {
+    totalIncome: 0,
+    totalNetIncome: 0,
+    totalGrossIncome: 0,
+  };
+
+  const bal = {
+    balSavings: 0,
+    balPre: 0,
+    balRoth: 0,
   };
 
   // debugger;
@@ -1249,6 +1269,42 @@ function calculateRetirementYearData(
     inputs.inflation
   );
 
+  ss.mySs = ssNetAdjusted;
+  ss.mySsGross = mySsBenefits.gross;
+  ss.spouseSs = spouseSsNetAdjusted;
+  ss.spouseSsGross = spouseSsBenefits.gross;
+  ss.taxes = ssTaxes;
+  ss.provisionalIncome = provisionalIncome;
+
+  pen.myPen = penNetAdjusted;
+  pen.myPenGross = myPensionBenefits.gross;
+  pen.spousePen = spousePenNetAdjusted;
+  pen.spousePenGross = spousePensionBenefits.gross;
+
+  taxes.total = taxesThisYear;
+  taxes.otherTaxes = otherTaxes;
+  taxes.penTaxes = penTaxAllocated;
+  taxes.nonTaxableIncome = totalNonTaxableIncome;
+  taxes.taxableIncome = totalTaxableIncomeAfterDeduction;
+  taxes.taxableInterest = savingsInterestEarnedForTheYear;
+  taxes.effectiveTaxRate = effectiveTaxRate;
+
+  totals.totalIncome =
+    ssNetAdjusted +
+    penNetAdjusted +
+    spouseSsNetAdjusted +
+    spousePenNetAdjusted +
+    withdrawalNetAdjusted +
+    savingsInterestEarnedForTheYear +
+    taxableIncomeAdjustment +
+    taxFreeIncomeAdjustment;
+  totals.totalNetIncome = totalNetIncome;
+  totals.totalGrossIncome = totalGrossIncome;
+
+  bal.balSavings = balances.balSavings;
+  bal.balPre = balances.balPre;
+  bal.balRoth = balances.balRoth;
+
   // Update all the final values in the result object
   result.spend = actualSpend;
 
@@ -1263,45 +1319,17 @@ function calculateRetirementYearData(
 
   result.withdrawals = withdrawals;
 
-  result.provisionalIncome = provisionalIncome;
-  result.ssGross = mySsBenefits.gross;
-  result.ss = ssNetAdjusted;
-  result.spouseSsGross = spouseSsBenefits.gross;
-  result.spouseSs = spouseSsNetAdjusted;
-  result.ssTaxes = ssTaxAllocated;
+  result.ss = ss;
 
-  result.pen = penNetAdjusted;
-  result.spousePen = spousePenNetAdjusted;
-  result.penGross = myPensionBenefits.gross;
-  result.spousePenGross = spousePensionBenefits.gross;
+  result.pen = pen;
 
-  result.taxes = {
-    total: taxesThisYear,
-    otherTaxes: otherTaxes,
-    penTaxes: penTaxAllocated,
-    nonTaxableIncome: totalNonTaxableIncome,
-    taxableIncome: totalTaxableIncomeAfterDeduction,
-    taxableInterest: savingsInterestEarnedForTheYear,
-    effectiveTaxRate: effectiveTaxRate,
-  };
+  result.taxes = taxes;
 
   result.standardDeduction = standardDeduction;
 
-  result.totalIncome =
-    ssNetAdjusted +
-    penNetAdjusted +
-    spouseSsNetAdjusted +
-    spousePenNetAdjusted +
-    withdrawalNetAdjusted +
-    savingsInterestEarnedForTheYear +
-    taxableIncomeAdjustment +
-    taxFreeIncomeAdjustment;
-  result.totalNetIncome = totalNetIncome;
-  result.totalGrossIncome = totalGrossIncome;
+  result.totals = totals;
 
-  result.balSavings = balances.balSavings;
-  result.balPre = balances.balPre;
-  result.balRoth = balances.balRoth;
+  result.bal = bal;
 
   result.total = totalBal;
 

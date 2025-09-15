@@ -1,7 +1,7 @@
 // SS Breakdown Popup Functions
 function showSsBreakdown(yearIndex) {
   const calculation = calculations[yearIndex];
-  if (!calculation || !calculation.ss) {
+  if (!calculation || !calculation.ss.mySs) {
     return; // No SS data to show
   }
 
@@ -155,7 +155,7 @@ function showSsBreakdown(yearIndex) {
     </div>
     <div class="ss-breakdown-item">
         <span class="ss-breakdown-label">Net Amount (Take Home):</span>
-        <span class="ss-breakdown-value">${fmt(calculation.ss)}</span>
+        <span class="ss-breakdown-value">${fmt(calculation.ss.mySs)}</span>
     </div>
     `;
 
@@ -240,9 +240,10 @@ function showTaxableIncomeBreakdown(yearIndex) {
   }
 
   // Social Security gross (before calculating taxable portion)
-  if (calculation.ssGross && calculation.ssGross > 0) {
+  if (calculation.ss.mySsGross && calculation.ss.mySsGross > 0) {
     const ssTaxableAmount =
-      calculation.ssBreakdown?.ssTaxableAmount || calculation.ssGross * 0.85; // Estimate if not available
+      calculation.ssBreakdown?.ssTaxableAmount ||
+      calculation.ss.mySsGross * 0.85; // Estimate if not available
     breakdownHtml += `
       <div class="ss-breakdown-item">
           <span class="ss-breakdown-label">Social Security (Taxable Portion):</span>
@@ -253,21 +254,23 @@ function showTaxableIncomeBreakdown(yearIndex) {
   }
 
   // Pension gross (typically fully taxable)
-  if (calculation.penGross && calculation.penGross > 0) {
+  if (calculation.pen.myPenGross && calculation.pen.myPenGross > 0) {
     breakdownHtml += `
       <div class="ss-breakdown-item">
           <span class="ss-breakdown-label">Pension:</span>
-          <span class="ss-breakdown-value">${fmt(calculation.penGross)}</span>
+          <span class="ss-breakdown-value">${fmt(
+            calculation.pen.myPenGross
+          )}</span>
       </div>
     `;
-    grossTaxableTotal += calculation.penGross;
+    grossTaxableTotal += calculation.pen.myPenGross;
   }
 
   // Spouse Social Security gross
-  if (calculation.spouseSsGross && calculation.spouseSsGross > 0) {
+  if (calculation.ss.spouseSsGross && calculation.ss.spouseSsGross > 0) {
     const spouseSsTaxableAmount =
       calculation.spouseSsBreakdown?.ssTaxableAmount ||
-      calculation.spouseSsGross * 0.85; // Estimate if not available
+      calculation.ss.spouseSsGross * 0.85; // Estimate if not available
     breakdownHtml += `
       <div class="ss-breakdown-item">
           <span class="ss-breakdown-label">Spouse Social Security (Taxable Portion):</span>
@@ -278,16 +281,16 @@ function showTaxableIncomeBreakdown(yearIndex) {
   }
 
   // Spouse Pension gross
-  if (calculation.spousePenGross && calculation.spousePenGross > 0) {
+  if (calculation.pen.spousePenGross && calculation.pen.spousePenGross > 0) {
     breakdownHtml += `
       <div class="ss-breakdown-item">
           <span class="ss-breakdown-label">Spouse Pension:</span>
           <span class="ss-breakdown-value">${fmt(
-            calculation.spousePenGross
+            calculation.pen.spousePenGross
           )}</span>
       </div>
     `;
-    grossTaxableTotal += calculation.spousePenGross;
+    grossTaxableTotal += calculation.pen.spousePenGross;
   }
 
   // Pre-tax withdrawals (401k)
@@ -391,9 +394,9 @@ function showNonTaxableIncomeBreakdown(yearIndex) {
   let nonTaxableTotal = 0;
 
   // Social Security non-taxable portion
-  if (calculation.ssGross && calculation.ssGross > 0) {
+  if (calculation.ss.mySsGross && calculation.ss.mySsGross > 0) {
     const ssNonTaxableAmount =
-      calculation.ssBreakdown?.ssNonTaxable || calculation.ssGross * 0.15; // Estimate if not available
+      calculation.ssBreakdown?.ssNonTaxable || calculation.ss.mySsGross * 0.15; // Estimate if not available
     if (ssNonTaxableAmount > 0) {
       breakdownHtml += `
         <div class="ss-breakdown-item">
@@ -406,10 +409,10 @@ function showNonTaxableIncomeBreakdown(yearIndex) {
   }
 
   // Spouse Social Security non-taxable portion
-  if (calculation.spouseSsGross && calculation.spouseSsGross > 0) {
+  if (calculation.ss.spouseSsGross && calculation.ss.spouseSsGross > 0) {
     const spouseSsNonTaxableAmount =
       calculation.spouseSsBreakdown?.ssNonTaxable ||
-      calculation.spouseSsGross * 0.15; // Estimate if not available
+      calculation.ss.spouseSsGross * 0.15; // Estimate if not available
     if (spouseSsNonTaxableAmount > 0) {
       breakdownHtml += `
         <div class="ss-breakdown-item">
@@ -594,8 +597,9 @@ function showProvisionalIncomeBreakdown(yearIndex) {
   ) {
     // Calculate components of provisional income
     const otherTaxableIncome =
-      provisionalIncomeDetails.provisionalIncome - calculation.ssGross * 0.5;
-    const halfSocialSecurity = calculation.ssGross * 0.5;
+      provisionalIncomeDetails.provisionalIncome -
+      calculation.ss.mySsGross * 0.5;
+    const halfSocialSecurity = calculation.ss.mySsGross * 0.5;
 
     breakdownHtml += `
       <div class="ss-breakdown-section">
@@ -664,7 +668,7 @@ function showProvisionalIncomeBreakdown(yearIndex) {
 
       // Determine which tier applies and calculate detailed breakdown
       const provisionalIncome = provisionalIncomeDetails.provisionalIncome;
-      const ssGross = calculation.ssGross;
+      const ssGross = calculation.ss.mySsGross;
 
       // Calculate the actual taxable SS amount using IRS rules
       let ssTaxableAmount = 0;
@@ -910,14 +914,14 @@ function showTotalTaxesBreakdown(yearIndex) {
   let totalTaxes = 0;
 
   // Social Security taxes
-  if (calculation.ssTaxes && calculation.ssTaxes > 0) {
+  if (calculation.ss.taxes && calculation.ss.taxes > 0) {
     breakdownHtml += `
       <div class="ss-breakdown-item">
           <span class="ss-breakdown-label">Social Security Taxes:</span>
-          <span class="ss-breakdown-value">${fmt(calculation.ssTaxes)}</span>
+          <span class="ss-breakdown-value">${fmt(calculation.ss.taxes)}</span>
       </div>
     `;
-    totalTaxes += calculation.ssTaxes;
+    totalTaxes += calculation.ss.taxes;
   }
 
   // Other taxes (income taxes on pre-tax withdrawals, pensions, etc.)
@@ -1847,24 +1851,24 @@ function exportTotalNetToJson(index) {
   csvContent += "Gross Income Sources (Before Taxes)\n";
   csvContent += "Source,Amount,Notes\n";
 
-  if (calculation.ssGross > 0) {
+  if (calculation.ss.mySsGross > 0) {
     csvContent += `Social Security,${csvFmt(
-      calculation.ssGross
+      calculation.ss.mySsGross
     )},Before federal taxation\n`;
   }
-  if (calculation.spouseSsGross > 0) {
+  if (calculation.ss.spouseSsGross > 0) {
     csvContent += `Spouse Social Security,${csvFmt(
-      calculation.spouseSsGross
+      calculation.ss.spouseSsGross
     )},Before federal taxation\n`;
   }
-  if (calculation.penGross > 0) {
+  if (calculation.pen.myPenGross > 0) {
     csvContent += `Pension,${csvFmt(
-      calculation.penGross
+      calculation.pen.myPenGross
     )},Before federal taxation\n`;
   }
-  if (calculation.spousePenGross > 0) {
+  if (calculation.pen.spousePenGross > 0) {
     csvContent += `Spouse Pension,${csvFmt(
-      calculation.spousePenGross
+      calculation.pen.spousePenGross
     )},Before federal taxation\n`;
   }
   if (calculation.withdrawals.gross > 0) {
@@ -1880,10 +1884,10 @@ function exportTotalNetToJson(index) {
 
   // Calculate total gross income
   const grossIncomeTotal =
-    (calculation.ssGross || 0) +
-    (calculation.spouseSsGross || 0) +
-    (calculation.penGross || 0) +
-    (calculation.spousePenGross || 0) +
+    (calculation.ss.mySsGross || 0) +
+    (calculation.ss.spouseSsGross || 0) +
+    (calculation.pen.myPenGross || 0) +
+    (calculation.pen.spousePenGross || 0) +
     (calculation.withdrawals.gross || 0) +
     (calculation.taxes.taxableInterest || 0);
 
@@ -1895,22 +1899,24 @@ function exportTotalNetToJson(index) {
   csvContent += "Income Sources (Net After Taxes)\n";
   csvContent += "Source,Amount,Notes\n";
 
-  if (calculation.ss > 0) {
+  if (calculation.ss.mySs > 0) {
     csvContent += `Social Security,${csvFmt(
-      calculation.ss
+      calculation.ss.mySs
     )},After federal taxation\n`;
   }
-  if (calculation.spouseSs > 0) {
+  if (calculation.ss.spouseSs > 0) {
     csvContent += `Spouse Social Security,${csvFmt(
-      calculation.spouseSs
+      calculation.ss.spouseSs
     )},After federal taxation\n`;
   }
-  if (calculation.pen > 0) {
-    csvContent += `Pension,${csvFmt(calculation.pen)},After federal taxation\n`;
+  if (calculation.pen.myPen > 0) {
+    csvContent += `Pension,${csvFmt(
+      calculation.pen.myPen
+    )},After federal taxation\n`;
   }
-  if (calculation.spousePen > 0) {
+  if (calculation.pen.spousePen > 0) {
     csvContent += `Spouse Pension,${csvFmt(
-      calculation.spousePen
+      calculation.pen.spousePen
     )},After federal taxation\n`;
   }
   if (calculation.wNet > 0) {
@@ -1925,7 +1931,7 @@ function exportTotalNetToJson(index) {
   }
 
   csvContent += `Total Net Income,${csvFmt(
-    calculation.totalNetIncome
+    calculation.total.totalNetIncome
   )},After all taxes\n\n`;
 
   // Withdrawal Breakdown section (if applicable)
@@ -2007,33 +2013,33 @@ function exportTotalNetToJson(index) {
 
     grossIncomeSourcesBeforeTaxes: {
       socialSecurity:
-        calculation.ssGross > 0
+        calculation.ss.mySsGross > 0
           ? {
-              amount: jsonFmt(calculation.ssGross),
+              amount: jsonFmt(calculation.ss.mySsGross),
               notes: "Before federal taxation",
             }
           : null,
 
       spouseSocialSecurity:
-        calculation.spouseSsGross > 0
+        calculation.ss.spouseSsGross > 0
           ? {
-              amount: jsonFmt(calculation.spouseSsGross),
+              amount: jsonFmt(calculation.ss.spouseSsGross),
               notes: "Before federal taxation",
             }
           : null,
 
       pension:
-        calculation.penGross > 0
+        calculation.pen.myPenGross > 0
           ? {
-              amount: jsonFmt(calculation.penGross),
+              amount: jsonFmt(calculation.pen.myPenGross),
               notes: "Before federal taxation",
             }
           : null,
 
       spousePension:
-        calculation.spousePenGross > 0
+        calculation.pen.spousePenGross > 0
           ? {
-              amount: jsonFmt(calculation.spousePenGross),
+              amount: jsonFmt(calculation.pen.spousePenGross),
               notes: "Before federal taxation",
             }
           : null,
@@ -2056,10 +2062,10 @@ function exportTotalNetToJson(index) {
 
       total: {
         amount: jsonFmt(
-          (calculation.ssGross || 0) +
-            (calculation.spouseSsGross || 0) +
-            (calculation.penGross || 0) +
-            (calculation.spousePenGross || 0) +
+          (calculation.ss.mySsGross || 0) +
+            (calculation.ss.spouseSsGross || 0) +
+            (calculation.pen.myPenGross || 0) +
+            (calculation.pen.spousePenGross || 0) +
             (calculation.withdrawals.gross || 0) +
             (calculation.taxes.taxableInterest || 0)
         ),
@@ -2069,33 +2075,33 @@ function exportTotalNetToJson(index) {
 
     incomeSourcesNetAfterTaxes: {
       socialSecurity:
-        calculation.ss > 0
+        calculation.ss.mySs > 0
           ? {
-              amount: jsonFmt(calculation.ss),
+              amount: jsonFmt(calculation.ss.mySs),
               notes: "After federal taxation",
             }
           : null,
 
       spouseSocialSecurity:
-        calculation.spouseSs > 0
+        calculation.ss.spouseSs > 0
           ? {
-              amount: jsonFmt(calculation.spouseSs),
+              amount: jsonFmt(calculation.ss.spouseSs),
               notes: "After federal taxation",
             }
           : null,
 
       pension:
-        calculation.pen > 0
+        calculation.pen.myPen > 0
           ? {
-              amount: jsonFmt(calculation.pen),
+              amount: jsonFmt(calculation.pen.myPen),
               notes: "After federal taxation",
             }
           : null,
 
       spousePension:
-        calculation.spousePen > 0
+        calculation.pen.spousePen > 0
           ? {
-              amount: jsonFmt(calculation.spousePen),
+              amount: jsonFmt(calculation.pen.spousePen),
               notes: "After federal taxation",
             }
           : null,
@@ -2117,7 +2123,7 @@ function exportTotalNetToJson(index) {
       //     : null,
 
       total: {
-        amount: jsonFmt(calculation.totalNetIncome),
+        amount: jsonFmt(calculation.total.totalNetIncome),
         notes: "After all taxes",
       },
     },
@@ -2151,7 +2157,7 @@ function exportTotalNetToJson(index) {
               taxableAmount: jsonFmt(calculation.ssBreakdown.mySsTaxableAmount),
               nonTaxableAmount: jsonFmt(calculation.ssBreakdown.mySsNonTaxable),
               taxesPaid: jsonFmt(calculation.ssBreakdown.mySsTaxes),
-              netAmount: jsonFmt(calculation.ss),
+              netAmount: jsonFmt(calculation.ss.mySs),
               notes: "Primary Social Security benefits",
             }
           : null,
@@ -2168,7 +2174,7 @@ function exportTotalNetToJson(index) {
                 calculation.spouseSsBreakdown.ssNonTaxable
               ),
               taxesPaid: jsonFmt(calculation.spouseSsBreakdown.ssTaxes),
-              netAmount: jsonFmt(calculation.spouseSs),
+              netAmount: jsonFmt(calculation.ss.spouseSs),
               notes: "Spouse Social Security benefits",
             }
           : null,
@@ -2205,7 +2211,7 @@ function exportTotalNetToJson(index) {
                 calculation.spousePensionBreakdown.penNonTaxable
               ),
               taxesPaid: jsonFmt(calculation.spousePensionBreakdown.penTaxes),
-              netAmount: jsonFmt(calculation.spousePen),
+              netAmount: jsonFmt(calculation.pen.spousePen),
               taxRate: parseFloat(
                 (
                   calculation.spousePensionBreakdown.pensionTaxRate * 100

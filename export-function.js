@@ -25,24 +25,24 @@ function exportTotalNetToJson(index) {
   csvContent += "Gross Income Sources (Before Taxes)\n";
   csvContent += "Source,Amount,Notes\n";
 
-  if (calculation.ssGross > 0) {
+  if (calculation.ss.mySsGross > 0) {
     csvContent += `Social Security,${csvFmt(
-      calculation.ssGross
+      calculation.ss.mySsGross
     )},Before federal taxation\n`;
   }
-  if (calculation.spouseSsGross > 0) {
+  if (calculation.ss.spouseSsGross > 0) {
     csvContent += `Spouse Social Security,${csvFmt(
-      calculation.spouseSsGross
+      calculation.ss.spouseSsGross
     )},Before federal taxation\n`;
   }
-  if (calculation.penGross > 0) {
+  if (calculation.pen.myPenGross > 0) {
     csvContent += `Pension,${csvFmt(
-      calculation.penGross
+      calculation.pen.myPenGross
     )},Before federal taxation\n`;
   }
-  if (calculation.spousePenGross > 0) {
+  if (calculation.pen.spousePenGross > 0) {
     csvContent += `Spouse Pension,${csvFmt(
-      calculation.spousePenGross
+      calculation.pen.spousePenGross
     )},Before federal taxation\n`;
   }
   if (calculation.withdrawals.gross > 0) {
@@ -58,10 +58,10 @@ function exportTotalNetToJson(index) {
 
   // Calculate total gross income
   const grossIncomeTotal =
-    (calculation.ssGross || 0) +
-    (calculation.spouseSsGross || 0) +
-    (calculation.penGross || 0) +
-    (calculation.spousePenGross || 0) +
+    (calculation.ss.mySsGross || 0) +
+    (calculation.ss.spouseSsGross || 0) +
+    (calculation.pen.myPenGross || 0) +
+    (calculation.pen.spousePenGross || 0) +
     (calculation.withdrawals.gross || 0) +
     (calculation.taxes.taxableInterest || 0);
 
@@ -73,22 +73,24 @@ function exportTotalNetToJson(index) {
   csvContent += "Income Sources (Net After Taxes)\n";
   csvContent += "Source,Amount,Notes\n";
 
-  if (calculation.ss > 0) {
+  if (calculation.ss.mySs > 0) {
     csvContent += `Social Security,${csvFmt(
-      calculation.ss
+      calculation.ss.mySs
     )},After federal taxation\n`;
   }
-  if (calculation.spouseSs > 0) {
+  if (calculation.ss.spouseSs > 0) {
     csvContent += `Spouse Social Security,${csvFmt(
-      calculation.spouseSs
+      calculation.ss.spouseSs
     )},After federal taxation\n`;
   }
-  if (calculation.pen > 0) {
-    csvContent += `Pension,${csvFmt(calculation.pen)},After federal taxation\n`;
+  if (calculation.pen.myPen > 0) {
+    csvContent += `Pension,${csvFmt(
+      calculation.pen.myPen
+    )},After federal taxation\n`;
   }
-  if (calculation.spousePen > 0) {
+  if (calculation.pen.spousePen > 0) {
     csvContent += `Spouse Pension,${csvFmt(
-      calculation.spousePen
+      calculation.pen.spousePen
     )},After federal taxation\n`;
   }
   if (calculation.wNet > 0) {
@@ -103,7 +105,7 @@ function exportTotalNetToJson(index) {
   }
 
   csvContent += `Total Net Income,${csvFmt(
-    calculation.totalNetIncome
+    calculation.total.totalNetIncome
   )},After all taxes\n\n`;
 
   // Withdrawal Breakdown section (if applicable)

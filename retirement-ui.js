@@ -1830,8 +1830,12 @@ function generatePDFReport() {
         calculation.spend
           ? "$" + (calculation.spend / 1000).toFixed(2) + "k"
           : "",
-        calculation.ss ? "$" + (calculation.ss / 1000).toFixed(2) + "k" : "",
-        calculation.pen ? "$" + (calculation.pen / 1000).toFixed(2) + "k" : "",
+        calculation.ss.mySs
+          ? "$" + (calculation.ss.mySs / 1000).toFixed(2) + "k"
+          : "",
+        calculation.pen.myPen
+          ? "$" + (calculation.pen.myPen / 1000).toFixed(2) + "k"
+          : "",
         calculation.withdrawals.net
           ? "$" + (calculation.withdrawals.net / 1000).toFixed(2) + "k"
           : "",
