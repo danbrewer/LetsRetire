@@ -750,6 +750,7 @@ function calculateRetirementYearData(
     taxableIncome: 0,
     taxableInterest: 0,
     effectiveTaxRate: 0,
+    standardDeduction: 0,
   };
 
   const ss = {
@@ -1162,6 +1163,17 @@ function calculateRetirementYearData(
     totalNet: withdrawalNetAdjusted + additionalSavingsWithdrawal,
   };
 
+  const savingsBreakdown = {
+    startingBalance: savingsStartBalance,
+    withdrawals: actualSavingsWithdrawal,
+    overageDeposit: overage,
+    taxFreeIncomeDeposit: taxFreeIncomeAdjustment,
+    balanceBeforeGrowth: savingsBalanceBeforeGrowth,
+    interestEarnedAtYearEnd: savingsInterestEarnedForTheYear,
+    endingBalance: balances.balSavings,
+    growthRate: inputs.rateOfSavings * 100,
+  };
+
   if (DUMP_TO_CONSOLE) {
     console.log("Age", age, "Withdrawal Debug:");
     console.log(
@@ -1250,6 +1262,16 @@ function calculateRetirementYearData(
     spousePensionBenefits.nonTaxable +
     grossTaxableIncome;
 
+  const totalIncome =
+    ssNetAdjusted +
+    penNetAdjusted +
+    spouseSsNetAdjusted +
+    spousePenNetAdjusted +
+    withdrawalNetAdjusted +
+    savingsInterestEarnedForTheYear +
+    taxableIncomeAdjustment +
+    taxFreeIncomeAdjustment;
+
   // Effective tax rate calculation
   const effectiveTaxRate =
     totalTaxableIncomeAfterDeduction > 0
@@ -1269,6 +1291,7 @@ function calculateRetirementYearData(
     inputs.inflation
   );
 
+  // Update result object with calculated values
   ss.mySs = ssNetAdjusted;
   ss.mySsGross = mySsBenefits.gross;
   ss.spouseSs = spouseSsNetAdjusted;
@@ -1288,25 +1311,15 @@ function calculateRetirementYearData(
   taxes.taxableIncome = totalTaxableIncomeAfterDeduction;
   taxes.taxableInterest = savingsInterestEarnedForTheYear;
   taxes.effectiveTaxRate = effectiveTaxRate;
+  taxes.standardDeduction = standardDeduction;
 
-  totals.totalIncome =
-    ssNetAdjusted +
-    penNetAdjusted +
-    spouseSsNetAdjusted +
-    spousePenNetAdjusted +
-    withdrawalNetAdjusted +
-    savingsInterestEarnedForTheYear +
-    taxableIncomeAdjustment +
-    taxFreeIncomeAdjustment;
+  totals.totalIncome = totalIncome;
   totals.totalNetIncome = totalNetIncome;
   totals.totalGrossIncome = totalGrossIncome;
 
   bal.balSavings = balances.balSavings;
   bal.balPre = balances.balPre;
   bal.balRoth = balances.balRoth;
-
-  // Update all the final values in the result object
-  result.spend = actualSpend;
 
   // result.withdrawals.gross = finalWGrossTotal;
   // result.withdrawals.net = finalWNetTotal;
@@ -1317,62 +1330,7 @@ function calculateRetirementYearData(
   withdrawals.savingsRothNet =
     withdrawalBreakdown.savingsNet + withdrawalBreakdown.rothNet;
 
-  result.withdrawals = withdrawals;
-
-  result.ss = ss;
-
-  result.pen = pen;
-
-  result.taxes = taxes;
-
-  result.standardDeduction = standardDeduction;
-
-  result.totals = totals;
-
-  result.bal = bal;
-
-  result.total = totalBal;
-
-  // Add breakdown data
-  result.savingsBreakdown = {
-    startingBalance: savingsStartBalance,
-    withdrawals: actualSavingsWithdrawal,
-    overageDeposit: overage,
-    taxFreeIncomeDeposit: taxFreeIncomeAdjustment,
-    balanceBeforeGrowth: savingsBalanceBeforeGrowth,
-    interestEarnedAtYearEnd: savingsInterestEarnedForTheYear,
-    endingBalance: balances.balSavings,
-    growthRate: inputs.rateOfSavings * 100,
-  };
-
-  result.withdrawalBreakdown = withdrawalBreakdown;
-
-  result.ssBreakdown = {
-    mySsGross: mySsBenefits.gross,
-    mySsTaxableAmount:
-      totalSsTaxable *
-      (mySsBenefits.gross / (mySsBenefits.gross + spouseSsBenefits.gross || 1)),
-    mySsNonTaxable: ssNonTaxable,
-    mySsTaxes:
-      ssTaxAllocated *
-      (mySsBenefits.gross / (mySsBenefits.gross + spouseSsBenefits.gross || 1)),
-    ssSpouseGross: spouseSsBenefits.gross,
-    ssSpouseTaxableAmount:
-      totalSsTaxable *
-      (spouseSsBenefits.gross /
-        (mySsBenefits.gross + spouseSsBenefits.gross || 1)),
-    ssSpouseNonTaxable: spouseSsNonTaxable,
-    ssSpouseTaxes:
-      ssTaxAllocated *
-      (spouseSsBenefits.gross /
-        (mySsBenefits.gross + spouseSsBenefits.gross || 1)),
-    calculationDetails: ssCalculationDetails, // Detailed calculation methodology from retirement.js
-    otherTaxableIncome: taxCalculation
-      ? taxCalculation.totalTaxableIncome || 0
-      : 0,
-  };
-
-  result.pensionBreakdown = {
+  const pensionBreakdown = {
     penGross: myPensionBenefits.gross,
     penTaxableAmount: myPensionBenefits.gross, // Pensions are typically fully taxable
     penNonTaxable: myPensionBenefits.nonTaxable || 0,
@@ -1403,6 +1361,49 @@ function calculateRetirementYearData(
         : 0,
     calculationDetails: null,
   };
+
+  const ssBreakdown = {
+    mySsGross: mySsBenefits.gross,
+    mySsTaxableAmount:
+      totalSsTaxable *
+      (mySsBenefits.gross / (mySsBenefits.gross + spouseSsBenefits.gross || 1)),
+    mySsNonTaxable: ssNonTaxable,
+    mySsTaxes:
+      ssTaxAllocated *
+      (mySsBenefits.gross / (mySsBenefits.gross + spouseSsBenefits.gross || 1)),
+    ssSpouseGross: spouseSsBenefits.gross,
+    ssSpouseTaxableAmount:
+      totalSsTaxable *
+      (spouseSsBenefits.gross /
+        (mySsBenefits.gross + spouseSsBenefits.gross || 1)),
+    ssSpouseNonTaxable: spouseSsNonTaxable,
+    ssSpouseTaxes:
+      ssTaxAllocated *
+      (spouseSsBenefits.gross /
+        (mySsBenefits.gross + spouseSsBenefits.gross || 1)),
+    calculationDetails: ssCalculationDetails, // Detailed calculation methodology from retirement.js
+    otherTaxableIncome: taxCalculation
+      ? taxCalculation.totalTaxableIncome || 0
+      : 0,
+  };
+
+  // Update all the final values in the result object
+  result.spend = actualSpend;
+
+  result.withdrawals = withdrawals;
+  result.ss = ss;
+  result.pen = pen;
+  result.taxes = taxes;
+  result.standardDeduction = standardDeduction;
+  result.totals = totals;
+  result.bal = bal;
+  result.total = totalBal;
+
+  // Add breakdown data
+  result.savingsBreakdown = savingsBreakdown;
+  result.withdrawalBreakdown = withdrawalBreakdown;
+  result.ssBreakdown = ssBreakdown;
+  result.pensionBreakdown = pensionBreakdown;
 
   // Dump the result to the console
   if (DUMP_TO_CONSOLE) {
