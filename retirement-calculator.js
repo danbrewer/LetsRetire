@@ -236,6 +236,17 @@ function calculateWorkingYearData(inputs, year, salary, balances) {
     spouseSsBreakdown: {},
     pensionBreakdown: {},
     spousePensionBreakdown: {},
+    taxes: {},
+  };
+
+  const taxes = {
+    total: 0,
+    otherTaxes: 0,
+    penTaxes: 0,
+    nonTaxableIncome: 0,
+    taxableIncome: 0,
+    taxableInterest: 0,
+    effectiveTaxRate: 0,
   };
 
   const age = inputs.currentAge + year;
@@ -332,6 +343,21 @@ function calculateWorkingYearData(inputs, year, salary, balances) {
     rothGross: 0,
   };
 
+  const taxableIncome = calculateTaxableIncome(
+    grossTaxableIncome,
+    inputs.filingStatus,
+    TAX_BASE_YEAR + year,
+    inputs.inflation
+  );
+
+  taxes.total = workingYearTaxes;
+  taxes.otherTaxes = workingYearTaxes;
+  taxes.nonTaxableIncome = taxFreeIncomeAdjustment;
+  taxes.taxableIncome = taxableIncome;
+  taxes.taxableInterest = taxableInterestIncome;
+  taxes.effectiveTaxRate =
+    taxableIncome > 0 ? (workingYearTaxes / taxableIncome) * 100 : 0;
+
   // Update all the final values in the result object
   result.contrib = cPre + cRoth + cTax + match;
   result.ss = 0;
@@ -340,36 +366,14 @@ function calculateWorkingYearData(inputs, year, salary, balances) {
   result.spousePen = 0;
   result.spend = currentYearSpending;
   result.withdrawals = withdrawals;
-  result.taxes = workingYearTaxes;
+
+  result.taxes = taxes;
+
   result.ssTaxes = 0;
-  result.otherTaxes = workingYearTaxes;
-  result.nonTaxableIncome = taxFreeIncomeAdjustment;
-  result.taxableIncome = calculateTaxableIncome(
-    grossTaxableIncome,
-    inputs.filingStatus,
-    TAX_BASE_YEAR + year,
-    inputs.inflation
-  );
-  result.taxableInterest = taxableInterestIncome;
   result.totalIncome = totalGrossIncome + taxableInterestIncome;
   result.totalNetIncome = afterTaxIncome + taxFreeIncomeAdjustment;
   result.totalGrossIncome = totalGrossIncome + taxableInterestIncome;
-  result.effectiveTaxRate =
-    calculateTaxableIncome(
-      grossTaxableIncome,
-      inputs.filingStatus,
-      TAX_BASE_YEAR + year,
-      inputs.inflation
-    ) > 0
-      ? (workingYearTaxes /
-          calculateTaxableIncome(
-            grossTaxableIncome,
-            inputs.filingStatus,
-            TAX_BASE_YEAR + year,
-            inputs.inflation
-          )) *
-        100
-      : 0;
+
   result.provisionalIncome = 0;
   result.standardDeduction = getStandardDeduction(
     inputs.filingStatus,
@@ -736,17 +740,9 @@ function calculateRetirementYearData(
     spousePenGross: 0,
     ssTaxes: 0,
 
-    taxes12345: 0,
-    otherTaxes12345: 0,
-    penTaxes12345: 0,
-
-    nonTaxableIncome: 0,
-    taxableIncome: 0,
-    taxableInterest: 0,
     totalIncome: 0,
     totalNetIncome: 0,
     totalGrossIncome: 0,
-    effectiveTaxRate: 0,
     provisionalIncome: 0,
     standardDeduction: 0,
     balSavings: 0,
@@ -757,6 +753,17 @@ function calculateRetirementYearData(
     withdrawalBreakdown: {},
     ssBreakdown: {},
     pensionBreakdown: {},
+    taxes: {},
+  };
+
+  const taxes = {
+    total: 0,
+    otherTaxes: 0,
+    penTaxes: 0,
+    nonTaxableIncome: 0,
+    taxableIncome: 0,
+    taxableInterest: 0,
+    effectiveTaxRate: 0,
   };
 
   // debugger;
@@ -1273,13 +1280,16 @@ function calculateRetirementYearData(
   result.penGross = myPensionBenefits.gross;
   result.spousePenGross = spousePensionBenefits.gross;
 
-  result.taxes12345 = taxesThisYear;
-  result.otherTaxes12345 = otherTaxes;
-  result.penTaxes12345 = penTaxAllocated;
-  result.nonTaxableIncome = totalNonTaxableIncome;
-  result.taxableIncome = totalTaxableIncomeAfterDeduction;
-  result.taxableInterest = savingsInterestEarnedForTheYear;
-  result.effectiveTaxRate = effectiveTaxRate;
+  result.taxes = {
+    total: taxesThisYear,
+    otherTaxes: otherTaxes,
+    penTaxes: penTaxAllocated,
+    nonTaxableIncome: totalNonTaxableIncome,
+    taxableIncome: totalTaxableIncomeAfterDeduction,
+    taxableInterest: savingsInterestEarnedForTheYear,
+    effectiveTaxRate: effectiveTaxRate,
+  };
+
   result.standardDeduction = standardDeduction;
 
   result.totalIncome =

@@ -220,16 +220,19 @@ function showTaxableIncomeBreakdown(yearIndex) {
     grossTaxableTotal += calculation.salary;
   }
 
-  if (calculation.taxableInterest && calculation.taxableInterest > 0) {
+  if (
+    calculation.taxes.taxableInterest &&
+    calculation.taxes.taxableInterest > 0
+  ) {
     breakdownHtml += `
       <div class="ss-breakdown-item">
           <span class="ss-breakdown-label">Taxable Interest:</span>
           <span class="ss-breakdown-value">${fmt(
-            calculation.taxableInterest
+            calculation.taxes.taxableInterest
           )}</span>
       </div>
     `;
-    grossTaxableTotal += calculation.taxableInterest;
+    grossTaxableTotal += calculation.taxes.taxableInterest;
   }
 
   // Social Security gross (before calculating taxable portion)
@@ -335,7 +338,7 @@ function showTaxableIncomeBreakdown(yearIndex) {
     <div class="ss-breakdown-item">
         <span class="ss-breakdown-label"><strong>Net Taxable Income:</strong></span>
         <span class="ss-breakdown-value"><strong>${fmt(
-          calculation.taxableIncome ||
+          calculation.taxes.taxableIncome ||
             Math.max(0, grossTaxableTotal - standardDeduction)
         )}</strong></span>
     </div>
@@ -914,23 +917,27 @@ function showTotalTaxesBreakdown(yearIndex) {
   }
 
   // Other taxes (income taxes on pre-tax withdrawals, pensions, etc.)
-  if (calculation.otherTaxes && calculation.otherTaxes > 0) {
+  if (calculation.taxes.otherTaxes && calculation.taxes.otherTaxes > 0) {
     breakdownHtml += `
       <div class="ss-breakdown-item">
           <span class="ss-breakdown-label">Income Taxes:</span>
-          <span class="ss-breakdown-value">${fmt(calculation.otherTaxes)}</span>
+          <span class="ss-breakdown-value">${fmt(
+            calculation.taxes.otherTaxes
+          )}</span>
       </div>
     `;
-    totalTaxes += calculation.otherTaxes;
+    totalTaxes += calculation.taxes.otherTaxes;
 
     // Add breakdown of what income taxes include
     breakdownHtml += `<div style="margin-left: 20px;">`;
 
-    if (calculation.penTaxes && calculation.penTaxes > 0) {
+    if (calculation.taxes.penTaxes && calculation.taxes.penTaxes > 0) {
       breakdownHtml += `
         <div class="ss-breakdown-item" style="font-size: 12px; color: var(--muted);">
             <span class="ss-breakdown-label">• Taxes on pension income</span>
-            <span class="ss-breakdown-value">${fmt(calculation.penTaxes)}</span>
+            <span class="ss-breakdown-value">${fmt(
+              calculation.taxes.penTaxes
+            )}</span>
         </div>
       `;
     }
@@ -948,8 +955,8 @@ function showTotalTaxesBreakdown(yearIndex) {
 
     // Calculate other income taxes (like taxable interest)
     const otherIncomeTaxes =
-      calculation.otherTaxes -
-      (calculation.penTaxes || 0) -
+      calculation.taxes.otherTaxes -
+      (calculation.taxes.penTaxes || 0) -
       (calculation.withdrawals.taxes || 0);
     if (otherIncomeTaxes > 0) {
       breakdownHtml += `
@@ -974,11 +981,11 @@ function showTotalTaxesBreakdown(yearIndex) {
   `;
 
   // Add effective tax rate if available
-  if (calculation.effectiveTaxRate) {
+  if (calculation.taxes.effectiveTaxRate) {
     breakdownHtml += `
       <div class="ss-breakdown-item">
           <span class="ss-breakdown-label">Effective Tax Rate:</span>
-          <span class="ss-breakdown-value">${calculation.effectiveTaxRate.toFixed(
+          <span class="ss-breakdown-value">${calculation.taxes.effectiveTaxRate.toFixed(
             1
           )}%</span>
       </div>
@@ -1861,9 +1868,9 @@ function exportTotalNetToJson(index) {
       calculation.withdrawals.gross
     )},Before taxes and penalties\n`;
   }
-  if (calculation.taxableInterest > 0) {
+  if (calculation.taxes.taxableInterest > 0) {
     csvContent += `Taxable Interest,${csvFmt(
-      calculation.taxableInterest
+      calculation.taxes.taxableInterest
     )},Interest income\n`;
   }
 
@@ -1874,7 +1881,7 @@ function exportTotalNetToJson(index) {
     (calculation.penGross || 0) +
     (calculation.spousePenGross || 0) +
     (calculation.withdrawals.gross || 0) +
-    (calculation.taxableInterest || 0);
+    (calculation.taxes.taxableInterest || 0);
 
   csvContent += `Total Gross Income,${csvFmt(
     grossIncomeTotal
@@ -1907,9 +1914,9 @@ function exportTotalNetToJson(index) {
       calculation.wNet
     )},After taxes and penalties\n`;
   }
-  if (calculation.nonTaxableIncome > 0) {
+  if (calculation.taxes.nonTaxableIncome > 0) {
     csvContent += `Non-Taxable Income,${csvFmt(
-      calculation.nonTaxableIncome
+      calculation.taxes.nonTaxableIncome
     )},Tax-free income sources\n`;
   }
 
@@ -1949,10 +1956,10 @@ function exportTotalNetToJson(index) {
   csvContent += "Tax Summary\n";
   csvContent += "Item,Amount,Notes\n";
   csvContent += `Total Federal Taxes,${csvFmt(
-    calculation.taxes12345
+    calculation.taxes.total
   )},All federal taxes owed\n`;
   csvContent += `Taxable Income,${csvFmt(
-    calculation.taxableIncome
+    calculation.taxes.taxableIncome
   )},Income subject to federal tax\n`;
 
   // Create and trigger download
@@ -2036,9 +2043,9 @@ function exportTotalNetToJson(index) {
           : null,
 
       taxableInterest:
-        calculation.taxableInterest > 0
+        calculation.taxes.taxableInterest > 0
           ? {
-              amount: jsonFmt(calculation.taxableInterest),
+              amount: jsonFmt(calculation.taxes.taxableInterest),
               notes: "Interest income",
             }
           : null,
@@ -2050,7 +2057,7 @@ function exportTotalNetToJson(index) {
             (calculation.penGross || 0) +
             (calculation.spousePenGross || 0) +
             (calculation.withdrawals.gross || 0) +
-            (calculation.taxableInterest || 0)
+            (calculation.taxes.taxableInterest || 0)
         ),
         notes: "Gross income before adjustments",
       },
@@ -2115,16 +2122,18 @@ function exportTotalNetToJson(index) {
 
     taxSummary: {
       totalFederalTaxes: {
-        amount: jsonFmt(calculation.taxes12345),
+        amount: jsonFmt(calculation.taxes.total),
         notes: "All federal taxes owed",
       },
       taxableIncome: {
-        amount: jsonFmt(calculation.taxableIncome),
+        amount: jsonFmt(calculation.taxes.taxableIncome),
         notes: "Income subject to federal tax",
       },
-      effectiveTaxRate: calculation.effectiveTaxRate
+      effectiveTaxRate: calculation.taxes.effectiveTaxRate
         ? {
-            percentage: parseFloat(calculation.effectiveTaxRate.toFixed(1)),
+            percentage: parseFloat(
+              calculation.taxes.effectiveTaxRate.toFixed(1)
+            ),
             notes: "Total taxes divided by taxable income",
           }
         : null,

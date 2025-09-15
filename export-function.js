@@ -50,9 +50,9 @@ function exportTotalNetToJson(index) {
       calculation.withdrawals.gross
     )},Before taxes and penalties\n`;
   }
-  if (calculation.taxableInterest > 0) {
+  if (calculation.taxes.taxableInterest > 0) {
     csvContent += `Taxable Interest,${csvFmt(
-      calculation.taxableInterest
+      calculation.taxes.taxableInterest
     )},Interest income\n`;
   }
 
@@ -63,7 +63,7 @@ function exportTotalNetToJson(index) {
     (calculation.penGross || 0) +
     (calculation.spousePenGross || 0) +
     (calculation.withdrawals.gross || 0) +
-    (calculation.taxableInterest || 0);
+    (calculation.taxes.taxableInterest || 0);
 
   csvContent += `Total Gross Income,${csvFmt(
     grossIncomeTotal
@@ -96,9 +96,9 @@ function exportTotalNetToJson(index) {
       calculation.wNet
     )},After taxes and penalties\n`;
   }
-  if (calculation.nonTaxableIncome > 0) {
+  if (calculation.taxes.nonTaxableIncome > 0) {
     csvContent += `Non-Taxable Income,${csvFmt(
-      calculation.nonTaxableIncome
+      calculation.taxes.nonTaxableIncome
     )},Tax-free income sources\n`;
   }
 
@@ -138,10 +138,10 @@ function exportTotalNetToJson(index) {
   csvContent += "Tax Summary\n";
   csvContent += "Item,Amount,Notes\n";
   csvContent += `Total Federal Taxes,${csvFmt(
-    calculation.taxes12345
+    calculation.taxes.total
   )},All federal taxes owed\n`;
   csvContent += `Taxable Income,${csvFmt(
-    calculation.taxableIncome
+    calculation.taxes.taxableIncome
   )},Income subject to federal tax\n`;
 
   // Create and trigger download

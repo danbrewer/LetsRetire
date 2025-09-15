@@ -1835,8 +1835,8 @@ function generatePDFReport() {
         calculation.withdrawals.net
           ? "$" + (calculation.withdrawals.net / 1000).toFixed(2) + "k"
           : "",
-        calculation.taxes12345
-          ? "$" + (calculation.taxes12345 / 1000).toFixed(2) + "k"
+        calculation.taxes.total
+          ? "$" + (calculation.taxes.total / 1000).toFixed(2) + "k"
           : "",
         "$" + (calculation.total / 1000).toFixed(2) + "k",
       ];
