@@ -556,6 +556,31 @@ function createWithdrawalFunctions(
       return { gross: 0, net: 0 };
     }
 
+    const otherTaxableIncomeValue = isNaN(
+      closuredCopyOfOtherFixedTaxableIncome.value
+    )
+      ? 0
+      : closuredCopyOfOtherFixedTaxableIncome.value;
+
+    if (isNaN(closuredCopyOfOtherFixedTaxableIncome.value)) {
+      console.warn(
+        `[NaN Protection] otherTaxableIncome was NaN, using 0 instead`
+      );
+    }
+
+    // debugger;
+    const opts = {
+      otherTaxableIncome: otherTaxableIncomeValue,
+      ssBenefit: ssBenefits, // Include Social Security benefits in tax calculation
+      standardDeduction: getStandardDeduction(
+        inputs.filingStatus,
+        year, // year is already the actual year (e.g., 2040)
+        inputs.inflation
+      ),
+      brackets: getTaxBrackets(inputs.filingStatus, year, inputs.inflation),
+      precision: 0.01, // Precision for binary search convergence
+    };
+
     // For pretax withdrawals, use sophisticated tax calculations from retirement.js
     let desiredWithdrawal, netReceived;
 
@@ -563,30 +588,6 @@ function createWithdrawalFunctions(
       // Use binary search optimization from retirement.js for accurate withdrawal calculation
       // Construct the opts object that these functions expect
       // Add comprehensive NaN protection for otherTaxableIncome
-      const otherTaxableIncomeValue = isNaN(
-        closuredCopyOfOtherFixedTaxableIncome.value
-      )
-        ? 0
-        : closuredCopyOfOtherFixedTaxableIncome.value;
-
-      if (isNaN(closuredCopyOfOtherFixedTaxableIncome.value)) {
-        console.warn(
-          `[NaN Protection] otherTaxableIncome was NaN, using 0 instead`
-        );
-      }
-
-      // debugger;
-      const opts = {
-        otherTaxableIncome: otherTaxableIncomeValue,
-        ssBenefit: ssBenefits, // Include Social Security benefits in tax calculation
-        standardDeduction: getStandardDeduction(
-          inputs.filingStatus,
-          year, // year is already the actual year (e.g., 2040)
-          inputs.inflation
-        ),
-        brackets: getTaxBrackets(inputs.filingStatus, year, inputs.inflation),
-        precision: 0.01, // Precision for binary search convergence
-      };
 
       const withdrawalResult = determine401kWithdrawalToHitNetTargetOf(
         desiredNetAmount,
@@ -606,10 +607,15 @@ function createWithdrawalFunctions(
       netReceived = netResult.netIncome;
       updateTargetedAccountBalance(targetedAccountBalance - desiredWithdrawal);
     } else {
+      // debugger;
+      const netResult = calculateNetWhen401kIncomeIs(0, opts);
       // For Savings/Roth accounts, there is no tax impact; simply withdraw the desired amount
-      desiredWithdrawal = Math.min(desiredNetAmount, targetedAccountBalance);
-      netReceived = desiredWithdrawal;
-      updateTargetedAccountBalance(targetedAccountBalance - desiredWithdrawal);
+      netReceived = Math.min(
+        desiredNetAmount - netResult.netIncome,
+        targetedAccountBalance
+      );
+      desiredWithdrawal = netReceived; // Gross equals net for Savings/Roth
+      updateTargetedAccountBalance(targetedAccountBalance - netReceived);
     }
 
     // Track withdrawals by source
@@ -688,7 +694,7 @@ function createWithdrawalFunctions(
   return result;
 }
 
-function extractSpouseInputs(inputs, age, benefitAmounts) {
+function extractSpouseBenefitInputs(inputs, age, benefitAmounts) {
   const spouse = {
     ssGross: 0,
     penGross: 0,
@@ -770,142 +776,135 @@ function calculateRetirementYearData(
 
   const retirementYear =
     new Date().getFullYear() + inputs.totalWorkingYears + yearIndex;
-
   // Set basic values in result object
+
   result.year = retirementYear;
   result.age = age;
   result.salary = 0;
   result.contrib = 0;
 
-  console.log(
-    `-----------------------------------------------\n--- Retirement Year ${
-      yearIndex + 1
-    } (Age ${age}) (Year ${retirementYear}) ---\n-----------------------------------------------`
-  );
+  const DUMP_TO_CONSOLE = age == 62;
+
+  if (DUMP_TO_CONSOLE) {
+    console.log(
+      `-----------------------------------------------\n--- Retirement Year ${
+        yearIndex + 1
+      } (Age ${age}) (Year ${retirementYear}) ---\n-----------------------------------------------`
+    );
+  }
 
   // Income sources (gross amounts)
   const eligibleForSs = age >= inputs.ssStartAge;
   const hasPen = age >= inputs.penStartAge && inputs.penMonthly > 0;
 
-  const mySsGross = eligibleForSs ? benefitAmounts.ssAnnual : 0;
-  const myPenGross = hasPen ? benefitAmounts.penAnnual : 0;
+  const mySsBenefits = {
+    gross: eligibleForSs ? benefitAmounts.ssAnnual : 0,
+    net: 0,
+    taxable: 0,
+    nonTaxable: 0,
+    taxes: 0,
+    taxRate: 0,
+  };
 
-  const spouse = extractSpouseInputs(inputs, age, benefitAmounts);
+  const myPensionBenefits = {
+    gross: hasPen ? benefitAmounts.penAnnual : 0,
+    net: 0,
+    taxable: 0,
+    nonTaxable: 0,
+    taxes: 0,
+    taxRate: 0,
+  };
+
+  const spouse = extractSpouseBenefitInputs(inputs, age, benefitAmounts);
+
+  const spouseSsBenefits = {
+    gross: spouse.ssGross,
+    net: 0,
+    taxable: 0,
+    nonTaxable: 0,
+    taxes: 0,
+    taxRate: 0,
+  };
+
+  const spousePensionBenefits = {
+    gross: spouse.penGross,
+    net: 0,
+    taxable: 0,
+    nonTaxable: 0,
+    taxes: 0,
+    taxRate: 0,
+  };
 
   // Get income adjustments for this age
   const taxableIncomeAdjustment = getTaxableIncomeOverride(age) || 0;
   const taxFreeIncomeAdjustment = getTaxFreeIncomeOverride(age) || 0;
+
   // Get spending need (with additional spending)
-  const additionalSpending = getSpendingOverride(age);
+  let additionalSpending = getSpendingOverride(age);
+
+  if (additionalSpending !== null && additionalSpending > 0) {
+    if (DUMP_TO_CONSOLE) {
+      console.log(
+        `Age ${age}: Adding extra spending $${additionalSpending.toLocaleString()} to base $${spend.toLocaleString()} = total $${actualSpend.toLocaleString()}`
+      );
+    }
+  }
+  if (additionalSpending === null) {
+    setSpendingFieldValue(age, spend);
+    additionalSpending = 0;
+  }
+
+  // Add the additional spend to spend and track as actualSpend
+  const actualSpend = spend + additionalSpending;
 
   // Calculate savings breakdown (track starting balance BEFORE any adjustments for current year)
   const savingsStartBalance = balances.balSavings;
 
-  if (additionalSpending !== null && additionalSpending > 0) {
-    console.log(
-      `Age ${age}: Adding extra spending $${additionalSpending.toLocaleString()} to base $${spend.toLocaleString()} = total $${actualSpend.toLocaleString()}`
-    );
-  }
-  if (additionalSpending === null) {
-    setSpendingFieldValue(age, spend);
-  }
+  // Treat RMDs as a non-adjustable income source
 
-  // Add the additional spend to spend and track as actualSpend
-  const actualSpend = spend + (additionalSpending || 0);
-
-  // STEP 1: Calculate estimated withdrawals for
-  // more conservative interest calculation
-  // Estimate total withdrawals that will happen during the year
-  // let estimatedSpendShortfall =
-  //   actualSpend - (mySsGross + spouse.ssGross + myPenGross + spouse.penGross);
-
-  // if (estimatedSpendShortfall < 0) {
-  //   estimatedSpendShortfall = 0;
-  // }
-
-  // const estimatedSavingsWithdrawals = Math.min(
-  //   estimatedSpendShortfall,
-  //   balances.balSavings
-  // );
-
-  // // Calculate taxable interest on balance AFTER subtracting estimated withdrawals (more conservative)
-  // const savingsBalanceAfterWithdrawals = Math.max(
-  //   0,
-  //   balances.balSavings - estimatedSavingsWithdrawals
-  // );
-
-  // STEP 2: Track pensions
-  const myPenTracker = buildPensionTracker(myPenGross);
-  const spousePenTracker = buildPensionTracker(spouse.penGross);
-
-  // Track taxable income reference to include only
-  // taxable portions plus taxable interest
-  // Ensure all components are valid numbers to prevent NaN
-  // const penGrossTotal = isNaN(myPenTracker.penGross) ? 0 : myPenTracker.penGross;
-  // const spousePenGrossTotal = isNaN(spousePenTracker.penGross)
-  //   ? 0
-  //   : spousePenTracker.penGross;
-  // const taxableInterest = isNaN(taxableInterestEarned)
-  //   ? 0
-  //   : taxableInterestEarned;
-  // const taxableAdjustment = isNaN(taxableIncomeAdjustment)
-  //   ? 0
-  //   : taxableIncomeAdjustment;
-
-  // let totalTaxableIncome = {
-  //   value:
-  //     penGrossTotal + spousePenGrossTotal + taxableInterest + taxableAdjustment,
-  // };
-
-  // Calculate spending need from all benefit sources
-  // Since pensions are fully taxable, we use gross amounts and let the
-  // retirement.js functions handle the complete tax calculation including SS
-
-  // Treat RMDs as a separate income source
-  let rmdAmount = 0;
-  if (inputs.useRMD && age >= 73) {
-    rmdAmount = calculateRMD(age, balances);
-    if (rmdAmount > 0) {
-      // const rmdWithdrawal = withdrawalFunctions.withdrawRMD(rmdAmount);
-      // finalWGross += rmdWithdrawal.gross;
-      // finalWNet += rmdWithdrawal.net;
-      console.log(`RMD at age ${age}: $${rmdAmount.toLocaleString()}`);
+  const rmdAmount =
+    inputs.useRMD && age >= 73 ? calculateRMD(age, balances) : 0;
+  if (rmdAmount > 0) {
+    if (DUMP_TO_CONSOLE) {
+      console.log(`RMD required at age ${age}: $${rmdAmount.toLocaleString()}`);
     }
   }
-  // const totalIncomeStreamsGross =
-  //   myPenTracker.penGross +
-  //   spousePenTracker.penGross +
-  //   mySsGross +
-  //   spouse.ssGross +
-  //   rmdAmount;
-  // const baseSpendNeed = Math.max(0, spend - totalIncomeStreamsGross); // Subtract benefits from spending need
-  const additionalSpendNeed = additionalSpending || 0;
-  const totalNeedNet = spend + additionalSpendNeed;
-  const taxableInterest = balances.taxableInterestEarned || 0;
-  // Build complete income picture for withdrawal functions
-  const otherFixedTaxableIncome = {
-    value:
-      myPenTracker.penGross +
-      spousePenTracker.penGross +
-      taxableInterest +
-      taxableIncomeAdjustment +
-      rmdAmount,
-  };
+  // Track taxable interest earned last year
+  const taxableInterest = balances.taxableInterestEarned;
+
+  // Build complete taxable income picture for withdrawal functions
+  const fixedPortionOfTaxableIncome =
+    myPensionBenefits.gross +
+    spousePensionBenefits.gross +
+    taxableInterest +
+    taxableIncomeAdjustment +
+    rmdAmount;
 
   // debugger;
-  console.log("Age", age, "Spending Need Debug:");
-  console.log("- spend                   : ", spend);
-  console.log("- additionalSpending      : ", additionalSpending);
-  console.log("- rmd                     : ", rmdAmount);
-  console.log("- totalNeedNet            : ", totalNeedNet);
-  console.log("- totalIncomeStreamsGross : ", otherFixedTaxableIncome.value);
+  if (DUMP_TO_CONSOLE) {
+    console.log("Age", age, "Spending Need Debug:");
+    console.log("- spend".padEnd(30), spend);
+    console.log("- additionalSpending".padEnd(30), additionalSpending);
+    console.log("- totalNeedNet".padEnd(30), actualSpend);
+    console.log("- rmd".padEnd(30), rmdAmount);
+    console.log(
+      "- taxableIncomeAdjustment".padEnd(30),
+      taxableIncomeAdjustment
+    );
+    console.log("- taxableInterest".padEnd(30), taxableInterest);
+
+    console.log(
+      "- fixedPortionOfTaxableIncome".padEnd(30),
+      fixedPortionOfTaxableIncome
+    );
+  }
 
   const withdrawalFunctions = createWithdrawalFunctions(
     inputs,
     balances,
-    otherFixedTaxableIncome.value,
+    fixedPortionOfTaxableIncome,
     retirementYear,
-    mySsGross + spouse.ssGross // Pass SS benefits to withdrawal functions
+    mySsBenefits.gross + spouseSsBenefits.gross // Pass SS benefits to withdrawal functions
   );
 
   // Calculate withdrawal needs and execute withdrawals
@@ -917,7 +916,7 @@ function calculateRetirementYearData(
   // we can calculate the net benefit amounts directly
   // const netBenefitsFromRetirementJs = finalWNet; // Start with what we got from RMD
 
-  let remainingNeedNet = Math.max(0, totalNeedNet);
+  let remainingNeedNet = Math.max(0, actualSpend);
 
   // Handle remaining withdrawals using the specified order
   for (const k of inputs.order) {
@@ -935,13 +934,15 @@ function calculateRetirementYearData(
 
   // debugger;
   // If no withdrawals were made, we still need to calculate taxes on pension/SS income
-  if (!taxCalculation && otherFixedTaxableIncome.value > 0) {
-    console.log(
-      "No withdrawals made, but calculating taxes on pension/SS income..."
-    );
+  if (!taxCalculation && fixedPortionOfTaxableIncome > 0) {
+    if (DUMP_TO_CONSOLE) {
+      console.log(
+        "No withdrawals made, but calculating taxes on pension/SS income..."
+      );
+    }
     const opts = {
-      otherTaxableIncome: otherFixedTaxableIncome.value,
-      ssBenefit: mySsGross + spouse.ssGross,
+      otherTaxableIncome: fixedPortionOfTaxableIncome,
+      ssBenefit: mySsBenefits.gross + spouseSsBenefits.gross, // Include Social Security benefits in tax calculation
       standardDeduction: getStandardDeduction(
         inputs.filingStatus,
         retirementYear,
@@ -975,13 +976,13 @@ function calculateRetirementYearData(
   }
 
   // Get detailed Social Security calculation results for breakdown objects
-  if (mySsGross > 0 || spouse.ssGross > 0) {
+  if (mySsBenefits.gross > 0 || spouseSsBenefits.gross > 0) {
     const totalOtherTaxableIncome =
-      otherFixedTaxableIncome.value +
+      fixedPortionOfTaxableIncome +
       (taxCalculation ? taxCalculation.withdrawalIncome || 0 : 0);
 
     const ssResult = determineTaxablePortionOfSocialSecurity(
-      mySsGross + spouse.ssGross,
+      mySsBenefits.gross + spouseSsBenefits.gross,
       totalOtherTaxableIncome
     );
 
@@ -991,15 +992,21 @@ function calculateRetirementYearData(
   // For Social Security breakdown, we still need some manual calculation since we need separate spouse results
   // But we can use the taxable amounts from retirement.js
   const ssNonTaxable =
-    mySsGross -
-    (totalSsTaxable * mySsGross) / (mySsGross + spouse.ssGross || 1);
+    mySsBenefits.gross -
+    (totalSsTaxable * mySsBenefits.gross) /
+      (mySsBenefits.gross + spouseSsBenefits.gross || 1);
   const spouseSsNonTaxable =
-    spouse.ssGross -
-    (totalSsTaxable * spouse.ssGross) / (mySsGross + spouse.ssGross || 1);
+    spouseSsBenefits.gross -
+    (totalSsTaxable * spouseSsBenefits.gross) /
+      (mySsBenefits.gross + spouseSsBenefits.gross || 1);
 
   // Calculate net income and handle overage BEFORE growing balances
   const grossIncomeFromBenefitsAndWithdrawals =
-    mySsGross + spouse.ssGross + myPenGross + spouse.penGross + finalWGross;
+    mySsBenefits.gross +
+    spouseSsBenefits.gross +
+    myPensionBenefits.gross +
+    spousePensionBenefits.gross +
+    finalWGross;
   const netIncomeFromTaxableSources =
     grossIncomeFromBenefitsAndWithdrawals - taxesThisYear;
   const spendingTarget = actualSpend;
@@ -1013,17 +1020,21 @@ function calculateRetirementYearData(
     withdrawalsBySource.savingsAccount += additionalSavingsWithdrawal;
   }
 
+  // debugger;
   let actualSavingsWithdrawal = withdrawalsBySource.savingsAccount; // Track the actual amount withdrawn from savings
 
   // Calculate total net income
-  const totalNetIncome =
-    netIncomeFromTaxableSources + additionalSavingsWithdrawal;
+  const totalNetIncome = (
+    netIncomeFromTaxableSources + additionalSavingsWithdrawal
+  ).round(0);
 
-  console.log("Age", age, "Net Income Debug:");
-  console.log("- netIncomeFromTaxableSources:", netIncomeFromTaxableSources);
-  console.log("- additionalSavingsWithdrawal:", additionalSavingsWithdrawal);
-  console.log("- totalNetIncome:", totalNetIncome);
-  console.log("- spendingTarget:", spendingTarget);
+  if (DUMP_TO_CONSOLE) {
+    console.log("Age", age, "Net Income Debug:");
+    console.log("- netIncomeFromTaxableSources:", netIncomeFromTaxableSources);
+    console.log("- additionalSavingsWithdrawal:", additionalSavingsWithdrawal);
+    console.log("- totalNetIncome:", totalNetIncome);
+    console.log("- spendingTarget:", spendingTarget);
+  }
 
   // Update final withdrawal amounts to include any additional savings withdrawal
   const totalWithdrawals = finalWGross + additionalSavingsWithdrawal;
@@ -1035,6 +1046,10 @@ function calculateRetirementYearData(
   // deposits due to tax-free income adjustments or overage deposits
   const savingsInterestEarnedForTheYear =
     balances.balSavings * inputs.rateOfSavings;
+
+  if (DUMP_TO_CONSOLE) {
+    debugger;
+  }
   // Track taxable interest earned for reporting purposes and next year's taxes
   balances.taxableInterestEarned = savingsInterestEarnedForTheYear;
   // Note: interest is calculated on the balance before growth and before deposits
@@ -1072,25 +1087,25 @@ function calculateRetirementYearData(
 
   // For display purposes: allocate taxes proportionally (only to taxable income sources)
   const ssNetAdjusted =
-    mySsGross > 0 && grossIncomeFromBenefitsAndWithdrawals > 0
-      ? (mySsGross / grossIncomeFromBenefitsAndWithdrawals) *
+    mySsBenefits.gross > 0 && grossIncomeFromBenefitsAndWithdrawals > 0
+      ? (mySsBenefits.gross / grossIncomeFromBenefitsAndWithdrawals) *
         netIncomeFromTaxableSources
-      : mySsGross;
+      : mySsBenefits.gross;
   const spouseSsNetAdjusted =
-    spouse.ssGross > 0 && grossIncomeFromBenefitsAndWithdrawals > 0
-      ? (spouse.ssGross / grossIncomeFromBenefitsAndWithdrawals) *
+    spouseSsBenefits.gross > 0 && grossIncomeFromBenefitsAndWithdrawals > 0
+      ? (spouseSsBenefits.gross / grossIncomeFromBenefitsAndWithdrawals) *
         netIncomeFromTaxableSources
-      : spouse.ssGross;
+      : spouseSsBenefits.gross;
   const penNetAdjusted =
-    myPenGross > 0 && grossIncomeFromBenefitsAndWithdrawals > 0
-      ? (myPenGross / grossIncomeFromBenefitsAndWithdrawals) *
+    myPensionBenefits.gross > 0 && grossIncomeFromBenefitsAndWithdrawals > 0
+      ? (myPensionBenefits.gross / grossIncomeFromBenefitsAndWithdrawals) *
         netIncomeFromTaxableSources
-      : myPenGross;
+      : myPensionBenefits.gross;
   const spousePenNetAdjusted =
-    spouse.penGross > 0 && grossIncomeFromBenefitsAndWithdrawals > 0
-      ? (spouse.penGross / grossIncomeFromBenefitsAndWithdrawals) *
+    spousePensionBenefits.gross > 0 && grossIncomeFromBenefitsAndWithdrawals > 0
+      ? (spousePensionBenefits.gross / grossIncomeFromBenefitsAndWithdrawals) *
         netIncomeFromTaxableSources
-      : spouse.penGross;
+      : spousePensionBenefits.gross;
   const withdrawalNetAdjusted =
     finalWGross > 0 && grossIncomeFromBenefitsAndWithdrawals > 0
       ? (finalWGross / grossIncomeFromBenefitsAndWithdrawals) *
@@ -1123,26 +1138,32 @@ function calculateRetirementYearData(
     totalNet: withdrawalNetAdjusted + additionalSavingsWithdrawal,
   };
 
-  console.log("Age", age, "Withdrawal Debug:");
-  console.log(
-    "- withdrawalsBySource.savingsAccount:",
-    withdrawalsBySource.savingsAccount
-  );
-  console.log(
-    "- withdrawalBreakdown.savingsNet:",
-    withdrawalBreakdown.savingsNet
-  );
-  console.log("- withdrawalBreakdown.totalNet:", withdrawalBreakdown.totalNet);
+  if (DUMP_TO_CONSOLE) {
+    console.log("Age", age, "Withdrawal Debug:");
+    console.log(
+      "- withdrawalsBySource.savingsAccount:",
+      withdrawalsBySource.savingsAccount
+    );
+    console.log(
+      "- withdrawalBreakdown.savingsNet:",
+      withdrawalBreakdown.savingsNet
+    );
+    console.log(
+      "- withdrawalBreakdown.totalNet:",
+      withdrawalBreakdown.totalNet
+    );
+  }
 
   // For tax allocation display purposes
   const ssTaxAllocated =
     grossIncomeFromBenefitsAndWithdrawals > 0
-      ? ((mySsGross + spouse.ssGross) / grossIncomeFromBenefitsAndWithdrawals) *
+      ? ((mySsBenefits.gross + spouseSsBenefits.gross) /
+          grossIncomeFromBenefitsAndWithdrawals) *
         taxesThisYear
       : 0;
   const penTaxAllocated =
     grossIncomeFromBenefitsAndWithdrawals > 0
-      ? ((myPenGross + spouse.penGross) /
+      ? ((myPensionBenefits.gross + spousePensionBenefits.gross) /
           grossIncomeFromBenefitsAndWithdrawals) *
         taxesThisYear
       : 0;
@@ -1159,8 +1180,8 @@ function calculateRetirementYearData(
   const totalNonTaxableIncome =
     ssNonTaxable +
     spouseSsNonTaxable +
-    myPenTracker.penNonTaxable +
-    spousePenTracker.penNonTaxable +
+    myPensionBenefits.nonTaxable +
+    spousePensionBenefits.nonTaxable +
     withdrawalsBySource.savingsAccount +
     withdrawalsBySource.roth +
     taxFreeIncomeAdjustment;
@@ -1168,12 +1189,12 @@ function calculateRetirementYearData(
   // Gross taxable income includes pre-tax withdrawals + taxable interest earned + taxable portions of benefits + taxable income adjustments
   // Ensure all components are valid numbers to prevent NaN
   // Calculate gross taxable income for display purposes using retirement.js results
-  const grossPenGross = isNaN(myPenTracker.penGross)
+  const grossPenGross = isNaN(myPensionBenefits.gross)
     ? 0
-    : myPenTracker.penGross;
-  const grossSpousePenGross = isNaN(spousePenTracker.penGross)
+    : myPensionBenefits.gross;
+  const grossSpousePenGross = isNaN(spousePensionBenefits.gross)
     ? 0
-    : spousePenTracker.penGross;
+    : spousePensionBenefits.gross;
   const grossSsTaxable = totalSsTaxable; // Use total from retirement.js calculation
   const grossSpouseSsTaxable = 0; // Spouse SS included in totalSsTaxable
   const grossRetirementWithdrawals = isNaN(
@@ -1201,8 +1222,8 @@ function calculateRetirementYearData(
   const totalGrossIncome =
     ssNonTaxable +
     spouseSsNonTaxable +
-    myPenTracker.penNonTaxable +
-    spousePenTracker.penNonTaxable +
+    myPensionBenefits.nonTaxable +
+    spousePensionBenefits.nonTaxable +
     grossTaxableIncome;
 
   // Effective tax rate calculation
@@ -1211,9 +1232,11 @@ function calculateRetirementYearData(
       ? (taxesThisYear / totalTaxableIncomeAfterDeduction) * 100
       : 0;
 
-  console.log(
-    `Age ${age}: Total taxes = ${taxesThisYear}, Taxable income = ${totalTaxableIncomeAfterDeduction}`
-  );
+  if (DUMP_TO_CONSOLE) {
+    console.log(
+      `Age ${age}: Total taxes = ${taxesThisYear}, Taxable income = ${totalTaxableIncomeAfterDeduction}`
+    );
+  }
 
   // Calculate standard deduction for this year
   const standardDeduction = getStandardDeduction(
@@ -1235,16 +1258,16 @@ function calculateRetirementYearData(
     withdrawalBreakdown.savingsNet + withdrawalBreakdown.rothNet;
 
   result.provisionalIncome = provisionalIncome;
-  result.ssGross = mySsGross;
+  result.ssGross = mySsBenefits.gross;
   result.ss = ssNetAdjusted;
-  result.spouseSsGross = spouse.ssGross;
+  result.spouseSsGross = spouseSsBenefits.gross;
   result.spouseSs = spouseSsNetAdjusted;
   result.ssTaxes = ssTaxAllocated;
 
   result.pen = penNetAdjusted;
   result.spousePen = spousePenNetAdjusted;
-  result.penGross = myPenGross;
-  result.spousePenGross = spouse.penGross;
+  result.penGross = myPensionBenefits.gross;
+  result.spousePenGross = spousePensionBenefits.gross;
 
   result.taxes = taxesThisYear;
   result.otherTaxes = otherTaxes;
@@ -1289,17 +1312,24 @@ function calculateRetirementYearData(
   result.withdrawalBreakdown = withdrawalBreakdown;
 
   result.ssBreakdown = {
-    ssGross: mySsGross,
+    ssGross: mySsBenefits.gross,
     ssTaxableAmount:
-      totalSsTaxable * (mySsGross / (mySsGross + spouse.ssGross || 1)),
+      totalSsTaxable *
+      (mySsBenefits.gross / (mySsBenefits.gross + spouseSsBenefits.gross || 1)),
     ssNonTaxable: ssNonTaxable,
-    ssTaxes: ssTaxAllocated * (mySsGross / (mySsGross + spouse.ssGross || 1)),
-    ssSpouseGross: spouse.ssGross,
+    ssTaxes:
+      ssTaxAllocated *
+      (mySsBenefits.gross / (mySsBenefits.gross + spouseSsBenefits.gross || 1)),
+    ssSpouseGross: spouseSsBenefits.gross,
     ssSpouseTaxableAmount:
-      totalSsTaxable * (spouse.ssGross / (mySsGross + spouse.ssGross || 1)),
+      totalSsTaxable *
+      (spouseSsBenefits.gross /
+        (mySsBenefits.gross + spouseSsBenefits.gross || 1)),
     ssSpouseNonTaxable: spouseSsNonTaxable,
     ssSpouseTaxes:
-      ssTaxAllocated * (spouse.ssGross / (mySsGross + spouse.ssGross || 1)),
+      ssTaxAllocated *
+      (spouseSsBenefits.gross /
+        (mySsBenefits.gross + spouseSsBenefits.gross || 1)),
     calculationDetails: ssCalculationDetails, // Detailed calculation methodology from retirement.js
     otherTaxableIncome: taxCalculation
       ? taxCalculation.totalTaxableIncome || 0
@@ -1307,33 +1337,41 @@ function calculateRetirementYearData(
   };
 
   result.pensionBreakdown = {
-    penGross: myPenGross,
-    penTaxableAmount: myPenGross, // Pensions are typically fully taxable
-    penNonTaxable: myPenTracker.penNonTaxable || 0,
+    penGross: myPensionBenefits.gross,
+    penTaxableAmount: myPensionBenefits.gross, // Pensions are typically fully taxable
+    penNonTaxable: myPensionBenefits.nonTaxable || 0,
     penTaxes:
-      penTaxAllocated * (myPenGross / (myPenGross + spouse.penGross || 1)),
+      penTaxAllocated *
+      (myPensionBenefits.gross /
+        (myPensionBenefits.gross + spousePensionBenefits.gross || 1)),
     pensionTaxRate:
-      myPenGross > 0
+      myPensionBenefits.gross > 0
         ? (penTaxAllocated *
-            (myPenGross / (myPenGross + spouse.penGross || 1))) /
-          myPenGross
+            (myPensionBenefits.gross /
+              (myPensionBenefits.gross + spousePensionBenefits.gross || 1))) /
+          myPensionBenefits.gross
         : 0,
-    penSpouseGross: spouse.penGross,
-    penSpouseTaxableAmount: spouse.penGross, // Pensions are typically fully taxable
-    penSpouseNonTaxable: spousePenTracker.penNonTaxable || 0,
+    penSpouseGross: spousePensionBenefits.gross,
+    penSpouseTaxableAmount: spousePensionBenefits.gross, // Pensions are typically fully taxable
+    penSpouseNonTaxable: spousePensionBenefits.nonTaxable || 0,
     penSpouseTaxes:
-      penTaxAllocated * (spouse.penGross / (myPenGross + spouse.penGross || 1)),
+      penTaxAllocated *
+      (spousePensionBenefits.gross /
+        (myPensionBenefits.gross + spousePensionBenefits.gross || 1)),
     pensionSpouseTaxRate:
-      spouse.penGross > 0
+      spousePensionBenefits.gross > 0
         ? (penTaxAllocated *
-            (spouse.penGross / (myPenGross + spouse.penGross || 1))) /
-          spouse.penGross
+            (spousePensionBenefits.gross /
+              (myPensionBenefits.gross + spousePensionBenefits.gross || 1))) /
+          spousePensionBenefits.gross
         : 0,
     calculationDetails: null,
   };
 
   // Dump the result to the console
-  console.log("Retirement Year Result:", result);
+  if (DUMP_TO_CONSOLE) {
+    console.log("Retirement Year Result:", result);
+  }
 
   return result;
 }
@@ -1477,7 +1515,8 @@ function calc() {
     balPre: inputs.balPre,
     balRoth: inputs.balRoth,
     balSavings: inputs.balSavings,
-    savingsInterestEarned: inputs.balSavings / (1 + inputs.rateOfSavings), // Track taxable interest earned each year
+    taxableInterestEarned:
+      inputs.balSavings - inputs.balSavings / (1 + inputs.rateOfSavings), // Track taxable interest earned each year
   };
 
   // Reset calculations array
