@@ -214,8 +214,6 @@ function calculateWorkingYearData(inputs, year, salary, balances) {
     spouseSs: 0,
     spousePen: 0,
     spend: 0,
-    wNet: 0,
-    w401kNet: 0,
     withdrawals: {},
     taxes: 0,
     ssTaxes: 0,
@@ -324,6 +322,16 @@ function calculateWorkingYearData(inputs, year, salary, balances) {
     (balances.balSavings + cTax + taxFreeIncomeAdjustment) *
     (1 + inputs.rateOfSavings);
 
+  const withdrawals = {
+    net: 0,
+    retirementAccountNet: 0,
+    savingsRothNet: 0,
+    gross: 0,
+    retirementAccountGross: 0,
+    savingsGross: 0,
+    rothGross: 0,
+  };
+
   // Update all the final values in the result object
   result.contrib = cPre + cRoth + cTax + match;
   result.ss = 0;
@@ -331,13 +339,7 @@ function calculateWorkingYearData(inputs, year, salary, balances) {
   result.spouseSs = 0;
   result.spousePen = 0;
   result.spend = currentYearSpending;
-  result.withdrawals.net = 0;
-  result.withdrawals.retirementAccountNet = 0;
-  result.withdrawals.savingsRothNet = 0;
-  result.withdrawals.gross = 0;
-  result.withdrawals.retirementAccountGross = 0;
-  result.withdrawals.savingsGross = 0;
-  result.withdrawals.rothGross = 0;
+  result.withdrawals = withdrawals;
   result.taxes = workingYearTaxes;
   result.ssTaxes = 0;
   result.otherTaxes = workingYearTaxes;
@@ -721,22 +723,23 @@ function calculateRetirementYearData(
     age: 0,
     salary: 0,
     contrib: 0,
-    ss: 0,
     pen: 0,
-    spouseSs: 0,
     spousePen: 0,
     spend: 0,
-    wNet: 0,
     withdrawals: {},
+
+    ss: 0,
     ssGross: 0,
     penGross: 0,
+    spouseSs: 0,
     spouseSsGross: 0,
     spousePenGross: 0,
-    taxes: 0,
     ssTaxes: 0,
-    otherTaxes: 0,
-    penTaxes: 0,
-    withdrawalTaxes: 0,
+
+    taxes12345: 0,
+    otherTaxes12345: 0,
+    penTaxes12345: 0,
+
     nonTaxableIncome: 0,
     taxableIncome: 0,
     taxableInterest: 0,
@@ -771,7 +774,7 @@ function calculateRetirementYearData(
   result.salary = 0;
   result.contrib = 0;
 
-  const DUMP_TO_CONSOLE = age == 62;
+  const DUMP_TO_CONSOLE = age == 65;
 
   if (DUMP_TO_CONSOLE) {
     console.log(
@@ -784,11 +787,14 @@ function calculateRetirementYearData(
   const withdrawals = {
     savingsRothNet: 0,
     gross: 0,
+    net: 0,
     retirementAccountGross: 0,
     retirementAccountNet: 0,
     savingsGross: 0,
     rothGross: 0,
+    taxes: 0,
   };
+
   // Income sources (gross amounts)
   const eligibleForSs = age >= inputs.ssStartAge;
   const hasPen = age >= inputs.penStartAge && inputs.penMonthly > 0;
@@ -1043,9 +1049,9 @@ function calculateRetirementYearData(
   const savingsInterestEarnedForTheYear =
     balances.balSavings * inputs.rateOfSavings;
 
-  if (DUMP_TO_CONSOLE) {
-    debugger;
-  }
+  // if (DUMP_TO_CONSOLE) {
+  //   debugger;
+  // }
   // Track taxable interest earned for reporting purposes and next year's taxes
   balances.taxableInterestEarned = savingsInterestEarnedForTheYear;
   // Note: interest is calculated on the balance before growth and before deposits
@@ -1163,7 +1169,7 @@ function calculateRetirementYearData(
           grossIncomeFromBenefitsAndWithdrawals) *
         taxesThisYear
       : 0;
-  const withdrawalTaxes =
+  withdrawals.taxes =
     grossIncomeFromBenefitsAndWithdrawals > 0
       ? (finalWGross / grossIncomeFromBenefitsAndWithdrawals) * taxesThisYear
       : 0;
@@ -1245,7 +1251,7 @@ function calculateRetirementYearData(
   result.spend = actualSpend;
 
   // result.withdrawals.gross = finalWGrossTotal;
-  // result.wNet = finalWNetTotal;
+  // result.withdrawals.net = finalWNetTotal;
   withdrawals.retirementAccountGross = withdrawalsBySource.retirementAccount;
   withdrawals.savingsGross = withdrawalsBySource.savingsAccount;
   withdrawals.rothGross = withdrawalsBySource.roth;
@@ -1267,10 +1273,9 @@ function calculateRetirementYearData(
   result.penGross = myPensionBenefits.gross;
   result.spousePenGross = spousePensionBenefits.gross;
 
-  result.taxes = taxesThisYear;
-  result.otherTaxes = otherTaxes;
-  result.penTaxes = penTaxAllocated;
-  result.withdrawalTaxes = withdrawalTaxes;
+  result.taxes12345 = taxesThisYear;
+  result.otherTaxes12345 = otherTaxes;
+  result.penTaxes12345 = penTaxAllocated;
   result.nonTaxableIncome = totalNonTaxableIncome;
   result.taxableIncome = totalTaxableIncomeAfterDeduction;
   result.taxableInterest = savingsInterestEarnedForTheYear;
@@ -1577,7 +1582,7 @@ function calc() {
     calculations.push(yearData);
 
     const totalBal = yearData.total;
-    totalTaxes += yearData.taxes;
+    totalTaxes += yearData.taxes12345;
     if (totalBal < maxDrawdown.value) {
       maxDrawdown = { year: yearData.year, value: totalBal };
     }

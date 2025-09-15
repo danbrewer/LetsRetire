@@ -981,10 +981,10 @@ function handleJSONFile(event) {
   const reader = new FileReader();
   reader.onload = function (e) {
     try {
-      const data = JSON.parse(e.target.result);
+      const fileData = JSON.parse(e.target.result);
 
       // Validate the JSON structure
-      if (!data.inputs || typeof data.inputs !== "object") {
+      if (!fileData.inputs || typeof fileData.inputs !== "object") {
         showToast(
           "Invalid Format",
           "Invalid JSON file format. Expected retirement calculator scenario data.",
@@ -997,7 +997,7 @@ function handleJSONFile(event) {
       let totalCount = 0;
 
       // Load all input values
-      Object.entries(data.inputs).forEach(([id, value]) => {
+      Object.entries(fileData.inputs).forEach(([id, value]) => {
         totalCount++;
         const element = document.getElementById(id);
         if (element) {
@@ -1010,13 +1010,13 @@ function handleJSONFile(event) {
       });
 
       // If there are spending override fields in the import, regenerate the fields first
-      const hasSpendingOverrides = Object.keys(data.inputs).some((id) =>
+      const hasSpendingOverrides = Object.keys(fileData.inputs).some((id) =>
         id.startsWith("spending_")
       );
       if (hasSpendingOverrides) {
         regenerateSpendingFields();
         // Now load the spending override values
-        Object.entries(data.inputs).forEach(([id, value]) => {
+        Object.entries(fileData.inputs).forEach(([id, value]) => {
           if (id.startsWith("spending_")) {
             const element = document.getElementById(id);
             if (element) {
@@ -1028,17 +1028,17 @@ function handleJSONFile(event) {
       }
 
       // If there are income adjustment fields in the import, regenerate the fields first
-      const hasTaxableIncomeOverrides = Object.keys(data.inputs).some((id) =>
-        id.startsWith("taxableIncome_")
+      const hasTaxableIncomeOverrides = Object.keys(fileData.inputs).some(
+        (id) => id.startsWith("taxableIncome_")
       );
-      const hasTaxFreeIncomeOverrides = Object.keys(data.inputs).some((id) =>
-        id.startsWith("taxFreeIncome_")
+      const hasTaxFreeIncomeOverrides = Object.keys(fileData.inputs).some(
+        (id) => id.startsWith("taxFreeIncome_")
       );
       if (hasTaxableIncomeOverrides || hasTaxFreeIncomeOverrides) {
         regenerateTaxableIncomeFields();
         regenerateTaxFreeIncomeFields();
         // Now load the income adjustment values
-        Object.entries(data.inputs).forEach(([id, value]) => {
+        Object.entries(fileData.inputs).forEach(([id, value]) => {
           if (
             id.startsWith("taxableIncome_") ||
             id.startsWith("taxFreeIncome_")
@@ -1054,12 +1054,12 @@ function handleJSONFile(event) {
 
       // Show import summary
       let summary = `Loaded ${loadedCount} of ${totalCount} settings.`;
-      if (data.description) {
-        summary += `\nDescription: ${data.description}`;
+      if (fileData.description) {
+        summary += `\nDescription: ${fileData.description}`;
       }
-      if (data.exportDate) {
+      if (fileData.exportDate) {
         summary += `\nExported: ${new Date(
-          data.exportDate
+          fileData.exportDate
         ).toLocaleDateString()}`;
       }
 
@@ -1198,9 +1198,9 @@ function generatePDFReport() {
     // Executive Summary with status indicator
     yPos = addSectionHeader("Executive Summary", yPos);
 
-    const last = calculations[calculations.length - 1];
+    const calculation = calculations[calculations.length - 1];
     const fundedTo =
-      last.total > 0
+      calculation.total > 0
         ? inputs.endAge
         : calculations.reduce(
             (lastGoodAge, r) => (r.total > 0 ? r.age : lastGoodAge),
@@ -1290,7 +1290,7 @@ function generatePDFReport() {
     );
     yPos = addKeyValuePair(
       "Projected Final Balance:",
-      fmt(Math.max(0, last.total)),
+      fmt(Math.max(0, calculation.total)),
       yPos,
       0,
       isFullyFunded ? colors.success : colors.danger
@@ -1791,7 +1791,7 @@ function generatePDFReport() {
       );
     });
 
-    keyYears.forEach((calc, index) => {
+    keyYears.forEach((calculation, index) => {
       if (yPos > 270) {
         // Page break
         doc.addPage();
@@ -1820,25 +1820,31 @@ function generatePDFReport() {
       }
 
       // Highlight retirement transition
-      if (calc.age === inputs.retireAge) {
+      if (calculation.age === inputs.retireAge) {
         addColoredRect(15, yPos - 3, 180, 8, colors.warning, 0.2);
       }
 
       const values = [
-        calc.year.toString(),
-        calc.age.toString(),
-        calc.spend ? "$" + (calc.spend / 1000).toFixed(2) + "k" : "",
-        calc.ss ? "$" + (calc.ss / 1000).toFixed(2) + "k" : "",
-        calc.pen ? "$" + (calc.pen / 1000).toFixed(2) + "k" : "",
-        calc.wNet ? "$" + (calc.wNet / 1000).toFixed(2) + "k" : "",
-        calc.taxes ? "$" + (calc.taxes / 1000).toFixed(2) + "k" : "",
-        "$" + (calc.total / 1000).toFixed(2) + "k",
+        calculation.year.toString(),
+        calculation.age.toString(),
+        calculation.spend
+          ? "$" + (calculation.spend / 1000).toFixed(2) + "k"
+          : "",
+        calculation.ss ? "$" + (calculation.ss / 1000).toFixed(2) + "k" : "",
+        calculation.pen ? "$" + (calculation.pen / 1000).toFixed(2) + "k" : "",
+        calculation.withdrawals.net
+          ? "$" + (calculation.withdrawals.net / 1000).toFixed(2) + "k"
+          : "",
+        calculation.taxes12345
+          ? "$" + (calculation.taxes12345 / 1000).toFixed(2) + "k"
+          : "",
+        "$" + (calculation.total / 1000).toFixed(2) + "k",
       ];
 
       xPos = 20;
       values.forEach((value, i) => {
         // Color code negative balances
-        if (i === 7 && calc.total < 0) {
+        if (i === 7 && calculation.total < 0) {
           doc.setTextColor(
             colors.danger[0],
             colors.danger[1],
@@ -2257,10 +2263,10 @@ function generateOutputAndSummary(inputs, rows) {
     .join("");
 
   // KPIs
-  const last = calculations[calculations.length - 1];
+  const calculation = calculations[calculations.length - 1];
   // Find the last age where there's still money, or endAge if money lasts throughout
   const fundedTo =
-    last.total > 0
+    calculation.total > 0
       ? inputs.endAge
       : calculations.reduce(
           (lastGoodAge, r) => (r.total > 0 ? r.age : lastGoodAge),
@@ -2269,7 +2275,7 @@ function generateOutputAndSummary(inputs, rows) {
   $("kpiAge").innerHTML = `${fundedTo} <span class="pill ${
     fundedTo >= inputs.endAge ? "ok" : "alert"
   }">${fundedTo >= inputs.endAge ? "Fully funded" : "Shortfall"}</span>`;
-  $("kpiEndBal").textContent = fmt(Math.max(0, last.total));
+  $("kpiEndBal").textContent = fmt(Math.max(0, calculation.total));
   $("kpiDraw").textContent = `${inputs.retireAge}`;
   $("kpiTax").textContent = fmt(
     inputs.balPre + inputs.balRoth + inputs.balSavings

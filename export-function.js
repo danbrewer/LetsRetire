@@ -7,7 +7,7 @@ function exportTotalNetToJson(index) {
     return;
   }
 
-  const data = calculations[index];
+  const calculation = calculations[index];
 
   // Helper function to format values for CSV (removes formatting, handles nulls)
   const csvFmt = (val) => {
@@ -19,49 +19,51 @@ function exportTotalNetToJson(index) {
   let csvContent = "data:text/csv;charset=utf-8,";
 
   // Add header with age and year
-  csvContent += `Total Net Income Breakdown - Age ${data.age} (Year ${data.year})\n\n`;
+  csvContent += `Total Net Income Breakdown - Age ${calculation.age} (Year ${calculation.year})\n\n`;
 
   // Gross Income Sources section
   csvContent += "Gross Income Sources (Before Taxes)\n";
   csvContent += "Source,Amount,Notes\n";
 
-  if (data.ssGross > 0) {
+  if (calculation.ssGross > 0) {
     csvContent += `Social Security,${csvFmt(
-      data.ssGross
+      calculation.ssGross
     )},Before federal taxation\n`;
   }
-  if (data.spouseSsGross > 0) {
+  if (calculation.spouseSsGross > 0) {
     csvContent += `Spouse Social Security,${csvFmt(
-      data.spouseSsGross
+      calculation.spouseSsGross
     )},Before federal taxation\n`;
   }
-  if (data.penGross > 0) {
-    csvContent += `Pension,${csvFmt(data.penGross)},Before federal taxation\n`;
+  if (calculation.penGross > 0) {
+    csvContent += `Pension,${csvFmt(
+      calculation.penGross
+    )},Before federal taxation\n`;
   }
-  if (data.spousePenGross > 0) {
+  if (calculation.spousePenGross > 0) {
     csvContent += `Spouse Pension,${csvFmt(
-      data.spousePenGross
+      calculation.spousePenGross
     )},Before federal taxation\n`;
   }
-  if (data.withdrawals.gross > 0) {
+  if (calculation.withdrawals.gross > 0) {
     csvContent += `Non-Taxable Withdrawals,${csvFmt(
-      data.withdrawals.gross
+      calculation.withdrawals.gross
     )},Before taxes and penalties\n`;
   }
-  if (data.taxableInterest > 0) {
+  if (calculation.taxableInterest > 0) {
     csvContent += `Taxable Interest,${csvFmt(
-      data.taxableInterest
+      calculation.taxableInterest
     )},Interest income\n`;
   }
 
   // Calculate total gross income
   const grossIncomeTotal =
-    (data.ssGross || 0) +
-    (data.spouseSsGross || 0) +
-    (data.penGross || 0) +
-    (data.spousePenGross || 0) +
-    (data.withdrawals.gross || 0) +
-    (data.taxableInterest || 0);
+    (calculation.ssGross || 0) +
+    (calculation.spouseSsGross || 0) +
+    (calculation.penGross || 0) +
+    (calculation.spousePenGross || 0) +
+    (calculation.withdrawals.gross || 0) +
+    (calculation.taxableInterest || 0);
 
   csvContent += `Total Gross Income,${csvFmt(
     grossIncomeTotal
@@ -71,73 +73,75 @@ function exportTotalNetToJson(index) {
   csvContent += "Income Sources (Net After Taxes)\n";
   csvContent += "Source,Amount,Notes\n";
 
-  if (data.ss > 0) {
-    csvContent += `Social Security,${csvFmt(data.ss)},After federal taxation\n`;
+  if (calculation.ss > 0) {
+    csvContent += `Social Security,${csvFmt(
+      calculation.ss
+    )},After federal taxation\n`;
   }
-  if (data.spouseSs > 0) {
+  if (calculation.spouseSs > 0) {
     csvContent += `Spouse Social Security,${csvFmt(
-      data.spouseSs
+      calculation.spouseSs
     )},After federal taxation\n`;
   }
-  if (data.pen > 0) {
-    csvContent += `Pension,${csvFmt(data.pen)},After federal taxation\n`;
+  if (calculation.pen > 0) {
+    csvContent += `Pension,${csvFmt(calculation.pen)},After federal taxation\n`;
   }
-  if (data.spousePen > 0) {
+  if (calculation.spousePen > 0) {
     csvContent += `Spouse Pension,${csvFmt(
-      data.spousePen
+      calculation.spousePen
     )},After federal taxation\n`;
   }
-  if (data.wNet > 0) {
+  if (calculation.wNet > 0) {
     csvContent += `Non-Taxable Withdrawals,${csvFmt(
-      data.wNet
+      calculation.wNet
     )},After taxes and penalties\n`;
   }
-  if (data.nonTaxableIncome > 0) {
+  if (calculation.nonTaxableIncome > 0) {
     csvContent += `Non-Taxable Income,${csvFmt(
-      data.nonTaxableIncome
+      calculation.nonTaxableIncome
     )},Tax-free income sources\n`;
   }
 
   csvContent += `Total Net Income,${csvFmt(
-    data.totalNetIncome
+    calculation.totalNetIncome
   )},After all taxes\n\n`;
 
   // Withdrawal Breakdown section (if applicable)
-  if (data.withdrawalBreakdown && data.wNet > 0) {
+  if (calculation.withdrawalBreakdown && calculation.wNet > 0) {
     csvContent += "Withdrawal Breakdown\n";
     csvContent += "Account Type,Gross Amount,Net Amount,Notes\n";
 
-    if (data.withdrawalBreakdown.pretax401kGross > 0) {
+    if (calculation.withdrawalBreakdown.pretax401kGross > 0) {
       csvContent += `401k/403b/TSP,${csvFmt(
-        data.withdrawalBreakdown.pretax401kGross
+        calculation.withdrawalBreakdown.pretax401kGross
       )},${csvFmt(
-        data.withdrawalBreakdown.pretax401kNet
+        calculation.withdrawalBreakdown.pretax401kNet
       )},Taxable withdrawal\n`;
     }
-    if (data.withdrawals.savingsGross > 0) {
+    if (calculation.withdrawals.savingsGross > 0) {
       csvContent += `Taxable Savings,${csvFmt(
-        data.withdrawals.savingsGross
-      )},${csvFmt(data.withdrawals.savingsGross)},Tax-free principal\n`;
+        calculation.withdrawals.savingsGross
+      )},${csvFmt(calculation.withdrawals.savingsGross)},Tax-free principal\n`;
     }
-    if (data.withdrawals.rothGross > 0) {
-      csvContent += `Roth IRA,${csvFmt(data.withdrawals.rothGross)},${csvFmt(
-        data.withdrawals.rothGross
-      )},Tax-free withdrawal\n`;
+    if (calculation.withdrawals.rothGross > 0) {
+      csvContent += `Roth IRA,${csvFmt(
+        calculation.withdrawals.rothGross
+      )},${csvFmt(calculation.withdrawals.rothGross)},Tax-free withdrawal\n`;
     }
 
-    csvContent += `Total Withdrawals,${csvFmt(data.withdrawals.gross)},${csvFmt(
-      data.wNet
-    )},Combined Non-Taxable withdrawals\n\n`;
+    csvContent += `Total Withdrawals,${csvFmt(
+      calculation.withdrawals.gross
+    )},${csvFmt(calculation.wNet)},Combined Non-Taxable withdrawals\n\n`;
   }
 
   // Tax Summary
   csvContent += "Tax Summary\n";
   csvContent += "Item,Amount,Notes\n";
   csvContent += `Total Federal Taxes,${csvFmt(
-    data.taxes
+    calculation.taxes12345
   )},All federal taxes owed\n`;
   csvContent += `Taxable Income,${csvFmt(
-    data.taxableIncome
+    calculation.taxableIncome
   )},Income subject to federal tax\n`;
 
   // Create and trigger download
@@ -146,7 +150,7 @@ function exportTotalNetToJson(index) {
   link.setAttribute("href", encodedUri);
   link.setAttribute(
     "download",
-    `retirement_breakdown_age_${data.age}_year_${data.year}.csv`
+    `retirement_breakdown_age_${calculation.age}_year_${calculation.year}.csv`
   );
   document.body.appendChild(link);
   link.click();
