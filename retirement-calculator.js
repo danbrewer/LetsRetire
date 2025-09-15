@@ -216,11 +216,7 @@ function calculateWorkingYearData(inputs, year, salary, balances) {
     spend: 0,
     wNet: 0,
     w401kNet: 0,
-    wSavingsRothNet: 0,
-    wGross: 0,
-    w401kGross: 0,
-    wSavingsGross: 0,
-    wRothGross: 0,
+    withdrawals: {},
     taxes: 0,
     ssTaxes: 0,
     otherTaxes: 0,
@@ -335,13 +331,13 @@ function calculateWorkingYearData(inputs, year, salary, balances) {
   result.spouseSs = 0;
   result.spousePen = 0;
   result.spend = currentYearSpending;
-  result.wNet = 0;
-  result.w401kNet = 0;
-  result.wSavingsRothNet = 0;
-  result.wGross = 0;
-  result.w401kGross = 0;
-  result.wSavingsGross = 0;
-  result.wRothGross = 0;
+  result.withdrawals.net = 0;
+  result.withdrawals.retirementAccountNet = 0;
+  result.withdrawals.savingsRothNet = 0;
+  result.withdrawals.gross = 0;
+  result.withdrawals.retirementAccountGross = 0;
+  result.withdrawals.savingsGross = 0;
+  result.withdrawals.rothGross = 0;
   result.taxes = workingYearTaxes;
   result.ssTaxes = 0;
   result.otherTaxes = workingYearTaxes;
@@ -555,14 +551,11 @@ function createWithdrawalFunctions(
       console.error("Unknown withdrawal kind:", kind);
       return { gross: 0, net: 0 };
     }
-
-    const otherTaxableIncomeValue = isNaN(
-      closuredCopyOfOtherFixedTaxableIncome.value
-    )
+    const otherTaxableIncomeValue = isNaN(closuredCopyOfOtherFixedTaxableIncome)
       ? 0
-      : closuredCopyOfOtherFixedTaxableIncome.value;
+      : closuredCopyOfOtherFixedTaxableIncome;
 
-    if (isNaN(closuredCopyOfOtherFixedTaxableIncome.value)) {
+    if (isNaN(closuredCopyOfOtherFixedTaxableIncome)) {
       console.warn(
         `[NaN Protection] otherTaxableIncome was NaN, using 0 instead`
       );
@@ -734,12 +727,7 @@ function calculateRetirementYearData(
     spousePen: 0,
     spend: 0,
     wNet: 0,
-    w401kNet: 0,
-    wSavingsRothNet: 0,
-    wGross: 0,
-    w401kGross: 0,
-    wSavingsGross: 0,
-    wRothGross: 0,
+    withdrawals: {},
     ssGross: 0,
     penGross: 0,
     spouseSsGross: 0,
@@ -793,6 +781,14 @@ function calculateRetirementYearData(
     );
   }
 
+  const withdrawals = {
+    savingsRothNet: 0,
+    gross: 0,
+    retirementAccountGross: 0,
+    retirementAccountNet: 0,
+    savingsGross: 0,
+    rothGross: 0,
+  };
   // Income sources (gross amounts)
   const eligibleForSs = age >= inputs.ssStartAge;
   const hasPen = age >= inputs.penStartAge && inputs.penMonthly > 0;
@@ -1248,14 +1244,16 @@ function calculateRetirementYearData(
   // Update all the final values in the result object
   result.spend = actualSpend;
 
-  // result.wGross = finalWGrossTotal;
+  // result.withdrawals.gross = finalWGrossTotal;
   // result.wNet = finalWNetTotal;
-  result.w401kGross = withdrawalsBySource.retirementAccount;
-  result.wSavingsGross = withdrawalsBySource.savingsAccount;
-  result.wRothGross = withdrawalsBySource.roth;
-  result.w401kNet = withdrawalBreakdown.pretax401kNet;
-  result.wSavingsRothNet =
+  withdrawals.retirementAccountGross = withdrawalsBySource.retirementAccount;
+  withdrawals.savingsGross = withdrawalsBySource.savingsAccount;
+  withdrawals.rothGross = withdrawalsBySource.roth;
+  withdrawals.retirementAccountNet = withdrawalBreakdown.pretax401kNet;
+  withdrawals.savingsRothNet =
     withdrawalBreakdown.savingsNet + withdrawalBreakdown.rothNet;
+
+  result.withdrawals = withdrawals;
 
   result.provisionalIncome = provisionalIncome;
   result.ssGross = mySsBenefits.gross;

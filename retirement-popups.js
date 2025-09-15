@@ -284,14 +284,19 @@ function showTaxableIncomeBreakdown(yearIndex) {
   }
 
   // Pre-tax withdrawals (401k)
-  if (calculation.w401kGross && calculation.w401kGross > 0) {
+  if (
+    calculation.withdrawals.retirementAccountGross &&
+    calculation.withdrawals.retirementAccountGross > 0
+  ) {
     breakdownHtml += `
       <div class="ss-breakdown-item">
           <span class="ss-breakdown-label">401k Withdrawals:</span>
-          <span class="ss-breakdown-value">${fmt(calculation.w401kGross)}</span>
+          <span class="ss-breakdown-value">${fmt(
+            calculation.withdrawals.retirementAccountGross
+          )}</span>
       </div>
     `;
-    grossTaxableTotal += calculation.w401kGross;
+    grossTaxableTotal += calculation.withdrawals.retirementAccountGross;
   }
 
   // Add separator and totals
@@ -444,27 +449,35 @@ function showNonTaxableIncomeBreakdown(yearIndex) {
   }
 
   // Savings withdrawals (after-tax money)
-  if (calculation.wSavingsGross && calculation.wSavingsGross > 0) {
+  if (
+    calculation.withdrawals.savingsGross &&
+    calculation.withdrawals.savingsGross > 0
+  ) {
     breakdownHtml += `
       <div class="ss-breakdown-item">
           <span class="ss-breakdown-label">Savings Withdrawals:</span>
           <span class="ss-breakdown-value">${fmt(
-            calculation.wSavingsGross
+            calculation.withdrawals.savingsGross
           )}</span>
       </div>
     `;
-    nonTaxableTotal += calculation.wSavingsGross;
+    nonTaxableTotal += calculation.withdrawals.savingsGross;
   }
 
   // Roth withdrawals (tax-free)
-  if (calculation.wRothGross && calculation.wRothGross > 0) {
+  if (
+    calculation.withdrawals.rothGross &&
+    calculation.withdrawals.rothGross > 0
+  ) {
     breakdownHtml += `
       <div class="ss-breakdown-item">
           <span class="ss-breakdown-label">Roth Withdrawals:</span>
-          <span class="ss-breakdown-value">${fmt(calculation.wRothGross)}</span>
+          <span class="ss-breakdown-value">${fmt(
+            calculation.withdrawals.rothGross
+          )}</span>
       </div>
     `;
-    nonTaxableTotal += calculation.wRothGross;
+    nonTaxableTotal += calculation.withdrawals.rothGross;
   }
 
   // Tax-free income adjustments (gifts, inheritance, etc.)
@@ -1154,11 +1167,11 @@ function generateTotalNetBreakdownContent(data) {
   }
 
   // Withdrawals (Gross)
-  if (data.wGross > 0) {
+  if (data.withdrawals.gross > 0) {
     html += `
       <tr>
         <td>Portfolio Withdrawals</td>
-        <td class="amount">${fmt(data.wGross)}</td>
+        <td class="amount">${fmt(data.withdrawals.gross)}</td>
         <td>Before taxes and penalties</td>
       </tr>
     `;
@@ -1181,7 +1194,7 @@ function generateTotalNetBreakdownContent(data) {
     (data.spouseSsGross || 0) +
     (data.penGross || 0) +
     (data.spousePenGross || 0) +
-    (data.wGross || 0) +
+    (data.withdrawals.gross || 0) +
     (data.taxableInterest || 0);
 
   html += `
@@ -1318,34 +1331,38 @@ function generateTotalNetBreakdownContent(data) {
           <tbody>
     `;
 
-    if (data.wSavingsGross > 0) {
+    if (data.withdrawals.savingsGross > 0) {
       html += `
         <tr>
           <td>Savings</td>
-          <td class="amount">${fmt(data.wSavingsGross)}</td>
+          <td class="amount">${fmt(data.withdrawals.savingsGross)}</td>
           <td>Tax-free (already taxed)</td>
         </tr>
       `;
     }
 
-    if (data.wRothGross > 0) {
+    if (data.withdrawals.rothGross > 0) {
       html += `
         <tr>
           <td>Roth IRA/401k</td>
-          <td class="amount">${fmt(data.wRothGross)}</td>
+          <td class="amount">${fmt(data.withdrawals.rothGross)}</td>
           <td>Tax-free qualified distribution</td>
         </tr>
       `;
     }
 
-    if (data.w401kGross > 0) {
+    if (data.withdrawals.retirementAccountGross > 0) {
       const withdrawalTaxes =
-        data.w401kGross -
-        (data.wNet - (data.wSavingsGross || 0) - (data.wRothGross || 0));
+        data.withdrawals.retirementAccountGross -
+        (data.wNet -
+          (data.withdrawals.savingsGross || 0) -
+          (data.withdrawals.rothGross || 0));
       html += `
         <tr>
           <td>Pre-Tax 401k/IRA</td>
-          <td class="amount">${fmt(data.w401kGross)}</td>
+          <td class="amount">${fmt(
+            data.withdrawals.retirementAccountGross
+          )}</td>
           <td>Taxable as ordinary income</td>
         </tr>
       `;
@@ -1362,14 +1379,16 @@ function generateTotalNetBreakdownContent(data) {
 
     // Calculate and add total for Withdrawal Breakdown
     const withdrawalTaxes =
-      data.w401kGross > 0
-        ? data.w401kGross -
-          (data.wNet - (data.wSavingsGross || 0) - (data.wRothGross || 0))
+      data.withdrawals.retirementAccountGross > 0
+        ? data.withdrawals.retirementAccountGross -
+          (data.wNet -
+            (data.withdrawals.savingsGross || 0) -
+            (data.withdrawals.rothGross || 0))
         : 0;
     const withdrawalNetTotal =
-      (data.wSavingsGross || 0) +
-      (data.wRothGross || 0) +
-      (data.w401kGross || 0) -
+      (data.withdrawals.savingsGross || 0) +
+      (data.withdrawals.rothGross || 0) +
+      (data.withdrawals.retirementAccountGross || 0) -
       (withdrawalTaxes > 0 ? withdrawalTaxes : 0);
 
     html += `
@@ -1392,7 +1411,7 @@ function generateTotalNetBreakdownContent(data) {
     (data.spouseSsGross || 0) +
     (data.penGross || 0) +
     (data.spousePenGross || 0) +
-    (data.w401kGross || 0) + // Only pre-tax withdrawals, not savings/Roth
+    (data.withdrawals.retirementAccountGross || 0) + // Only pre-tax withdrawals, not savings/Roth
     (data.taxableInterest || 0);
   const totalTaxes = data.taxes || 0;
   const totalNetIncome = data.totalNetIncome;
@@ -1402,7 +1421,7 @@ function generateTotalNetBreakdownContent(data) {
   const fullyTaxableIncome =
     (data.penGross || 0) +
     (data.spousePenGross || 0) +
-    (data.w401kGross || 0) +
+    (data.withdrawals.retirementAccountGross || 0) +
     (data.taxableInterest || 0);
 
   // For SS, the taxable portion is typically what was used to calculate ssTaxes
@@ -1545,7 +1564,8 @@ function showWithdrawalNetBreakdown(yearIndex) {
   const calculation = calculations[yearIndex];
   if (
     !calculation ||
-    (!calculation.w401kNet && !calculation.wSavingsRothNet) ||
+    (!calculation.withdrawals.retirementAccountNet &&
+      !calculation.withdrawals.savingsRothNet) ||
     !calculation.withdrawalBreakdown
   ) {
     return; // No withdrawal data to show
@@ -1834,9 +1854,9 @@ function exportTotalNetToJson(index) {
       data.spousePenGross
     )},Before federal taxation\n`;
   }
-  if (data.wGross > 0) {
+  if (data.withdrawals.gross > 0) {
     csvContent += `Portfolio Withdrawals,${csvFmt(
-      data.wGross
+      data.withdrawals.gross
     )},Before taxes and penalties\n`;
   }
   if (data.taxableInterest > 0) {
@@ -1851,7 +1871,7 @@ function exportTotalNetToJson(index) {
     (data.spouseSsGross || 0) +
     (data.penGross || 0) +
     (data.spousePenGross || 0) +
-    (data.wGross || 0) +
+    (data.withdrawals.gross || 0) +
     (data.taxableInterest || 0);
 
   csvContent += `Total Gross Income,${csvFmt(
@@ -1905,18 +1925,18 @@ function exportTotalNetToJson(index) {
         data.withdrawalBreakdown.pretax401kNet
       )},Taxable withdrawal\n`;
     }
-    if (data.wSavingsGross > 0) {
-      csvContent += `Taxable Savings,${csvFmt(data.wSavingsGross)},${csvFmt(
-        data.wSavingsGross
-      )},Tax-free principal\n`;
+    if (data.withdrawals.savingsGross > 0) {
+      csvContent += `Taxable Savings,${csvFmt(
+        data.withdrawals.savingsGross
+      )},${csvFmt(data.withdrawals.savingsGross)},Tax-free principal\n`;
     }
-    if (data.wRothGross > 0) {
-      csvContent += `Roth IRA,${csvFmt(data.wRothGross)},${csvFmt(
-        data.wRothGross
+    if (data.withdrawals.rothGross > 0) {
+      csvContent += `Roth IRA,${csvFmt(data.withdrawals.rothGross)},${csvFmt(
+        data.withdrawals.rothGross
       )},Tax-free withdrawal\n`;
     }
 
-    csvContent += `Total Withdrawals,${csvFmt(data.wGross)},${csvFmt(
+    csvContent += `Total Withdrawals,${csvFmt(data.withdrawals.gross)},${csvFmt(
       data.wNet
     )},Combined portfolio withdrawals\n\n`;
   }
@@ -2004,9 +2024,9 @@ function exportTotalNetToJson(index) {
           : null,
 
       taxablePortfolioWithdrawals:
-        data.wGross > 0
+        data.withdrawals.gross > 0
           ? {
-              amount: jsonFmt(data.wGross),
+              amount: jsonFmt(data.withdrawals.gross),
               notes: "Before taxes and penalties",
             }
           : null,
@@ -2025,7 +2045,7 @@ function exportTotalNetToJson(index) {
             (data.spouseSsGross || 0) +
             (data.penGross || 0) +
             (data.spousePenGross || 0) +
-            (data.wGross || 0) +
+            (data.withdrawals.gross || 0) +
             (data.taxableInterest || 0)
         ),
         notes: "Gross income before adjustments",

@@ -893,16 +893,16 @@ function exportCSV() {
           r.pen,
           r.spouseSs || 0,
           r.spousePen || 0,
-          r.w401kNet || 0,
-          r.wSavingsRothNet || 0,
+          r.withdrawals.retirementAccountNet || 0,
+          r.withdrawals.savingsRothNet || 0,
           r.wNet || 0,
           r.ssGross || 0,
           r.penGross || 0,
           r.spouseSsGross || 0,
           r.spousePenGross || 0,
-          r.w401kGross || 0,
-          r.wSavingsGross || 0,
-          r.wRothGross || 0,
+          r.withdrawals.retirementAccountGross || 0,
+          r.withdrawals.savingsGross || 0,
+          r.withdrawals.rothGross || 0,
           r.totalGrossIncome || 0,
           r.taxableIncome || 0,
           r.nonTaxableIncome || 0,
@@ -2153,14 +2153,14 @@ function generateOutputAndSummary(inputs, rows) {
         <td class="income">${r.spouseSs ? fmt(r.spouseSs) : ""}</td>
         <td class="income">${r.spousePen ? fmt(r.spousePen) : ""}</td>
         <td class="income">${
-          r.w401kNet
+          r.withdrawals.retirementAccountNet
             ? `<span class="withdrawal-net-link" onclick="showWithdrawalNetBreakdown(${index})">${fmt(
-                r.w401kNet
+                r.withdrawals.retirementAccountNet
               )}</span>`
             : ""
         }</td>
         <td class="income">${
-          r.wSavingsRothNet ? fmt(r.wSavingsRothNet) : ""
+          r.withdrawals.savingsRothNet ? fmt(r.withdrawals.savingsRothNet) : ""
         }</td>
         <td class="income">${
           r.totalNetIncome
@@ -2181,7 +2181,11 @@ function generateOutputAndSummary(inputs, rows) {
         <td class="income">${r.pen ? fmt(r.penGross || 0) : ""}</td>
         <td class="income">${r.spouseSs ? fmt(r.spouseSsGross || 0) : ""}</td>
         <td class="income">${r.spousePen ? fmt(r.spousePenGross || 0) : ""}</td>
-        <td class="income">${r.w401kGross ? fmt(r.w401kGross) : ""}</td>
+        <td class="income">${
+          r.withdrawals.retirementAccountGross
+            ? fmt(r.withdrawals.retirementAccountGross)
+            : ""
+        }</td>
         <td class="income">${
           r.totalGrossIncome ? fmt(r.totalGrossIncome) : ""
         }</td>

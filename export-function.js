@@ -43,9 +43,9 @@ function exportTotalNetToJson(index) {
       data.spousePenGross
     )},Before federal taxation\n`;
   }
-  if (data.wGross > 0) {
+  if (data.withdrawals.gross > 0) {
     csvContent += `Non-Taxable Withdrawals,${csvFmt(
-      data.wGross
+      data.withdrawals.gross
     )},Before taxes and penalties\n`;
   }
   if (data.taxableInterest > 0) {
@@ -60,7 +60,7 @@ function exportTotalNetToJson(index) {
     (data.spouseSsGross || 0) +
     (data.penGross || 0) +
     (data.spousePenGross || 0) +
-    (data.wGross || 0) +
+    (data.withdrawals.gross || 0) +
     (data.taxableInterest || 0);
 
   csvContent += `Total Gross Income,${csvFmt(
@@ -114,18 +114,18 @@ function exportTotalNetToJson(index) {
         data.withdrawalBreakdown.pretax401kNet
       )},Taxable withdrawal\n`;
     }
-    if (data.wSavingsGross > 0) {
-      csvContent += `Taxable Savings,${csvFmt(data.wSavingsGross)},${csvFmt(
-        data.wSavingsGross
-      )},Tax-free principal\n`;
+    if (data.withdrawals.savingsGross > 0) {
+      csvContent += `Taxable Savings,${csvFmt(
+        data.withdrawals.savingsGross
+      )},${csvFmt(data.withdrawals.savingsGross)},Tax-free principal\n`;
     }
-    if (data.wRothGross > 0) {
-      csvContent += `Roth IRA,${csvFmt(data.wRothGross)},${csvFmt(
-        data.wRothGross
+    if (data.withdrawals.rothGross > 0) {
+      csvContent += `Roth IRA,${csvFmt(data.withdrawals.rothGross)},${csvFmt(
+        data.withdrawals.rothGross
       )},Tax-free withdrawal\n`;
     }
 
-    csvContent += `Total Withdrawals,${csvFmt(data.wGross)},${csvFmt(
+    csvContent += `Total Withdrawals,${csvFmt(data.withdrawals.gross)},${csvFmt(
       data.wNet
     )},Combined Non-Taxable withdrawals\n\n`;
   }
