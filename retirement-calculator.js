@@ -1145,6 +1145,7 @@ function calculateRetirementYearData(
   //   debugger;
   // }
   // Calculate individual withdrawal net amounts for breakdown
+
   const withdrawalBreakdown = {
     pretax401kGross: withdrawalsBySource.retirementAccount,
     pretax401kNet:
@@ -1161,17 +1162,6 @@ function calculateRetirementYearData(
         : withdrawalsBySource.roth,
     totalGross: finalWGross + additionalSavingsWithdrawal,
     totalNet: withdrawalNetAdjusted + additionalSavingsWithdrawal,
-  };
-
-  const savingsBreakdown = {
-    startingBalance: savingsStartBalance,
-    withdrawals: actualSavingsWithdrawal,
-    overageDeposit: overage,
-    taxFreeIncomeDeposit: taxFreeIncomeAdjustment,
-    balanceBeforeGrowth: savingsBalanceBeforeGrowth,
-    interestEarnedAtYearEnd: savingsInterestEarnedForTheYear,
-    endingBalance: balances.balSavings,
-    growthRate: inputs.rateOfSavings * 100,
   };
 
   if (DUMP_TO_CONSOLE) {
@@ -1291,7 +1281,7 @@ function calculateRetirementYearData(
     inputs.inflation
   );
 
-  // Update result object with calculated values
+  // Update result objects with calculated values
   ss.mySs = ssNetAdjusted;
   ss.mySsGross = mySsBenefits.gross;
   ss.spouseSs = spouseSsNetAdjusted;
@@ -1385,6 +1375,17 @@ function calculateRetirementYearData(
     otherTaxableIncome: taxCalculation
       ? taxCalculation.totalTaxableIncome || 0
       : 0,
+  };
+
+  const savingsBreakdown = {
+    startingBalance: savingsStartBalance,
+    withdrawals: actualSavingsWithdrawal,
+    overageDeposit: overage,
+    taxFreeIncomeDeposit: taxFreeIncomeAdjustment,
+    balanceBeforeGrowth: savingsBalanceBeforeGrowth,
+    interestEarnedAtYearEnd: savingsInterestEarnedForTheYear,
+    endingBalance: balances.balSavings,
+    growthRate: inputs.rateOfSavings * 100,
   };
 
   // Update all the final values in the result object
