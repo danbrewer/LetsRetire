@@ -208,8 +208,8 @@ function calculateWorkingYearData(inputs, year, salary, balances) {
   const result = {
     age: 0,
     salary: 0,
-    contrib: 0,
     spend: 0,
+    contributions: {},
     withdrawals: {},
     bal: {},
     savingsBreakdown: {},
@@ -261,6 +261,16 @@ function calculateWorkingYearData(inputs, year, salary, balances) {
     totalIncome: 0,
     totalNetIncome: 0,
     totalGrossIncome: 0,
+  };
+
+  const contributions = {
+    my401k: 0,
+    myRoth: 0,
+    spouse401k: 0,
+    spouseRoth: 0,
+    savings: 0,
+    employerMatch: 0,
+    total: 0,
   };
 
   const age = inputs.currentAge + year;
@@ -389,7 +399,16 @@ function calculateWorkingYearData(inputs, year, salary, balances) {
   totals.totalGrossIncome = totalGrossIncome + taxableInterestIncome;
 
   // Update all the final values in the result object
-  result.contrib = cPre + cRoth + cTax + match;
+
+  contributions.my401k = cPre;
+  contributions.myRoth = cRoth;
+  contributions.savings = cTax;
+  contributions.employerMatch = match;
+  contributions.total = cPre + cRoth + cTax + match;
+  // Note: Spouse contributions not handled in working year calculations
+
+  result.contributions = contributions;
+
   result.ss = ss;
   result.pen = pen;
   result.spend = currentYearSpending;
@@ -743,24 +762,14 @@ function calculateRetirementYearData(
     age: 0,
     salary: 0,
     contrib: 0,
-    pen: 0,
-    spousePen: 0,
     spend: 0,
-
-    penGross: 0,
-    spousePenGross: 0,
-
-    standardDeduction: 0,
-    balSavings: 0,
-    balPre: 0,
-    balRoth: 0,
-    total: 0,
 
     withdrawals: {},
     taxes: {},
     ss: {},
     totals: {},
     bal: {},
+    pen: {},
 
     savingsBreakdown: {},
     withdrawalBreakdown: {},
@@ -809,6 +818,29 @@ function calculateRetirementYearData(
     total: 0,
   };
 
+  const contributions = {
+    my401k: 0,
+    myRoth: 0,
+    spouse401k: 0,
+    spouseRoth: 0,
+    savings: 0,
+    employerMatch: 0,
+    total: 0,
+  };
+
+  const savings = {
+    startingBalance: balances.balSavings,
+    withdrawals: 0,
+    extraWithdrawals: 0,
+    balanceSubjectToInterest: 0,
+    interestEarned: 0,
+    overageDeposit: 0,
+    taxFreeIncomeDeposit: 0,
+    regularDeposit: 0,
+    endingBalance: 0,
+    growthRate: inputs.rateOfSavings * 100,
+  };
+
   // debugger;
   const age = inputs.retireAge + yearIndex;
 
@@ -821,8 +853,7 @@ function calculateRetirementYearData(
 
   result.year = retirementYear;
   result.age = age;
-  result.salary = 0;
-  result.contrib = 0;
+  result.contributions = contributions;
 
   const DUMP_TO_CONSOLE = age == 200;
 
@@ -1127,6 +1158,7 @@ function calculateRetirementYearData(
   const overage = Math.max(0, totalNetIncome - spendingTarget);
   if (overage > 0) {
     balances.balSavings += overage;
+    contributions.savings = (contributions.savings || 0) + overage;
   }
 
   // Apply normal growth to other account types (withdrawals happen at specific times)
