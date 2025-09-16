@@ -211,19 +211,12 @@ function calculateWorkingYearData(inputs, year, salary, balances) {
     contrib: 0,
     spend: 0,
     withdrawals: {},
-    totalIncome: 0,
-    totalNetIncome: 0,
-    totalGrossIncome: 0,
-    effectiveTaxRate: 0,
-    provisionalIncome: 0,
-    standardDeduction: 0,
-    balSavings: 0,
-    balPre: 0,
-    balRoth: 0,
-    total: 0,
+    bal: {},
     savingsBreakdown: {},
     ssBreakdown: {},
     spouseSsBreakdown: {},
+    pen: {},
+    ss: {},
     pensionBreakdown: {},
     spousePensionBreakdown: {},
     taxes: {},
@@ -237,6 +230,37 @@ function calculateWorkingYearData(inputs, year, salary, balances) {
     taxableIncome: 0,
     taxableInterest: 0,
     effectiveTaxRate: 0,
+    standardDeduction: 0,
+  };
+
+  const bal = {
+    balSavings: 0,
+    balPre: 0,
+    balRoth: 0,
+    total: 0,
+  };
+
+  const pen = {
+    myPen: 0,
+    myPenGross: 0,
+    spousePen: 0,
+    spousePenGross: 0,
+    taxes: 0,
+  };
+
+  const ss = {
+    mySs: 0,
+    mySsGross: 0,
+    spouseSs: 0,
+    spouseSsGross: 0,
+    taxes: 0,
+    provisionalIncome: 0,
+  };
+
+  const totals = {
+    totalIncome: 0,
+    totalNetIncome: 0,
+    totalGrossIncome: 0,
   };
 
   const age = inputs.currentAge + year;
@@ -340,6 +364,12 @@ function calculateWorkingYearData(inputs, year, salary, balances) {
     inputs.inflation
   );
 
+  const standardDeduction = getStandardDeduction(
+    inputs.filingStatus,
+    TAX_BASE_YEAR + year,
+    inputs.inflation
+  );
+
   taxes.total = workingYearTaxes;
   taxes.otherTaxes = workingYearTaxes;
   taxes.nonTaxableIncome = taxFreeIncomeAdjustment;
@@ -347,33 +377,29 @@ function calculateWorkingYearData(inputs, year, salary, balances) {
   taxes.taxableInterest = taxableInterestIncome;
   taxes.effectiveTaxRate =
     taxableIncome > 0 ? (workingYearTaxes / taxableIncome) * 100 : 0;
+  taxes.standardDeduction = standardDeduction;
+
+  bal.balSavings = balances.balSavings;
+  bal.balPre = balances.balPre;
+  bal.balRoth = balances.balRoth;
+  bal.total = balances.balSavings + balances.balPre + balances.balRoth;
+
+  totals.totalIncome = totalGrossIncome + taxableInterestIncome;
+  totals.totalNetIncome = afterTaxIncome + taxFreeIncomeAdjustment;
+  totals.totalGrossIncome = totalGrossIncome + taxableInterestIncome;
 
   // Update all the final values in the result object
   result.contrib = cPre + cRoth + cTax + match;
-  result.ss = 0;
-  result.pen = 0;
-  result.spouseSs = 0;
-  result.spousePen = 0;
+  result.ss = ss;
+  result.pen = pen;
   result.spend = currentYearSpending;
   result.withdrawals = withdrawals;
 
   result.taxes = taxes;
 
-  result.ssTaxes = 0;
-  result.totalIncome = totalGrossIncome + taxableInterestIncome;
-  result.totalNetIncome = afterTaxIncome + taxFreeIncomeAdjustment;
-  result.totalGrossIncome = totalGrossIncome + taxableInterestIncome;
+  result.totals = totals;
 
-  result.provisionalIncome = 0;
-  result.standardDeduction = getStandardDeduction(
-    inputs.filingStatus,
-    TAX_BASE_YEAR + year,
-    inputs.inflation
-  );
-  result.balSavings = balances.balSavings;
-  result.balPre = balances.balPre;
-  result.balRoth = balances.balRoth;
-  result.total = balances.balSavings + balances.balPre + balances.balRoth;
+  result.bal = bal;
 
   // Add breakdown data
   result.savingsBreakdown = {
@@ -780,6 +806,7 @@ function calculateRetirementYearData(
     balSavings: 0,
     balPre: 0,
     balRoth: 0,
+    total: 0,
   };
 
   // debugger;
@@ -797,7 +824,7 @@ function calculateRetirementYearData(
   result.salary = 0;
   result.contrib = 0;
 
-  const DUMP_TO_CONSOLE = age == 65;
+  const DUMP_TO_CONSOLE = age == 200;
 
   if (DUMP_TO_CONSOLE) {
     console.log(
@@ -1310,6 +1337,7 @@ function calculateRetirementYearData(
   bal.balSavings = balances.balSavings;
   bal.balPre = balances.balPre;
   bal.balRoth = balances.balRoth;
+  bal.total = balances.balSavings + balances.balPre + balances.balRoth;
 
   // result.withdrawals.gross = finalWGrossTotal;
   // result.withdrawals.net = finalWNetTotal;

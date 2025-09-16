@@ -1375,7 +1375,10 @@ function generatePDFReport() {
     );
 
     // Get chart data and create a simple line chart
-    const chartData = calculations.map((r) => ({ x: r.year, y: r.total }));
+    const chartData = calculations.map((calculation) => ({
+      x: calculation.year,
+      y: calculation.total,
+    }));
     const chartWidth = 170;
     const chartHeight = 80;
     const chartX = 20;
@@ -2143,125 +2146,153 @@ function generateOutputAndSummary(inputs, rows) {
   const tbody = $("rows");
   tbody.innerHTML = calculations
     .map(
-      (r, index) => `
+      (calculation, index) => `
         <tr>
-        <td class="neutral">${r.year}</td>
-        <td class="neutral">${r.age}</td>
+        <td class="neutral">${calculation.year}</td>
+        <td class="neutral">${calculation.age}</td>
         
         <!-- THE NEED -->
-        <td class="outgoing">${r.spend ? fmt(r.spend) : ""}</td>
+        <td class="outgoing">${
+          calculation.spend ? fmt(calculation.spend) : ""
+        }</td>
         
         <!-- NET INCOME (what you actually receive) -->
         <td class="income">${
-          r.ss
+          calculation.ss
             ? `<span class="ss-link" onclick="showSsBreakdown(${index})">${fmt(
-                r.ss
+                calculation.ss
               )}</span>`
             : ""
         }</td>
-        <td class="income">${r.pen ? fmt(r.pen) : ""}</td>
-        <td class="income">${r.spouseSs ? fmt(r.spouseSs) : ""}</td>
-        <td class="income">${r.spousePen ? fmt(r.spousePen) : ""}</td>
+        <td class="income">${calculation.pen ? fmt(calculation.pen) : ""}</td>
         <td class="income">${
-          r.withdrawals.retirementAccountNet
+          calculation.spouseSs ? fmt(calculation.spouseSs) : ""
+        }</td>
+        <td class="income">${
+          calculation.spousePen ? fmt(calculation.spousePen) : ""
+        }</td>
+        <td class="income">${
+          calculation.withdrawals.retirementAccountNet
             ? `<span class="withdrawal-net-link" onclick="showWithdrawalNetBreakdown(${index})">${fmt(
-                r.withdrawals.retirementAccountNet
+                calculation.withdrawals.retirementAccountNet
               )}</span>`
             : ""
         }</td>
         <td class="income">${
-          r.withdrawals.savingsRothNet ? fmt(r.withdrawals.savingsRothNet) : ""
+          calculation.withdrawals.savingsRothNet
+            ? fmt(calculation.withdrawals.savingsRothNet)
+            : ""
         }</td>
         <td class="income">${
-          r.totalNetIncome
-            ? r.age >= inputs.retireAge
+          calculation.totalNetIncome
+            ? calculation.age >= inputs.retireAge
               ? `<span class="ss-link" onclick="showTotalNetBreakdown(${index})">${fmt(
-                  r.totalNetIncome
+                  calculation.totalNetIncome
                 )}</span>`
-              : fmt(r.totalNetIncome)
+              : fmt(calculation.totalNetIncome)
             : ""
         }</td>
         
         <!-- GROSS INCOME (before taxes/deductions) -->
-        <td class="income">${r.salary ? fmt(r.salary) : ""}</td>
         <td class="income">${
-          r.taxableInterest ? fmt(r.taxableInterest) : ""
+          calculation.salary ? fmt(calculation.salary) : ""
         }</td>
-        <td class="income">${r.ss ? fmt(r.ssGross || 0) : ""}</td>
-        <td class="income">${r.pen ? fmt(r.penGross || 0) : ""}</td>
-        <td class="income">${r.spouseSs ? fmt(r.spouseSsGross || 0) : ""}</td>
-        <td class="income">${r.spousePen ? fmt(r.spousePenGross || 0) : ""}</td>
         <td class="income">${
-          r.withdrawals.retirementAccountGross
-            ? fmt(r.withdrawals.retirementAccountGross)
+          calculation.taxableInterest ? fmt(calculation.taxableInterest) : ""
+        }</td>
+        <td class="income">${
+          calculation.ss ? fmt(calculation.ssGross || 0) : ""
+        }</td>
+        <td class="income">${
+          calculation.pen ? fmt(calculation.penGross || 0) : ""
+        }</td>
+        <td class="income">${
+          calculation.spouseSs ? fmt(calculation.spouseSsGross || 0) : ""
+        }</td>
+        <td class="income">${
+          calculation.spousePen ? fmt(calculation.spousePenGross || 0) : ""
+        }</td>
+        <td class="income">${
+          calculation.withdrawals.retirementAccountGross
+            ? fmt(calculation.withdrawals.retirementAccountGross)
             : ""
         }</td>
         <td class="income">${
-          r.totalGrossIncome ? fmt(r.totalGrossIncome) : ""
+          calculation.totalGrossIncome ? fmt(calculation.totalGrossIncome) : ""
         }</td>
         
         <!-- THE BREAKDOWN -->
         <td class="income">${
-          r.age >= inputs.retireAge
+          calculation.age >= inputs.retireAge
             ? `<span class="taxable-income-link" onclick="showTaxableIncomeBreakdown(${index})" title="Click to see breakdown">${fmt(
-                r.taxableIncome || 0
+                calculation.taxableIncome || 0
               )}</span>`
-            : r.taxableIncome
-            ? fmt(r.taxableIncome)
+            : calculation.taxableIncome
+            ? fmt(calculation.taxableIncome)
             : ""
         }</td>
         <td class="income">${
-          r.nonTaxableIncome
-            ? r.age >= inputs.retireAge
+          calculation.nonTaxableIncome
+            ? calculation.age >= inputs.retireAge
               ? `<span class="non-taxable-income-link" onclick="showNonTaxableIncomeBreakdown(${index})" title="Click to see breakdown">${fmt(
-                  r.nonTaxableIncome
+                  calculation.nonTaxableIncome
                 )}</span>`
-              : fmt(r.nonTaxableIncome)
+              : fmt(calculation.nonTaxableIncome)
             : ""
         }</td>
         <td class="income">${
-          r.provisionalIncome && r.provisionalIncome > 0
+          calculation.provisionalIncome && calculation.provisionalIncome > 0
             ? `<span class="provisional-income-link" onclick="showProvisionalIncomeBreakdown(${index})" title="Click to see breakdown">${fmt(
-                r.provisionalIncome
+                calculation.provisionalIncome
               )}</span>`
-            : r.provisionalIncome
-            ? fmt(r.provisionalIncome)
+            : calculation.provisionalIncome
+            ? fmt(calculation.provisionalIncome)
             : ""
         }</td>
         
         <!-- TAX INFORMATION -->
         <td class="neutral">${
-          r.standardDeduction ? fmt(r.standardDeduction) : ""
-        }</td>
-        <td class="neutral">${r.taxableIncome ? fmt(r.taxableIncome) : ""}</td>
-        <td class="outgoing">${
-          r.ssTaxes !== undefined && r.ssTaxes !== null ? fmt(r.ssTaxes) : ""
-        }</td>
-        <td class="outgoing">${r.otherTaxes ? fmt(r.otherTaxes) : ""}</td>
-        <td class="outgoing">${
-          r.age >= inputs.retireAge
-            ? `<span class="total-taxes-link" onclick="showTotalTaxesBreakdown(${index})" title="Click to see breakdown">${fmt(
-                r.taxes || 0
-              )}</span>`
-            : r.taxes
-            ? fmt(r.taxes)
+          calculation.standardDeduction
+            ? fmt(calculation.standardDeduction)
             : ""
         }</td>
         <td class="neutral">${
-          r.effectiveTaxRate ? r.effectiveTaxRate.toFixed(1) + "%" : ""
+          calculation.taxableIncome ? fmt(calculation.taxableIncome) : ""
+        }</td>
+        <td class="outgoing">${
+          calculation.ssTaxes !== undefined && calculation.ssTaxes !== null
+            ? fmt(calculation.ssTaxes)
+            : ""
+        }</td>
+        <td class="outgoing">${
+          calculation.otherTaxes ? fmt(calculation.otherTaxes) : ""
+        }</td>
+        <td class="outgoing">${
+          calculation.age >= inputs.retireAge
+            ? `<span class="total-taxes-link" onclick="showTotalTaxesBreakdown(${index})" title="Click to see breakdown">${fmt(
+                calculation.taxes || 0
+              )}</span>`
+            : calculation.taxes
+            ? fmt(calculation.taxes)
+            : ""
+        }</td>
+        <td class="neutral">${
+          calculation.effectiveTaxRate
+            ? calculation.effectiveTaxRate.toFixed(1) + "%"
+            : ""
         }</td>
         
         <!-- THE RESULT -->
         <td class="neutral">${
-          r.balSavings
+          calculation.balSavings
             ? `<span class="savings-balance-link" onclick="showSavingsBreakdown(${index})" title="Click to see savings changes">${fmt(
-                r.balSavings
+                calculation.balSavings
               )}</span>`
             : ""
         }</td>
-        <td class="neutral">${fmt(r.balPre)}</td>
-        <td class="neutral">${fmt(r.balRoth)}</td>
-        <td class="neutral">${fmt(r.total)}</td>
+        <td class="neutral">${fmt(calculation.bal.balPre)}</td>
+        <td class="neutral">${fmt(calculation.bal.balRoth)}</td>
+        <td class="neutral">${fmt(calculation.bal.total)}</td>
         </tr>`
     )
     .join("");
@@ -2286,7 +2317,13 @@ function generateOutputAndSummary(inputs, rows) {
   );
 
   // Chart (total balance)
-  drawChart(calculations.map((r) => ({ x: r.year, y: r.total, age: r.age })));
+  drawChart(
+    calculations.map((calculation) => ({
+      x: calculation.year,
+      y: calculation.total,
+      age: calculation.age,
+    }))
+  );
 
   // Save rows for export
   window.__rows = rows;

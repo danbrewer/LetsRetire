@@ -1675,7 +1675,7 @@ function showWithdrawalNetBreakdown(yearIndex) {
 // Savings Breakdown Popup Functions
 function showSavingsBreakdown(yearIndex) {
   const calculation = calculations[yearIndex];
-  if (!calculation || calculation.balSavings === undefined) {
+  if (!calculation || calculation.bal.balSavings === undefined) {
     return; // No savings data to show
   }
 
