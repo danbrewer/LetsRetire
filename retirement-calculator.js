@@ -770,6 +770,7 @@ function calculateRetirementYearData(
     totals: {},
     bal: {},
     pen: {},
+    savings: {},
 
     savingsBreakdown: {},
     withdrawalBreakdown: {},
@@ -838,7 +839,7 @@ function calculateRetirementYearData(
     taxFreeIncomeDeposit: 0,
     regularDeposit: 0,
     endingBalance: 0,
-    growthRate: inputs.rateOfSavings * 100,
+    growthRate: inputs.rateOfSavings,
   };
 
   // debugger;
@@ -1096,10 +1097,13 @@ function calculateRetirementYearData(
   const shortfall = Math.max(0, spendingTarget - netIncomeFromTaxableSources);
 
   // Handle shortfall with additional savings withdrawal
-  let additionalSavingsWithdrawal = Math.min(shortfall, balances.balSavings);
+  let additionalSavingsWithdrawal = Math.min(
+    shortfall,
+    savings.startingBalance
+  );
 
   if (additionalSavingsWithdrawal > 0) {
-    balances.balSavings -= additionalSavingsWithdrawal;
+    // balances.balSavings -= additionalSavingsWithdrawal;
     withdrawalsBySource.savingsAccount += additionalSavingsWithdrawal;
   }
 
@@ -1124,6 +1128,20 @@ function calculateRetirementYearData(
 
   // Calculate balance before growth (after all deposits/withdrawals)
   const savingsBalanceBeforeGrowth = balances.balSavings;
+
+  savings.withdrawals = withdrawalsBySource.savingsAccount;
+  savings.extraWithdrawals = additionalSavingsWithdrawal;
+  savings.balanceSubjectToInterest = savingsBalanceBeforeGrowth;
+  savings.interestEarned = balances.balSavings * inputs.rateOfSavings; // Interest on starting balance before growth
+  savings.overageDeposit = Math.max(
+    0,
+    totalNetIncome - spendingTarget - taxFreeIncomeAdjustment
+  );
+  savings.taxFreeIncomeDeposit = taxFreeIncomeAdjustment;
+  savings.regularDeposit = 0; // No regular deposits in retirement
+  savings.endingBalance = balances.balSavings; // Will be updated after growth
+
+  result.savings = savings;
 
   // Apply conservative growth: interest is calculated on savings balance prior to any
   // deposits due to tax-free income adjustments or overage deposits
