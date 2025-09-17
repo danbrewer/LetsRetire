@@ -66,18 +66,18 @@ if (!args.target || !args.ss) {
 }
 
 // Parse and validate numeric values
-const netTarget = parseFloat(args.target);
-const ssBenefit = parseFloat(args.ss);
-const savings = parseFloat(args.savings || "0");
-const otherTaxableIncome = parseFloat(args.other || "0");
+const targetSpend = parseFloat(args.target);
+const combinedSsGrossIncome = parseFloat(args.ss);
+const savingsBalance = parseFloat(args.savings || "0");
+const fixedPortionOfTaxableIncome = parseFloat(args.other || "0");
 const year = parseInt(args.year || "0");
 const inflationRate = parseFloat(args.inflationRate || "0.0");
 
 if (
-  isNaN(netTarget) ||
-  isNaN(ssBenefit) ||
-  isNaN(savings) ||
-  isNaN(otherTaxableIncome) ||
+  isNaN(targetSpend) ||
+  isNaN(combinedSsGrossIncome) ||
+  isNaN(savingsBalance) ||
+  isNaN(fixedPortionOfTaxableIncome) ||
   isNaN(year) ||
   isNaN(inflationRate)
 ) {
@@ -97,17 +97,17 @@ const standardDeduction = getStandardDeduction(
 );
 
 // Remove savings because it is not taxable
-const target_LessSavings = netTarget - savings;
+const targetSpend_LessSavings = targetSpend - savingsBalance;
 
 const opts = {
-  otherTaxableIncome,
-  ssBenefit,
+  fixedPortionOfTaxableIncome,
+  combinedSsGrossIncome: combinedSsGrossIncome,
   standardDeduction,
   brackets,
 };
 
 const result = determine401kWithdrawalToHitNetTargetOf(
-  target_LessSavings,
+  targetSpend_LessSavings,
   opts
 );
 
@@ -122,26 +122,33 @@ if (year > 0) {
   );
   log.info();
 }
-log.info("Target Net Income:          $", netTarget.toFixed(0));
+log.info("Target Net Income:          $", targetSpend.toFixed(0));
 log.info();
-log.info("Social Security Benefit:    $", ssBenefit.toFixed(0));
-log.info("+ other Taxable Income:     $", otherTaxableIncome.toFixed(0));
+log.info("Social Security Benefit:    $", combinedSsGrossIncome.toFixed(0));
+log.info(
+  "+ other Taxable Income:     $",
+  fixedPortionOfTaxableIncome.toFixed(0)
+);
 log.info("+ 401k Withdrawal Needed:   $", result.withdrawalNeeded.toFixed(0));
 log.info("---------------------------------------");
 log.info(
   "Total Income:               $",
-  (otherTaxableIncome + ssBenefit + result.withdrawalNeeded).toFixed(0)
+  (
+    fixedPortionOfTaxableIncome +
+    combinedSsGrossIncome +
+    result.withdrawalNeeded
+  ).toFixed(0)
 );
 log.info("- Taxes:                    $", result.tax.toFixed(0));
 log.info("=======================================");
 log.info("Net income:                 $", result.net.toFixed(0));
-log.info("+ savings contribution:     $", savings.toFixed(0));
+log.info("+ savings contribution:     $", savingsBalance.toFixed(0));
 log.info(
   "Final spend:                $",
   (
-    otherTaxableIncome +
-    ssBenefit +
-    savings +
+    fixedPortionOfTaxableIncome +
+    combinedSsGrossIncome +
+    savingsBalance +
     result.withdrawalNeeded -
     result.tax
   ).toFixed(0)

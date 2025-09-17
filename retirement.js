@@ -58,7 +58,7 @@ const log = {
 function determineTaxablePortionOfSocialSecurity(ssGross, otherIncome) {
   // Declare and initialize the result object at the top
   const result = {
-    taxableSSAmount: 0,
+    taxablePortion: 0,
     provisionalIncome: 0,
     calculationDetails: {
       method: "irs-rules",
@@ -93,14 +93,16 @@ function determineTaxablePortionOfSocialSecurity(ssGross, otherIncome) {
 
   let taxableSSAmount = 0;
   //   log.info("*** Social Security Benefits Taxation ***");
-  log.info(`Social Security Income: $${safeSSGross.round(2)}`);
+  log.info(`Social Security Income: $${safeSSGross.asCurrency()}`);
   log.info(`. Provisional income is defined as 1/2 SS  + Other Taxable Income`);
-  log.info(`. 1/2 of SS: $${(0.5 * safeSSGross).round(2)}`);
-  log.info(`. Other Taxable Income: $${safeOtherIncome.round(2)}`);
+  log.info(`. 1/2 of SS: $${(0.5 * safeSSGross).asCurrency()}`);
+  log.info(`. Other Taxable Income: $${safeOtherIncome.asCurrency()}`);
   log.info(
     `. Provisional Income is $${provisionalIncome.round(
       2
-    )} ($${safeOtherIncome.round(2)} + $${(0.5 * safeSSGross).round(2)})`
+    )} ($${safeOtherIncome.asCurrency()} + $${(
+      0.5 * safeSSGross
+    ).asCurrency()})`
   );
 
   const base1 = 32000;
@@ -112,7 +114,7 @@ function determineTaxablePortionOfSocialSecurity(ssGross, otherIncome) {
     log.info(
       `. Provisional income is below Tier 1 ($${base1}). No Social Security benefits are taxable.`
     );
-    result.taxableSSAmount = taxableSSAmount;
+    result.taxablePortion = taxableSSAmount;
     result.calculationDetails.effectiveRate = 0;
     return result;
   }
@@ -126,7 +128,7 @@ function determineTaxablePortionOfSocialSecurity(ssGross, otherIncome) {
         2
       )}.`
     );
-    log.info(`   50% of SS benefit ($${(0.5 * safeSSGross).round(2)})`);
+    log.info(`   50% of SS benefit ($${(0.5 * safeSSGross).asCurrency()})`);
     log.info(`     -- or --`);
     log.info(
       `   50% of the amount over the Tier1 threshold ($${tier1TaxableAmount.round(
@@ -136,7 +138,9 @@ function determineTaxablePortionOfSocialSecurity(ssGross, otherIncome) {
 
     taxableSSAmount = Math.min(0.5 * safeSSGross, tier1TaxableAmount);
 
-    log.info(`Amount of SS that is taxable is $${taxableSSAmount.round(2)}.`);
+    log.info(
+      `Amount of SS that is taxable is $${taxableSSAmount.asCurrency()}.`
+    );
 
     // Update calculation details
     result.calculationDetails.excessIncome1 = amountInExcessOfBase;
@@ -144,7 +148,7 @@ function determineTaxablePortionOfSocialSecurity(ssGross, otherIncome) {
     result.calculationDetails.effectiveRate =
       safeSSGross > 0 ? taxableSSAmount / safeSSGross : 0;
 
-    result.taxableSSAmount = taxableSSAmount;
+    result.taxablePortion = taxableSSAmount;
     return result;
   }
 
@@ -158,19 +162,21 @@ function determineTaxablePortionOfSocialSecurity(ssGross, otherIncome) {
     )}`
   );
   log.info(`. Taxable amount of SS is the lesser of:`);
-  log.info(`    85% of total SS benefit ($${(0.85 * safeSSGross).round(2)})`);
+  log.info(
+    `    85% of total SS benefit ($${(0.85 * safeSSGross).asCurrency()})`
+  );
   log.info(`     -- or ---`);
   log.info(
     `    50% of excess over Tier 1 ($6000) + 85% of the excess over Tier 2 ($${(
       0.85 * excessOverBase2
-    ).round(2)}).`
+    ).asCurrency()}).`
   );
 
   let tier1Max = 0.5 * (base2 - base1);
   let tier2TaxableAmount = 0.85 * excessOverBase2;
 
   taxableSSAmount = Math.min(0.85 * safeSSGross, tier1Max + tier2TaxableAmount);
-  log.info(`Amount of SS that is taxable is $${taxableSSAmount.round(2)}.`);
+  log.info(`Amount of SS that is taxable is $${taxableSSAmount.asCurrency()}.`);
 
   // Update calculation details
   result.calculationDetails.excessIncome1 = base2 - base1;
@@ -183,7 +189,7 @@ function determineTaxablePortionOfSocialSecurity(ssGross, otherIncome) {
   result.calculationDetails.effectiveRate =
     safeSSGross > 0 ? taxableSSAmount / safeSSGross : 0;
 
-  result.taxableSSAmount = taxableSSAmount;
+  result.taxablePortion = taxableSSAmount;
   return result;
 }
 
@@ -197,79 +203,85 @@ function determineTaxUsingBrackets(taxableIncome, brackets, opts) {
     if (taxableIncome <= upTo) break;
     prev = upTo;
   }
-  // log.info(`Total tax calculated is $${tax.round(2)}.`);
+  // log.info(`Total tax calculated is $${tax.asCurrency()}.`);
 
   return tax;
 }
 
-function calculateNetWhen401kIncomeIs(guestimateFor401k, opts) {
+function calculate401kNetWhen401kGrossIs(gross401k, opts) {
   // Declare and initialize the result object at the top
   const result = {
-    netIncome: 0,
+    net: 0,
     tax: 0,
-    taxableSSAmt: 0,
-    totalTaxableIncome: 0,
-    grossTaxableIncome: 0,
-    actualTaxableIncome: 0,
+    taxablePortionOfSS: 0,
+    allTaxableIncomeExcludingSs: 0,
+    grossIncome: 0,
+    taxableIncome: 0,
   };
 
-  const { otherTaxableIncome, ssBenefit, standardDeduction, brackets } = opts;
+  const {
+    fixedPortionOfTaxableIncome,
+    combinedSsGrossIncome,
+    standardDeduction,
+    brackets,
+    precision = 0.01,
+  } = opts;
 
-  log.info(`*** calculateNetWhen401kIncomeIs ***`);
+  log.info(`*** calculate401kNetWhen401kGrossIs ***`);
   log.info(`Inputs: ${JSON.stringify(opts)}`);
   log.info(
-    `Calculating net income when 401k withdrawal is $${guestimateFor401k.round(
-      2
-    )}.`
+    `Calculating after-tax income when 401k withdrawal is $${gross401k.asCurrency()}.`
   );
-  const allTaxableIncomeExcludingSS = guestimateFor401k + otherTaxableIncome;
-  const taxableSSResult = determineTaxablePortionOfSocialSecurity(
-    ssBenefit,
+  const allTaxableIncomeExcludingSS = gross401k + fixedPortionOfTaxableIncome;
+  const ssBreakdown = determineTaxablePortionOfSocialSecurity(
+    combinedSsGrossIncome,
     allTaxableIncomeExcludingSS
   );
-  const grossIncome =
-    allTaxableIncomeExcludingSS + taxableSSResult.taxableSSAmount;
+
+  const grossIncome = allTaxableIncomeExcludingSS + ssBreakdown.taxablePortion;
 
   const taxableIncome = Math.max(0, grossIncome - standardDeduction);
-  log.info(`Other taxable income is $${otherTaxableIncome.round(2)}.`);
-  log.info(`401k withdrawal is $${guestimateFor401k.round(2)}.`);
+
   log.info(
-    `Taxable income (excluding SS) is $${allTaxableIncomeExcludingSS.round(2)}.`
+    `Fixed portion of gross income is $${fixedPortionOfTaxableIncome.asCurrency()}.`
+  );
+  log.info(`401k withdrawal is $${gross401k.asCurrency()}.`);
+  log.info(
+    `Gross income (excluding taxable SS portion) is $${allTaxableIncomeExcludingSS.asCurrency()}.`
   );
   log.info(
-    `Taxable SS amount is $${taxableSSResult.taxableSSAmount.round(2)}.`
+    `Taxable portion of SS is $${ssBreakdown.taxablePortion.asCurrency()}.`
   );
   log.info(
-    `Gross taxable income is $${grossIncome.round(
+    `Gross income is $${grossIncome.round(
       0
-    )}. (${allTaxableIncomeExcludingSS.round(
-      2
-    )} + ${taxableSSResult.taxableSSAmount.round(2)})`
+    )}. (${allTaxableIncomeExcludingSS.asCurrency()} + ${ssBreakdown.taxablePortion.asCurrency()})`
   );
-  log.info(`Standard deduction is $${standardDeduction.round(2)}.`);
-  log.info(`Actual taxable income is $${taxableIncome.round(2)}.`);
+  log.info(`Standard deduction is $${standardDeduction.asCurrency()}.`);
+  log.info(`Taxable income is $${taxableIncome.asCurrency()}.`);
 
   // debugger;
-  const tax = determineTaxUsingBrackets(taxableIncome, brackets, opts);
-
-  log.info(
-    `Total income from all sources is $${(
-      allTaxableIncomeExcludingSS + ssBenefit
-    ).round(2)}.`
+  const incomeTaxOwed = determineTaxUsingBrackets(
+    taxableIncome,
+    brackets,
+    opts
   );
-  log.info(`Taxes owed are $${tax.round(2)}.`);
 
-  const netIncome = allTaxableIncomeExcludingSS + ssBenefit - tax;
+  log.info(`Gross income from all sources is $${grossIncome.asCurrency()}.`);
+  log.info(`Taxes owed are $${incomeTaxOwed.asCurrency()}.`);
 
-  log.info(`Net income after taxes is $${netIncome.round(2)}.`);
+  const netIncome =
+    allTaxableIncomeExcludingSS + combinedSsGrossIncome - incomeTaxOwed;
+
+  log.info(`Net income after taxes is $${netIncome.asCurrency()}.`);
 
   // Update all the final values in the result object
-  result.netIncome = netIncome;
-  result.tax = tax;
-  result.taxableSSAmt = taxableSSResult.taxableSSAmount;
-  result.totalTaxableIncome = allTaxableIncomeExcludingSS;
-  result.grossTaxableIncome = grossIncome;
-  result.actualTaxableIncome = taxableIncome;
+  result.net = netIncome;
+  result.tax = incomeTaxOwed;
+  result.taxablePortionOfSS = ssBreakdown.taxablePortion;
+  result.allTaxableIncomeExcludingSs = allTaxableIncomeExcludingSS;
+  result.grossIncome = grossIncome;
+  result.taxableIncome = taxableIncome;
 
   return result;
 }
@@ -284,51 +296,51 @@ function determine401kWithdrawalToHitNetTargetOf(targetAmount, opts) {
 
   let lo = 0,
     hi = targetAmount * 2,
-    net;
+    income;
   for (let i = 0; i < 80; i++) {
     log.info();
     log.info(
-      `===== Iteration ${i}: lo=$${lo.round(2)}, hi=$${hi.round(2)} ======`
+      `===== Iteration ${i}: lo=$${lo.asCurrency()}, hi=$${hi.asCurrency()} ======`
     );
     const guestimate401kWithdrawal = (lo + hi) / 2;
     log.info(
-      `Guestimate 401k withdrawal: $${guestimate401kWithdrawal.round(2)}`
+      `Guestimate 401k withdrawal: $${guestimate401kWithdrawal.asCurrency()}`
     );
 
-    net = calculateNetWhen401kIncomeIs(guestimate401kWithdrawal, opts);
+    income = calculate401kNetWhen401kGrossIs(guestimate401kWithdrawal, opts);
 
-    log.info(`Target income is $${targetAmount.round(2)}.`);
+    log.info(`Target income is $${targetAmount.asCurrency()}.`);
 
     const highLow =
-      net.netIncome.round(2) > targetAmount.round(2)
+      income.net.asCurrency() > targetAmount.asCurrency()
         ? "TOO HIGH"
-        : net.netIncome.round(2) < targetAmount.round(2)
+        : income.net.asCurrency() < targetAmount.asCurrency()
         ? "TOO LOW"
         : "JUST RIGHT";
     const highLowTextColor =
-      net.netIncome.round(2) > targetAmount.round(2)
+      income.net.asCurrency() > targetAmount.asCurrency()
         ? "\x1b[31m"
-        : net.netIncome.round(2) < targetAmount.round(2)
+        : income.net.asCurrency() < targetAmount.asCurrency()
         ? "\x1b[34m"
         : "\x1b[32m"; // Red for too high, Blue for too low, Green for just right
     log.info(
       `When 401k withdrawal is $${guestimate401kWithdrawal.round(
         0
-      )} then the net income will be $${net.netIncome.round(
+      )} then the net income will be $${income.net.round(
         0
       )} ${highLowTextColor}(${highLow})\x1b[0m`
     );
 
-    if (net.netIncome.round(2) == targetAmount.round(2)) break;
-    if (net.netIncome < targetAmount) lo = guestimate401kWithdrawal;
+    if (income.net.asCurrency() == targetAmount.asCurrency()) break;
+    if (income.net < targetAmount) lo = guestimate401kWithdrawal;
     else hi = guestimate401kWithdrawal;
-    if (hi.round(2) - lo.round(2) <= opts.precision) break;
+    if (hi.asCurrency() - lo.asCurrency() <= opts.precision) break;
   }
 
   // Update all the final values in the result object
-  result.net = net.netIncome;
+  result.net = income.net;
   result.withdrawalNeeded = hi;
-  result.tax = net.tax;
+  result.tax = income.tax;
 
   return result;
 }
@@ -459,7 +471,7 @@ if (typeof module !== "undefined" && module.exports) {
     log,
     determineTaxablePortionOfSocialSecurity,
     determineTaxUsingBrackets,
-    calculateNetWhen401kIncomeIs,
+    calculate401kNetWhen401kGrossIs: calculate401kNetWhen401kGrossIs,
     determine401kWithdrawalToHitNetTargetOf,
     // Export some common tax brackets and standard deductions for convenience
     getTaxBrackets,
