@@ -197,7 +197,7 @@ function determineTaxUsingBrackets(taxableIncome, brackets, opts) {
     if (taxableIncome <= upTo) break;
     prev = upTo;
   }
-  log.info(`Total tax calculated is $${tax.round(2)}.`);
+  // log.info(`Total tax calculated is $${tax.round(2)}.`);
 
   return tax;
 }

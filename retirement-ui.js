@@ -1283,7 +1283,7 @@ function generatePDFReport() {
 
     yPos = addKeyValuePair(
       "Current Total Assets:",
-      fmt(inputs.balPre + inputs.balRoth + inputs.balSavings),
+      fmt(inputs.trad401k + inputs.rothIRA + inputs.savings),
       yPos,
       0,
       colors.primary
@@ -1305,28 +1305,28 @@ function generatePDFReport() {
       80
     );
 
-    const totalAssets = inputs.balPre + inputs.balRoth + inputs.balSavings;
-    const pretaxPct = ((inputs.balPre / totalAssets) * 100).toFixed(1);
-    const rothPct = ((inputs.balRoth / totalAssets) * 100).toFixed(1);
-    const savingsPct = ((inputs.balSavings / totalAssets) * 100).toFixed(1);
+    const totalAssets = inputs.trad401k + inputs.rothIRA + inputs.savings;
+    const pretaxPct = ((inputs.trad401k / totalAssets) * 100).toFixed(1);
+    const rothPct = ((inputs.rothIRA / totalAssets) * 100).toFixed(1);
+    const savingsPct = ((inputs.savings / totalAssets) * 100).toFixed(1);
 
     yPos = addKeyValuePair(
       "Pre-tax (401k/IRA):",
-      `${fmt(inputs.balPre)} (${pretaxPct}%)`,
+      `${fmt(inputs.trad401k)} (${pretaxPct}%)`,
       yPos,
       0,
       colors.primary
     );
     yPos = addKeyValuePair(
       "Roth IRA/401k:",
-      `${fmt(inputs.balRoth)} (${rothPct}%)`,
+      `${fmt(inputs.rothIRA)} (${rothPct}%)`,
       yPos,
       0,
       colors.success
     );
     yPos = addKeyValuePair(
       "Taxable Savings:",
-      `${fmt(inputs.balSavings)} (${savingsPct}%)`,
+      `${fmt(inputs.savings)} (${savingsPct}%)`,
       yPos,
       0,
       colors.warning
@@ -1339,17 +1339,17 @@ function generatePDFReport() {
     yPos += 10;
 
     // Pre-tax bar
-    const pretaxBarWidth = barWidth * (inputs.balPre / totalAssets);
+    const pretaxBarWidth = barWidth * (inputs.trad401k / totalAssets);
     doc.setFillColor(colors.primary[0], colors.primary[1], colors.primary[2]);
     doc.rect(barStartX, yPos, pretaxBarWidth, barHeight, "F");
 
     // Roth bar
-    const rothBarWidth = barWidth * (inputs.balRoth / totalAssets);
+    const rothBarWidth = barWidth * (inputs.rothIRA / totalAssets);
     doc.setFillColor(colors.success[0], colors.success[1], colors.success[2]);
     doc.rect(barStartX + pretaxBarWidth, yPos, rothBarWidth, barHeight, "F");
 
     // Savings bar
-    const savingsBarWidth = barWidth * (inputs.balSavings / totalAssets);
+    const savingsBarWidth = barWidth * (inputs.savings / totalAssets);
     doc.setFillColor(colors.warning[0], colors.warning[1], colors.warning[2]);
     doc.rect(
       barStartX + pretaxBarWidth + rothBarWidth,
@@ -1509,12 +1509,12 @@ function generatePDFReport() {
     const investmentItems = [
       {
         key: "Pre-tax Accounts:",
-        value: `${(inputs.retPre * 100).toFixed(1)}%`,
+        value: `${(inputs.ret401k * 100).toFixed(1)}%`,
       },
       { key: "Roth Accounts:", value: `${(inputs.retRoth * 100).toFixed(1)}%` },
       {
         key: "Taxable Accounts:",
-        value: `${(inputs.rateOfSavings * 100).toFixed(1)}%`,
+        value: `${(inputs.retSavings * 100).toFixed(1)}%`,
       },
       // Future investment types can be added here
     ];
@@ -2046,12 +2046,12 @@ function parseInputParameters() {
     matchRate: pct(num("matchRate")),
 
     // Account balances and returns
-    balPre: num("balPre"),
-    balRoth: num("balRoth"),
-    balSavings: num("balSavings"),
-    retPre: pct(num("retPre")),
+    trad401k: num("balPre"),
+    rothIRA: num("balRoth"),
+    savings: num("balSavings"),
+    ret401k: pct(num("retPre")),
     retRoth: pct(num("retRoth")),
-    rateOfSavings: pct(num("retTax")),
+    retSavings: pct(num("retTax")),
 
     // Income sources
     ssMonthly: num("ssMonthly"),
@@ -2313,7 +2313,7 @@ function generateOutputAndSummary(inputs, rows) {
   $("kpiEndBal").textContent = fmt(Math.max(0, calculation.total));
   $("kpiDraw").textContent = `${inputs.retireAge}`;
   $("kpiTax").textContent = fmt(
-    inputs.balPre + inputs.balRoth + inputs.balSavings
+    inputs.trad401k + inputs.rothIRA + inputs.savings
   );
 
   // Chart (total balance)
