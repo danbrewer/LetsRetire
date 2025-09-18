@@ -504,18 +504,37 @@ function buildWithdrawalFunctions(
   // Declare and initialize the result object at the top
   const result = {
     withdrawFrom: null,
-    withdrawRMD: null,
     getTaxesThisYear: null,
     getWithdrawalsBySource: null,
+    getLastTaxCalculation: null,
   };
 
+  if (isNaN(closuredCopyOfFixedPortionOfTaxableIncome)) {
+    console.error(
+      `closuedCopyOfFixedPortionOfTaxableIncome is NaN.  This is a fatal error`
+    );
+    return result;
+  }
+
+  if (
+    closuredCopyOfRunningBalances == null ||
+    !closuredCopyOfRunningBalances ||
+    Object.keys(closuredCopyOfRunningBalances).length === 0
+  ) {
+    console.error(
+      `closuredCopyOfRunningBalances is null or undefined.  This is a fatal error`
+    );
+    return result;
+  }
+
   let taxesThisYear = 0;
+
   let withdrawalsBySource = {
     retirementAccount: 0,
     savingsAccount: 0,
     roth: 0,
   };
-  let lastTaxCalculation = null; // Store the most recent detailed tax calculation
+  let last401kNetCalculationResults = null; // Store the most recent detailed tax calculation
 
   function withdrawFrom(kind, desiredNetAmount) {
     const result = {
@@ -527,65 +546,80 @@ function buildWithdrawalFunctions(
       netSavingsWithdrawal: 0,
     };
 
-    // console.log(`withdrawFrom called with kind: "${kind}", netAmount: ${netAmount}`);
-    if (desiredNetAmount <= 0) return result;
-
+    // **************
+    // Sanity checks
+    // **************
     // Validate kind parameter
     if (!kind || typeof kind !== "string") {
       console.error("Invalid withdrawal kind:", kind);
       return result;
     }
-
-    // Determine balance reference and setter function
-    let targetedAccountBalance = 0,
-      updateTargetedAccountBalance;
-
-    if (kind === "savings") {
-      targetedAccountBalance = closuredCopyOfRunningBalances.savings;
-      updateTargetedAccountBalance = (v) => {
-        closuredCopyOfRunningBalances.savings = v;
-      };
-    } else if (kind === "pretax") {
-      targetedAccountBalance = closuredCopyOfRunningBalances.traditional401k;
-      updateTargetedAccountBalance = (v) => {
-        closuredCopyOfRunningBalances.traditional401k = v;
-      };
-    } else if (kind === "roth") {
-      targetedAccountBalance = closuredCopyOfRunningBalances.rothIra;
-      updateTargetedAccountBalance = (v) => {
-        closuredCopyOfRunningBalances.rothIra = v;
-      };
-    } else {
-      console.error("Unknown withdrawal kind:", kind);
+    // verify kind is one of the expected values and error if not
+    const validKinds = ["savings", "pretax", "roth"];
+    if (!validKinds.includes(kind)) {
+      console.error("Withdrawal target not defined or not supported:", kind);
+      console.error("Expected one of:", validKinds.join(", "));
       return result;
     }
 
-    if (isNaN(closuredCopyOfFixedPortionOfTaxableIncome)) {
-      console.warn(
-        `[NaN Protection] closuredCopyOfFixedPortionOfTaxableIncome was NaN, using 0 instead`
-      );
+    if (desiredNetAmount <= 0) return result;
+
+    // Determine balance reference and setter function
+    const targetedAccount = {
+      getBalance: null,
+      setBalance: null,
+    };
+
+    switch (kind) {
+      case "savings":
+        targetedAccount.getBalance = () =>
+          closuredCopyOfRunningBalances.savings;
+        targetedAccount.setBalance = (v) => {
+          closuredCopyOfRunningBalances.savings = v;
+        };
+        break;
+      case "pretax":
+        targetedAccount.getBalance = () =>
+          closuredCopyOfRunningBalances.traditional401k;
+        targetedAccount.setBalance = (v) => {
+          closuredCopyOfRunningBalances.traditional401k = v;
+        };
+        break;
+      case "roth":
+        targetedAccount.getBalance = () =>
+          closuredCopyOfRunningBalances.rothIra;
+        targetedAccount.setBalance = (v) => {
+          closuredCopyOfRunningBalances.rothIra = v;
+        };
+        break;
+      default:
+        console.error("Unknown withdrawal kind:", kind);
+        return result;
     }
-    const fixedPortionOfTaxableIncome = isNaN(
-      closuredCopyOfFixedPortionOfTaxableIncome
-    )
-      ? 0
-      : closuredCopyOfFixedPortionOfTaxableIncome;
+
+    const standardDeduction = getStandardDeduction(
+      inputs.filingStatus,
+      year, // year is already the actual year (e.g., 2040)
+      inputs.inflation
+    );
+
+    const taxBrackets = getTaxBrackets(
+      inputs.filingStatus,
+      year,
+      inputs.inflation
+    );
 
     // debugger;
     const opts = {
-      fixedPortionOfTaxableIncome,
+      fixedPortionOfTaxableIncome: closuredCopyOfFixedPortionOfTaxableIncome,
       combinedSsGrossIncome: ssBenefits, // Include Social Security benefits in tax calculation
-      standardDeduction: getStandardDeduction(
-        inputs.filingStatus,
-        year, // year is already the actual year (e.g., 2040)
-        inputs.inflation
-      ),
-      brackets: getTaxBrackets(inputs.filingStatus, year, inputs.inflation),
+      standardDeduction,
+      brackets: taxBrackets,
       precision: 0.01, // Precision for binary search convergence
     };
 
     // For pretax withdrawals, use sophisticated tax calculations from retirement.js
-    let desiredWithdrawal, netReceived;
+    let gross401kWithdrawal, netReceived;
 
     if (kind === "pretax") {
       // Use binary search optimization from retirement.js for accurate withdrawal calculation
@@ -598,107 +632,59 @@ function buildWithdrawalFunctions(
       );
 
       // Only take what is available in the account
-      desiredWithdrawal = Math.min(
+      gross401kWithdrawal = Math.min(
         withdrawalResult.withdrawalNeeded,
-        targetedAccountBalance
+        targetedAccount.getBalance()
       );
 
       // Calculate actual net using the sophisticated tax calculation
       const netResult = calculate401kNetWhen401kGrossIs(
-        desiredWithdrawal,
+        gross401kWithdrawal,
         opts
       );
-      lastTaxCalculation = netResult; // Store detailed tax calculation results
+      last401kNetCalculationResults = netResult; // Store detailed tax calculation results
 
       netReceived = netResult.net;
-      updateTargetedAccountBalance(targetedAccountBalance - desiredWithdrawal);
+      targetedAccount.setBalance(
+        targetedAccount.getBalance() - gross401kWithdrawal
+      );
     } else {
       // debugger;
       const netResult = calculate401kNetWhen401kGrossIs(0, opts);
       // For Savings/Roth accounts, there is no tax impact; simply withdraw the desired amount
       netReceived = Math.min(
         desiredNetAmount - netResult.net,
-        targetedAccountBalance
+        targetedAccount.getBalance()
       );
-      desiredWithdrawal = netReceived; // Gross equals net for Savings/Roth
-      updateTargetedAccountBalance(targetedAccountBalance - netReceived);
+      gross401kWithdrawal = netReceived; // Gross equals net for Savings/Roth
+      targetedAccount.setBalance(targetedAccount.getBalance() - netReceived);
     }
 
     // Track withdrawals by source
     if (kind === "pretax") {
-      withdrawalsBySource.retirementAccount += desiredWithdrawal;
+      withdrawalsBySource.retirementAccount += gross401kWithdrawal;
     } else if (kind === "savings") {
-      withdrawalsBySource.savingsAccount += desiredWithdrawal;
+      withdrawalsBySource.savingsAccount += gross401kWithdrawal;
     } else if (kind === "roth") {
-      withdrawalsBySource.roth += desiredWithdrawal;
+      withdrawalsBySource.roth += gross401kWithdrawal;
     }
 
     // Add pre-tax withdrawals to Taxable Income for subsequent calculations
     if (kind === "pretax") {
-      const safeGrossTake = isNaN(desiredWithdrawal) ? 0 : desiredWithdrawal;
+      const safeGrossTake = isNaN(gross401kWithdrawal)
+        ? 0
+        : gross401kWithdrawal;
       closuredCopyOfFixedPortionOfTaxableIncome.value += safeGrossTake;
     }
 
-    return { gross: desiredWithdrawal, net: netReceived };
-  }
-
-  // Special function for RMD withdrawals (gross amount based)
-  function withdrawRMD(grossAmount) {
-    if (grossAmount <= 0 || closuredCopyOfRunningBalances.balPre <= 0)
-      return { gross: 0, net: 0 };
-
-    const actualGross = Math.min(
-      grossAmount,
-      closuredCopyOfRunningBalances.balPre
-    );
-
-    // Calculate net amount using the sophisticated tax calculation from retirement.js
-    // Construct the opts object that calculate401kNetWhen401kGrossIs expects
-    // Add comprehensive NaN protection for otherTaxableIncome
-    const otherTaxableIncomeValue = isNaN(
-      closuredCopyOfFixedPortionOfTaxableIncome.value
-    )
-      ? 0
-      : closuredCopyOfFixedPortionOfTaxableIncome.value;
-
-    if (isNaN(closuredCopyOfFixedPortionOfTaxableIncome.value)) {
-      console.warn(
-        `[NaN Protection] RMD otherTaxableIncome was NaN, using 0 instead`
-      );
-    }
-
-    const opts = {
-      otherTaxableIncome: otherTaxableIncomeValue,
-      ssBenefit: ssBenefits, // Include Social Security benefits in RMD tax calculation too
-      standardDeduction: getStandardDeduction(
-        inputs.filingStatus,
-        year, // year is already the actual year (e.g., 2040)
-        inputs.inflation
-      ),
-      brackets: getTaxBrackets(inputs.filingStatus, year, inputs.inflation),
-      precision: 0.01, // Precision for binary search convergence
-    };
-
-    const netResult = calculate401kNetWhen401kGrossIs(actualGross, opts);
-    lastTaxCalculation = netResult; // Store detailed tax calculation results for RMD too
-    const netAmount = netResult.net;
-
-    closuredCopyOfRunningBalances.balPre -= actualGross;
-    const safeActualGross = isNaN(actualGross) ? 0 : actualGross;
-    closuredCopyOfFixedPortionOfTaxableIncome.value += safeActualGross;
-
-    // Track RMD withdrawals as retirement account
-    withdrawalsBySource.retirementAccount += actualGross;
-
-    return { gross: actualGross, net: netAmount };
+    return { gross: gross401kWithdrawal, net: netReceived };
   }
 
   // Populate the result object
   result.withdrawFrom = withdrawFrom;
-  result.withdrawRMD = withdrawRMD;
   result.getTaxesThisYear = () => taxesThisYear;
   result.getWithdrawalsBySource = () => withdrawalsBySource;
-  result.getLastTaxCalculation = () => lastTaxCalculation;
+  result.getLastTaxCalculation = () => last401kNetCalculationResults;
 
   return result;
 }
@@ -956,6 +942,7 @@ function calculateRetirementYearData(
     );
   }
 
+  // debugger;
   const withdrawalFunctions = buildWithdrawalFunctions(
     inputs,
     rollingBalances,
@@ -972,7 +959,7 @@ function calculateRetirementYearData(
 
   let remainingSpendNeeded = Math.max(0, totalSpend);
 
-  debugger;
+  // debugger;
   // Handle remaining withdrawals using the specified order
   for (const k of inputs.order) {
     if (remainingSpendNeeded <= 0) break;

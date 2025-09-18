@@ -120,3 +120,54 @@ function withdraw50_50(withdrawalFunctions, totalNetNeeded) {
 
   return { totalGross, totalNet };
 }
+
+// Special function for RMD withdrawals (gross amount based)
+function withdrawRMD(grossAmount) {
+  if (grossAmount <= 0 || closuredCopyOfRunningBalances.balPre <= 0)
+    return { gross: 0, net: 0 };
+
+  const actualGross = Math.min(
+    grossAmount,
+    closuredCopyOfRunningBalances.balPre
+  );
+
+  // Calculate net amount using the sophisticated tax calculation from retirement.js
+  // Construct the opts object that calculate401kNetWhen401kGrossIs expects
+  // Add comprehensive NaN protection for otherTaxableIncome
+  const otherTaxableIncomeValue = isNaN(
+    closuredCopyOfFixedPortionOfTaxableIncome.value
+  )
+    ? 0
+    : closuredCopyOfFixedPortionOfTaxableIncome.value;
+
+  if (isNaN(closuredCopyOfFixedPortionOfTaxableIncome.value)) {
+    console.warn(
+      `[NaN Protection] RMD otherTaxableIncome was NaN, using 0 instead`
+    );
+  }
+
+  const opts = {
+    otherTaxableIncome: otherTaxableIncomeValue,
+    ssBenefit: ssBenefits, // Include Social Security benefits in RMD tax calculation too
+    standardDeduction: getStandardDeduction(
+      inputs.filingStatus,
+      year, // year is already the actual year (e.g., 2040)
+      inputs.inflation
+    ),
+    brackets: getTaxBrackets(inputs.filingStatus, year, inputs.inflation),
+    precision: 0.01, // Precision for binary search convergence
+  };
+
+  const netResult = calculate401kNetWhen401kGrossIs(actualGross, opts);
+  lastTaxCalculation = netResult; // Store detailed tax calculation results for RMD too
+  const netAmount = netResult.net;
+
+  closuredCopyOfRunningBalances.balPre -= actualGross;
+  const safeActualGross = isNaN(actualGross) ? 0 : actualGross;
+  closuredCopyOfFixedPortionOfTaxableIncome.value += safeActualGross;
+
+  // Track RMD withdrawals as retirement account
+  withdrawalsBySource.retirementAccount += actualGross;
+
+  return { gross: actualGross, net: netAmount };
+}
