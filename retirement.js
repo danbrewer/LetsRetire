@@ -55,11 +55,40 @@ const log = {
   },
 };
 
-function determineTaxablePortionOfSocialSecurity(ssIncome, allOtherIncome) {
+function determineTaxablePortionOfSocialSecurity(
+  mySsBenefitsGross,
+  spouseSsBenefitsGross,
+  allOtherIncome
+) {
   // Declare and initialize the result object at the top
+  debugger;
   const result = {
+    myBenefits: mySsBenefitsGross,
+    spouseBenefits: spouseSsBenefitsGross,
+    allOtherIncome: allOtherIncome,
     taxablePortion: 0,
-    provisionalIncome: 0,
+    // derived values
+    nonTaxablePortion() {
+      return this.totalBenefits() - this.taxablePortion;
+    },
+    totalBenefits() {
+      return this.myBenefits + this.spouseBenefits;
+    },
+    myPortion() {
+      return this.myBenefits / (this.totalBenefits() || 1) || 0;
+    },
+    spousePortion() {
+      return this.spouseBenefits / (this.totalBenefits() || 1) || 0;
+    },
+    myNonTaxablePortion() {
+      return this.myPortion() * this.nonTaxablePortion();
+    },
+    spouseNonTaxablePortion() {
+      return this.spousePortion() * this.nonTaxablePortion();
+    },
+    provisionalIncome() {
+      return this.allOtherIncomeallOtherIncome + 0.5 * this.totalBenefits();
+    },
     calculationDetails: {
       method: "irs-rules",
       threshold1: 32000,
@@ -68,36 +97,37 @@ function determineTaxablePortionOfSocialSecurity(ssIncome, allOtherIncome) {
       halfSSBenefit: 0,
       excessIncome1: 0,
       excessIncome2: 0,
-      tier1Amount: 0,
-      tier2Amount: 0,
-      effectiveRate: 0,
+      tier1TaxableAmount: 0,
+      tier2TaxableAmount: 0,
+      effectiveTaxRate: 0,
     },
   };
 
-  if (isNaN(ssIncome) || isNaN(allOtherIncome)) {
+  if (isNaN(result.totalBenefits()) || isNaN(result.allOtherIncome)) {
     log.error(
-      `determineTaxablePortionOfSocialSecurity received NaN values: ssGross=${ssIncome}, otherIncome=${allOtherIncome}`
+      `determineTaxablePortionOfSocialSecurity received NaN values: result.totalBenefits() was ${result.totalBenefits()}, allOtherIncome was ${
+        result.allOtherIncome
+      }`
     );
-    return result; // Return with taxablePortion = 0
+    throw new Error("Invalid input: NaN values detected");
   }
-
-  const provisionalIncome = allOtherIncome + 0.5 * ssIncome;
-  result.provisionalIncome = provisionalIncome;
 
   // Update calculation details
   result.calculationDetails.otherTaxableIncome = allOtherIncome;
-  result.calculationDetails.halfSSBenefit = 0.5 * ssIncome;
+  result.calculationDetails.halfSSBenefit = 0.5 * result.totalBenefits();
 
   let taxableSSAmount = 0;
   //   log.info("*** Social Security Benefits Taxation ***");
-  log.info(`Social Security Income: $${ssIncome.asCurrency()}`);
+  log.info(`Social Security Income: $${result.totalBenefits().asCurrency()}`);
   log.info(`. Provisional income is defined as 1/2 SS  + Other Taxable Income`);
-  log.info(`. 1/2 of SS: $${(0.5 * ssIncome).asCurrency()}`);
+  log.info(`. 1/2 of SS: $${(0.5 * result.totalBenefits()).asCurrency()}`);
   log.info(`. Other Taxable Income: $${allOtherIncome.asCurrency()}`);
   log.info(
-    `. Provisional Income is $${provisionalIncome.round(
-      2
-    )} ($${allOtherIncome.asCurrency()} + $${(0.5 * ssIncome).asCurrency()})`
+    `. Provisional Income is $${result
+      .provisionalIncome()
+      .round(2)} ($${allOtherIncome.asCurrency()} + $${(
+      0.5 * result.totalBenefits()
+    ).asCurrency()})`
   );
 
   const base1 = 32000;
@@ -105,17 +135,17 @@ function determineTaxablePortionOfSocialSecurity(ssIncome, allOtherIncome) {
   log.info(`Tier 1 threshold: $${base1}`);
   log.info(`Tier 2 threshold: $${base2}`);
 
-  if (provisionalIncome <= base1) {
+  if (result.provisionalIncome() <= base1) {
     log.info(
       `. Provisional income is below Tier 1 ($${base1}). No Social Security benefits are taxable.`
     );
     result.taxablePortion = taxableSSAmount;
-    result.calculationDetails.effectiveRate = 0;
+    result.calculationDetails.effectiveTaxRate = 0;
     return result;
   }
 
-  if (provisionalIncome <= base2) {
-    let amountInExcessOfBase = provisionalIncome - base1;
+  if (result.provisionalIncome() <= base2) {
+    let amountInExcessOfBase = result.provisionalIncome() - base1;
     let tier1TaxableAmount = 0.5 * amountInExcessOfBase;
 
     log.info(
@@ -123,7 +153,9 @@ function determineTaxablePortionOfSocialSecurity(ssIncome, allOtherIncome) {
         2
       )}.`
     );
-    log.info(`   50% of SS benefit ($${(0.5 * ssIncome).asCurrency()})`);
+    log.info(
+      `   50% of SS benefit ($${(0.5 * result.totalBenefits()).asCurrency()})`
+    );
     log.info(`     -- or --`);
     log.info(
       `   50% of the amount over the Tier1 threshold ($${tier1TaxableAmount.round(
@@ -131,7 +163,10 @@ function determineTaxablePortionOfSocialSecurity(ssIncome, allOtherIncome) {
       )}).`
     );
 
-    taxableSSAmount = Math.min(0.5 * ssIncome, tier1TaxableAmount);
+    taxableSSAmount = Math.min(
+      0.5 * result.totalBenefits(),
+      tier1TaxableAmount
+    );
 
     log.info(
       `Amount of SS that is taxable is $${taxableSSAmount.asCurrency()}.`
@@ -139,15 +174,15 @@ function determineTaxablePortionOfSocialSecurity(ssIncome, allOtherIncome) {
 
     // Update calculation details
     result.calculationDetails.excessIncome1 = amountInExcessOfBase;
-    result.calculationDetails.tier1Amount = taxableSSAmount;
-    result.calculationDetails.effectiveRate =
-      ssIncome > 0 ? taxableSSAmount / ssIncome : 0;
+    result.calculationDetails.tier1TaxableAmount = taxableSSAmount;
+    result.calculationDetails.effectiveTaxRate =
+      result.totalBenefits() > 0 ? taxableSSAmount / result.totalBenefits() : 0;
 
     result.taxablePortion = taxableSSAmount;
     return result;
   }
 
-  const excessOverBase2 = provisionalIncome - base2;
+  const excessOverBase2 = result.provisionalIncome() - base2;
   log.info(
     `. Provisional income exceeds Tier 1 in its entirety: $${base2 - base1}.`
   );
@@ -157,7 +192,11 @@ function determineTaxablePortionOfSocialSecurity(ssIncome, allOtherIncome) {
     )}`
   );
   log.info(`. Taxable amount of SS is the lesser of:`);
-  log.info(`    85% of total SS benefit ($${(0.85 * ssIncome).asCurrency()})`);
+  log.info(
+    `    85% of total SS benefit ($${(
+      0.85 * result.totalBenefits()
+    ).asCurrency()})`
+  );
   log.info(`     -- or ---`);
   log.info(
     `    50% of excess over Tier 1 ($6000) + 85% of the excess over Tier 2 ($${(
@@ -168,19 +207,22 @@ function determineTaxablePortionOfSocialSecurity(ssIncome, allOtherIncome) {
   let tier1Max = 0.5 * (base2 - base1);
   let tier2TaxableAmount = 0.85 * excessOverBase2;
 
-  taxableSSAmount = Math.min(0.85 * ssIncome, tier1Max + tier2TaxableAmount);
+  taxableSSAmount = Math.min(
+    0.85 * result.totalBenefits(),
+    tier1Max + tier2TaxableAmount
+  );
   log.info(`Amount of SS that is taxable is $${taxableSSAmount.asCurrency()}.`);
 
   // Update calculation details
   result.calculationDetails.excessIncome1 = base2 - base1;
   result.calculationDetails.excessIncome2 = excessOverBase2;
-  result.calculationDetails.tier1Amount = tier1Max;
-  result.calculationDetails.tier2Amount = Math.min(
-    0.85 * ssIncome - tier1Max,
+  result.calculationDetails.tier1TaxableAmount = tier1Max;
+  result.calculationDetails.tier2TaxableAmount = Math.min(
+    0.85 * result.totalBenefits() - tier1Max,
     tier2TaxableAmount
   );
-  result.calculationDetails.effectiveRate =
-    ssIncome > 0 ? taxableSSAmount / ssIncome : 0;
+  result.calculationDetails.effectiveTaxRate =
+    result.totalBenefits() > 0 ? taxableSSAmount / result.totalBenefits() : 0;
 
   result.taxablePortion = taxableSSAmount;
   return result;
@@ -214,7 +256,8 @@ function calculate401kNetWhen401kGrossIs(gross401kIncome, opts) {
 
   const {
     pensionAndMiscIncome,
-    combinedSsGrossIncome: socialSecurityIncome,
+    mySsBenefitsGross,
+    spouseSsBenefitsGross,
     standardDeduction,
     brackets,
     precision = 0.01,
@@ -227,31 +270,16 @@ function calculate401kNetWhen401kGrossIs(gross401kIncome, opts) {
   );
 
   const ssBreakdown = {
-    socialSecurityIncome: socialSecurityIncome,
-    pensionAnd401kIncome: pensionAndMiscIncome + gross401kIncome,
-    taxablePortion: 0,
-    provisionalIncome: 0,
-    calculationDetails: {
-      method: "irs-rules",
-      threshold1: 32000,
-      threshold2: 44000,
-      otherTaxableIncome: 0,
-      halfSSBenefit: 0,
-      excessIncome1: 0,
-      excessIncome2: 0,
-      tier1Amount: 0,
-      tier2Amount: 0,
-      effectiveRate: 0,
-    },
     ...determineTaxablePortionOfSocialSecurity(
-      socialSecurityIncome,
+      mySsBenefitsGross,
+      spouseSsBenefitsGross,
       pensionAndMiscIncome + gross401kIncome
     ),
   };
 
   const incomeBreakdown = {
     pensionAndMiscIncome: pensionAndMiscIncome,
-    socialSecurityIncome: socialSecurityIncome,
+    socialSecurityIncome: mySsBenefitsGross + spouseSsBenefitsGross,
     gross401kIncome: gross401kIncome,
     totalIncome: 0,
 
@@ -266,11 +294,17 @@ function calculate401kNetWhen401kGrossIs(gross401kIncome, opts) {
 
   log.info(`Pension/Misc income is $${pensionAndMiscIncome.asCurrency()}.`);
   log.info(`401k income is $${gross401kIncome.asCurrency()}`);
-  log.info(`Social Security income is $${socialSecurityIncome.asCurrency()}.`);
+  log.info(
+    `Social Security income is $${(
+      mySsBenefitsGross + spouseSsBenefitsGross
+    ).asCurrency()}.`
+  );
   // log.info(`All taxable income EXCLUDING SS is $${allTaxableIncomeExcludingSS.asCurrency()}.`);
 
   incomeBreakdown.totalIncome =
-    pensionAndMiscIncome + gross401kIncome + socialSecurityIncome;
+    pensionAndMiscIncome +
+    gross401kIncome +
+    (mySsBenefitsGross + spouseSsBenefitsGross);
   log.info(`Total income is $${incomeBreakdown.totalIncome.asCurrency()}.`);
 
   // Calculate gross taxable income
