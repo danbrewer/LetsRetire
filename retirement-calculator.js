@@ -682,7 +682,6 @@ function calculateWorkingYearData(inputs, yearIndex, salary, rollingBalances) {
 --- Retirement Year ${fiscalData.yearIndex + 1} (Age ${demographics.age}) (Year ${demographics.retirementYear}) ---
 -----------------------------------------------`;
 
-  debugger;
   return result;
 }
 
