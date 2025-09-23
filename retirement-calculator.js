@@ -249,9 +249,7 @@ function calculateRMD(age, balances) {
 function calculateWorkingYearData(inputs, yearIndex, salary, rollingBalances) {
   // Declare and initialize the result object at the top
   const result = {
-    age: 0,
-    salary: 0,
-    spend: 0,
+    _description: "",
     contributions: {},
     withdrawals: {},
     bal: {},
@@ -276,21 +274,22 @@ function calculateWorkingYearData(inputs, yearIndex, salary, rollingBalances) {
 
     taxYear: TAX_BASE_YEAR + yearIndex,
     yearIndex: yearIndex,
-    currentYearSpending: inputs.spendingToday.adjustedForInflation(
+    spend: inputs.spendingToday.adjustedForInflation(
       inputs.inflation,
       yearIndex
     ),
     actualSavingsContribution: 0,
     desiredSavingsContribution: salary * inputs.taxablePct,
     determineActualSavingsContribution(netIncome) {
-      this.actualSavingsContribution = Math.max(
-        netIncome - this.currentYearSpending,
-        0
-      );
+      if (!netIncome || isNaN(netIncome)) return this.actualSavingsContribution;
+
+      this.actualSavingsContribution = Math.max(netIncome - this.spend, 0);
+      return this.actualSavingsContribution;
     },
   };
 
   const demographics = {
+    _description: "Demographics",
     age: inputs.currentAge + yearIndex,
     ssStartAge: inputs.ssStartAge,
     penStartAge: inputs.penStartAge,
@@ -306,15 +305,6 @@ function calculateWorkingYearData(inputs, yearIndex, salary, rollingBalances) {
     hasPen() {
       return this.age >= this.penStartAge;
     },
-    dump() {
-      console.log(
-        `-----------------------------------------------\n--- Retirement Year ${
-          this.yearIndex + 1
-        } (Age ${this.age}) (Year ${
-          this.retirementYear
-        }) ---\n-----------------------------------------------`
-      );
-    },
   };
 
   const taxes = {
@@ -328,14 +318,18 @@ function calculateWorkingYearData(inputs, yearIndex, salary, rollingBalances) {
     effectiveTaxRate: 0,
     standardDeduction: 0,
     determineEffectiveTaxRate(grossIncome) {
+      if (!grossIncome || isNaN(grossIncome)) return this.effectiveTaxRate;
+
       this.effectiveTaxRate =
-        grossIncome > 0 ? this.federalTaxesOwned / taxableIncome : 0;
+        grossIncome > 0 ? this.federalTaxesOwned / this.grossTaxableIncome : 0;
+
+      return this.effectiveTaxRate;
     },
   };
 
   const income = {
     _description: "Income",
-    wagesTipsAndCompensation: 0,
+    wagesTipsAndCompensation: salary,
     otherTaxableIncomeAdjustments:
       getTaxableIncomeOverride(demographics.age) || 0,
     taxableInterestIncome: 0,
@@ -345,6 +339,8 @@ function calculateWorkingYearData(inputs, yearIndex, salary, rollingBalances) {
     rothIraContributions: 0,
     taxableIncome: 0,
     netIncome: 0,
+    totalIncome: 0,
+    spendableIncome: 0,
     allIncomeSources() {
       return (
         this.wagesTipsAndCompensation +
@@ -364,12 +360,15 @@ function calculateWorkingYearData(inputs, yearIndex, salary, rollingBalances) {
       return this.grossIncome() - this.retirementAccountContributions;
     },
     determineNetIncome(taxesOwed) {
-      return (
-        this.adjustedGrossIncome() -
-        taxesOwed +
-        this.taxFreeIncomeAdjustment -
-        this.rothIraContributions
-      );
+      if (taxesOwed) {
+        this.netIncome = Math.max(this.grossIncome() - taxesOwed, 0);
+        this.spendableIncome =
+          this.netIncome +
+          this.taxFreeIncomeAdjustment -
+          this.rothIraContributions;
+      }
+      this.totalIncome = this.grossIncome();
+      return this.netIncome;
     },
     spendableIncome() {
       return this.netIncome() + this.taxFreeIncomeAdjustment;
@@ -469,8 +468,7 @@ function calculateWorkingYearData(inputs, yearIndex, salary, rollingBalances) {
     endingBalance() {
       return (
         this.balanceSubjectToInterest() +
-        this.overageDeposit +
-        this.deposits +
+        this.contributions +
         this.earnedInterest()
       ).asCurrency();
     },
@@ -498,7 +496,7 @@ function calculateWorkingYearData(inputs, yearIndex, salary, rollingBalances) {
     endingBalance() {
       return (
         this.balanceSubjectToInterest() +
-        this.overageDeposit +
+        this.deposits +
         this.taxFreeIncomeDeposit +
         this.regularDeposit +
         this.earnedInterest()
@@ -514,9 +512,6 @@ function calculateWorkingYearData(inputs, yearIndex, salary, rollingBalances) {
     rothContributionPercentage: inputs.rothPct,
     employeeMatchCap: inputs.matchCap,
     matchRate: inputs.matchRate,
-    totalGrossIncome() {
-      return this.salary + this.taxableIncomeAdjustment;
-    },
     desired401kContribution() {
       return this.salary * this.pretaxContributionPercentage;
     },
@@ -525,9 +520,10 @@ function calculateWorkingYearData(inputs, yearIndex, salary, rollingBalances) {
     },
     electiveScale() {
       let electiveLimit =
-        EMPLOYEE_401K_LIMIT_2025 + (age >= 50 ? EMPLOYEE_401K_CATCHUP_50 : 0);
+        EMPLOYEE_401K_LIMIT_2025 +
+        (demographics.age >= 50 ? EMPLOYEE_401K_CATCHUP_50 : 0);
       const totalDesiredContribution =
-        desired401kContribution() + desiredRothContribution();
+        this.desired401kContribution() + this.desiredRothContribution();
       let scale =
         totalDesiredContribution > 0
           ? Math.min(1, electiveLimit / totalDesiredContribution)
@@ -556,6 +552,8 @@ function calculateWorkingYearData(inputs, yearIndex, salary, rollingBalances) {
   // Calculations
   // **************
 
+  // debugger;
+
   retirementAccount.contributions = employmentInfo.cap401kContribution();
   rothIra.contributions = employmentInfo.capRothContribution();
 
@@ -577,7 +575,7 @@ function calculateWorkingYearData(inputs, yearIndex, salary, rollingBalances) {
   );
 
   taxes.federalTaxesOwned = calculateFederalTax(
-    taxes.taxableIncome,
+    income.taxableIncome,
     fiscalData.filingStatus,
     fiscalData.taxYear,
     fiscalData.inflationRate
@@ -587,18 +585,17 @@ function calculateWorkingYearData(inputs, yearIndex, salary, rollingBalances) {
   income.determineNetIncome(taxes.federalTaxesOwned);
 
   // Money not spent from income goes into savings
-  fiscalData.determineActualSavingsContribution(income.netIncome());
+  fiscalData.determineActualSavingsContribution(income.netIncome);
   savings.deposits += fiscalData.actualSavingsContribution;
 
   rothIra.contributions = employmentInfo.capRothContribution();
   retirementAccount.contributions = employmentInfo.cap401kContribution();
-
+  // debugger;
   rollingBalances.traditional401k = retirementAccount.endingBalance();
-  rollingBalances.rothIra = rothIra.endingBalance;
+  rollingBalances.rothIra = rothIra.endingBalance();
   rollingBalances.savings = savings.endingBalance();
 
   const withdrawals = {
-    net: 0,
     retirementAccount: retirementAccount.withdrawals,
     savings: savings.withdrawals,
     rothIra: rothIra.withdrawals,
@@ -614,37 +611,37 @@ function calculateWorkingYearData(inputs, yearIndex, salary, rollingBalances) {
   totals.totalIncome = income.allIncomeSources();
   totals.totalNetIncome =
     income.spendableIncome + income.taxFreeIncomeAdjustment;
-  totals.totalGrossIncome = income.allIncomeSources();
+  totals.totalGrossIncome = income.grossIncome();
 
   // Update all the final values in the result object
   contributions.my401k = employmentInfo.cap401kContribution();
   contributions.myRoth = employmentInfo.capRothContribution();
-  contributions.savings = income.rollingOverIntoSavings;
-  contributions.employerMatch = employmentInfo.employerMatch();
-  contributions.total =
-    employmentInfo.cap401kContribution() +
-    employmentInfo.capRothContribution() +
-    income.rollingOverIntoSavings +
-    employmentInfo.employerMatch();
+  contributions.savings = savings.deposits;
+  contributions.employerMatch = employmentInfo.employer401kMatch();
 
   // Note: Spouse contributions not handled in working year calculations
 
   result.contributions = contributions;
   result.ss = ss;
   result.pen = pen;
-  result.spend = fiscalData.currentYearSpending;
   result.withdrawals = withdrawals;
   result.taxes = taxes;
   result.totals = totals;
   result.bal = balances;
+  result.income = income;
+  result.demographics = demographics;
+  result.employmentInfo = employmentInfo;
+  result.roth = rothIra;
+  result.savings = savings;
+  result.ret = retirementAccount;
+  result.fiscalData = fiscalData;
 
   // Add breakdown data
   result.savingsBreakdown = {
     startingBalance: savings.startingBalance,
     withdrawals: savings.withdrawals,
-    overageDeposit: savings.overageDeposit,
+    deposits: savings.deposits,
     taxFreeIncomeDeposit: income.taxFreeIncomeAdjustment,
-    regularDeposit: income.rollingOverIntoSavings,
     interestEarned: savings.earnedInterest(),
     endingBalance: savings.endingBalance(),
     growthRate: savings.growthRate * 100,
@@ -680,6 +677,12 @@ function calculateWorkingYearData(inputs, yearIndex, salary, rollingBalances) {
     pensionTaxRate: 0,
   };
 
+  result._description = `
+-----------------------------------------------
+--- Retirement Year ${fiscalData.yearIndex + 1} (Age ${demographics.age}) (Year ${demographics.retirementYear}) ---
+-----------------------------------------------`;
+
+  debugger;
   return result;
 }
 
