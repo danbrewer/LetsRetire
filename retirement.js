@@ -280,16 +280,32 @@ function calculate401kNetWhen401kGrossIs(gross401kIncome, opts) {
   const incomeBreakdown = {
     pensionAndMiscIncome: pensionAndMiscIncome,
     socialSecurityIncome: mySsBenefitsGross + spouseSsBenefitsGross,
-    gross401kIncome: gross401kIncome,
-    totalIncome: 0,
-
-    taxableIncomeExcludingSs: 0,
-    taxableSsIncome: 0,
-    grossTaxableIncome: 0,
+    retirementAcctIncome: gross401kIncome,
+    taxableSsIncome: ssBreakdown.taxablePortion,
     standardDeduction: standardDeduction,
-    actualTaxableIncome: 0,
-    incomeTaxOwed: 0,
-    netIncome: 0,
+    federalIncomeTax: 0,
+    grossIncome() {
+      return (
+        this.pensionAndMiscIncome +
+        this.retirementAcctIncome +
+        this.socialSecurityIncome
+      );
+    },
+    ssNonTaxablePortion() {
+      return this.socialSecurityIncome - this.taxableSsIncome;
+    },
+    grossTaxableIncome() {
+      return this.grossIncome() - this.ssNonTaxablePortion();
+    },
+    grossTaxableIncomeWithoutSs() {
+      return this.pensionAndMiscIncome + this.retirementAcctIncome;
+    },
+    taxableIncome() {
+      return Math.max(0, this.grossTaxableIncome - this.standardDeduction);
+    },
+    netIncome() {
+      return this.grossIncome() - this.federalIncomeTax;
+    },
   };
 
   log.info(`Pension/Misc income is $${pensionAndMiscIncome.asCurrency()}.`);
@@ -301,66 +317,47 @@ function calculate401kNetWhen401kGrossIs(gross401kIncome, opts) {
   );
   // log.info(`All taxable income EXCLUDING SS is $${allTaxableIncomeExcludingSS.asCurrency()}.`);
 
-  incomeBreakdown.totalIncome =
-    pensionAndMiscIncome +
-    gross401kIncome +
-    (mySsBenefitsGross + spouseSsBenefitsGross);
-  log.info(`Total income is $${incomeBreakdown.totalIncome.asCurrency()}.`);
+  log.info(`Total income is $${incomeBreakdown.grossIncome().asCurrency()}.`);
 
-  // Calculate gross taxable income
-  incomeBreakdown.grossTaxableIncome =
-    pensionAndMiscIncome + gross401kIncome + ssBreakdown.taxablePortion;
-
-  incomeBreakdown.taxableIncomeExcludingSs =
-    pensionAndMiscIncome + gross401kIncome;
   log.info(
-    `Taxable income (excluding taxable SS portion) is $${incomeBreakdown.taxableIncomeExcludingSs.asCurrency()} (Pension + 401k)`
+    `Taxable income (excluding taxable SS portion) is $${incomeBreakdown.grossTaxableIncomeWithoutSs().asCurrency()} (Pension + 401k)`
   );
   log.info(
-    `Taxable portion of SS is $${ssBreakdown.taxablePortion.asCurrency()}.`
+    `Taxable portion of SS is $${incomeBreakdown.taxableSsIncome.asCurrency()}.`
   );
   log.info(
     `Total taxable income is $${incomeBreakdown.grossTaxableIncome.round(0)}
     (Pension + 401k + Taxable SS Portion)`
   );
-  log.info(`Standard deduction is $${standardDeduction.asCurrency()}.`);
-
-  incomeBreakdown.actualTaxableIncome = Math.max(
-    0,
-    incomeBreakdown.grossTaxableIncome - standardDeduction
-  );
   log.info(
-    `Actual taxable income is $${incomeBreakdown.actualTaxableIncome.asCurrency()} (Total Taxable Income - Standard Deduction)`
+    `Standard deduction is $${incomeBreakdown.standardDeduction.asCurrency()}.`
   );
 
-  // debugger;
-  const incomeTaxOwed = determineTaxUsingBrackets(
-    incomeBreakdown.actualTaxableIncome,
+  log.info(
+    `Actual taxable income is $${incomeBreakdown.taxableIncome().asCurrency()} (Total Taxable Income - Standard Deduction)`
+  );
+
+  incomeBreakdown.federalIncomeTax = determineTaxUsingBrackets(
+    incomeBreakdown.taxableIncome,
     brackets,
     opts
   );
 
-  incomeBreakdown.incomeTaxOwed = incomeTaxOwed;
-
   // log.info(
   //   `Gross income from all sources is $${grossTaxableIncome.asCurrency()}.`
   // );
-  log.info(`Taxes owed are $${incomeTaxOwed.asCurrency()}.`);
-
-  // incomeBreakdown.grossIncome =
-  //   pensionAndMiscIncome + gross401kIncome + socialSecurityIncome;
-
-  incomeBreakdown.netIncome = incomeBreakdown.totalIncome - incomeTaxOwed;
+  log.info(`Taxes owed are $${incomeBreakdown.federalIncomeTax.asCurrency()}.`);
 
   log.info(
-    `Net income is $${incomeBreakdown.netIncome.asCurrency()} (Pension + 401k + SS - Tax)`
+    `Net income is $${incomeBreakdown.netIncome().asCurrency()} (Pension + 401k + SS - Tax)`
   );
 
   // Update all the final values in the result object
-  result.totalIncome = incomeBreakdown.totalIncome;
-  result.taxableIncome = incomeBreakdown.actualTaxableIncome;
-  result.tax = incomeTaxOwed;
-  result.netIncome = incomeBreakdown.netIncome;
+  result.totalIncome = incomeBreakdown.grossIncome;
+  result.taxableIncome = incomeBreakdown.taxableIncome();
+  result.tax = incomeBreakdown.federalIncomeTax;
+  result.netIncome = incomeBreakdown.netIncome();
+
   result.ssBreakdown = ssBreakdown;
   result.incomeBreakdown = incomeBreakdown;
 
@@ -404,14 +401,14 @@ function determine401kWithdrawalToHitNetTargetOf(targetAmount, opts) {
       income.netIncome.asCurrency() > targetAmount.asCurrency()
         ? "TOO HIGH"
         : income.netIncome.asCurrency() < targetAmount.asCurrency()
-        ? "TOO LOW"
-        : "JUST RIGHT";
+          ? "TOO LOW"
+          : "JUST RIGHT";
     const highLowTextColor =
       income.netIncome.asCurrency() > targetAmount.asCurrency()
         ? "\x1b[31m"
         : income.net.asCurrency() < targetAmount.asCurrency()
-        ? "\x1b[34m"
-        : "\x1b[32m"; // Red for too high, Blue for too low, Green for just right
+          ? "\x1b[34m"
+          : "\x1b[32m"; // Red for too high, Blue for too low, Green for just right
     log.info(
       `When 401k withdrawal is $${guestimate401kWithdrawal.round(
         0

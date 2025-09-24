@@ -2228,8 +2228,8 @@ function generateOutputAndSummary(inputs, rows) {
                 calculation.taxableIncome || 0
               )}</span>`
             : calculation.taxableIncome
-            ? fmt(calculation.taxableIncome)
-            : ""
+              ? fmt(calculation.taxableIncome)
+              : ""
         }</td>
         <td class="income">${
           calculation.nonTaxableIncome
@@ -2246,8 +2246,8 @@ function generateOutputAndSummary(inputs, rows) {
                 calculation.provisionalIncome
               )}</span>`
             : calculation.provisionalIncome
-            ? fmt(calculation.provisionalIncome)
-            : ""
+              ? fmt(calculation.provisionalIncome)
+              : ""
         }</td>
         
         <!-- TAX INFORMATION -->
@@ -2273,8 +2273,8 @@ function generateOutputAndSummary(inputs, rows) {
                 calculation.taxes || 0
               )}</span>`
             : calculation.taxes
-            ? fmt(calculation.taxes)
-            : ""
+              ? fmt(calculation.taxes)
+              : ""
         }</td>
         <td class="neutral">${
           calculation.effectiveTaxRate
@@ -2527,7 +2527,8 @@ function getSpendingOverride(age) {
     }
   }
   // console.log(`getSpendingOverride(${age}): No override (field empty or invalid)`);
-  return null; // No override specified
+  setSpendingFieldValue(age);
+  return 0; // No override specified
 }
 
 function setSpendingFieldValue(age) {
