@@ -1,72 +1,6 @@
 // retirement-calculator.js
 
 // Add Number prototype extensions needed by retirement.js functions
-Number.prototype.round = function (decimals = 0) {
-  const factor = Math.pow(10, decimals);
-  return Math.round(this * factor) / factor;
-};
-
-Number.prototype.asCurrency = function () {
-  return this.round(2);
-};
-
-Object.defineProperty(Object.prototype, "dumpToConsole", {
-  value: function (title, depth = 0) {
-    const indent = "  ".repeat(depth);
-
-    if (depth === 0) {
-      const header = title || this._description || "Object Dump";
-      console.log(`${header}:`);
-    }
-
-    if (Array.isArray(this)) {
-      this.forEach((val, i) => {
-        if (val && typeof val === "object") {
-          console.log(`${indent}- [${i}]`);
-          val.dumpToConsole(null, depth + 1);
-        } else {
-          console.log(`${indent}- [${i}] ${val}`);
-        }
-      });
-      return;
-    }
-
-    for (const [key, value] of Object.entries(this)) {
-      if (typeof value === "function") {
-        try {
-          console.log(`${indent}- ${key.padEnd(25)} ${value.call(this)}`);
-        } catch {
-          console.log(`${indent}- ${key.padEnd(25)} [function]`);
-        }
-      } else if (value && typeof value === "object") {
-        console.log(`${indent}- ${key}:`);
-        value.dumpToConsole(null, depth + 1);
-      } else if (key === "_description") {
-        // Skip _description at all levels
-      } else {
-        console.log(`${indent}- ${key.padEnd(25)} ${value}`);
-      }
-    }
-  },
-  enumerable: false,
-});
-
-function dedent(strings, ...values) {
-  const raw = String.raw({ raw: strings }, ...values);
-
-  // Find minimum indentation
-  const lines = raw.split("\n");
-  const nonEmpty = lines.filter((line) => line.trim().length > 0);
-  const indent = Math.min(
-    ...nonEmpty.map((line) => line.match(/^(\s*)/)[0].length)
-  );
-
-  // Remove that indentation from every line
-  return lines
-    .map((line) => line.slice(indent))
-    .join("\n")
-    .trim();
-}
 
 // Add default implementations for UI override functions when not available
 if (typeof getTaxableIncomeOverride === "undefined") {
@@ -257,283 +191,6 @@ function calculateSpouseBenefits(inputs) {
     result.spouseSsAnnual = inputs.spouseSsMonthly * 12;
     result.spousePenAnnual = inputs.spousePenMonthly * 12;
   }
-
-  return result;
-}
-
-/**
- * Create withdrawal function for a specific retirement year
- */
-function createWithdrawalFactory(
-  incomeStreams = {},
-  fiscalData = {},
-  demographics = {},
-  rollingBalances = {}
-) {
-  const withdrawalsMade = {
-    retirementAccount: 0,
-    savingsAccount: 0,
-    roth: 0,
-  };
-
-  let incomeResults = {
-    totalIncome: 0,
-    taxableIncome: 0,
-    tax: 0,
-    netIncome: 0,
-    ssBreakdown: {},
-    incomeBreakdown: {},
-  };
-  // Declare and initialize the result object at the top
-  const result = {
-    withdrawFromTargetedAccount: () => {},
-    getWithdrawalsMade: () => withdrawalsMade,
-    getFinalIncomeResults: () => incomeResults,
-  };
-
-  // **************
-  // Sanity checks
-  // **************
-  // if (isNaN(closuredCopyOfFixedPortionOfTaxableIncome)) {
-  //   console.error(
-  //     `closuedCopyOfFixedPortionOfTaxableIncome is NaN.  This is a fatal error`
-  //   );
-  //   return result;
-  // }
-  if (rollingBalances.length === 0 || !rollingBalances) {
-    console.error(
-      `rollingBalances is null or undefined.  This is a fatal error`
-    );
-    return result;
-  }
-  // **************
-
-  function withdrawFrom(accountType, desiredSpend) {
-    // **************
-    // Sanity checks
-    // **************
-    // Validate kind parameter
-    debugger;
-    if (!accountType || typeof accountType !== "string") {
-      console.error("Invalid withdrawal kind:", accountType);
-      return 0;
-    }
-    // verify kind is one of the expected values and error if not
-    const validKinds = ["savings", "401k", "roth"];
-    if (!validKinds.includes(accountType)) {
-      console.error(
-        "Withdrawal target not defined or not supported:",
-        accountType
-      );
-      console.error("Expected one of:", validKinds.join(", "));
-      return 0;
-    }
-
-    if (desiredSpend <= 0) return 0;
-
-    // Determine balance reference and setter function
-    const targetedAccount = {
-      getBalance: {},
-      deposit: {},
-      withdraw: {},
-    };
-
-    switch (accountType) {
-      case "savings":
-        targetedAccount.getBalance = () => rollingBalances.savings;
-        targetedAccount.deposit = (v) => (rollingBalances.savings += v);
-        targetedAccount.withdraw = (v) => {
-          rollingBalances.savings -= v;
-          withdrawalsMade.savingsAccount += v;
-        };
-        break;
-      case "401k":
-        targetedAccount.getBalance = () => rollingBalances.traditional401k;
-        targetedAccount.deposit = (v) => (rollingBalances.traditional401k += v);
-        targetedAccount.withdraw = (v) => {
-          rollingBalances.traditional401k -= v;
-          withdrawalsMade.retirementAccount += v;
-        };
-        break;
-      case "roth":
-        targetedAccount.getBalance = () => rollingBalances.rothIra;
-        targetedAccount.deposit = (v) => (rollingBalances.rothIra = +v);
-        targetedAccount.withdraw = (v) => {
-          rollingBalances.rothIra -= v;
-          withdrawalsMade.roth += v;
-        };
-        break;
-      default:
-        console.error("Unknown account type:", accountType);
-        return result;
-    }
-
-    const standardDeduction = getStandardDeduction(
-      demographics.filingStatus,
-      fiscalData.taxYear, // year is already the actual year (e.g., 2040)
-      fiscalData.inflationRate
-    );
-
-    const taxBrackets = getTaxBrackets(
-      demographics.filingStatus,
-      fiscalData.taxYear,
-      fiscalData.inflationRate
-    );
-
-    const opts = {
-      pensionAndMiscIncome:
-        incomeStreams.fixedPortion() - incomeStreams.ssIncome(),
-      mySsBenefitsGross: incomeStreams.mySs,
-      spouseSsBenefitsGross: incomeStreams.spouseSs,
-      standardDeduction: standardDeduction,
-      brackets: taxBrackets,
-      precision: 0.01, // Precision for binary search convergence
-    };
-
-    if (accountType === "401k") {
-      const ideal401kWithdrawal = determine401kWithdrawalToHitNetTargetOf(
-        desiredSpend,
-        opts
-      );
-
-      // Only take what is available in the 401k account
-      const withdrawalAmountNeeded = Math.min(
-        ideal401kWithdrawal.withdrawalNeeded,
-        targetedAccount.getBalance()
-      );
-
-      // Calculate actual net using the sophisticated tax calculation
-      incomeResults = {
-        totalIncome: 0,
-        taxableIncome: 0,
-        tax: 0,
-        netIncome: 0,
-        ssBreakdown: {},
-        incomeBreakdown: {},
-        ...calculate401kNetWhen401kGrossIs(withdrawalAmountNeeded, opts),
-      };
-
-      targetedAccount.withdraw(withdrawalAmountNeeded);
-
-      remainingSpendNeeded = desiredSpend - incomeResults.netIncome;
-
-      return remainingSpendNeeded;
-    } else {
-      // Savings or Roth withdrawal (no tax impact)
-
-      // Check if retirementAccountIncome has already been calculated by a previous withdrawal
-      const retirementAcctIncomeHasBeenRecognized =
-        incomeResults.incomeBreakdown.retirementAcctIncome > 0;
-      const retirementAcctIncomeHasNotYetBeenRecognized =
-        !retirementAcctIncomeHasBeenRecognized;
-
-      if (retirementAcctIncomeHasNotYetBeenRecognized) {
-        // We use tempIncomeData here because it's possible savings can't cover the entire desiredSpend
-        // When that happens, we only want to reduce the desiredSpend by the amount withdrawn from savings/Roth
-
-        const proposedIncomeWithNo401kWithdrawals = {
-          ...calculate401kNetWhen401kGrossIs(0, opts),
-        };
-
-        const fundsNeeded =
-          desiredSpend - proposedIncomeWithNo401kWithdrawals.netIncome;
-        const fundsAvailable = targetedAccount.getBalance();
-        // Determine how much to withdraw to meet the desired spend
-        withdrawalAmount = Math.min(fundsAvailable, fundsNeeded);
-
-        // Reduce the account balance by the net received amount
-        targetedAccount.withdraw(withdrawalAmount);
-
-        let remainingSpendNeeded =
-          desiredSpend -
-          withdrawalAmount -
-          proposedIncomeWithNo401kWithdrawals.netIncome;
-
-        // If the remaining needed is not yet zero, don't include the incomeData yet
-        if (remainingSpendNeeded > 0) {
-          // Only reduce the remaining spend need by the amount actually withdrawn
-          remainingSpendNeeded = desiredSpend - withdrawalAmount;
-        } else {
-          // Net income + savings/Roth covered the entire desired spend
-          if (retirementAcctIncomeHasNotYetBeenRecognized) {
-            // Store the incomeData only if it hasn't been recognized yet
-            incomeResults = { ...proposedIncomeWithNo401kWithdrawals };
-          }
-        }
-        return remainingSpendNeeded;
-      } else {
-        // Retirement account income has been recognized
-        // Reference previously recognized incomeData for calculating desired withdrawal
-        const fundsNeeded = desiredSpend;
-        const fundsAvailable = targetedAccount.getBalance();
-        // Determine how much to withdraw to meet the desired spend
-        withdrawalAmount = Math.min(fundsAvailable, fundsNeeded);
-
-        // Reduce the account balance by the net received amount
-        targetedAccount.withdraw(withdrawalAmount);
-
-        let remainingSpendNeeded = desiredSpend - withdrawalAmount;
-
-        return remainingSpendNeeded;
-      }
-
-      // // We use tempIncomeData here because it's possible savings can't cover the entire desiredSpend
-      // // When that happens, we only want to reduce the desiredSpend by the amount withdrawn from savings/Roth
-      // let tempIncomeData = {};
-
-      // if (retirementAcctIncomeHasBeenRecognized) {
-      //   // Reference previously recognized incomeData for calculating desired withdrawal
-      //   tempIncomeData = {
-      //     ...incomeResults,
-      //   };
-      // } else {
-      //   // Estimate incomeData with $0 401k withdrawal to determine current net income
-      //   tempIncomeData = {
-      //     ...calculate401kNetWhen401kGrossIs(0, opts),
-      //   };
-      // }
-
-      // // Determine how much to withdraw to meet the desired spend
-      // withdrawalAmount = Math.min(
-      //   desiredSpend - tempIncomeData.netIncome,
-      //   targetedAccount.getBalance()
-      // );
-
-      // if (kind === "savings") {
-      //   withdrawalsMade.savingsAccount += withdrawalAmount;
-      // }
-      // if (kind === "roth") {
-      //   withdrawalsMade.roth += withdrawalAmount;
-      // }
-
-      // // Reduce the account balance by the net received amount
-      // targetedAccount.widthdraw(withdrawalAmount);
-
-      // let remainingSpendNeeded = desiredSpend - withdrawalAmount;
-
-      // // Try to zero out the remaining spend needed with net income if it hasn't been recognized yet
-      // if (retirementAcctIncomeHasNotYetBeenRecognized) {
-      //   remainingSpendNeeded -= tempIncomeData.netIncome;
-      // }
-
-      // // If the remaining needed is not yet zero, don't include the incomeData yet
-      // if (remainingSpendNeeded > 0) {
-      //   // Only reduce the remaining spend need by the amount actually withdrawn
-      //   remainingSpendNeeded = desiredSpend - withdrawalAmount;
-      // } else {
-      //   // Net income + savings/Roth covered the entire desired spend
-      //   if (retirementAcctIncomeHasNotYetBeenRecognized) {
-      //     // Store the incomeData only if it hasn't been recognized yet
-      //     incomeResults = { ...tempIncomeData };
-      //   }
-      // }
-
-      // return remainingSpendNeeded;
-    }
-  }
-
-  // Populate the result object
-  result.withdrawFromTargetedAccount = withdrawFrom;
 
   return result;
 }
@@ -1050,15 +707,11 @@ function calculateRetirementYearData(
     hasPen() {
       return this.age >= this.penStartAge;
     },
-    dump() {
-      console.log(
-        `-----------------------------------------------\n--- Retirement Year ${
-          this.yearIndex + 1
-        } (Age ${this.age}) (Year ${
-          this.retirementYear
-        }) ---\n-----------------------------------------------`
-      );
-    },
+    _description: `-----------------------------------------------\n--- Retirement Year ${
+      this.yearIndex + 1
+    } (Age ${this.age}) (Year ${
+      this.retirementYear
+    }) ---\n-----------------------------------------------`,
   };
 
   const fiscalData = {
@@ -1170,10 +823,9 @@ function calculateRetirementYearData(
   };
 
   const savings = {
-    _description: "Savings Breakdown",
+    _description: "Savings",
     startingBalance: rollingBalances.savings,
     withdrawals: 0,
-    deposits: 0,
     balanceSubjectToInterest() {
       return Math.max(0, this.startingBalance - this.withdrawals);
     },
@@ -1182,9 +834,10 @@ function calculateRetirementYearData(
     earnedInterest() {
       return this.balanceSubjectToInterest() * this.growthRate;
     },
+    deposits: 0,
     endingBalance() {
       return (
-        this.balanceSubjectToInterest() +
+        this.startingBalance +
         this.deposits +
         this.earnedInterest()
       ).asCurrency();
@@ -1207,20 +860,9 @@ function calculateRetirementYearData(
   const mySsBenefits = {
     _description: "Social Security Benefits Breakdown",
     gross: demographics.eligibleForSs ? benefitAmounts.ssAnnual : 0,
-    net: 0,
     taxable: 0,
     nonTaxable: 0,
-    taxes: 0,
-    taxRate: 0,
-    breakDownSsBenefitPortions(taxablePortionOfSs, spouseGross) {
-      if (!taxablePortionOfSs || isNaN(taxablePortionOfSs)) return 0;
-
-      this.taxable = Math.round(
-        (taxablePortionOfSs * this.gross) / (this.gross + spouseGross || 1)
-      );
-      this.nonTaxable = this.gross - this.taxable;
-      return `Taxable Portion: ${this.taxable}, Non-Taxable Portion: ${this.nonTaxable}`;
-    },
+    portionOfTotalBenefits: 0,
   };
 
   const myPensionBenefits = {
@@ -1228,9 +870,7 @@ function calculateRetirementYearData(
     gross: demographics.hasPen() ? benefitAmounts.penAnnual : 0,
     net: 0,
     taxable: 0,
-    nonTaxable: 0,
-    taxes: 0,
-    taxRate: 0,
+    portionOfTotalBenefits: 0,
   };
 
   const spouseBenefitInputs = extractSpouseBenefitInputs(
@@ -1324,6 +964,7 @@ function calculateRetirementYearData(
 
   const DUMP_TO_CONSOLE = demographics.age == 200;
 
+  debugger;
   const incomeStreams = {
     _description: "Gross Income Breakdown",
     myPension: myPensionBenefits.gross,
@@ -1361,8 +1002,6 @@ function calculateRetirementYearData(
     rollingBalances
   );
 
-  debugger;
-
   // At this point we have gross income from pensions and taxable interest,
   // and we know the fixed portion of taxable income
   // We need to withdraw enough from accounts to meet the spend.total() need after taxes
@@ -1387,15 +1026,21 @@ function calculateRetirementYearData(
   // For Social Security breakdown, we still need some manual calculation since we need separate spouse results
   // But we can use the taxable amounts from retirement.js
 
-  mySsBenefits.breakDownSsBenefitPortions(
-    withdrawalFactoryIncomeResults.ssBreakdown.taxablePortion,
-    spouseSsBenefits.gross
-  );
+  debugger;
 
-  spouseSsBenefits.breakDownSsBenefitPortions(
-    withdrawalFactoryIncomeResults.ssBreakdown.taxablePortion,
-    mySsBenefits.gross
-  );
+  mySsBenefits.taxable =
+    withdrawalFactoryIncomeResults.ssBreakdown.myTaxablePortion();
+  mySsBenefits.nonTaxable =
+    withdrawalFactoryIncomeResults.ssBreakdown.myNonTaxablePortion();
+  mySsBenefits.portionOfTotalBenefits =
+    withdrawalFactoryIncomeResults.ssBreakdown.myPortion();
+
+  spouseSsBenefits.taxable =
+    withdrawalFactoryIncomeResults.ssBreakdown.spouseTaxablePortion();
+  spouseSsBenefits.nonTaxable =
+    withdrawalFactoryIncomeResults.ssBreakdown.spouseNonTaxablePortion();
+  spouseSsBenefits.portionOfTotalBenefits =
+    withdrawalFactoryIncomeResults.ssBreakdown.spousePortion();
 
   // Calculate gross and net income from taxable sources
   const grossTaxableIncomeFromAllTaxableSources =
@@ -1406,14 +1051,13 @@ function calculateRetirementYearData(
     withdrawalsMade.retirementAccount +
     incomeStreams.rmd +
     incomeStreams.taxableInterest;
+
   const netIncomeFromTaxableSources =
     grossTaxableIncomeFromAllTaxableSources -
     withdrawalFactoryIncomeResults.tax;
 
   // Calculate total net income
-  const totalNetIncome = (
-    netIncomeFromTaxableSources + withdrawalsMade.savingsAccount
-  ).round(0);
+  const totalNetIncome = netIncomeFromTaxableSources.asCurrency();
 
   if (DUMP_TO_CONSOLE) {
     console.log("Age", age, "Net Income Debug:");
@@ -1429,16 +1073,19 @@ function calculateRetirementYearData(
     withdrawalsMade.retirementAccount;
 
   savings.withdrawals = withdrawalsMade.savingsAccount;
+
+  const excessIncome =
+    withdrawalFactoryIncomeResults.netIncomeLessSavingsInterest +
+    totalWithdrawals +
+    income.taxFreeIncomeAdjustment -
+    expenditures.total();
+
   // overageDeposit is whatever is left after spending need is met
-  savings.deposits += Math.max(
-    0,
-    totalNetIncome - expenditures.total() - income.taxFreeIncomeAdjustment
-  );
+  savings.deposits += Math.max(0, excessIncome);
 
   // Track taxable interest earned for reporting purposes and next year's taxes
   rollingBalances.taxableInterestIncome = savings.interestEarned;
-  rollingBalances.savings += savings.interestEarned;
-  rollingBalances.savings += savings.taxFreeIncomeDeposit;
+  rollingBalances.savings += savings.deposits;
 
   // If there's an overage (excess income beyond targeted "spend"), add it to savings
   // as if deposited on 12/31 of the current year, AFTER savings growth has been determined
@@ -1446,12 +1093,12 @@ function calculateRetirementYearData(
   // rather than letting it sit idle in a checking account
   // Note: this overage is not taxable since it's from after-tax income
   // (it has already been taxed when earned)
-  const overage = Math.max(0, totalNetIncome - expenditures.total());
-  if (overage > 0) {
-    rollingBalances.savings += overage;
-    contributions.savings += overage;
-    savings.overageDeposit += overage;
-  }
+  // const overage = Math.max(0, totalNetIncome - expenditures.total());
+  // if (overage > 0) {
+  //   rollingBalances.savings += overage;
+  //   contributions.savings += overage;
+  //   savings.overageDeposit += overage;
+  // }
 
   // Apply normal growth to other account types (withdrawals happen at specific times)
   rollingBalances.traditional401k *= 1 + inputs.ret401k;
@@ -1464,6 +1111,7 @@ function calculateRetirementYearData(
     rollingBalances.traditional401k +
     rollingBalances.rothIra;
 
+  debugger;
   // For display purposes: allocate taxes proportionally (only to taxable income sources)
   const mySsNetIncome =
     mySsBenefits.gross > 0 && grossTaxableIncomeFromAllTaxableSources > 0
@@ -1556,11 +1204,11 @@ function calculateRetirementYearData(
   // For display purposes: ssTaxes shows allocated SS taxes, otherTaxes shows non-SS taxes
   const ssTaxes = ssTaxAllocated;
   const otherTaxes = withdrawalFactoryIncomeResults.tax - ssTaxAllocated;
-
+  debugger;
   // Non-taxable income includes SS/pension non-taxable portions + savings withdrawals (already after-tax) + Roth withdrawals
   const totalNonTaxableIncome =
-    mySsNonTaxable +
-    spouseSsNonTaxable +
+    mySsBenefits.nonTaxable +
+    spouseSsBenefits.nonTaxable +
     myPensionBenefits.nonTaxable +
     spousePensionBenefits.nonTaxable +
     withdrawalsMade.savingsAccount +
@@ -1578,12 +1226,12 @@ function calculateRetirementYearData(
   const grossRetirementWithdrawals = isNaN(withdrawalsMade.retirementAccount)
     ? 0
     : withdrawalsMade.retirementAccount;
-  const grossTaxableInterest = isNaN(savingsInterestEarnedForTheYear)
+  const grossTaxableInterest = isNaN(savings.earnedInterest())
     ? 0
     : savingsInterestEarnedForTheYear;
-  const grossTaxableAdjustment = isNaN(income.taxableIncomeAdjustment)
+  const grossTaxableAdjustment = isNaN(income.otherTaxableIncomeAdjustments)
     ? 0
-    : income.taxableIncomeAdjustment;
+    : income.otherTaxableIncomeAdjustments;
 
   const grossTaxableIncome =
     grossPenGross +
@@ -1608,8 +1256,8 @@ function calculateRetirementYearData(
     spouseSsNetIncome +
     spousePenNetAdjusted +
     retirementAccountNetAdjusted +
-    savingsInterestEarnedForTheYear +
-    income.taxableIncomeAdjustment +
+    savings.earnedInterest() +
+    income.otherTaxableIncomeAdjustments +
     income.taxFreeIncomeAdjustment;
 
   // Effective tax rate calculation
@@ -1633,7 +1281,7 @@ function calculateRetirementYearData(
   ss.spouseSs = spouseSsNetIncome;
   ss.spouseSsGross = spouseSsBenefits.gross;
   ss.taxes = ssTaxes;
-  ss.incomeFigures.ssBreakdown.provisionalIncome =
+  ss.ssBreakdown.provisionalIncome =
     withdrawalFactoryIncomeResults.ssBreakdown.provisionalIncome;
 
   pen.myPen = penNetAdjusted;
@@ -1730,31 +1378,19 @@ function calculateRetirementYearData(
     _description: "Savings Breakdown",
     startingBalance: savings.startingBalance,
     withdrawals: savings.withdrawals,
-    overageDeposit: 0,
-    taxFreeIncomeDeposit: 0,
-    growthRate: inputs.retSavings * 100,
-    earnedInterest() {
-      return (
-        (this.startingBalance - this.withdrawals) * (this.growthRate / 100)
-      );
-    },
-    endingBalance() {
-      return (
-        this.startingBalance -
-        this.withdrawals +
-        this.overageDeposit +
-        this.taxFreeIncomeDeposit +
-        this.earnedInterest()
-      ).asCurrency();
-    },
+    deposits: 0,
+    balanceBeforeGrowth: 0,
+    growthRate: 0,
+    interestEarnedAtYearEnd: 0,
+    endingBalance: 0,
   };
 
-  savingsBreakdown.startingBalance = savingsBreakdown.startingBalance;
-  savingsBreakdown.withdrawals = withdrawalsMade.savingsAccount;
-  savingsBreakdown.overageDeposit = savings.overageDeposit;
-  savingsBreakdown.taxFreeIncomeDeposit = savings.taxFreeIncomeDeposit;
-  savingsBreakdown.balanceBeforeGrowth = savingsBalanceBeforeGrowth;
-  savingsBreakdown.interestEarnedAtYearEnd = savingsInterestEarnedForTheYear;
+  savingsBreakdown.startingBalance = savings.startingBalance;
+  savingsBreakdown.withdrawals = savings.withdrawals;
+  savingsBreakdown.balanceBeforeGrowth = savings.balanceSubjectToInterest();
+  savingsBreakdown.interestEarnedAtYearEnd = savings.earnedInterest();
+  savingsBreakdown.deposits = savings.deposits;
+  savingsBreakdown.endingBalance = savings.endingBalance();
   savingsBreakdown.growthRate = inputs.retSavings * 100;
 
   // Update all the final values in the result object

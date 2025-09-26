@@ -67,22 +67,28 @@ function calculateSsBenefits(
     myBenefits: mySsBenefitsGross || 0,
     spouseBenefits: spouseSsBenefitsGross || 0,
     allOtherIncome: allOtherIncome || 0,
-    taxableAmount: 0,
+    taxablePortion: 0,
     oneHalfOfSSBenefits() {
       return (0.5 * (mySsBenefitsGross + spouseSsBenefitsGross)).asCurrency();
     },
     // derived values
     nonTaxablePortion() {
-      return this.totalBenefits() - this.taxableAmount;
+      return this.totalBenefits() - this.taxablePortion;
     },
     totalBenefits() {
       return (this.myBenefits + this.spouseBenefits).asCurrency();
     },
     myPortion() {
-      return (this.myBenefits / (this.totalBenefits() || 1)) * 100;
+      return (this.myBenefits / (this.totalBenefits() || 1)).round(2);
     },
     spousePortion() {
-      return (this.spouseBenefits / (this.totalBenefits() || 1)) * 100;
+      return (this.spouseBenefits / (this.totalBenefits() || 1)).round(2);
+    },
+    myTaxablePortion() {
+      return this.myPortion() * this.taxablePortion;
+    },
+    spouseTaxablePortion() {
+      return this.spousePortion() * this.taxablePortion;
     },
     myNonTaxablePortion() {
       return this.myPortion() * this.nonTaxablePortion();
@@ -92,6 +98,9 @@ function calculateSsBenefits(
     },
     provisionalIncome() {
       return (this.oneHalfOfSSBenefits() + allOtherIncome).asCurrency();
+    },
+    effectiveTaxRate() {
+      return this.calculationDetails.effectiveTaxRate;
     },
     calculationDetails: {},
   };
@@ -139,19 +148,19 @@ function calculateSsBenefits(
   log.info(`Tier 1 threshold: $${calculationDetails.tier1Threshold}`);
   log.info(`Tier 2 threshold: $${calculationDetails.threshold2}`);
 
+  // Case 1: No social security is taxable
   if (
     calculationDetails.provisionalIncome <= calculationDetails.tier1Threshold
   ) {
     log.info(
       `. Provisional income is below Tier 1 ($${calculationDetails.tier1Threshold}). No Social Security benefits are taxable.`
     );
-    ssBenefits.taxableAmount = 0;
+    ssBenefits.taxablePortion = 0;
     debugger;
     return ssBenefits;
   }
 
-  let taxableSSAmount = 0;
-
+  // Case 2: Provisional income exceeds Tier 1 but not Tier 2
   if (calculationDetails.provisionalIncome <= calculationDetails.threshold2) {
     calculationDetails.incomeExceedingTier1 =
       calculationDetails.provisionalIncome - calculationDetails.tier1Threshold;
@@ -172,10 +181,11 @@ function calculateSsBenefits(
       excessOfTier1TaxableAmt
     ).asCurrency();
 
-    calculationDetails.tier1TaxableAmount = taxableSSAmount;
+    calculationDetails.tier1TaxableAmount =
+      calculationDetails.finalTaxableAmount;
 
     log.info(
-      `Amount of SS that is taxable is $${calculationDetails.tier1TaxableAmount}.`
+      `Amount of SS that is taxable is $${calculationDetails.finalTaxableAmount}.`
     );
 
     // Update calculation details
@@ -185,11 +195,11 @@ function calculateSsBenefits(
         ? calculationDetails.finalTaxableAmount / ssBenefits.totalBenefits()
         : 0;
 
-    ssBenefits.taxableAmount = taxableSSAmount;
+    ssBenefits.taxablePortion = calculationDetails.finalTaxableAmount;
     return ssBenefits;
   }
 
-  // Provisional income exceeds base2
+  // Case 3: Provisional income exceeds Tier 2
   const excessOverBase2 =
     ssBenefits.provisionalIncome() - calculationDetails.tier2Threshold;
   log.info(
@@ -231,7 +241,7 @@ function calculateSsBenefits(
       ? taxableSSAmount / ssBenefits.totalBenefits()
       : 0;
 
-  ssBenefits.taxableAmount = taxableSSAmount;
+  ssBenefits.taxablePortion = taxableSSAmount;
 
   return ssBenefits;
 }
@@ -258,6 +268,7 @@ function calculate401kNetWhen401kGrossIs(gross401kIncome, opts) {
     taxableIncome: 0,
     tax: 0,
     netIncome: 0,
+    netIncomeLessSavingsInterest: 0,
     ssBreakdown: {},
     incomeBreakdown: {},
   };
@@ -289,7 +300,7 @@ function calculate401kNetWhen401kGrossIs(gross401kIncome, opts) {
     pensionAndMiscIncome: pensionAndMiscIncome,
     socialSecurityIncome: mySsBenefitsGross + spouseSsBenefitsGross,
     retirementAcctIncome: gross401kIncome,
-    taxableSsIncome: ssBreakdown.taxableAmount,
+    taxableSsIncome: ssBreakdown.taxablePortion,
     standardDeduction: standardDeduction,
     federalIncomeTax: 0,
     grossIncome() {
@@ -309,7 +320,7 @@ function calculate401kNetWhen401kGrossIs(gross401kIncome, opts) {
       return this.pensionAndMiscIncome + this.retirementAcctIncome;
     },
     taxableIncome() {
-      return Math.max(0, this.grossTaxableIncome - this.standardDeduction);
+      return Math.max(0, this.grossTaxableIncome() - this.standardDeduction);
     },
     netIncome() {
       return this.grossIncome() - this.federalIncomeTax;
@@ -368,6 +379,8 @@ function calculate401kNetWhen401kGrossIs(gross401kIncome, opts) {
 
   result.ssBreakdown = ssBreakdown;
   result.incomeBreakdown = incomeBreakdown;
+  result.netIncomeLessSavingsInterest =
+    result.netIncome - opts.taxableSavingsInterest;
 
   return result;
 }
