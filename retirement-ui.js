@@ -2069,7 +2069,7 @@ function parseInputParameters() {
     .map((s) => s.trim())
     .filter((s) => s.length > 0);
   if (inputs.order.length === 0) {
-    inputs.order = ["savings", "pretax", "roth"];
+    inputs.order = ["savings", "401k", "roth"];
   }
 
   // Derived values

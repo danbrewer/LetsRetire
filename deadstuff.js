@@ -76,7 +76,7 @@ function withdraw50_50(withdrawalFunctions, totalNetNeeded) {
   // Then try to get equal net amount from pretax (401k)
   // This will automatically gross up to account for taxes
   const pretaxResult = withdrawalFunctions.withdrawFrom(
-    "pretax",
+    "401k",
     targetNetPerSource
   );
   totalGross += pretaxResult.gross;
@@ -99,7 +99,7 @@ function withdraw50_50(withdrawalFunctions, totalNetNeeded) {
     const stillRemaining = totalNetNeeded - totalNet;
     if (stillRemaining > 0) {
       const additionalPretax = withdrawalFunctions.withdrawFrom(
-        "pretax",
+        "401k",
         stillRemaining
       );
       totalGross += additionalPretax.gross;

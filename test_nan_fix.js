@@ -25,7 +25,7 @@ const testInputs = {
   pensionMonthlyAmount: 1500,
   spousePensionAge: 65,
   spousePensionMonthlyAmount: 1000,
-  order: ["savings", "pretax", "roth"], // Default withdrawal order
+  order: ["savings", "401k", "roth"], // Default withdrawal order
 };
 
 // Test balances for age 62 (retirement year 1)
