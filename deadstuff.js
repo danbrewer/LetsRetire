@@ -149,12 +149,16 @@ function withdrawRMD(grossAmount) {
   const opts = {
     otherTaxableIncome: otherTaxableIncomeValue,
     ssBenefit: ssBenefits, // Include Social Security benefits in RMD tax calculation too
-    standardDeduction: getStandardDeduction(
+    standardDeduction: retirementJS_getStandardDeduction(
       inputs.filingStatus,
       year, // year is already the actual year (e.g., 2040)
       inputs.inflation
     ),
-    brackets: getTaxBrackets(inputs.filingStatus, year, inputs.inflation),
+    brackets: retirementJS_getTaxBrackets(
+      inputs.filingStatus,
+      year,
+      inputs.inflation
+    ),
     precision: 0.01, // Precision for binary search convergence
   };
 

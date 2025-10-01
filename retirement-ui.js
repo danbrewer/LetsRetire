@@ -2412,7 +2412,7 @@ function loadExample() {
     penStart: 65,
     penCola: 0,
     order: "savings,pretax,roth",
-    filingStatus: FILING_STATUS.MARRIED_FILING_JOINTLY,
+    filingStatus: constsJS_FILING_STATUS.MARRIED_FILING_JOINTLY,
     useRMD: true,
   };
   // const ex = {

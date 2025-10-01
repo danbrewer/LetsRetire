@@ -1,18 +1,12 @@
 /**
  * Create withdrawal function for a specific retirement year
  */
-function createWithdrawalFactory(
+function withdrawalFactoryJS_createWithdrawalFactory(
   incomeStreams = {},
   fiscalData = {},
   demographics = {},
   rollingBalances = {}
 ) {
-  const withdrawalsMade = {
-    retirementAccount: 0,
-    savingsAccount: 0,
-    roth: 0,
-  };
-
   let incomeResults = {
     totalIncome: 0,
     taxableIncome: 0,
@@ -21,22 +15,34 @@ function createWithdrawalFactory(
     ssBreakdown: {},
     incomeBreakdown: {},
   };
+
+  const incomeStreams = {
+    taxableSavingsInterestEarned: 0,
+    myPension: 0,
+    spousePension: 0,
+    mySs: 0,
+    spouseSs: 0,
+    rmd: 0,
+    otherTaxableIncomeAdjustments: 0,
+    totalIncome() {},
+    taxableIncome() {},
+    fixedIncomeIncludingSavingsInterest() {},
+    fixedIncomeExcludingSavingsInterest() {},
+    otherIncomeForPurposesOfSsTaxation() {},
+    ssIncome() {},
+    nonSsIncome() {},
+    ...incomeStreams,
+  };
+
   // Declare and initialize the result object at the top
   const result = {
     withdrawFromTargetedAccount: () => {},
-    getWithdrawalsMade: () => withdrawalsMade,
     getFinalIncomeResults: () => incomeResults,
   };
 
   // **************
   // Sanity checks
   // **************
-  // if (isNaN(closuredCopyOfFixedPortionOfTaxableIncome)) {
-  //   console.error(
-  //     `closuedCopyOfFixedPortionOfTaxableIncome is NaN.  This is a fatal error`
-  //   );
-  //   return result;
-  // }
   if (rollingBalances.length === 0 || !rollingBalances) {
     console.error(
       `rollingBalances is null or undefined.  This is a fatal error`
@@ -45,15 +51,20 @@ function createWithdrawalFactory(
   }
   // **************
 
-  function withdrawFrom(accountType, desiredSpend) {
+  function withdrawFrom(accountType, expenditureTracker) {
     // **************
     // Sanity checks
     // **************
-    // Validate kind parameter
-    debugger;
+    // Input sanitization
+    // debugger;
+    if (!expenditureTracker || typeof expenditureTracker !== "object") {
+      console.error("Invalid expenditure tracker:", expenditureTracker);
+      return;
+    }
+
     if (!accountType || typeof accountType !== "string") {
       console.error("Invalid withdrawal kind:", accountType);
-      return 0;
+      return;
     }
     // verify kind is one of the expected values and error if not
     const validKinds = ["savings", "401k", "roth"];
@@ -63,10 +74,26 @@ function createWithdrawalFactory(
         accountType
       );
       console.error("Expected one of:", validKinds.join(", "));
-      return 0;
+      return;
     }
 
-    if (desiredSpend <= 0) return 0;
+    // Redeclare and initialize the expenditure tracker object
+    // Original declaration is in retirement-calculator.js
+    const expTracker = {
+      budgeted: 0,
+      additionalSpending: 0,
+      withdrawalsMade: {
+        fromSavings: 0,
+        from401k: 0,
+        fromRoth: 0,
+      },
+      totalBudgeted() {},
+      actual() {},
+      shortfall() {},
+      ...expenditureTracker,
+    };
+
+    if (expTracker.shortfall() <= 0) return; // No withdrawal needed
 
     // Determine balance reference and setter function
     const targetedAccount = {
@@ -81,7 +108,7 @@ function createWithdrawalFactory(
         targetedAccount.deposit = (v) => (rollingBalances.savings += v);
         targetedAccount.withdraw = (v) => {
           rollingBalances.savings -= v;
-          withdrawalsMade.savingsAccount += v;
+          expTracker.withdrawalsMade.fromSavings += v;
         };
         break;
       case "401k":
@@ -89,7 +116,7 @@ function createWithdrawalFactory(
         targetedAccount.deposit = (v) => (rollingBalances.traditional401k += v);
         targetedAccount.withdraw = (v) => {
           rollingBalances.traditional401k -= v;
-          withdrawalsMade.retirementAccount += v;
+          expTracker.withdrawalsMade.from401k += v;
         };
         break;
       case "roth":
@@ -97,7 +124,7 @@ function createWithdrawalFactory(
         targetedAccount.deposit = (v) => (rollingBalances.rothIra = +v);
         targetedAccount.withdraw = (v) => {
           rollingBalances.rothIra -= v;
-          withdrawalsMade.roth += v;
+          expTracker.withdrawalsMade.fromRoth += v;
         };
         break;
       default:
@@ -105,37 +132,47 @@ function createWithdrawalFactory(
         return result;
     }
 
-    const standardDeduction = getStandardDeduction(
+    const standardDeduction = retirementJS_getStandardDeduction(
       demographics.filingStatus,
       fiscalData.taxYear, // year is already the actual year (e.g., 2040)
       fiscalData.inflationRate
     );
 
-    const taxBrackets = getTaxBrackets(
+    const taxBrackets = retirementJS_getTaxBrackets(
       demographics.filingStatus,
       fiscalData.taxYear,
       fiscalData.inflationRate
     );
 
-    const opts = {
-      pensionAndMiscIncome:
-        incomeStreams.fixedPortion() - incomeStreams.ssIncome(),
-      taxableSavingsInterest: incomeStreams.taxableInterest,
+    const otherIncomeFactors = {
+      taxableSavingsInterestEarned: incomeStreams.taxableSavingsInterestEarned,
+      myPension: incomeStreams.myPension,
+      spousePension: incomeStreams.spousePension,
+      rmd: incomeStreams.rmd,
+      otherTaxableIncomeAdjustments:
+        incomeStreams.otherTaxableIncomeAdjustments,
       mySsBenefitsGross: incomeStreams.mySs,
       spouseSsBenefitsGross: incomeStreams.spouseSs,
       standardDeduction: standardDeduction,
-      brackets: taxBrackets,
+      taxBrackets: taxBrackets,
       precision: 0.01, // Precision for binary search convergence
     };
 
+    // Withdrawal amount to be determined
     if (accountType === "401k") {
-      const ideal401kWithdrawal = determine401kWithdrawalToHitNetTargetOf(
-        desiredSpend,
-        opts
-      );
+      if (targetedAccount.getBalance() <= 0) {
+        // No funds available, skip
+        return;
+      }
+
+      const ideal401kWithdrawal =
+        retirementJS_determine401kWithdrawalToHitNetTargetOf(
+          expTracker.shortfall(),
+          otherIncomeFactors
+        );
 
       // Only take what is available in the 401k account
-      const withdrawalAmountNeeded = Math.min(
+      const amtOf401kToWithdraw = Math.min(
         ideal401kWithdrawal.withdrawalNeeded,
         targetedAccount.getBalance()
       );
@@ -148,15 +185,13 @@ function createWithdrawalFactory(
         netIncome: 0,
         ssBreakdown: {},
         incomeBreakdown: {},
-        ...calculate401kNetWhen401kGrossIs(withdrawalAmountNeeded, opts),
+        ...retirementJS_calculateIncomeWhen401kGrossIs(
+          amtOf401kToWithdraw,
+          otherIncomeFactors
+        ),
       };
 
-      targetedAccount.withdraw(withdrawalAmountNeeded);
-
-      remainingSpendNeeded =
-        desiredSpend - incomeResults.netIncomeLessSavingsInterest;
-
-      return remainingSpendNeeded;
+      targetedAccount.withdraw(amtOf401kToWithdraw);
     } else {
       // Savings or Roth withdrawal (no tax impact)
 
@@ -171,106 +206,46 @@ function createWithdrawalFactory(
         // When that happens, we only want to reduce the desiredSpend by the amount withdrawn from savings/Roth
 
         const proposedIncomeWithNo401kWithdrawals = {
-          ...calculate401kNetWhen401kGrossIs(0, opts),
+          ...retirement.retirementJS_calculateIncomeWhen401kGrossIs(
+            0,
+            otherIncomeFactors
+          ),
         };
 
-        debugger;
-        const fundsNeeded =
-          desiredSpend -
-          proposedIncomeWithNo401kWithdrawals.netIncomeLessSavingsInterest;
-
-        const fundsAvailable = targetedAccount.getBalance();
+        // debugger;
         // Determine how much to withdraw to meet the desired spend
-        withdrawalAmount = Math.min(fundsAvailable, fundsNeeded);
+        withdrawalAmount = Math.min(
+          expTracker.shortfall(),
+          targetedAccount.getBalance()
+        );
 
         // Reduce the account balance by the net received amount
         targetedAccount.withdraw(withdrawalAmount);
 
-        let remainingSpendNeeded =
-          desiredSpend -
-          withdrawalAmount -
-          proposedIncomeWithNo401kWithdrawals.netIncomeLessSavingsInterest;
+        // let remainingSpendNeeded =
+        //   desiredSpend -
+        //   withdrawalAmount -
+        //   proposedNetIncomeWithNo401kWithdrawals.netIncomeLessSavingsInterest;
 
         // If the remaining needed is not yet zero, don't include the incomeData yet
-        if (remainingSpendNeeded > 0) {
-          // Only reduce the remaining spend need by the amount actually withdrawn
-          remainingSpendNeeded = desiredSpend - withdrawalAmount;
-        } else {
-          // Net income + savings/Roth covered the entire desired spend
-          if (retirementAcctIncomeHasNotYetBeenRecognized) {
-            // Store the incomeData only if it hasn't been recognized yet
-            incomeResults = { ...proposedIncomeWithNo401kWithdrawals };
-          }
+        if (
+          expTracker.shortfall() <= 0 &&
+          retirementAcctIncomeHasNotYetBeenRecognized
+        ) {
+          // Store the incomeData only if it hasn't been recognized yet
+          incomeResults = { ...proposedIncomeWithNo401kWithdrawals };
         }
-        return remainingSpendNeeded;
       } else {
         // Retirement account income has been recognized
         // Reference previously recognized incomeData for calculating desired withdrawal
-        const fundsNeeded = desiredSpend;
+        const fundsNeeded = expTracker.shortfall();
         const fundsAvailable = targetedAccount.getBalance();
         // Determine how much to withdraw to meet the desired spend
         withdrawalAmount = Math.min(fundsAvailable, fundsNeeded);
 
         // Reduce the account balance by the net received amount
         targetedAccount.withdraw(withdrawalAmount);
-
-        let remainingSpendNeeded = desiredSpend - withdrawalAmount;
-
-        return remainingSpendNeeded;
       }
-
-      // // We use tempIncomeData here because it's possible savings can't cover the entire desiredSpend
-      // // When that happens, we only want to reduce the desiredSpend by the amount withdrawn from savings/Roth
-      // let tempIncomeData = {};
-
-      // if (retirementAcctIncomeHasBeenRecognized) {
-      //   // Reference previously recognized incomeData for calculating desired withdrawal
-      //   tempIncomeData = {
-      //     ...incomeResults,
-      //   };
-      // } else {
-      //   // Estimate incomeData with $0 401k withdrawal to determine current net income
-      //   tempIncomeData = {
-      //     ...calculate401kNetWhen401kGrossIs(0, opts),
-      //   };
-      // }
-
-      // // Determine how much to withdraw to meet the desired spend
-      // withdrawalAmount = Math.min(
-      //   desiredSpend - tempIncomeData.netIncome,
-      //   targetedAccount.getBalance()
-      // );
-
-      // if (kind === "savings") {
-      //   withdrawalsMade.savingsAccount += withdrawalAmount;
-      // }
-      // if (kind === "roth") {
-      //   withdrawalsMade.roth += withdrawalAmount;
-      // }
-
-      // // Reduce the account balance by the net received amount
-      // targetedAccount.widthdraw(withdrawalAmount);
-
-      // let remainingSpendNeeded = desiredSpend - withdrawalAmount;
-
-      // // Try to zero out the remaining spend needed with net income if it hasn't been recognized yet
-      // if (retirementAcctIncomeHasNotYetBeenRecognized) {
-      //   remainingSpendNeeded -= tempIncomeData.netIncome;
-      // }
-
-      // // If the remaining needed is not yet zero, don't include the incomeData yet
-      // if (remainingSpendNeeded > 0) {
-      //   // Only reduce the remaining spend need by the amount actually withdrawn
-      //   remainingSpendNeeded = desiredSpend - withdrawalAmount;
-      // } else {
-      //   // Net income + savings/Roth covered the entire desired spend
-      //   if (retirementAcctIncomeHasNotYetBeenRecognized) {
-      //     // Store the incomeData only if it hasn't been recognized yet
-      //     incomeResults = { ...tempIncomeData };
-      //   }
-      // }
-
-      // return remainingSpendNeeded;
     }
   }
 

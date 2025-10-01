@@ -103,8 +103,8 @@ function showSsBreakdown(yearIndex) {
             <div style="margin-top: 4px; font-size: 11px;">
                 Tier 1 (50%): ${fmt(details.tier1Amount)}<br/>
                 Tier 2 (85% of excess over $${details.threshold2.toLocaleString()}): ${fmt(
-        details.tier2Amount
-      )}<br/>
+                  details.tier2Amount
+                )}<br/>
                 85% of SS benefits: ${fmt(
                   (ssBreakdown.mySsGross || 0) * 0.85
                 )}<br/>
@@ -331,7 +331,7 @@ function showTaxableIncomeBreakdown(yearIndex) {
   const inflationRate = inflationElement
     ? parseFloat(inflationElement.value) / 100
     : 0.025;
-  const standardDeduction = getStandardDeduction(
+  const standardDeduction = retirementJS_getStandardDeduction(
     filingStatus,
     calculationYear,
     inflationRate
@@ -630,8 +630,8 @@ function showProvisionalIncomeBreakdown(yearIndex) {
     const isUsingSSRules = provisionalIncomeDetails.method === "irs-rules";
     const filingStatus =
       threshold1 === 32000
-        ? FILING_STATUS.MARRIED_FILING_JOINTLY
-        : FILING_STATUS.SINGLE; // Infer from threshold
+        ? constsJS_FILING_STATUS.MARRIED_FILING_JOINTLY
+        : constsJS_FILING_STATUS.SINGLE; // Infer from threshold
 
     if (isUsingSSRules) {
       breakdownHtml += `
@@ -641,7 +641,7 @@ function showProvisionalIncomeBreakdown(yearIndex) {
             <div class="ss-breakdown-item">
                 <span class="ss-breakdown-label">Filing Status:</span>
                 <span class="ss-breakdown-value">${
-                  filingStatus === FILING_STATUS.MARRIED_FILING_JOINTLY
+                  filingStatus === constsJS_FILING_STATUS.MARRIED_FILING_JOINTLY
                     ? "Married Filing Jointly"
                     : "Single"
                 }</span>
@@ -762,8 +762,8 @@ function showProvisionalIncomeBreakdown(yearIndex) {
                     <span class="ss-breakdown-value">min(${fmt(
                       Math.max(0, provisionalIncome - threshold1)
                     )}, ${fmt(ssGross * 0.5)}) = ${fmt(
-        tier1TaxableAmount
-      )}</span>
+                      tier1TaxableAmount
+                    )}</span>
                 </div>
                 
                 ${
@@ -780,8 +780,8 @@ function showProvisionalIncomeBreakdown(yearIndex) {
                     <span class="ss-breakdown-value">min(${fmt(
                       (provisionalIncome - threshold2) * 0.85
                     )}, ${fmt(ssGross * 0.35)}) = ${fmt(
-                        tier2TaxableAmount
-                      )}</span>
+                      tier2TaxableAmount
+                    )}</span>
                 </div>
                 `
                     : ""

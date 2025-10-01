@@ -1,10 +1,10 @@
 // Include retirement.js as module
 const {
   log,
-  determine401kWithdrawalToHitNetTargetOf,
-  getTaxBrackets,
-  getStandardDeduction,
-  FILING_STATUS,
+  retirementJS_determine401kWithdrawalToHitNetTargetOf,
+  retirementJS_getTaxBrackets,
+  retirementJS_getStandardDeduction,
+  constsJS_FILING_STATUS,
 } = require("./retirement.js");
 
 // ---------------- CLI ----------------
@@ -86,11 +86,11 @@ if (
   showUsage();
   process.exit(1);
 }
-const filingStatus = FILING_STATUS.MARRIED_FILING_JOINTLY;
+const filingStatus = constsJS_FILING_STATUS.MARRIED_FILING_JOINTLY;
 
 // Use tax brackets and standard deduction for the specified year (with COLA if year > 0)
-const brackets = getTaxBrackets(filingStatus, year, inflationRate);
-const standardDeduction = getStandardDeduction(
+const brackets = retirementJS_getTaxBrackets(filingStatus, year, inflationRate);
+const standardDeduction = retirementJS_getStandardDeduction(
   filingStatus,
   year,
   inflationRate
@@ -106,7 +106,7 @@ const opts = {
   brackets,
 };
 
-const result = determine401kWithdrawalToHitNetTargetOf(
+const result = retirementJS_determine401kWithdrawalToHitNetTargetOf(
   targetSpend_LessSavings,
   opts
 );
