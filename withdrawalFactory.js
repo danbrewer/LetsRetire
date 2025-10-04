@@ -13,7 +13,7 @@ function withdrawalFactoryJS_createWithdrawalFactory(
   };
 
   const incomeStreams = {
-    earnedInterest: 0,
+    estimatedInterestEarned: 0,
     myPension: 0,
     spousePension: 0,
     mySs: 0,
@@ -133,7 +133,7 @@ function withdrawalFactoryJS_createWithdrawalFactory(
     );
 
     const fixedIncomeFactors = {
-      earnedInterest: incomeStreams.earnedInterest,
+      estimatedInterestEarned: incomeStreams.estimatedInterestEarned,
       myPension: incomeStreams.myPension,
       spousePension: incomeStreams.spousePension,
       rmd: incomeStreams.rmd,

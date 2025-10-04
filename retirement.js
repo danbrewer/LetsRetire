@@ -169,7 +169,7 @@ function retirementJS_calculateIncomeWhen401kWithdrawalIs(
   };
 
   const fixedIncomeFactors = {
-    earnedInterest: 0,
+    estimatedInterestEarned: 0,
     myPension: 0,
     spousePension: 0,
     rmd: 0,
@@ -204,7 +204,7 @@ function retirementJS_calculateIncomeWhen401kWithdrawalIs(
   };
 
   const incomeBreakdown = {
-    earnedInterest: fixedIncomeFactors.earnedInterest,
+    estimatedInterestEarned: fixedIncomeFactors.estimatedInterestEarned,
     myPension: fixedIncomeFactors.myPension,
     spousePension: fixedIncomeFactors.spousePension,
     rmd: fixedIncomeFactors.rmd,
@@ -218,7 +218,7 @@ function retirementJS_calculateIncomeWhen401kWithdrawalIs(
     taxableSsIncome: ssBreakdown.taxablePortion,
     allIncome() {
       return (
-        this.earnedInterest +
+        this.estimatedInterestEarned +
         this.myPension +
         this.spousePension +
         this.rmd +
@@ -243,7 +243,9 @@ function retirementJS_calculateIncomeWhen401kWithdrawalIs(
       return this.allIncome() - this.federalIncomeTax;
     },
     netIncomeLessEarnedInterest() {
-      return this.allIncome() - this.federalIncomeTax - this.earnedInterest;
+      return (
+        this.allIncome() - this.federalIncomeTax - this.estimatedInterestEarned
+      );
     },
     effectiveTaxRate() {
       if (this.allIncome() === 0) return 0;

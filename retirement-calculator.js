@@ -456,6 +456,9 @@ function calculateWorkingYearData(inputs, yearIndex, salary, accountBalances) {
         this.startingBalance - this.withdrawals - this.extraWithdrawals
       );
     },
+    estimatedEarnedInterest() {
+      return this.startingBalance * this.growthRate;
+    },
     // theses deposits do not contribute to interest calculation for the year
     earnedInterest() {
       return this.balanceSubjectToInterest() * this.growthRate;
@@ -578,12 +581,17 @@ function calculateWorkingYearData(inputs, yearIndex, salary, accountBalances) {
   totals.totalIncome = income.getAllIncomeSources();
   totals.totalNetIncome = income.getNetIncome();
   totals.grossTaxableIncome = income.getGrossTaxableIncome();
+  totals.calculationDetails = withLabel("income", income);
 
   // Update all the final values in the result object
   contributions.my401k = employmentInfo.cap401kContribution();
   contributions.myRoth = employmentInfo.capRothContribution();
   contributions.savings = savings.deposits;
   contributions.employerMatch = employmentInfo.employer401kMatch();
+  contributions.calculationDetails = [
+    withLabel("employmentInfo", employmentInfo),
+    withLabel("savings", savings),
+  ];
 
   // Note: Spouse contributions not handled in working year calculations
 
@@ -611,6 +619,13 @@ function calculateWorkingYearData(inputs, yearIndex, salary, accountBalances) {
     interestEarned: savings.earnedInterest(),
     endingBalance: savings.endingBalance(),
     growthRate: savings.growthRate * 100,
+    calculationDetails: [
+      withLabel("savings", savings),
+      withLabel(
+        "income.taxFreeIncomeAdjustment",
+        income.taxFreeIncomeAdjustment
+      ),
+    ],
   };
 
   result.ssBreakdown = {
@@ -770,9 +785,9 @@ function calculateRetirementYearData(
 
   const totals = {
     _description: "Totals Breakdown",
-    totalIncome: 0,
-    totalNetIncome: 0,
-    totalGrossIncome: 0,
+    grossIncome: 0,
+    taxableIncome: 0,
+    netIncome: 0,
   };
 
   const contributions = {
@@ -800,9 +815,9 @@ function calculateRetirementYearData(
     startingBalance: accountBalances.savings,
     withdrawals: 0,
     growthRate: inputs.retSavings,
-    // interestEarnedLastYear() {
-    //   return (this.startingBalance * this.growthRate) / (1 + this.growthRate);
-    // },
+    estimatedEarnedInterest() {
+      return this.startingBalance * this.growthRate;
+    },
     earnedInterest() {
       return (this.startingBalance - this.withdrawals) * this.growthRate;
     },
@@ -863,7 +878,7 @@ function calculateRetirementYearData(
 
   const incomeStreams = {
     _description: "Income",
-    earnedInterest: savings.earnedInterest(),
+    estimatedInterestEarned: savings.estimatedEarnedInterest(),
     myPension: myPensionBenefits.income,
     spousePension: spousePensionBenefits.income,
     mySs: mySsBenefits.income,
@@ -880,7 +895,7 @@ function calculateRetirementYearData(
       return (
         this.myPension +
         this.spousePension +
-        this.earnedInterest +
+        this.estimatedInterestEarned +
         this.otherTaxableIncomeAdjustments +
         this.rmd +
         this.mySs +
@@ -892,7 +907,7 @@ function calculateRetirementYearData(
       return (
         this.myPension +
         this.spousePension +
-        this.earnedInterest +
+        this.estimatedInterestEarned +
         this.otherTaxableIncomeAdjustments +
         this.rmd +
         this.mySs +
@@ -923,7 +938,7 @@ function calculateRetirementYearData(
       return (
         this.myPension +
         this.spousePension +
-        this.earnedInterest +
+        this.estimatedInterestEarned +
         this.otherTaxableIncomeAdjustments +
         this.rmd
       );
@@ -999,7 +1014,10 @@ function calculateRetirementYearData(
         this.retirementAccount + this.savings + this.roth + withdrawals.rmd
       );
     },
-    calculationDetails: expenditureTracker.withdrawalsMade,
+    calculationDetails: withLabel(
+      "expenditureTracker.withdrawalsMade",
+      expenditureTracker.withdrawalsMade
+    ),
   };
 
   // Non-taxable income includes SS/pension non-taxable portions + savings withdrawals (already after-tax) + Roth withdrawals
@@ -1013,7 +1031,10 @@ function calculateRetirementYearData(
     spouseTaxablePortion: incomeResults.ssBreakdown.spouseTaxablePortion() || 0,
     spouseNonTaxable: incomeResults.ssBreakdown.spouseNonTaxablePortion() || 0,
     provisionalIncome: incomeResults.ssBreakdown.provisionalIncome(),
-    calculationDetails: incomeResults.ssBreakdown,
+    calculationDetails: withLabel(
+      "incomeResults.ssBreakdown",
+      incomeResults.ssBreakdown
+    ),
   };
 
   const taxes = {
@@ -1021,7 +1042,10 @@ function calculateRetirementYearData(
     federalTaxes: incomeResults.incomeBreakdown.federalIncomeTax,
     effectiveTaxRate: incomeResults.incomeBreakdown.effectiveTaxRate(),
     standardDeduction: incomeResults.incomeBreakdown.standardDeduction,
-    calculationDetails: incomeResults.incomeBreakdown,
+    calculationDetails: withLabel(
+      "incomeResults.incomeBreakdown",
+      incomeResults.incomeBreakdown
+    ),
   };
 
   const balances = {
@@ -1032,7 +1056,7 @@ function calculateRetirementYearData(
     total() {
       return this.savings + this.traditional401k + this.rothIra;
     },
-    calculationDetails: accountBalances,
+    calculationDetails: withLabel("accountBalances", accountBalances),
   };
   //
 
@@ -1050,10 +1074,10 @@ function calculateRetirementYearData(
         this.rmd
       );
     },
-    calculationDetails: {
-      expenditureTracker: expenditureTracker,
-      incomeBreakdown: incomeResults.incomeBreakdown,
-    },
+    calculationDetails: [
+      withLabel("expenditureTracker", expenditureTracker),
+      withLabel("incomeBreakdown", incomeResults.incomeBreakdown),
+    ],
   };
   // result.withdrawals.gross = finalWGrossTotal;
   // result.withdrawals.net = finalWNetTotal;
@@ -1076,7 +1100,10 @@ function calculateRetirementYearData(
       incomeResults.incomeBreakdown.spousePension
     ),
     _description: "Pension Benefits Breakdown",
-    calculationDetails: incomeResults.incomeBreakdown,
+    calculationDetails: withLabel(
+      "incomeResults.incomeBreakdown",
+      incomeResults.incomeBreakdown
+    ),
   };
 
   const ssBreakdown = {
@@ -1088,7 +1115,10 @@ function calculateRetirementYearData(
       incomeResults.ssBreakdown.spouseTaxablePortion() || 0, // Total taxable portion from retirement.js
     ssSpouseNonTaxable:
       incomeResults.ssBreakdown.spouseNonTaxablePortion() || 0,
-    calculationDetails: incomeResults.ssBreakdown.calculationDetails, // Detailed calculation methodology from retirement.js
+    calculationDetails: withLabel(
+      "incomeResults.ssBreakdown",
+      incomeResults.ssBreakdown
+    ), // Detailed calculation methodology from retirement.js
   };
 
   const savingsBreakdown = {
@@ -1100,6 +1130,13 @@ function calculateRetirementYearData(
     deposits: savings.deposits,
     endingBalance: savings.endingBalance(),
   };
+
+  totals.grossIncome = incomeResults.incomeBreakdown.allIncome();
+  totals.taxableIncome = incomeResults.incomeBreakdown.taxableIncome();
+  totals.netIncome = incomeResults.incomeBreakdown.netIncome();
+  totals.calculationDetails = [
+    withLabel("incomeResults.incomeBreakdown", incomeResults.incomeBreakdown),
+  ];
 
   // Update all the final values in the result object
   result.expenditures = expenditureTracker.totalBudgeted();
