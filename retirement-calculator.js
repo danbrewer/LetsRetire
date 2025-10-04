@@ -217,7 +217,7 @@ function determineQualifyingSpouseBenefits(inputs, age, benefitAmounts) {
 /**
  * Calculate one year of accumulation phase (working years)
  */
-function calculateWorkingYearData(inputs, yearIndex, salary, rollingBalances) {
+function calculateWorkingYearData(inputs, yearIndex, salary, accountBalances) {
   // Declare and initialize the result object at the top
   const result = {
     _description: "",
@@ -400,7 +400,7 @@ function calculateWorkingYearData(inputs, yearIndex, salary, rollingBalances) {
 
   const rothIra = {
     _description: "Roth IRA Breakdown",
-    startingBalance: rollingBalances.rothIra,
+    startingBalance: accountBalances.rothIra,
     withdrawals: 0,
     contributions: 0,
     growthRate: inputs.retRoth,
@@ -422,7 +422,7 @@ function calculateWorkingYearData(inputs, yearIndex, salary, rollingBalances) {
 
   const retirementAccount = {
     _description: "401(k) Breakdown",
-    startingBalance: rollingBalances.traditional401k,
+    startingBalance: accountBalances.traditional401k,
     withdrawals: 0,
     contributions: 0,
     growthRate: inputs.ret401k,
@@ -443,7 +443,7 @@ function calculateWorkingYearData(inputs, yearIndex, salary, rollingBalances) {
 
   const savings = {
     _description: "Savings Account Breakdown",
-    startingBalance: rollingBalances.savings,
+    startingBalance: accountBalances.savings,
     withdrawals: 0,
     extraWithdrawals: 0,
     deposits: 0,
@@ -558,9 +558,9 @@ function calculateWorkingYearData(inputs, yearIndex, salary, rollingBalances) {
   rothIra.contributions = employmentInfo.capRothContribution();
   retirementAccount.contributions = employmentInfo.cap401kContribution();
   // debugger;
-  rollingBalances.traditional401k = retirementAccount.endingBalance();
-  rollingBalances.rothIra = rothIra.endingBalance();
-  rollingBalances.savings = savings.endingBalance();
+  accountBalances.traditional401k = retirementAccount.endingBalance();
+  accountBalances.rothIra = rothIra.endingBalance();
+  accountBalances.savings = savings.endingBalance();
 
   const withdrawals = {
     retirementAccount: retirementAccount.withdrawals,
@@ -571,9 +571,9 @@ function calculateWorkingYearData(inputs, yearIndex, salary, rollingBalances) {
     },
   };
 
-  balances.savings = rollingBalances.savings;
-  balances.traditional401k = rollingBalances.traditional401k;
-  balances.rothIra = rollingBalances.rothIra;
+  balances.savings = accountBalances.savings;
+  balances.traditional401k = accountBalances.traditional401k;
+  balances.rothIra = accountBalances.rothIra;
 
   totals.totalIncome = income.getAllIncomeSources();
   totals.totalNetIncome = income.getNetIncome();
@@ -657,7 +657,7 @@ function calculateWorkingYearData(inputs, yearIndex, salary, rollingBalances) {
 function calculateRetirementYearData(
   inputs,
   yearIndex,
-  rollingBalances,
+  accountBalances,
   benefitAmounts
 ) {
   // kill the logger for now
@@ -797,7 +797,7 @@ function calculateRetirementYearData(
 
   const savings = {
     _description: "Savings",
-    startingBalance: rollingBalances.savings,
+    startingBalance: accountBalances.savings,
     withdrawals: 0,
     growthRate: inputs.retSavings,
     // interestEarnedLastYear() {
@@ -863,7 +863,7 @@ function calculateRetirementYearData(
 
   const incomeStreams = {
     _description: "Income",
-    taxableSavingsInterestEarned: savings.earnedInterest(),
+    earnedInterest: savings.earnedInterest(),
     myPension: myPensionBenefits.income,
     spousePension: spousePensionBenefits.income,
     mySs: mySsBenefits.income,
@@ -871,7 +871,7 @@ function calculateRetirementYearData(
     rmd: calculateRMD(
       demographics.useRmd,
       demographics.age,
-      rollingBalances.traditional401k
+      accountBalances.traditional401k
     ),
     taxableIncomeAdjustment: getTaxableIncomeOverride(demographics.age),
     taxFreeIncomeAdjustment: getTaxFreeIncomeOverride(demographics.age),
@@ -880,7 +880,7 @@ function calculateRetirementYearData(
       return (
         this.myPension +
         this.spousePension +
-        this.taxableSavingsInterestEarned +
+        this.earnedInterest +
         this.otherTaxableIncomeAdjustments +
         this.rmd +
         this.mySs +
@@ -892,39 +892,30 @@ function calculateRetirementYearData(
       return (
         this.myPension +
         this.spousePension +
-        this.taxableSavingsInterestEarned +
+        this.earnedInterest +
         this.otherTaxableIncomeAdjustments +
         this.rmd +
         this.mySs +
         this.spouseSs
       );
     },
-    fixedIncomeIncludingSavingsInterest() {
-      return (
-        this.myPension +
-        this.spousePension +
-        this.taxableSavingsInterestEarned +
-        this.taxableIncomeAdjustment +
-        this.rmd +
-        this.mySs +
-        this.spouseSs
-      );
-    },
-    fixedIncomeExludingSavingsInterest() {
-      return (
-        this.fixedIncomeIncludingSavingsInterest() -
-        this.taxableSavingsInterestEarned
-      );
-    },
-    otherIncomeForPurposesOfSsTaxation() {
-      return (
-        this.myPension +
-        this.spousePension +
-        this.rmd +
-        this.taxableIncomeAdjustment +
-        this.taxableSavingsInterestEarned
-      );
-    },
+    // fixedIncomeInclSavingsInterest() {
+    //   return (
+    //     this.myPension +
+    //     this.spousePension +
+    //     this.earnedInterest +
+    //     this.taxableIncomeAdjustment +
+    //     this.rmd +
+    //     this.mySs +
+    //     this.spouseSs
+    //   );
+    // },
+    // fixedIncomeExludingSavingsInterest() {
+    //   return (
+    //     this.fixedIncomeInclSavingsInterest() -
+    //     this.earnedInterest
+    //   );
+    // },
     ssIncome() {
       return this.mySs + this.spouseSs;
     },
@@ -932,7 +923,7 @@ function calculateRetirementYearData(
       return (
         this.myPension +
         this.spousePension +
-        this.taxableSavingsInterestEarned +
+        this.earnedInterest +
         this.otherTaxableIncomeAdjustments +
         this.rmd
       );
@@ -951,7 +942,7 @@ function calculateRetirementYearData(
     incomeStreams,
     fiscalData,
     demographics,
-    rollingBalances
+    accountBalances
   );
 
   // At this point we have gross income from pensions and taxable interest,
@@ -967,15 +958,6 @@ function calculateRetirementYearData(
     );
   }
 
-  // Get withdrawal breakdown and tax information from sophisticated retirement.js functions
-  // NOW PART OF EXPENDITURE TRACKER
-  // const withdrawalsMade = {
-  //   retirementAccount: 0,
-  //   savingsAccount: 0,
-  //   roth: 0,
-  //   ...withdrawalFactory.getWithdrawalsMade(),
-  // };
-
   const incomeResults = {
     totalIncome: 0,
     taxableIncome: 0,
@@ -989,8 +971,6 @@ function calculateRetirementYearData(
   // For Social Security breakdown, we still need some manual calculation since we need separate spouse results
   // But we can use the taxable amounts from retirement.js
 
-  // debugger;
-
   mySsBenefits.taxablePortion = incomeResults.ssBreakdown.myTaxablePortion();
   mySsBenefits.nonTaxablePortion =
     incomeResults.ssBreakdown.myNonTaxablePortion();
@@ -1002,61 +982,13 @@ function calculateRetirementYearData(
   spouseSsBenefits.portionOfTotalBenefits =
     incomeResults.ssBreakdown.spousePortion();
 
-  // Calculate gross and net income from taxable sources
-  // const grossTaxableIncomeFromAllTaxableSources =
-  //   mySsBenefits.income +
-  //   spouseSsBenefits.income +
-  //   incomeStreams.myPension +
-  //   incomeStreams.spousePension +
-  //   withdrawalsMade.retirementAccount +
-  //   incomeStreams.rmd +
-  //   incomeStreams.taxableInterest;
-
-  // const netIncomeFromTaxableSources =
-  //   grossTaxableIncomeFromAllTaxableSources -
-  //   withdrawalFactoryIncomeResults.tax;
-
-  // // Calculate total net income
-  // const totalNetIncome = netIncomeFromTaxableSources.asCurrency();
-
-  // Update final withdrawal amounts to include any additional savings withdrawal
-  // const totalWithdrawals =
-  //   withdrawalsMade.savingsAccount +
-  //   withdrawalsMade.roth +
-  //   withdrawalsMade.retirementAccount;
-
   savings.withdrawals = expenditureTracker.withdrawalsMade.fromSavings;
   savings.deposits = expenditureTracker.depositsMade.toSavings;
 
-  // Track taxable interest earned for reporting purposes and next year's taxes
-
-  // If there's an overage (excess income beyond targeted "spend"), add it to savings
-  // as if deposited on 12/31 of the current year, AFTER savings growth has been determined
-  // This simulates the idea of saving any excess income at the end of the year
-  // rather than letting it sit idle in a checking account
-  // Note: this overage is not taxable since it's from after-tax income
-  // (it has already been taxed when earned)
-  // const overage = Math.max(0, totalNetIncome - expenditures.total());
-  // if (overage > 0) {
-  //   rollingBalances.savings += overage;
-  //   contributions.savings += overage;
-  //   savings.overageDeposit += overage;
-  // }
-
   // Apply normal growth to other account types (withdrawals happen at specific times)
-  rollingBalances.traditional401k *= 1 + inputs.ret401k;
-  rollingBalances.rothIra *= 1 + inputs.retRoth;
-
-  // Note: income.taxableInterestIncome was calculated earlier before withdrawals
-
-  // // Update final withdrawal gross to include savings
-  // const finalWGrossTotal = finalWGross + additionalSavingsWithdrawal;
-  // const finalWNetTotal = withdrawalNetAdjusted + additionalSavingsWithdrawal;
-
-  // if (age == 72) {
-  //   debugger;
-  // }
-  // Calculate individual withdrawal net amounts for breakdown
+  accountBalances.traditional401k *= 1 + inputs.ret401k;
+  accountBalances.rothIra *= 1 + inputs.retRoth;
+  accountBalances.savings = savings.endingBalance();
 
   const withdrawalBreakdown = {
     retirementAccount: expenditureTracker.withdrawalsMade.from401k,
@@ -1094,13 +1026,13 @@ function calculateRetirementYearData(
 
   const balances = {
     _description: "Account Balances",
-    savings: rollingBalances.savings.asCurrency(),
-    traditional401k: rollingBalances.traditional401k.asCurrency(),
-    rothIra: rollingBalances.rothIra.asCurrency(),
+    savings: accountBalances.savings.asCurrency(),
+    traditional401k: accountBalances.traditional401k.asCurrency(),
+    rothIra: accountBalances.rothIra.asCurrency(),
     total() {
       return this.savings + this.traditional401k + this.rothIra;
     },
-    calculationDetails: rollingBalances,
+    calculationDetails: accountBalances,
   };
   //
 

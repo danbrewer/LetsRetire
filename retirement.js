@@ -169,7 +169,7 @@ function retirementJS_calculateIncomeWhen401kWithdrawalIs(
   };
 
   const fixedIncomeFactors = {
-    taxableSavingsInterestEarned: 0,
+    earnedInterest: 0,
     myPension: 0,
     spousePension: 0,
     rmd: 0,
@@ -199,12 +199,12 @@ function retirementJS_calculateIncomeWhen401kWithdrawalIs(
     ..._calculateSsBenefits(
       fixedIncomeFactors.mySsBenefitsGross,
       fixedIncomeFactors.spouseSsBenefitsGross,
-      fixedIncomeFactors.nonSsIncome()
+      fixedIncomeFactors.nonSsIncome
     ),
   };
 
   const incomeBreakdown = {
-    taxableInterestEarned: fixedIncomeFactors.taxableSavingsInterestEarned,
+    earnedInterest: fixedIncomeFactors.earnedInterest,
     myPension: fixedIncomeFactors.myPension,
     spousePension: fixedIncomeFactors.spousePension,
     rmd: fixedIncomeFactors.rmd,
@@ -218,7 +218,7 @@ function retirementJS_calculateIncomeWhen401kWithdrawalIs(
     taxableSsIncome: ssBreakdown.taxablePortion,
     allIncome() {
       return (
-        this.taxableInterestEarned +
+        this.earnedInterest +
         this.myPension +
         this.spousePension +
         this.rmd +
@@ -242,10 +242,12 @@ function retirementJS_calculateIncomeWhen401kWithdrawalIs(
     netIncome() {
       return this.allIncome() - this.federalIncomeTax;
     },
-    netIncomeMinusGrossSavingsInterest() {
-      return (
-        this.allIncome() - this.federalIncomeTax - this.taxableInterestEarned
-      );
+    netIncomeLessEarnedInterest() {
+      return this.allIncome() - this.federalIncomeTax - this.earnedInterest;
+    },
+    effectiveTaxRate() {
+      if (this.allIncome() === 0) return 0;
+      return this.federalIncomeTax / this.allIncome();
     },
     incomeAsPercentageOfGross(amount = 0) {
       if (this.allIncome() === 0) return 0;
@@ -253,10 +255,6 @@ function retirementJS_calculateIncomeWhen401kWithdrawalIs(
     },
     translateGrossAmountToNet(amount = 0) {
       return this.incomeAsPercentageOfGross(amount) * this.netIncome();
-    },
-    effectiveTaxRate() {
-      if (this.allIncome() === 0) return 0;
-      return this.federalIncomeTax / this.allIncome();
     },
     translateGrossAmountToPortionOfFederalIncomeTax(amount = 0) {
       return this.incomeAsPercentageOfGross(amount) * this.federalIncomeTax;

@@ -5,7 +5,7 @@ function withdrawalFactoryJS_createWithdrawalFactory(
   incomeStreamsData = {},
   fiscalData = {},
   demographics = {},
-  rollingBalances = {}
+  accountBalances = {}
 ) {
   let incomeResults = {
     ssBreakdown: {},
@@ -13,7 +13,7 @@ function withdrawalFactoryJS_createWithdrawalFactory(
   };
 
   const incomeStreams = {
-    taxableSavingsInterestEarned: 0,
+    earnedInterest: 0,
     myPension: 0,
     spousePension: 0,
     mySs: 0,
@@ -22,9 +22,8 @@ function withdrawalFactoryJS_createWithdrawalFactory(
     otherTaxableIncomeAdjustments: 0,
     totalIncome() {},
     taxableIncome() {},
-    fixedIncomeIncludingSavingsInterest() {},
-    fixedIncomeExcludingSavingsInterest() {},
-    otherIncomeForPurposesOfSsTaxation() {},
+    // fixedIncomeInclSavingsInterest() {},
+    // fixedIncomeExclSavingsInterest() {},
     ssIncome() {},
     nonSsIncome() {},
     ...incomeStreamsData,
@@ -33,9 +32,9 @@ function withdrawalFactoryJS_createWithdrawalFactory(
   // **************
   // Sanity checks
   // **************
-  if (rollingBalances.length === 0 || !rollingBalances) {
+  if (accountBalances.length === 0 || !accountBalances) {
     console.error(
-      `rollingBalances is null or undefined.  This is a fatal error`
+      `accountBalances is null or undefined.  This is a fatal error`
     );
     return result;
   }
@@ -76,7 +75,7 @@ function withdrawalFactoryJS_createWithdrawalFactory(
 
     function depositIntoSavings(amount) {
       if (amount <= 0) return; // No deposit needed
-      rollingBalances.savings += amount;
+      accountBalances.savings += amount;
       expenditureTracker.depositsMade.toSavings += amount;
       // Optionally, track deposits if needed
       // expenditureTracker.depositsMade.toSavings += amount;
@@ -84,35 +83,35 @@ function withdrawalFactoryJS_createWithdrawalFactory(
 
     switch (accountType) {
       case "savings":
-        targetedAccount.getBalance = () => rollingBalances.savings;
+        targetedAccount.getBalance = () => accountBalances.savings;
         targetedAccount.deposit = (v) => {
-          rollingBalances.savings += v;
+          accountBalances.savings += v;
           expenditureTracker.depositsMade.toSavings += v;
         };
         targetedAccount.withdraw = (v) => {
-          rollingBalances.savings -= v;
+          accountBalances.savings -= v;
           expenditureTracker.withdrawalsMade.fromSavings += v;
         };
         break;
       case "401k":
-        targetedAccount.getBalance = () => rollingBalances.traditional401k;
+        targetedAccount.getBalance = () => accountBalances.traditional401k;
         targetedAccount.deposit = (v) => {
-          rollingBalances.traditional401k = +v;
+          accountBalances.traditional401k = +v;
           expenditureTracker.depositsMade.to401k += v;
         };
         targetedAccount.withdraw = (v) => {
-          rollingBalances.traditional401k -= v;
+          accountBalances.traditional401k -= v;
           expenditureTracker.withdrawalsMade.from401k += v;
         };
         break;
       case "roth":
-        targetedAccount.getBalance = () => rollingBalances.rothIra;
+        targetedAccount.getBalance = () => accountBalances.rothIra;
         targetedAccount.deposit = (v) => {
-          rollingBalances.rothIra = +v;
+          accountBalances.rothIra = +v;
           expenditureTracker.depositsMade.toRoth += v;
         };
         targetedAccount.withdraw = (v) => {
-          rollingBalances.rothIra -= v;
+          accountBalances.rothIra -= v;
           expenditureTracker.withdrawalsMade.fromRoth += v;
         };
         break;
@@ -134,7 +133,7 @@ function withdrawalFactoryJS_createWithdrawalFactory(
     );
 
     const fixedIncomeFactors = {
-      taxableSavingsInterestEarned: incomeStreams.taxableSavingsInterestEarned,
+      earnedInterest: incomeStreams.earnedInterest,
       myPension: incomeStreams.myPension,
       spousePension: incomeStreams.spousePension,
       rmd: incomeStreams.rmd,
@@ -144,18 +143,20 @@ function withdrawalFactoryJS_createWithdrawalFactory(
       spouseSsBenefitsGross: incomeStreams.spouseSs,
       standardDeduction: standardDeduction,
       taxBrackets: taxBrackets,
-      nonSsIncome() {
-        return (
-          this.taxableSavingsInterestEarned +
-          this.myPension +
-          this.spousePension +
-          this.rmd +
-          this.otherTaxableIncomeAdjustments
-        );
-      },
-      ssIncome() {
-        return this.mySsBenefitsGross + this.spouseSsBenefitsGross;
-      },
+      nonSsIncome: incomeStreams.nonSsIncome(),
+      ssIncome: incomeStreams.ssIncome(),
+      // nonSsIncome() {
+      //   return (
+      //     this.earnedInterest +
+      //     this.myPension +
+      //     this.spousePension +
+      //     this.rmd +
+      //     this.otherTaxableIncomeAdjustments
+      //   );
+      // },
+      // ssIncome() {
+      //   return this.mySsBenefitsGross + this.spouseSsBenefitsGross;
+      // },
       precision: 0.01, // Precision for binary search convergence
     };
 
@@ -213,7 +214,7 @@ function withdrawalFactoryJS_createWithdrawalFactory(
 
         // this COULD be negative if income sources are not enough to cover taxes owed
         const incomeNotAlreadyInSavings =
-          proposedIncomeWithNo401kWithdrawals.incomeBreakdown.netIncomeMinusGrossSavingsInterest();
+          proposedIncomeWithNo401kWithdrawals.incomeBreakdown.netIncomeLessEarnedInterest();
 
         depositIntoSavings(incomeNotAlreadyInSavings);
 
