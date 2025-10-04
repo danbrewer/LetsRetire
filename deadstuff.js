@@ -66,7 +66,7 @@ function withdraw50_50(withdrawalFunctions, totalNetNeeded) {
 
   // Try to withdraw equal net amounts from both sources
   // Start with savings (no tax impact)
-  const savingsResult = withdrawalFunctions.withdrawFrom(
+  const savingsResult = withdrawalFunctions.withdrawFromTargetedAccount(
     "savings",
     targetNetPerSource
   );
@@ -75,7 +75,7 @@ function withdraw50_50(withdrawalFunctions, totalNetNeeded) {
 
   // Then try to get equal net amount from pretax (401k)
   // This will automatically gross up to account for taxes
-  const pretaxResult = withdrawalFunctions.withdrawFrom(
+  const pretaxResult = withdrawalFunctions.withdrawFromTargetedAccount(
     "401k",
     targetNetPerSource
   );
@@ -87,7 +87,7 @@ function withdraw50_50(withdrawalFunctions, totalNetNeeded) {
   if (remaining > 0) {
     // Try savings first for any remaining amount
     if (remaining > 0) {
-      const additionalSavings = withdrawalFunctions.withdrawFrom(
+      const additionalSavings = withdrawalFunctions.withdrawFromTargetedAccount(
         "savings",
         remaining
       );
@@ -98,7 +98,7 @@ function withdraw50_50(withdrawalFunctions, totalNetNeeded) {
     // Then try pretax for any still remaining amount
     const stillRemaining = totalNetNeeded - totalNet;
     if (stillRemaining > 0) {
-      const additionalPretax = withdrawalFunctions.withdrawFrom(
+      const additionalPretax = withdrawalFunctions.withdrawFromTargetedAccount(
         "401k",
         stillRemaining
       );
@@ -109,7 +109,7 @@ function withdraw50_50(withdrawalFunctions, totalNetNeeded) {
     // Finally try Roth if both other sources are exhausted
     const finalRemaining = totalNetNeeded - totalNet;
     if (finalRemaining > 0) {
-      const rothResult = withdrawalFunctions.withdrawFrom(
+      const rothResult = withdrawalFunctions.withdrawFromTargetedAccount(
         "roth",
         finalRemaining
       );

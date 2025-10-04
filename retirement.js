@@ -3,7 +3,7 @@
 function _calculateSsBenefits(mySsBenefits, spouseSsBenefits, nonSsIncome) {
   // Declare and initialize the result object at the top
   // debugger;
-
+  // debugger;
   const ssBenefits = {
     inputs: {
       myBenefits: mySsBenefits || 0,
@@ -22,10 +22,10 @@ function _calculateSsBenefits(mySsBenefits, spouseSsBenefits, nonSsIncome) {
       return (this.inputs.myBenefits + this.inputs.spouseBenefits).asCurrency();
     },
     myPortion() {
-      return (this.inputs.myBenefits / this.totalBenefits()).round(2);
+      return (this.inputs.myBenefits / this.totalBenefits()).asCurrency();
     },
     spousePortion() {
-      return (this.inputs.spouseBenefits / this.totalBenefits()).round(2);
+      return (this.inputs.spouseBenefits / this.totalBenefits()).asCurrency();
     },
     myTaxablePortion() {
       return this.myPortion() * this.taxablePortion;
@@ -70,7 +70,6 @@ function _calculateSsBenefits(mySsBenefits, spouseSsBenefits, nonSsIncome) {
     tier2Threshold: 44000,
     incomeExceedingTier2: 0,
     finalTaxableAmount: 0,
-    effectiveTaxRate: 0,
   };
 
   ssBenefits.calculationDetails = calculationDetails;
@@ -147,9 +146,9 @@ function retirementJS_determineFederalIncomeTax(taxableIncome, brackets) {
   return tax;
 }
 
-function retirementJS_calculateIncomeWhen401kGrossIs(
+function retirementJS_calculateIncomeWhen401kWithdrawalIs(
   variableIncomeFactor,
-  fixedIncomeFactors
+  fixedIncomeFactorsArg
 ) {
   // Declare and initialize the result object at the top
   const result = {
@@ -158,7 +157,7 @@ function retirementJS_calculateIncomeWhen401kGrossIs(
     // allTaxableIncome() {
     //   return this.savingsInterestEarned + this.allOtherIncome;
     // },
-    federalTaxesPaid: 0,
+    // federalTaxesPaid: 0,
     // allNetIncome() {
     //   return this.allTaxableIncome() - this.federalTaxesPaid;
     // },
@@ -180,7 +179,7 @@ function retirementJS_calculateIncomeWhen401kGrossIs(
     standardDeduction: 0,
     taxBrackets: [],
     precision: 0.01,
-    ...fixedIncomeFactors,
+    ...fixedIncomeFactorsArg,
   };
 
   const ssBreakdown = {
@@ -196,12 +195,11 @@ function retirementJS_calculateIncomeWhen401kGrossIs(
     myNonTaxablePortion: {},
     spouseNonTaxablePortion: {},
     provisionalIncome: {},
-    effectiveTaxRate: {},
     calculationDetails: {},
     ..._calculateSsBenefits(
       fixedIncomeFactors.mySsBenefitsGross,
       fixedIncomeFactors.spouseSsBenefitsGross,
-      fixedIncomeFactors.nonSsIncome
+      fixedIncomeFactors.nonSsIncome()
     ),
   };
 
@@ -241,9 +239,28 @@ function retirementJS_calculateIncomeWhen401kGrossIs(
     taxableIncome() {
       return Math.max(0, this.adjustedGrossIncome() - this.standardDeduction);
     },
-    // netIncome() {
-    //   return this.grossIncome() - this.federalIncomeTax;
-    // },
+    netIncome() {
+      return this.allIncome() - this.federalIncomeTax;
+    },
+    netIncomeMinusGrossSavingsInterest() {
+      return (
+        this.allIncome() - this.federalIncomeTax - this.taxableInterestEarned
+      );
+    },
+    incomeAsPercentageOfGross(amount = 0) {
+      if (this.allIncome() === 0) return 0;
+      return amount / this.allIncome();
+    },
+    translateGrossAmountToNet(amount = 0) {
+      return this.incomeAsPercentageOfGross(amount) * this.netIncome();
+    },
+    effectiveTaxRate() {
+      if (this.allIncome() === 0) return 0;
+      return this.federalIncomeTax / this.allIncome();
+    },
+    translateGrossAmountToPortionOfFederalIncomeTax(amount = 0) {
+      return this.incomeAsPercentageOfGross(amount) * this.federalIncomeTax;
+    },
   };
 
   incomeBreakdown.federalIncomeTax = retirementJS_determineFederalIncomeTax(
@@ -254,7 +271,7 @@ function retirementJS_calculateIncomeWhen401kGrossIs(
   // Update all the final values in the result object
   // result.allTaxableIncome = incomeBreakdown.allIncome();
   // result.taxableIncome = incomeBreakdown.taxableIncome();
-  result.federalTaxesPaid = incomeBreakdown.federalIncomeTax;
+  // result.federalTaxesPaid = incomeBreakdown.federalIncomeTax;
   // result.allNetIncome(){ = incomeBreakdown.netIncome();
 
   result.ssBreakdown = ssBreakdown;
@@ -297,7 +314,7 @@ function retirementJS_determine401kWithdrawalToHitNetTargetOf(
     );
 
     income = {
-      ...retirementJS_calculateIncomeWhen401kGrossIs(
+      ...retirementJS_calculateIncomeWhen401kWithdrawalIs(
         guestimate401kWithdrawal,
         fixedIncomeFactors
       ),
@@ -306,15 +323,19 @@ function retirementJS_determine401kWithdrawalToHitNetTargetOf(
     log.info(`Target income is $${targetAmount.asCurrency()}.`);
 
     const highLow =
-      income.netIncome.asCurrency() > targetAmount.asCurrency()
+      income.incomeBreakdown.netIncome().asCurrency() >
+      targetAmount.asCurrency()
         ? "TOO HIGH"
-        : income.netIncome.asCurrency() < targetAmount.asCurrency()
+        : income.incomeBreakdown.netIncome().asCurrency() <
+            targetAmount.asCurrency()
           ? "TOO LOW"
           : "JUST RIGHT";
     const highLowTextColor =
-      income.netIncome.asCurrency() > targetAmount.asCurrency()
+      income.incomeBreakdown.netIncome().asCurrency() >
+      targetAmount.asCurrency()
         ? "\x1b[31m"
-        : income.netIncome.asCurrency() < targetAmount.asCurrency()
+        : income.incomeBreakdown.netIncome().asCurrency() <
+            targetAmount.asCurrency()
           ? "\x1b[34m"
           : "\x1b[32m"; // Red for too high, Blue for too low, Green for just right
     log.info(
@@ -325,23 +346,25 @@ function retirementJS_determine401kWithdrawalToHitNetTargetOf(
       )} ${highLowTextColor}(${highLow})\x1b[0m`
     );
 
-    if (income.netIncome.asCurrency() == targetAmount.asCurrency()) break;
-    if (income.netIncome < targetAmount) lo = guestimate401kWithdrawal;
+    if (
+      income.incomeBreakdown.netIncome().asCurrency() ==
+      targetAmount.asCurrency()
+    )
+      break;
+    if (income.incomeBreakdown.netIncome() < targetAmount)
+      lo = guestimate401kWithdrawal;
     else hi = guestimate401kWithdrawal;
     if (hi.asCurrency() - lo.asCurrency() <= fixedIncomeFactors.precision)
       break;
   }
 
   // Update all the final values in the result object
-  result.net = income.netIncome;
+  result.net = income.incomeBreakdown.netIncome();
   result.withdrawalNeeded = hi;
   result.tax = income.tax;
 
   return result;
 }
-
-// 2025 Federal Income Tax Brackets
-// Source: IRS inflation adjustments (effective Jan 1, 2025)
 
 function retirementJS_getTaxBrackets(filingStatus, year, inflationRate) {
   // The year passed is the actual tax year (e.g., 2025, 2026, 2052, etc.)
@@ -436,8 +459,8 @@ if (typeof module !== "undefined" && module.exports) {
     determineTaxablePortionOfSocialSecurity: _calculateSsBenefits,
     retirementJS_determineFederalIncomeTax:
       retirementJS_determineFederalIncomeTax,
-    retirementJS_calculateIncomeWhen401kGrossIs:
-      retirementJS_calculateIncomeWhen401kGrossIs,
+    retirementJS_calculateIncomeWhen401kWithdrawalIs:
+      retirementJS_calculateIncomeWhen401kWithdrawalIs,
     retirementJS_determine401kWithdrawalToHitNetTargetOf,
     // Export some common tax brackets and standard deductions for convenience
     retirementJS_getTaxBrackets,
