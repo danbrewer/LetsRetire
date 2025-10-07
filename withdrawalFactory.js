@@ -5,7 +5,7 @@ function withdrawalFactoryJS_createWithdrawalFactory(
   incomeStreamsData = {},
   fiscalData = {},
   demographics = {},
-  accountBalances = {}
+  accounts = {}
 ) {
   let incomeResults = {
     ssBreakdown: {},
@@ -32,10 +32,8 @@ function withdrawalFactoryJS_createWithdrawalFactory(
   // **************
   // Sanity checks
   // **************
-  if (accountBalances.length === 0 || !accountBalances) {
-    console.error(
-      `accountBalances is null or undefined.  This is a fatal error`
-    );
+  if (accounts.length === 0 || !accounts) {
+    console.error(`accounts is null or undefined.  This is a fatal error`);
     return result;
   }
   // **************
@@ -68,14 +66,15 @@ function withdrawalFactoryJS_createWithdrawalFactory(
 
     // Determine balance reference and setter function
     const targetedAccount = {
-      getBalance: {},
+      getStartingBalance: {},
       deposit: {},
       withdraw: {},
+      calculateEarnedInterest: {},
     };
 
     function depositIntoSavings(amount) {
       if (amount <= 0) return; // No deposit needed
-      accountBalances.savings += amount;
+      accounts.savings.deposits += amount;
       expenditureTracker.depositsMade.toSavings += amount;
       // Optionally, track deposits if needed
       // expenditureTracker.depositsMade.toSavings += amount;
@@ -83,36 +82,59 @@ function withdrawalFactoryJS_createWithdrawalFactory(
 
     switch (accountType) {
       case "savings":
-        targetedAccount.getBalance = () => accountBalances.savings;
+        targetedAccount.getStartingBalance = () => accounts.savings;
         targetedAccount.deposit = (v) => {
-          accountBalances.savings += v;
-          expenditureTracker.depositsMade.toSavings += v;
+          depositIntoSavings(v);
         };
         targetedAccount.withdraw = (v) => {
-          accountBalances.savings -= v;
+          accounts.savings.withdrawals += v;
           expenditureTracker.withdrawalsMade.fromSavings += v;
+        };
+        targetedAccount.calculateEarnedInterest = () => {
+          if (accounts.savings.interestEarned > 0) return; // Already calculated
+          const interestEarned =
+            accounts.savings.balanceSubjectToInterest() *
+            fiscalData.savingsRateOfReturn;
+          accounts.savings.interestEarned = interestEarned;
+          depositIntoSavings(interestEarned);
         };
         break;
       case "401k":
-        targetedAccount.getBalance = () => accountBalances.traditional401k;
+        targetedAccount.getStartingBalance = () => accounts.traditional401k;
         targetedAccount.deposit = (v) => {
-          accountBalances.traditional401k = +v;
+          accounts.traditional401k.deposits = +v;
           expenditureTracker.depositsMade.to401k += v;
         };
         targetedAccount.withdraw = (v) => {
-          accountBalances.traditional401k -= v;
+          accounts.traditional401k.withdrawals += v;
           expenditureTracker.withdrawalsMade.from401k += v;
+        };
+        targetedAccount.calculateEarnedInterest = () => {
+          if (accounts.traditional401k.interestEarned > 0) return; // Already calculated
+          const interestEarned =
+            accounts.traditional401k.balanceSubjectToInterest() *
+            fiscalData.retirementAccountRateOfReturn;
+          accounts.traditional401k.interestEarned = interestEarned;
+          targetedAccount.deposit(interestEarned);
         };
         break;
       case "roth":
-        targetedAccount.getBalance = () => accountBalances.rothIra;
+        targetedAccount.getStartingBalance = () => accounts.rothIra;
         targetedAccount.deposit = (v) => {
-          accountBalances.rothIra = +v;
+          accounts.rothIra.deposits = +v;
           expenditureTracker.depositsMade.toRoth += v;
         };
         targetedAccount.withdraw = (v) => {
-          accountBalances.rothIra -= v;
+          accounts.rothIra.withdrawals += v;
           expenditureTracker.withdrawalsMade.fromRoth += v;
+        };
+        targetedAccount.calculateEarnedInterest = () => {
+          if (accounts.rothIra.interestEarned > 0) return; // Already calculated
+          const interestEarned =
+            accounts.rothIra.balanceSubjectToInterest() *
+            fiscalData.rothRateOfReturn;
+          accounts.rothIra.interestEarned = interestEarned;
+          targetedAccount.deposit(interestEarned);
         };
         break;
       default:
@@ -145,18 +167,6 @@ function withdrawalFactoryJS_createWithdrawalFactory(
       taxBrackets: taxBrackets,
       nonSsIncome: incomeStreams.nonSsIncome(),
       ssIncome: incomeStreams.ssIncome(),
-      // nonSsIncome() {
-      //   return (
-      //     this.earnedInterest +
-      //     this.myPension +
-      //     this.spousePension +
-      //     this.rmd +
-      //     this.otherTaxableIncomeAdjustments
-      //   );
-      // },
-      // ssIncome() {
-      //   return this.mySsBenefitsGross + this.spouseSsBenefitsGross;
-      // },
       precision: 0.01, // Precision for binary search convergence
     };
 
@@ -167,7 +177,10 @@ function withdrawalFactoryJS_createWithdrawalFactory(
       // However, if there is no balance, we can't withdraw anything, so we skip the withdrawal step.
       // The tax calculation will still be performed below.
 
-      const available401kBalance = Math.max(targetedAccount.getBalance(), 0);
+      const available401kBalance = Math.max(
+        targetedAccount.getStartingBalance(),
+        0
+      );
 
       const ideal401kWithdrawal =
         retirementJS_determine401kWithdrawalToHitNetTargetOf(
@@ -220,17 +233,10 @@ function withdrawalFactoryJS_createWithdrawalFactory(
 
         // reduce the desiredSpend by the income not already in savings
         let remainingSpend = Math.max(0, expenditureTracker.shortfall());
-
-        // const surplusIncome = Math.max(
-        //   incomeNotAlreadyInSavings - expenditureTracker.shortfall(),
-        //   0
-        // );
-
-        // debugger;
         // Determine how much to withdraw to meet the desired spend
         withdrawalAmount = Math.min(
           remainingSpend,
-          targetedAccount.getBalance()
+          targetedAccount.getStartingBalance()
         );
 
         // Reduce the account balance by the net received amount
@@ -250,13 +256,14 @@ function withdrawalFactoryJS_createWithdrawalFactory(
         // Retirement account income has been recognized
         // Reference previously recognized incomeData for calculating desired withdrawal
         const fundsNeeded = expenditureTracker.shortfall();
-        const fundsAvailable = targetedAccount.getBalance();
+        const fundsAvailable = targetedAccount.getStartingBalance();
         // Determine how much to withdraw to meet the desired spend
         withdrawalAmount = Math.min(fundsAvailable, fundsNeeded);
 
         // Reduce the account balance by the net received amount
         targetedAccount.withdraw(withdrawalAmount);
       }
+      targetedAccount.calculateEarnedInterest();
     }
   }
 

@@ -175,3 +175,41 @@ function withdrawRMD(grossAmount) {
 
   return { gross: actualGross, net: netAmount };
 }
+
+function determineQualifyingSpouseBenefits(inputs, age, benefitAmounts) {
+  const spouseBenefits = {
+    ssIncome: 0,
+    pensionIncome: 0,
+  };
+
+  if (inputs.hasSpouse) {
+    const spouseCurrentAge = inputs.spouseAge + (age - inputs.currentAge);
+    const hasSpouseSS = spouseCurrentAge >= inputs.spouseSsStartAge;
+    const hasSpousePen = spouseCurrentAge >= inputs.spousePenStartAge;
+
+    spouseBenefits.ssIncome = hasSpouseSS ? benefitAmounts.spouseSsAnnual : 0;
+    spouseBenefits.pensionIncome = hasSpousePen
+      ? benefitAmounts.spousePenAnnual
+      : 0;
+  }
+
+  return spouseBenefits;
+}
+
+/**
+ * Calculate spouse benefit amounts at the time of primary person's retirement
+ */
+function calculateSpouseBenefits(inputs) {
+  // Declare and initialize the result object at the top
+  const result = {
+    spouseSsAnnual: 0,
+    spousePenAnnual: 0,
+  };
+
+  if (inputs.hasSpouse) {
+    result.spouseSsAnnual = inputs.spouseSsMonthly * 12;
+    result.spousePenAnnual = inputs.spousePenMonthly * 12;
+  }
+
+  return result;
+}

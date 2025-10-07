@@ -341,9 +341,9 @@ function retirementJS_determine401kWithdrawalToHitNetTargetOf(
     log.info(
       `When 401k withdrawal is $${guestimate401kWithdrawal.round(
         0
-      )} then the net income will be $${income.netIncome.round(
-        0
-      )} ${highLowTextColor}(${highLow})\x1b[0m`
+      )} then the net income will be $${income.incomeBreakdown
+        .netIncome()
+        .round(0)} ${highLowTextColor}(${highLow})\x1b[0m`
     );
 
     if (
@@ -448,6 +448,29 @@ function retirementJS_getStandardDeduction(filingStatus, year, inflationRate) {
     }
     return adjusted;
   }
+}
+
+// Wrapper function for backward compatibility with existing calls
+function retirementJS_calculateTaxableIncome(
+  adjustedGrossIncome,
+  standardDeduction
+) {
+  return Math.max(0, adjustedGrossIncome - standardDeduction);
+}
+
+// Wrapper for federal tax calculation using retirement.js functions
+function retirementJS_calculateFederalTax(
+  taxableIncome,
+  filingStatus = constsJS_FILING_STATUS.SINGLE,
+  year = 2025,
+  inflationRate = 0.025
+) {
+  const taxBrackets = retirementJS_getTaxBrackets(
+    filingStatus,
+    year,
+    inflationRate
+  );
+  return retirementJS_determineFederalIncomeTax(taxableIncome, taxBrackets);
 }
 
 // ---------------- MODULE EXPORTS ----------------

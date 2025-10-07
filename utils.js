@@ -16,6 +16,8 @@ Number.prototype.adjustedForInflation = function (inflationRate, years) {
   return adjustedValue;
 };
 
+const compoundedRate = (r, n) => Math.pow(1 + r, n);
+
 // =====================
 // Function helpers
 // =====================
