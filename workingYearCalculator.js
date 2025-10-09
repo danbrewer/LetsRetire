@@ -25,7 +25,7 @@ function calculateWorkingYearData(inputs, yearIndex, salary, accounts) {
     spouseSsBreakdown: {},
   };
 
-  debugger;
+  // debugger;
   const fiscalData = {
     _description: "Fiscal Year Data",
     inflationRate: inputs.inflation,
@@ -39,7 +39,7 @@ function calculateWorkingYearData(inputs, yearIndex, salary, accounts) {
       yearIndex
     ),
     actualSavingsContribution: 0,
-    desiredSavingsContribution: salary * inputs.taxablePct,
+    desiredSavingsContribution: (salary * inputs.taxablePct).asCurrency(),
     determineActualSavingsContribution(netIncome) {
       if (!netIncome || isNaN(netIncome)) return 0;
 
@@ -75,10 +75,10 @@ function calculateWorkingYearData(inputs, yearIndex, salary, accounts) {
     employeeMatchCap: inputs.matchCap,
     matchRate: inputs.matchRate,
     desired401kContribution() {
-      return this.salary * this.pretaxContributionPercentage;
+      return (this.salary * this.pretaxContributionPercentage).asCurrency();
     },
     desiredRothContribution() {
-      return this.salary * this.rothContributionPercentage;
+      return (this.salary * this.rothContributionPercentage).asCurrency();
     },
     electiveScale() {
       let electiveLimit =
@@ -93,10 +93,14 @@ function calculateWorkingYearData(inputs, yearIndex, salary, accounts) {
       return scale;
     },
     cap401kContribution() {
-      return this.desired401kContribution() * this.electiveScale();
+      return (
+        this.desired401kContribution() * this.electiveScale()
+      ).asCurrency();
     },
     capRothContribution() {
-      return this.desiredRothContribution() * this.electiveScale();
+      return (
+        this.desiredRothContribution() * this.electiveScale()
+      ).asCurrency();
     },
     emp401kContributionPct() {
       return this.salary > 0 ? this.cap401kContribution() / this.salary : 0;
@@ -106,46 +110,40 @@ function calculateWorkingYearData(inputs, yearIndex, salary, accounts) {
         Math.min(this.emp401kContributionPct(), this.employeeMatchCap) *
         this.salary *
         this.matchRate
-      );
+      ).asCurrency();
     },
   };
 
   // **************
   // Calculations
   // **************
-
+  // debugger;
   accounts.traditional401k.deposits += employmentInfo.cap401kContribution();
-  if (accounts.traditional401k.interestEarned == 0) {
-    accounts.traditional401k.interestEarned =
-      accounts.traditional401k.startingBalance * inputs.ret401k;
-    accounts.traditional401k.deposits +=
-      accounts.traditional401k.interestEarned;
-  }
+  accounts.traditional401k.calculateInterest(
+    INTEREST_CALCULATION_INTENSITY.MODERATE,
+    false
+  );
 
   accounts.savings.deposits += fiscalData.actualSavingsContribution;
-  if (accounts.savings.interestEarned == 0) {
-    accounts.savings.interestEarned =
-      accounts.savings.startingBalance * inputs.retSavings;
-    accounts.savings.deposits += accounts.savings.interestEarned;
-  }
+  accounts.savings.calculateInterest(
+    INTEREST_CALCULATION_INTENSITY.MODERATE,
+    false
+  );
 
   accounts.rothIra.deposits += employmentInfo.capRothContribution();
-  if (accounts.rothIra.interestEarned == 0) {
-    accounts.rothIra.interestEarned =
-      accounts.rothIra.startingBalance * inputs.retRoth;
-    accounts.rothIra.deposits += accounts.rothIra.interestEarned;
-  }
+  accounts.rothIra.calculateInterest(
+    INTEREST_CALCULATION_INTENSITY.MODERATE,
+    false
+  );
 
   const taxes = {
     _description: "Taxes",
+    grossIncome: 0,
+    standardDeduction: 0,
     taxableIncome: 0,
     federalTaxesOwed: 0,
-    total: 0,
     otherTaxes: 0,
-    penTaxes: 0,
     taxableIncomeAdjustment: 0,
-    effectiveTaxRate: 0,
-    standardDeduction: 0,
   };
 
   const contributions = {
@@ -173,7 +171,9 @@ function calculateWorkingYearData(inputs, yearIndex, salary, accounts) {
     wagesTipsAndCompensation: salary,
     otherTaxableIncomeAdjustments:
       getTaxableIncomeOverride(demographics.age) || 0,
-    taxableInterestIncome: accounts.savings.startingBalance * inputs.retSavings,
+    taxableInterestIncome: (
+      accounts.savings.startingBalance * inputs.retSavings
+    ).asCurrency(),
     rollingOverIntoSavings: 0,
     retirementAccountContributions: accounts.traditional401k.deposits,
     rothIraContributions: accounts.rothIra.deposits,

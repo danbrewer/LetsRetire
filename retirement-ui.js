@@ -2379,7 +2379,7 @@ function loadExample() {
     currentAge: 60,
     retireAge: 62,
     endAge: 90,
-    inflation: 0.0,
+    inflation: 2.5,
     spendingToday: 100000,
     spendingDecline: 0.0,
     spouseAge: 56,

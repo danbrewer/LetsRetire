@@ -28,16 +28,16 @@ function _calculateSsBenefits(mySsBenefits, spouseSsBenefits, nonSsIncome) {
       return (this.inputs.spouseBenefits / this.totalBenefits()).asCurrency();
     },
     myTaxablePortion() {
-      return this.myPortion() * this.taxablePortion;
+      return (this.myPortion() * this.taxablePortion).asCurrency();
     },
     spouseTaxablePortion() {
-      return this.spousePortion() * this.taxablePortion;
+      return (this.spousePortion() * this.taxablePortion).asCurrency();
     },
     myNonTaxablePortion() {
-      return this.myPortion() * this.nonTaxablePortion();
+      return (this.myPortion() * this.nonTaxablePortion()).asCurrency();
     },
     spouseNonTaxablePortion() {
-      return this.spousePortion() * this.nonTaxablePortion();
+      return (this.spousePortion() * this.nonTaxablePortion()).asCurrency();
     },
     provisionalIncome() {
       return (
@@ -91,10 +91,12 @@ function _calculateSsBenefits(mySsBenefits, spouseSsBenefits, nonSsIncome) {
 
     let excessOfTier1TaxableAmt = (
       0.5 * calculationDetails.incomeExceedingTier1
-    ).asCurrency();
+    )
+      .asCurrency()
+      .asCurrency();
 
     calculationDetails.finalTaxableAmount = Math.min(
-      0.5 * ssBenefits.totalBenefits(),
+      (0.5 * ssBenefits.totalBenefits()).asCurrency(),
       excessOfTier1TaxableAmt
     ).asCurrency();
 
@@ -109,10 +111,10 @@ function _calculateSsBenefits(mySsBenefits, spouseSsBenefits, nonSsIncome) {
   let taxableSsInExcessOfTier1Threshold =
     0.5 *
     (calculationDetails.tier2Threshold - calculationDetails.tier1Threshold);
-  let taxableSsInExcessOfTier2Threshold = 0.85 * excessOverTier2;
+  let taxableSsInExcessOfTier2Threshold = (0.85 * excessOverTier2).asCurrency();
 
   taxableSSAmount = Math.min(
-    0.85 * ssBenefits.totalBenefits(),
+    (0.85 * ssBenefits.totalBenefits()).asCurrency(),
     taxableSsInExcessOfTier1Threshold + taxableSsInExcessOfTier2Threshold
   );
 
@@ -122,7 +124,8 @@ function _calculateSsBenefits(mySsBenefits, spouseSsBenefits, nonSsIncome) {
   calculationDetails.incomeExceedingTier2 = excessOverTier2;
   calculationDetails.tier1TaxableAmount = taxableSsInExcessOfTier1Threshold;
   calculationDetails.tier2TaxableAmount = Math.min(
-    0.85 * ssBenefits.totalBenefits() - taxableSsInExcessOfTier1Threshold,
+    (0.85 * ssBenefits.totalBenefits()).asCurrency() -
+      taxableSsInExcessOfTier1Threshold,
     taxableSsInExcessOfTier2Threshold
   );
 
@@ -169,7 +172,7 @@ function retirementJS_calculateIncomeWhen401kWithdrawalIs(
   };
 
   const fixedIncomeFactors = {
-    estimatedInterestEarned: 0,
+    reportedEarnedInterest: 0,
     myPension: 0,
     spousePension: 0,
     rmd: 0,
@@ -204,7 +207,7 @@ function retirementJS_calculateIncomeWhen401kWithdrawalIs(
   };
 
   const incomeBreakdown = {
-    estimatedInterestEarned: fixedIncomeFactors.estimatedInterestEarned,
+    reportedEarnedInterest: fixedIncomeFactors.reportedEarnedInterest,
     myPension: fixedIncomeFactors.myPension,
     spousePension: fixedIncomeFactors.spousePension,
     rmd: fixedIncomeFactors.rmd,
@@ -218,7 +221,7 @@ function retirementJS_calculateIncomeWhen401kWithdrawalIs(
     taxableSsIncome: ssBreakdown.taxablePortion,
     allIncome() {
       return (
-        this.estimatedInterestEarned +
+        this.reportedEarnedInterest +
         this.myPension +
         this.spousePension +
         this.rmd +
@@ -244,7 +247,7 @@ function retirementJS_calculateIncomeWhen401kWithdrawalIs(
     },
     netIncomeLessEarnedInterest() {
       return (
-        this.allIncome() - this.federalIncomeTax - this.estimatedInterestEarned
+        this.allIncome() - this.federalIncomeTax - this.reportedEarnedInterest
       );
     },
     effectiveTaxRate() {
@@ -256,10 +259,14 @@ function retirementJS_calculateIncomeWhen401kWithdrawalIs(
       return amount / this.allIncome();
     },
     translateGrossAmountToNet(amount = 0) {
-      return this.incomeAsPercentageOfGross(amount) * this.netIncome();
+      return (
+        this.incomeAsPercentageOfGross(amount) * this.netIncome()
+      ).asCurrency();
     },
     translateGrossAmountToPortionOfFederalIncomeTax(amount = 0) {
-      return this.incomeAsPercentageOfGross(amount) * this.federalIncomeTax;
+      return (
+        this.incomeAsPercentageOfGross(amount) * this.federalIncomeTax
+      ).asCurrency();
     },
   };
 

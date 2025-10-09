@@ -35,6 +35,7 @@ function calculateRMD(useRmd, age, retirementAccountBalance) {
     100: 6.4,
   };
 
+  debugger;
   // For ages beyond 100, use declining factors
   let factor;
   if (age <= 100) {
@@ -44,7 +45,7 @@ function calculateRMD(useRmd, age, retirementAccountBalance) {
     factor = Math.max(1.0, lifeFactor[100] - (age - 100) * 0.1);
   }
 
-  return retirementAccountBalance / factor;
+  return (retirementAccountBalance / factor).asCurrency();
 }
 
 // Function to calculate initial benefit amounts for retirement
@@ -128,7 +129,7 @@ function calculateRetirementYearData(
     isWorking: false,
     hasSpouse: inputs.hasSpouse,
     ageOfSpouse: inputs.hasSpouse
-      ? inputs.spouseAge + (this.age - inputs.currentAge)
+      ? inputs.spouseAge + (inputs.retireAge + yearIndex - inputs.currentAge)
       : undefined,
     ssStartAgeOfSpouse: inputs.hasSpouse ? inputs.spouseSsStartAge : undefined,
     penStartAgeOfSpouse: inputs.hasSpouse
@@ -151,7 +152,7 @@ function calculateRetirementYearData(
     _description: `Retirement Year ${this.yearIndex + 1} (Age ${this.age}) (Year ${this.retirementYear})`,
   };
 
-  if (demographics.age == 65) debugger;
+  // if (demographics.age == 65) debugger;
 
   const fiscalData = {
     _description: "Fiscal Year Data",
@@ -170,9 +171,10 @@ function calculateRetirementYearData(
 
   const incomeStreams = {
     _description: "Income",
-    estimatedInterestEarned:
-      accounts.savings.startingBalance * inputs.retSavings,
     myPension: demographics.eligibleForPension() ? benefitAmounts.penAnnual : 0,
+    reportedEarnedInterest: (
+      accounts.savings.startingBalance * inputs.retSavings
+    ).asCurrency(),
     spousePension: 0,
     mySs: demographics.eligibleForSs() ? benefitAmounts.ssAnnual : 0,
     spouseSs: demographics.spouseEligibleForSs()
@@ -190,7 +192,7 @@ function calculateRetirementYearData(
       return (
         this.myPension +
         this.spousePension +
-        this.estimatedInterestEarned +
+        this.reportedEarnedInterest +
         this.otherTaxableIncomeAdjustments +
         this.rmd +
         this.mySs +
@@ -202,7 +204,7 @@ function calculateRetirementYearData(
       return (
         this.myPension +
         this.spousePension +
-        this.estimatedInterestEarned +
+        this.reportedEarnedInterest +
         this.otherTaxableIncomeAdjustments +
         this.rmd +
         this.mySs +
@@ -219,7 +221,7 @@ function calculateRetirementYearData(
       return (
         this.myPension +
         this.spousePension +
-        this.estimatedInterestEarned +
+        this.reportedEarnedInterest +
         this.otherTaxableIncomeAdjustments +
         this.rmd
       );
@@ -239,13 +241,13 @@ function calculateRetirementYearData(
   const expenditureTracker = {
     _description: "Expenditures Breakdown",
     budgeted: inputs.spendAtRetire,
-    additionalSpending: getSpendingOverride(demographics.age),
+    additionalSpending: getSpendingOverride(demographics.age).asCurrency(),
     withdrawalsMade: {
       fromSavings: 0,
       from401k: 0,
       fromRoth: 0,
       total() {
-        return this.fromSavings + this.from401k + this.fromRoth;
+        return (this.fromSavings + this.from401k + this.fromRoth).asCurrency();
       },
     },
     depositsMade: {
@@ -257,10 +259,10 @@ function calculateRetirementYearData(
       },
     },
     totalBudgeted() {
-      return this.budgeted + this.additionalSpending;
+      return (this.budgeted + this.additionalSpending).asCurrency();
     },
     actualExpenditures() {
-      return this.withdrawalsMade.total();
+      return this.withdrawalsMade.total().asCurrency();
     },
     shortfall() {
       return Math.max(0, this.totalBudgeted() - this.actualExpenditures());
@@ -278,6 +280,20 @@ function calculateRetirementYearData(
       expenditureTracker
     );
   }
+
+  // In case interest hasn't already been calculated, do it now
+  accounts.traditional401k.calculateInterest(
+    INTEREST_CALCULATION_INTENSITY.CONSERVATIVE,
+    false
+  );
+  accounts.rothIra.calculateInterest(
+    INTEREST_CALCULATION_INTENSITY.CONSERVATIVE,
+    false
+  );
+  accounts.savings.calculateInterest(
+    INTEREST_CALCULATION_INTENSITY.CONSERVATIVE,
+    false
+  );
 
   const incomeResults = {
     ssBreakdown: {},
@@ -490,8 +506,8 @@ function calculateRetirementYearData(
     _description: "Income Breakdown",
     myPension: incomeResults.incomeBreakdown.myPension,
     spousePension: incomeResults.incomeBreakdown.spousePension,
-    estimatedInterestEarned:
-      incomeResults.incomeBreakdown.estimatedInterestEarned,
+    reportedEarnedInterest:
+      incomeResults.incomeBreakdown.reportedEarnedInterest,
     actualEarnedInterest: incomeResults.incomeBreakdown.actualEarnedInterest,
     otherTaxableIncomeAdjustments:
       incomeResults.incomeBreakdown.otherTaxableIncomeAdjustments,
@@ -576,7 +592,7 @@ function calculateRetirementYearData(
       breakdown: {
         socialSec: result.incomeStreams.ssIncome(),
         pension: result.incomeStreams.pensionIncome(),
-        interest: result.incomeStreams.actualEarnedInterest,
+        interest: accounts.savings.interestEarned,
         rmd: result.incomeStreams.rmd,
         otherTaxableIncome: result.incomeStreams.otherTaxableIncomeAdjustments,
         taxFreeIncome: result.incomeStreams.taxFreeIncomeAdjustment,
@@ -584,7 +600,7 @@ function calculateRetirementYearData(
       },
     },
     federalTaxes: taxes.federalTaxes,
-    netIncome: incomeResults.incomeBreakdown.netIncome(),
+    netIncome: incomeResults.incomeBreakdown.netIncome,
     deposits: {
       total: deposits.total().asCurrency(),
       breakdown: {
@@ -602,21 +618,49 @@ function calculateRetirementYearData(
         rmd: withdrawals.rmd,
       },
     },
-    balances: {
-      total: balances.total(),
-      breakdown: {
-        savings: balances.savings,
-        traditional401k: balances.traditional401k,
-        rothIra: balances.rothIra,
-      },
+    accounts: { ...accounts },
+  };
+
+  const temp = {
+    income: {
+      netIncome: incomeResults.incomeBreakdown.netIncome().asCurrency(),
+      spend: fiscalData.spend.asCurrency(),
+      shortfall: Math.max(
+        fiscalData.spend - accounts.savings.deposits,
+        0
+      ).asCurrency(),
+      overage: Math.max(
+        accounts.savings.deposits - fiscalData.spend,
+        0
+      ).asCurrency(),
+    },
+    savings: {
+      startingBalance: accounts.savings.startingBalance.asCurrency(),
+      withdrawals: accounts.savings.withdrawals.asCurrency(),
+      deposits: accounts.savings.deposits.asCurrency(),
+      endingBalance: accounts.savings.endingBalance().asCurrency(),
+      interestEarned:
+        accounts.savings.interestCalculations._interestEarned.asCurrency(),
+    },
+    traditional401k: {
+      startingBalance: accounts.traditional401k.startingBalance.asCurrency(),
+      withdrawals: accounts.traditional401k.withdrawals,
+      deposits: accounts.traditional401k.deposits.asCurrency(),
+      endingBalance: accounts.traditional401k.endingBalance().asCurrency(),
+      interestEarned:
+        accounts.traditional401k.interestCalculations._interestEarned.asCurrency(),
     },
   };
-  debugData.dump();
 
-  result.dump();
+  temp.dump("Balances");
+  // debugData.dump("debugData");
+  // accounts.savings.dump("Savings");
+  // accounts.traditional401k.dump("401k");
+  // debugger;
+
+  // result.dump("result");
 
   // result.income.dump();
   // result.balances.dump();
-  debugger;
   return result;
 }

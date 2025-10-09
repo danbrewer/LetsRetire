@@ -8,7 +8,7 @@ Number.prototype.round = function (decimals = 0) {
 };
 
 Number.prototype.asCurrency = function () {
-  return this.round(2);
+  return this.round(0);
 };
 
 Number.prototype.adjustedForInflation = function (inflationRate, years) {
@@ -176,6 +176,7 @@ Object.defineProperty(Object.prototype, "dump", {
   writable: true,
   value: function (title, depth = 0) {
     const indent = "  ".repeat(depth);
+    const colWidth = 30; // adjust for alignment width
 
     if (depth === 0) {
       const header = title || this._description || "Object Dump";
@@ -246,11 +247,11 @@ Object.defineProperty(Object.prototype, "dump", {
           try {
             const result = value.call(this);
             console.log(
-              `${indent}- ${(key + "()").padEnd(30)} ${safeFormat(result)}`
+              `${indent}- ${(key + "()").padEnd(colWidth)} ${alignValue(result, colWidth)}`
             );
           } catch (e) {
             console.log(
-              `${indent}- ${(key + "()").padEnd(30)} [function threw: ${e?.message ?? e}]`
+              `${indent}- ${(key + "()").padEnd(colWidth)} [function threw: ${e?.message ?? e}]`
             );
           }
         } else {
@@ -269,12 +270,22 @@ Object.defineProperty(Object.prototype, "dump", {
         ) {
           // labeled primitive wrapper
           console.log(
-            `${indent}- ${value[DUMP_LABEL]}: ${safeFormat(value.value)}`
+            `${indent}- ${value[DUMP_LABEL]}: ${alignValue(value.value, colWidth)}`
           );
         } else {
-          console.log(`${indent}- ${key.padEnd(30)} ${safeFormat(value)}`);
+          console.log(
+            `${indent}- ${key.padEnd(colWidth)} ${alignValue(value, colWidth)}`
+          );
         }
       }
     }
   },
 });
+
+// helper: align numbers right, strings left
+function alignValue(val, width) {
+  if (typeof val === "number") {
+    return String(val).padStart(width);
+  }
+  return String(val).padEnd(width);
+}
