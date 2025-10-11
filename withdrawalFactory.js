@@ -7,12 +7,17 @@ function withdrawalFactoryJS_createWithdrawalFactory(
   demographics = {},
   accounts = {}
 ) {
+  let retirementAccountIncomeRecognized = false;
+  let savingsAccountIncomeRecognized = false;
+  let rothAccountIncomeRecognized = false;
+
   let incomeResults = {
     ssBreakdown: {},
     incomeBreakdown: {},
   };
 
   const incomeStreams = {
+    reportedEarnedInterest: 0,
     myPension: 0,
     spousePension: 0,
     mySs: 0,
@@ -35,19 +40,9 @@ function withdrawalFactoryJS_createWithdrawalFactory(
   }
   // **************
 
-  function withdrawFromTargetedAccount(accountType, expenditureTracker) {
-    // **************
-    // Sanity checks
-    // **************
-    // Input sanitization
-    // debugger;
-    if (!expenditureTracker || typeof expenditureTracker !== "object") {
-      console.error("Invalid expenditure tracker:", expenditureTracker);
-      return;
-    }
-
+  function withdrawFromTargetedAccount(amount, accountType) {
     if (!accountType || typeof accountType !== "string") {
-      console.error("Invalid withdrawal kind:", accountType);
+      console.error("Invalid account type:", accountType);
       return;
     }
     // verify kind is one of the expected values and error if not
@@ -64,98 +59,106 @@ function withdrawalFactoryJS_createWithdrawalFactory(
     // Determine balance reference and setter function
     const targetedAccount = {
       getStartingBalance: {},
-      endingBalance: () => 0,
+      availableFunds: () => 0,
       deposit: {},
       withdraw: {},
       calculateEarnedInterest: {},
     };
 
     function depositIntoSavings(amount) {
-      if (amount <= 0) return; // No deposit needed
-      accounts.savings.deposits += amount;
-      expenditureTracker.depositsMade.toSavings += amount;
-      // Optionally, track deposits if needed
-      // expenditureTracker.depositsMade.toSavings += amount;
+      accounts.savings.deposit(
+        amount,
+        TransactionType.DEPOSIT,
+        fiscalData.taxYear
+      );
     }
 
     function withdrawFrom401k(amount) {
-      if (amount <= 0) return; // No deposit needed
-      const amountToWithdraw = Math.min(
-        accounts.traditional401k.endingBalance(),
-        amount
+      const amountWithdrawn = accounts.traditional401k.withdrawal(
+        amount,
+        TransactionType.WITHDRAWAL,
+        fiscalData.taxYear
       );
-      accounts.traditional401k.withdrawals += amountToWithdraw;
-      expenditureTracker.withdrawalsMade.from401k += amountToWithdraw;
-      // Optionally, track withdrawals if needed
-      // expenditureTracker.withdrawalsMade.from401k += amountToWithdraw;
     }
 
     switch (accountType) {
       case "savings":
         targetedAccount.getStartingBalance = () =>
-          accounts.savings.startingBalance;
-        targetedAccount.endingBalance = () => accounts.savings.endingBalance();
+          accounts.savings.startingBalanceForYear(fiscalData.taxYear);
+        targetedAccount.availableFunds = () =>
+          Math.max(
+            accounts.savings.endingBalanceForYear(fiscalData.taxYear),
+            0
+          );
         targetedAccount.deposit = (v) => {
           depositIntoSavings(v);
         };
         targetedAccount.withdraw = (v) => {
-          const amountToWithdraw = Math.min(
-            accounts.savings.endingBalance(),
-            v
+          return accounts.savings.withdrawal(
+            v,
+            TransactionType.WITHDRAWAL,
+            fiscalData.taxYear
           );
-          accounts.savings.withdrawals += amountToWithdraw;
-          expenditureTracker.withdrawalsMade.fromSavings += amountToWithdraw;
         };
-        targetedAccount.calculateEarnedInterest = (
-          calculationIntensity,
-          force
-        ) => {
-          accounts.savings.calculateInterest(calculationIntensity, force);
+        targetedAccount.calculateEarnedInterest = (calculationIntensity) => {
+          accounts.savings.calculateInterestForYear(
+            calculationIntensity,
+            fiscalData.taxYear
+          );
         };
         break;
       case "401k":
         targetedAccount.getStartingBalance = () =>
-          accounts.traditional401k.startingBalance;
-        targetedAccount.endingBalance = () =>
-          accounts.traditional401k.endingBalance();
+          accounts.traditional401k.startingBalanceForYear(fiscalData.taxYear);
+        targetedAccount.availableFunds = () =>
+          Math.max(
+            accounts.traditional401k.endingBalanceForYear(fiscalData.taxYear),
+            0
+          );
         targetedAccount.deposit = (v) => {
-          accounts.traditional401k.deposits = +v;
-          expenditureTracker.depositsMade.to401k += v;
+          accounts.traditional401k.deposit(
+            v,
+            TransactionType.DEPOSIT,
+            fiscalData.taxYear
+          );
         };
         targetedAccount.withdraw = (v) => {
           withdrawFrom401k(v);
         };
-        targetedAccount.calculateEarnedInterest = (
-          calculationIntensity,
-          force
-        ) => {
-          accounts.traditional401k.calculateInterest(
+        targetedAccount.calculateEarnedInterest = (calculationIntensity) => {
+          accounts.traditional401k.calculateInterestForYear(
             calculationIntensity,
-            force
+            fiscalData.taxYear
           );
         };
         break;
       case "roth":
         targetedAccount.getStartingBalance = () =>
           accounts.rothIra.startingBalance;
-        targetedAccount.endingBalance = () => accounts.rothIra.endingBalance();
+        targetedAccount.availableFunds = () =>
+          Math.max(
+            accounts.rothIra.endingBalanceForYear(fiscalData.taxYear),
+            0
+          );
         targetedAccount.deposit = (v) => {
-          accounts.rothIra.deposits = +v;
-          expenditureTracker.depositsMade.toRoth += v;
+          accounts.rothIra.deposit(
+            v,
+            TransactionType.DEPOSIT,
+            fiscalData.taxYear
+          );
         };
         targetedAccount.withdraw = (v) => {
-          const amountToWithdraw = Math.min(
-            accounts.rothIra.endingBalance(),
-            v
+          return accounts.rothIra.withdrawal(
+            v,
+            TransactionType.WITHDRAWAL,
+            fiscalData.taxYear
           );
-          accounts.rothIra.withdrawals += amountToWithdraw;
-          expenditureTracker.withdrawalsMade.fromRoth += amountToWithdraw;
         };
-        targetedAccount.calculateEarnedInterest = (
-          calculationIntensity,
-          force
-        ) => {
-          accounts.rothIra.calculateInterest(calculationIntensity, force);
+        targetedAccount.calculateEarnedInterest = (calculationIntensity) => {
+          accounts.rothIra.calculateInterestForYear(
+            calculationIntensity,
+            fiscalData.taxYear
+          );
         };
         break;
       default:
@@ -193,31 +196,27 @@ function withdrawalFactoryJS_createWithdrawalFactory(
 
     // Withdrawal amount to be determined
     if (accountType === "401k") {
+      if (retirementAccountIncomeRecognized) return; // already processed a 401k withdrawal this year
+
       // Because taxes are calculated based on this withdrawal, even if there is no 401k balance left to withdraw from,
       // we still need to run the tax calculation to determine the correct tax impact of other income sources.
       // However, if there is no balance, we can't withdraw anything, so we skip the withdrawal step.
       // The tax calculation will still be performed below.
 
-      const available401kBalance = Math.max(
-        targetedAccount.endingBalance(),
-        0
+      const available401kBalance = Math.min(
+        targetedAccount.availableFunds() - incomeStreams.rmd,
+        amount
       ).asCurrency();
 
       const ideal401kWithdrawal =
         retirementJS_determine401kWithdrawalToHitNetTargetOf(
-          expenditureTracker.shortfall(),
+          amount,
           fixedIncomeFactors
         );
 
-      ideal401kWithdrawal.withdrawalNeeded = Math.max(
-        ideal401kWithdrawal.withdrawalNeeded - incomeStreams.rmd,
-        0
-      ).asCurrency();
-
-      // Only take what is available in the 401k account
-      const amtOf401kToWithdraw = Math.min(
-        ideal401kWithdrawal.withdrawalNeeded,
-        available401kBalance
+      const actual401kWithdrawal = Math.min(
+        available401kBalance,
+        ideal401kWithdrawal.withdrawalNeeded
       ).asCurrency();
 
       // Calculate actual net using the sophisticated tax calculation
@@ -225,29 +224,41 @@ function withdrawalFactoryJS_createWithdrawalFactory(
         ssBreakdown: {},
         incomeBreakdown: {},
         ...retirementJS_calculateIncomeWhen401kWithdrawalIs(
-          amtOf401kToWithdraw,
+          actual401kWithdrawal,
           fixedIncomeFactors
         ),
       };
 
-      targetedAccount.withdraw(amtOf401kToWithdraw);
       targetedAccount.withdraw(incomeStreams.rmd);
-    } else {
-      // Savings or Roth withdrawal (no tax impact)
+      targetedAccount.withdraw(actual401kWithdrawal);
+      depositIntoSavings(
+        incomeResults.incomeBreakdown.netIncomeLessEarnedInterest()
+      );
+
+      retirementAccountIncomeRecognized = true;
+    } else if (accountType === "savings") {
+      if (savingsAccountIncomeRecognized) return; // already processed a savings withdrawal this year
 
       // Check if retirementAccountIncome has already been calculated by a previous withdrawal
-      const retirementAcctIncomeHasBeenRecognized =
-        incomeResults.incomeBreakdown.retirementAccountWithdrawal > 0;
       const retirementAcctIncomeHasNotYetBeenRecognized =
-        !retirementAcctIncomeHasBeenRecognized;
+        !retirementAccountIncomeRecognized;
 
       if (retirementAcctIncomeHasNotYetBeenRecognized) {
+        // split the amount equally between savings and 401k for tax efficiency
+        const halfAmount = (amount / 2).asCurrency();
+
+        // Can savings cover the entire desiredSpend?
+        const availableSavings = Math.min(
+          accounts.savings.endingBalanceForYear(fiscalData.taxYear),
+          halfAmount
+        ).asCurrency();
+
         // We use tempIncomeData here because it's possible savings can't cover the entire desiredSpend
         // When that happens, we only want to reduce the desiredSpend by the amount withdrawn from savings/Roth
 
         const proposedIncomeWithRmdWithdrawals = {
           ...retirementJS_calculateIncomeWhen401kWithdrawalIs(
-            incomeStreams.rmd,
+            halfAmount,
             fixedIncomeFactors
           ),
         };
@@ -279,6 +290,8 @@ function withdrawalFactoryJS_createWithdrawalFactory(
           // Store the incomeData only if it hasn't been recognized yet
           incomeResults = { ...proposedIncomeWithRmdWithdrawals };
         }
+
+        retirementAccountIncomeRecognized = true;
       } else {
         // Retirement account income has been recognized
         // Reference previously recognized incomeData for calculating desired withdrawal
@@ -290,11 +303,31 @@ function withdrawalFactoryJS_createWithdrawalFactory(
         // Reduce the account balance by the net received amount
         targetedAccount.withdraw(withdrawalAmount);
       }
+
       targetedAccount.calculateEarnedInterest(
-        INTEREST_CALCULATION_INTENSITY.CONSERVATIVE,
+        INTEREST_CALCULATION_EPOCH.BEGINNING_OF_YEAR,
         true
       );
+    } else if (accountType === "roth") {
+      // Roth withdrawal (no tax impact)
+      const fundsNeeded = expenditureTracker.shortfall();
+      const fundsAvailable = targetedAccount.getStartingBalance();
+      // Determine how much to withdraw to meet the desired spend
+      withdrawalAmount = Math.min(fundsAvailable, fundsNeeded);
+
+      // Reduce the account balance by the net received amount
+      targetedAccount.withdraw(withdrawalAmount);
+
+      targetedAccount.calculateEarnedInterest(
+        INTEREST_CALCULATION_EPOCH.BEGINNING_OF_YEAR,
+        true
+      );
+    } else {
+      console.error("Unsupported account type:", accountType);
+      return;
     }
+
+    // Update incomeResults if not already done for this year
   }
 
   // Populate the result object

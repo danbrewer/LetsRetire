@@ -116,151 +116,71 @@ function calc() {
     lastCurrentAge = inputs.currentAge;
   }
 
-  const interestCalculator = {
-    calculateInterest: (account, calculationIntensity, force) => {
-      if (force) {
-        account.deposits -= account.interestCalculations._interestEarned; // Remove previously calculated interest
-        account.interestCalculations._interestEarned = 0; // Reset to force recalculation
-      }
+  // const interestCalculator = {
+  //   calculateInterest: (account, calculationIntensity, force) => {
+  //     if (force) {
+  //       account.deposits -= account.interestCalculations._interestEarned; // Remove previously calculated interest
+  //       account.interestCalculations._interestEarned = 0; // Reset to force recalculation
+  //     }
 
-      if (account.interestCalculations._interestEarned != 0) {
-        if (
-          account.interestCalculations._interestCalculationIntensity ===
-          calculationIntensity
-        ) {
-          return account.interestCalculations._interestEarned;
-        }
-        account.deposits -= account.interestCalculations._interestEarned; // Remove previously calculated interest
-      } // Already calculated
+  //     if (account.interestCalculations._interestEarned != 0) {
+  //       if (
+  //         account.interestCalculations._interestCalculationIntensity ===
+  //         calculationIntensity
+  //       ) {
+  //         return account.interestCalculations._interestEarned;
+  //       }
+  //       account.deposits -= account.interestCalculations._interestEarned; // Remove previously calculated interest
+  //     } // Already calculated
 
-      let earnedInterest = 0;
-      account.interestCalculations._interestCalculationIntensity =
-        calculationIntensity;
-      switch (calculationIntensity) {
-        case INTEREST_CALCULATION_INTENSITY.AGGRESSIVE:
-          earnedInterest = (
-            account.startingBalance * account.interestCalculations._growthRate
-          ).asCurrency();
-          account.interestCalculations._interestCalculationMethod = `startingBalance * growthRate: ${account.startingBalance} * ${account.interestCalculations._growthRate}`;
-          break;
-        case INTEREST_CALCULATION_INTENSITY.MODERATE:
-          // use the average of starting and ending balance
-          earnedInterest = (
-            ((account.endingBalance() + account.startingBalance) / 2) *
-            account.interestCalculations._growthRate
-          ).asCurrency();
-          account.interestCalculations._interestCalculationMethod = `(endingBalance + startingBalance) / 2 * growthRate: ${account.endingBalance()} + ${account.startingBalance} / 2 * ${account.interestCalculations._growthRate}`;
-          break;
-        case INTEREST_CALCULATION_INTENSITY.CONSERVATIVE:
-        default:
-          account.interestCalculations._interestCalculationIntensity =
-            INTEREST_CALCULATION_INTENSITY.CONSERVATIVE;
-          earnedInterest = (
-            (account.startingBalance - account.withdrawals) *
-            account.interestCalculations._growthRate
-          ).asCurrency();
-          account.interestCalculations._interestCalculationMethod = `(startingBalance - withdrawals) * growthRate: ${account.startingBalance} - ${account.withdrawals} * ${account.interestCalculations._growthRate}`;
-          break;
-      }
-      account.interestCalculations._interestEarned = earnedInterest;
-      account.deposits += earnedInterest;
-    },
-  };
+  //     let earnedInterest = 0;
+  //     account.interestCalculations._interestCalculationIntensity =
+  //       calculationIntensity;
+  //     switch (calculationIntensity) {
+  //       case INTEREST_CALCULATION_EPOCH.END_OF_YEAR:
+  //         earnedInterest = (
+  //           account.startingBalance * account.interestCalculations._growthRate
+  //         ).asCurrency();
+  //         account.interestCalculations._interestCalculationMethod = `startingBalance * growthRate: ${account.startingBalance} * ${account.interestCalculations._growthRate}`;
+  //         break;
+  //       case INTEREST_CALCULATION_EPOCH.MID_YEAR:
+  //         // use the average of starting and ending balance
+  //         earnedInterest = (
+  //           ((account.endingBalance() + account.startingBalance) / 2) *
+  //           account.interestCalculations._growthRate
+  //         ).asCurrency();
+  //         account.interestCalculations._interestCalculationMethod = `(endingBalance + startingBalance) / 2 * growthRate: ${account.endingBalance()} + ${account.startingBalance} / 2 * ${account.interestCalculations._growthRate}`;
+  //         break;
+  //       case INTEREST_CALCULATION_EPOCH.BEGINNING_OF_YEAR:
+  //       default:
+  //         account.interestCalculations._interestCalculationIntensity =
+  //           INTEREST_CALCULATION_EPOCH.BEGINNING_OF_YEAR;
+  //         earnedInterest = (
+  //           (account.startingBalance - account.withdrawals) *
+  //           account.interestCalculations._growthRate
+  //         ).asCurrency();
+  //         account.interestCalculations._interestCalculationMethod = `(startingBalance - withdrawals) * growthRate: ${account.startingBalance} - ${account.withdrawals} * ${account.interestCalculations._growthRate}`;
+  //         break;
+  //     }
+  //     account.interestCalculations._interestEarned = earnedInterest;
+  //     account.deposits += earnedInterest;
+  //   },
+  // };
 
   // Initialize balances object for tracking
   const accounts = {
-    traditional401k: {
+    traditional401k: new Account({
       startingBalance: inputs.trad401k,
-      withdrawals: 0,
-      deposits: 0,
-      endingBalance() {
-        return this.startingBalance + this.deposits - this.withdrawals;
-      },
-      interestEarned() {
-        return this.interestCalculations._interestEarned;
-      },
-      calculateInterest(calculationIntensity, force) {
-        return interestCalculator.calculateInterest(
-          this,
-          calculationIntensity,
-          force
-        );
-      },
-      interestCalculations: {
-        _growthRate: inputs.retSavings,
-        _interestCalculationIntensity: null,
-        _interestCalculationMethod: null,
-        _interestEarned: 0,
-      },
-    },
-    rothIra: {
+      interestRate: inputs.retSavings,
+    }),
+    rothIra: new Account({
       startingBalance: inputs.rothIRA,
-      withdrawals: 0,
-      deposits: 0,
-      endingBalance() {
-        return this.startingBalance + this.deposits - this.withdrawals;
-      },
-      interestEarned() {
-        return this.interestCalculations._interestEarned;
-      },
-      calculateInterest(calculationIntensity, force) {
-        return interestCalculator.calculateInterest(
-          this,
-          calculationIntensity,
-          force
-        );
-      },
-      interestCalculations: {
-        _growthRate: inputs.retSavings,
-        _interestCalculationIntensity: null,
-        _interestCalculationMethod: null,
-        _interestEarned: 0,
-      },
-    },
-    savings: {
+      interestRate: inputs.retSavings,
+    }),
+    savings: new Account({
       startingBalance: inputs.savings,
-      withdrawals: 0,
-      deposits: 0,
-      endingBalance() {
-        return this.startingBalance + this.deposits - this.withdrawals;
-      },
-      interestEarned() {
-        return this.interestCalculations._interestEarned;
-      },
-      calculateInterest(calculationIntensity, force) {
-        return interestCalculator.calculateInterest(
-          this,
-          calculationIntensity,
-          force
-        );
-      },
-      interestCalculations: {
-        _growthRate: inputs.retSavings,
-        _interestCalculationIntensity: null,
-        _interestCalculationMethod: null,
-        _interestEarned: 0,
-      },
-    },
-    rollForward() {
-      this.traditional401k.startingBalance =
-        this.traditional401k.endingBalance();
-      this.rothIra.startingBalance = this.rothIra.endingBalance();
-      this.savings.startingBalance = this.savings.endingBalance();
-      this.traditional401k.withdrawals = 0;
-      this.traditional401k.deposits = 0;
-      this.rothIra.withdrawals = 0;
-      this.rothIra.deposits = 0;
-      this.savings.withdrawals = 0;
-      this.savings.deposits = 0;
-      this.traditional401k.interestCalculations._interestEarned = 0;
-      this.rothIra.interestCalculations._interestEarned = 0;
-      this.savings.interestCalculations._interestEarned = 0;
-      this.traditional401k.interestCalculations._interestCalculationIntensity =
-        null;
-      this.rothIra.interestCalculations._interestCalculationIntensity = null;
-      this.savings.interestCalculations._interestCalculationIntensity = null;
-      return "void";
-    },
+      interestRate: inputs.retSavings,
+    }),
   };
 
   // Reset calculations array
@@ -272,6 +192,8 @@ function calc() {
 
   // Working years
   for (let y = 0; y < inputs.totalWorkingYears; y++) {
+    generateYearlyIndexedInputValues(inputs, y);
+
     const yearData = calculateWorkingYearData(
       inputs,
       y,
@@ -291,9 +213,10 @@ function calc() {
 
     // Update salary for next year
     currentSalary *= 1 + inputs.salaryGrowth;
-    accounts.rollForward();
+    // accounts.rollForward();
   }
 
+  debugger;
   // Setup retirement years; calculate initial benefit amounts
   const initialBenefits = calculateInitialBenefitAmounts(inputs);
   let ssAnnual = initialBenefits.ssAnnual;
@@ -303,10 +226,12 @@ function calc() {
 
   // Retirement years
   for (
-    let retirementYear = 0;
-    retirementYear < inputs.totalLivingYears - inputs.totalWorkingYears;
-    retirementYear++
+    let yearIndex = 0;
+    yearIndex < inputs.totalLivingYears - inputs.totalWorkingYears;
+    yearIndex++
   ) {
+    generateYearlyIndexedInputValues(inputs, yearIndex);
+
     const benefitAmounts = {
       ssAnnual,
       penAnnual,
@@ -315,7 +240,6 @@ function calc() {
     };
     const yearData = calculateRetirementYearData(
       inputs,
-      retirementYear,
       accounts,
       benefitAmounts
     );
@@ -323,7 +247,7 @@ function calc() {
     yearData.accounts = { ...accounts };
 
     calculations.push({
-      year: new Date().getFullYear() + retirementYear,
+      year: new Date().getFullYear() + yearIndex,
       ...yearData,
     });
 
@@ -334,7 +258,6 @@ function calc() {
     }
 
     // Step next year: Apply COLAs to benefits
-    const age = yearData.age;
     if (age >= inputs.ssStartAge) ssAnnual *= 1 + inputs.ssCola;
     if (age >= inputs.penStartAge && inputs.penMonthly > 0)
       penAnnual *= 1 + inputs.penCola;
@@ -360,7 +283,7 @@ function calc() {
     ).asCurrency();
 
     inputs.spendAtRetire += annualIncreaseInSpending + annualDecreaseInSpending;
-    accounts.rollForward();
+    // accounts.rollForward();
   }
 
   // console.log("Calculations: ", calculations);
@@ -369,4 +292,28 @@ function calc() {
 
   // Generate final output
   generateOutputAndSummary(inputs, rows, totalTaxes, maxDrawdown);
+}
+
+// Helper to generate dynamic input values for a given year index
+function generateYearlyIndexedInputValues(inputs, yearIndex) {
+  const age = inputs.currentAge + inputs.totalWorkingYears + yearIndex;
+
+  inputs.yearIndex = yearIndex;
+  inputs.age = age;
+  inputs.spouseAge = inputs.hasSpouse
+    ? inputs.spouseAge + (age - (inputs.currentAge + inputs.totalWorkingYears))
+    : undefined;
+  inputs.retirementYear =
+    new Date().getFullYear() + inputs.totalWorkingYears + yearIndex;
+
+  inputs.additionalSpending = getSpendingOverride(age).asCurrency();
+  inputs.spend = inputs.spendingToday.adjustedForInflation(
+    inputs.inflation,
+    yearIndex
+  );
+
+  inputs.taxableIncomeAdjustment = getTaxableIncomeOverride(age).asCurrency();
+  inputs.taxFreeIncomeAdjustment = getTaxFreeIncomeOverride(age).asCurrency();
+  inputs.otherTaxableIncomeAdjustments =
+    getTaxableIncomeOverride(age).asCurrency();
 }

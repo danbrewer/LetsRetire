@@ -34,10 +34,7 @@ function calculateWorkingYearData(inputs, yearIndex, salary, accounts) {
     rothRateOfReturn: inputs.retRoth,
     taxYear: TAX_BASE_YEAR + yearIndex,
     yearIndex: yearIndex,
-    spend: inputs.spendingToday.adjustedForInflation(
-      inputs.inflation,
-      yearIndex
-    ),
+    spend: inputs.spend,
     actualSavingsContribution: 0,
     desiredSavingsContribution: (salary * inputs.taxablePct).asCurrency(),
     determineActualSavingsContribution(netIncome) {
@@ -120,19 +117,19 @@ function calculateWorkingYearData(inputs, yearIndex, salary, accounts) {
   // debugger;
   accounts.traditional401k.deposits += employmentInfo.cap401kContribution();
   accounts.traditional401k.calculateInterest(
-    INTEREST_CALCULATION_INTENSITY.MODERATE,
+    INTEREST_CALCULATION_EPOCH.MID_YEAR,
     false
   );
 
   accounts.savings.deposits += fiscalData.actualSavingsContribution;
   accounts.savings.calculateInterest(
-    INTEREST_CALCULATION_INTENSITY.MODERATE,
+    INTEREST_CALCULATION_EPOCH.MID_YEAR,
     false
   );
 
   accounts.rothIra.deposits += employmentInfo.capRothContribution();
   accounts.rothIra.calculateInterest(
-    INTEREST_CALCULATION_INTENSITY.MODERATE,
+    INTEREST_CALCULATION_EPOCH.MID_YEAR,
     false
   );
 

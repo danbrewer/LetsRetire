@@ -82,12 +82,7 @@ function calculateInitialBenefitAmounts(inputs) {
 /**
  * Calculate a given retirement year with proper SS taxation based on total income
  */
-function calculateRetirementYearData(
-  inputs,
-  yearIndex,
-  accounts,
-  benefitAmounts
-) {
+function calculateRetirementYearData(inputs, accounts, benefitAmounts) {
   // kill the logger for now
   LOG_LEVEL = 0;
 
@@ -119,18 +114,14 @@ function calculateRetirementYearData(
   };
 
   const demographics = {
-    yearIndex: yearIndex,
-    age: inputs.retireAge + yearIndex,
+    age: inputs.age,
     ssStartAge: inputs.ssStartAge,
     penStartAge: inputs.penStartAge,
-    retirementYear:
-      new Date().getFullYear() + inputs.totalWorkingYears + yearIndex,
+    retirementYear: inputs.retirementYear,
     isRetired: true,
     isWorking: false,
     hasSpouse: inputs.hasSpouse,
-    ageOfSpouse: inputs.hasSpouse
-      ? inputs.spouseAge + (inputs.retireAge + yearIndex - inputs.currentAge)
-      : undefined,
+    ageOfSpouse: inputs.spouseAge,
     ssStartAgeOfSpouse: inputs.hasSpouse ? inputs.spouseSsStartAge : undefined,
     penStartAgeOfSpouse: inputs.hasSpouse
       ? inputs.spousePenStartAge
@@ -149,7 +140,7 @@ function calculateRetirementYearData(
     spouseEligibleForPension() {
       return this.hasSpouse && this.ageOfSpouse >= this.penStartAgeOfSpouse;
     },
-    _description: `Retirement Year ${this.yearIndex + 1} (Age ${this.age}) (Year ${this.retirementYear})`,
+    _description: `Retirement Year ${inputs.yearIndex + 1} (Age ${this.age}) (Year ${this.retirementYear})`,
   };
 
   // if (demographics.age == 65) debugger;
@@ -161,20 +152,20 @@ function calculateRetirementYearData(
     retirementAccountRateOfReturn: inputs.ret401k,
     rothRateOfReturn: inputs.retRoth,
     savingsRateOfReturn: inputs.retSavings,
-    taxYear: TAX_BASE_YEAR + yearIndex,
-    yearIndex: yearIndex,
-    spend: inputs.spendingToday.adjustedForInflation(
-      inputs.inflation,
-      yearIndex
-    ),
+    taxYear: TAX_BASE_YEAR + inputs.yearIndex,
+    yearIndex: inputs.yearIndex,
+    spend: inputs.spend,
   };
 
   const incomeStreams = {
     _description: "Income",
     myPension: demographics.eligibleForPension() ? benefitAmounts.penAnnual : 0,
-    reportedEarnedInterest: (
-      accounts.savings.startingBalance * inputs.retSavings
-    ).asCurrency(),
+    reportedEarnedInterest: accounts.savings
+      .calculateInterestForYear(
+        INTEREST_CALCULATION_EPOCH.BEGINNING_OF_YEAR,
+        fiscalData.taxYear
+      )
+      .asCurrency(),
     spousePension: 0,
     mySs: demographics.eligibleForSs() ? benefitAmounts.ssAnnual : 0,
     spouseSs: demographics.spouseEligibleForSs()
@@ -185,9 +176,9 @@ function calculateRetirementYearData(
       demographics.age,
       accounts.traditional401k.startingBalance
     ),
-    taxableIncomeAdjustment: getTaxableIncomeOverride(demographics.age),
-    taxFreeIncomeAdjustment: getTaxFreeIncomeOverride(demographics.age),
-    otherTaxableIncomeAdjustments: getTaxableIncomeOverride(demographics.age),
+    taxableIncomeAdjustment: inputs.taxableIncomeAdjustment,
+    taxFreeIncomeAdjustment: inputs.taxFreeIncomeAdjustment,
+    otherTaxableIncomeAdjustments: inputs.otherTaxableIncomeAdjustments,
     totalIncome() {
       return (
         this.myPension +
@@ -241,7 +232,7 @@ function calculateRetirementYearData(
   const expenditureTracker = {
     _description: "Expenditures Breakdown",
     budgeted: inputs.spendAtRetire,
-    additionalSpending: getSpendingOverride(demographics.age).asCurrency(),
+    additionalSpending: inputs.additionalSpending,
     withdrawalsMade: {
       fromSavings: 0,
       from401k: 0,
@@ -275,23 +266,20 @@ function calculateRetirementYearData(
   for (const accountType of inputs.order) {
     if (expenditureTracker.shortfall() == 0) break;
 
-    withdrawalFactory.withdrawFromTargetedAccount(
-      accountType,
-      expenditureTracker
-    );
+    withdrawalFactory.withdrawFromTargetedAccount(accountType);
   }
 
   // In case interest hasn't already been calculated, do it now
   accounts.traditional401k.calculateInterest(
-    INTEREST_CALCULATION_INTENSITY.CONSERVATIVE,
+    INTEREST_CALCULATION_EPOCH.BEGINNING_OF_YEAR,
     false
   );
   accounts.rothIra.calculateInterest(
-    INTEREST_CALCULATION_INTENSITY.CONSERVATIVE,
+    INTEREST_CALCULATION_EPOCH.BEGINNING_OF_YEAR,
     false
   );
   accounts.savings.calculateInterest(
-    INTEREST_CALCULATION_INTENSITY.CONSERVATIVE,
+    INTEREST_CALCULATION_EPOCH.BEGINNING_OF_YEAR,
     false
   );
 
