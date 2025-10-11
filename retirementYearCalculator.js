@@ -162,7 +162,7 @@ function calculateRetirementYearData(inputs, accounts, benefitAmounts) {
     myPension: demographics.eligibleForPension() ? benefitAmounts.penAnnual : 0,
     reportedEarnedInterest: accounts.savings
       .calculateInterestForYear(
-        INTEREST_CALCULATION_EPOCH.BEGINNING_OF_YEAR,
+        INTEREST_CALCULATION_EPOCH.STARTING_BALANCE,
         fiscalData.taxYear
       )
       .asCurrency(),
@@ -269,18 +269,30 @@ function calculateRetirementYearData(inputs, accounts, benefitAmounts) {
     withdrawalFactory.withdrawFromTargetedAccount(accountType);
   }
 
-  // In case interest hasn't already been calculated, do it now
-  accounts.traditional401k.calculateInterest(
-    INTEREST_CALCULATION_EPOCH.BEGINNING_OF_YEAR,
-    false
+  // Deposit interest earned into accounts
+  accounts.traditional401k.deposit(
+    accounts.traditional401k.calculateInterestForYear(
+      INTEREST_CALCULATION_EPOCH.IGNORE_DEPOSITS,
+      false
+    ),
+    "interest",
+    fiscalData.taxYear
   );
-  accounts.rothIra.calculateInterest(
-    INTEREST_CALCULATION_EPOCH.BEGINNING_OF_YEAR,
-    false
+  accounts.rothIra.deposit(
+    accounts.rothIra.calculateInterestForYear(
+      INTEREST_CALCULATION_EPOCH.IGNORE_DEPOSITS,
+      false
+    ),
+    "interest",
+    fiscalData.taxYear
   );
-  accounts.savings.calculateInterest(
-    INTEREST_CALCULATION_EPOCH.BEGINNING_OF_YEAR,
-    false
+  accounts.savings.deposit(
+    accounts.savings.calculateInterestForYear(
+      INTEREST_CALCULATION_EPOCH.IGNORE_DEPOSITS,
+      false
+    ),
+    "interest",
+    fiscalData.taxYear
   );
 
   const incomeResults = {

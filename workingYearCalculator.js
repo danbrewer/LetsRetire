@@ -116,20 +116,20 @@ function calculateWorkingYearData(inputs, yearIndex, salary, accounts) {
   // **************
   // debugger;
   accounts.traditional401k.deposits += employmentInfo.cap401kContribution();
-  accounts.traditional401k.calculateInterest(
-    INTEREST_CALCULATION_EPOCH.MID_YEAR,
+  accounts.traditional401k.calculateInterestForYear(
+    INTEREST_CALCULATION_EPOCH.AVERAGE_BALANCE,
     false
   );
 
   accounts.savings.deposits += fiscalData.actualSavingsContribution;
-  accounts.savings.calculateInterest(
-    INTEREST_CALCULATION_EPOCH.MID_YEAR,
+  accounts.savings.calculateInterestForYear(
+    INTEREST_CALCULATION_EPOCH.AVERAGE_BALANCE,
     false
   );
 
   accounts.rothIra.deposits += employmentInfo.capRothContribution();
-  accounts.rothIra.calculateInterest(
-    INTEREST_CALCULATION_EPOCH.MID_YEAR,
+  accounts.rothIra.calculateInterestForYear(
+    INTEREST_CALCULATION_EPOCH.AVERAGE_BALANCE,
     false
   );
 
@@ -286,9 +286,11 @@ function calculateWorkingYearData(inputs, yearIndex, salary, accounts) {
     grossTaxableIncome: 0,
   };
 
-  balances.savings = accounts.savings.endingBalance();
-  balances.traditional401k = accounts.traditional401k.endingBalance();
-  balances.rothIra = accounts.rothIra.endingBalance();
+  balances.savings = accounts.savings.endingBalanceForYear(fiscalData.taxYear);
+  balances.traditional401k = accounts.traditional401k.endingBalanceForYear(
+    fiscalData.taxYear
+  );
+  balances.rothIra = accounts.rothIra.endingBalanceForYear(fiscalData.taxYear);
 
   totals.totalIncome = income.getAllIncomeSources();
   totals.totalNetIncome = income.getNetIncome();
@@ -330,7 +332,7 @@ function calculateWorkingYearData(inputs, yearIndex, salary, accounts) {
     deposits: accounts.savings.deposits,
     taxFreeIncomeDeposit: income.taxFreeIncomeAdjustment,
     interestEarned: accounts.savings.interestEarned,
-    endingBalance: accounts.savings.endingBalance(),
+    endingBalance: accounts.savings.endingBalanceForYear(fiscalData.taxYear),
     growthRate: fiscalData.annualReturnRate * 100,
     calculationDetails: [
       withLabel("savings", accounts.savings),

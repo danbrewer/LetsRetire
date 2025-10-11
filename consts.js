@@ -39,7 +39,9 @@ const EMPLOYEE_401K_LIMIT_2025 = 23000; // elective deferral
 const EMPLOYEE_401K_CATCHUP_50 = 7500; // catch-up age 50+
 
 const INTEREST_CALCULATION_EPOCH = {
-  BEGINNING_OF_YEAR: "beginning", // based on starting balance
-  MID_YEAR: "mid", // based on average of starting and ending balances
-  END_OF_YEAR: "end", // based on ending balance
+  STARTING_BALANCE: "beginning", // based on starting balance
+  IGNORE_DEPOSITS: "ignore_deposits", // based on starting balance - withdrawals
+  IGNORE_WITHDRAWALS: "ignore_withdrawals", // based on starting balance + deposits
+  AVERAGE_BALANCE: "average", // based on average of starting and ending balances
+  ENDING_BALANCE: "end", // based on ending balance
 };

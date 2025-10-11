@@ -279,6 +279,30 @@ Object.defineProperty(Object.prototype, "dump", {
         }
       }
     }
+
+    // ===================================================
+    // 🔍 NEW SECTION: Include getters from prototype
+    // ===================================================
+    const proto = Object.getPrototypeOf(this);
+    if (proto && proto !== Object.prototype) {
+      const props = Object.getOwnPropertyDescriptors(proto);
+
+      for (const [key, desc] of Object.entries(props)) {
+        if (key === "constructor") continue;
+        if (typeof desc.get === "function") {
+          try {
+            const value = this[key];
+            console.log(
+              `${indent}- ${key.padEnd(colWidth)} ${alignValue(value, colWidth)}`
+            );
+          } catch (e) {
+            console.log(
+              `${indent}- ${key.padEnd(colWidth)} [getter threw: ${e?.message ?? e}]`
+            );
+          }
+        }
+      }
+    }
   },
 });
 

@@ -91,20 +91,32 @@ class Account {
   calculateInterestForYear(intensity, yyyy) {
     let interestEarned = 0;
     switch (intensity) {
-      case INTEREST_CALCULATION_EPOCH.BEGINNING_OF_YEAR:
+      case INTEREST_CALCULATION_EPOCH.STARTING_BALANCE:
         interestEarned = (
           this.#startingBalanceForYear(yyyy) * this.interestRate
         ).asCurrency();
         break;
-      case INTEREST_CALCULATION_EPOCH.MID_YEAR:
+      case INTEREST_CALCULATION_EPOCH.IGNORE_DEPOSITS:
         interestEarned = (
-          ((this.#endingBalanceForYear(yyyy) -
+          (this.#startingBalanceForYear(yyyy) - this.withdrawalsForYear(yyyy)) *
+          this.interestRate
+        ).asCurrency();
+        break;
+      case INTEREST_CALCULATION_EPOCH.IGNORE_WITHDRAWALS:
+        interestEarned = (
+          (this.#startingBalanceForYear(yyyy) + this.depositsForYear(yyyy)) *
+          this.interestRate
+        ).asCurrency();
+        break;
+      case INTEREST_CALCULATION_EPOCH.AVERAGE_BALANCE:
+        interestEarned = (
+          ((this.#endingBalanceForYear(yyyy) +
             this.#startingBalanceForYear(yyyy)) /
             2) *
           this.interestRate
         ).asCurrency();
         break;
-      case INTEREST_CALCULATION_EPOCH.END_OF_YEAR:
+      case INTEREST_CALCULATION_EPOCH.ENDING_BALANCE:
         interestEarned = (
           this.#endingBalanceForYear(yyyy) * this.interestRate
         ).asCurrency();

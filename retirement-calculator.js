@@ -167,20 +167,16 @@ function calc() {
   //   },
   // };
 
+  debugger;
   // Initialize balances object for tracking
   const accounts = {
-    traditional401k: new Account({
-      startingBalance: inputs.trad401k,
-      interestRate: inputs.retSavings,
-    }),
-    rothIra: new Account({
-      startingBalance: inputs.rothIRA,
-      interestRate: inputs.retSavings,
-    }),
-    savings: new Account({
-      startingBalance: inputs.savings,
-      interestRate: inputs.retSavings,
-    }),
+    traditional401k: new Account(
+      "Traditional 401k",
+      inputs.trad401k,
+      inputs.ret401k
+    ),
+    rothIra: new Account("Roth IRA", inputs.rothIRA, inputs.retRoth),
+    savings: new Account("Savings", inputs.savings, inputs.retSavings),
   };
 
   // Reset calculations array
@@ -216,13 +212,12 @@ function calc() {
     // accounts.rollForward();
   }
 
-  debugger;
   // Setup retirement years; calculate initial benefit amounts
   const initialBenefits = calculateInitialBenefitAmounts(inputs);
-  let ssAnnual = initialBenefits.ssAnnual;
-  let penAnnual = initialBenefits.penAnnual;
-  let spouseSsAnnual = initialBenefits.spouseSsAnnual;
-  let spousePenAnnual = initialBenefits.spousePenAnnual;
+  let ssYearlyIndexed = initialBenefits.ssAnnual;
+  let penYearlyIndexed = initialBenefits.penAnnual;
+  let spouseSsYearlyIndexed = initialBenefits.spouseSsAnnual;
+  let spousePenYearlyIndexed = initialBenefits.spousePenAnnual;
 
   // Retirement years
   for (
@@ -233,10 +228,10 @@ function calc() {
     generateYearlyIndexedInputValues(inputs, yearIndex);
 
     const benefitAmounts = {
-      ssAnnual,
-      penAnnual,
-      spouseSsAnnual,
-      spousePenAnnual,
+      ssAnnual: ssYearlyIndexed,
+      penAnnual: penYearlyIndexed,
+      spouseSsAnnual: spouseSsYearlyIndexed,
+      spousePenAnnual: spousePenYearlyIndexed,
     };
     const yearData = calculateRetirementYearData(
       inputs,
@@ -258,19 +253,19 @@ function calc() {
     }
 
     // Step next year: Apply COLAs to benefits
-    if (age >= inputs.ssStartAge) ssAnnual *= 1 + inputs.ssCola;
+    if (age >= inputs.ssStartAge) ssYearlyIndexed *= 1 + inputs.ssCola;
     if (age >= inputs.penStartAge && inputs.penMonthly > 0)
-      penAnnual *= 1 + inputs.penCola;
+      penYearlyIndexed *= 1 + inputs.penCola;
 
     if (inputs.hasSpouse) {
       const spouseCurrentAge = inputs.spouseAge + (age - inputs.currentAge);
       if (spouseCurrentAge >= inputs.spouseSsStartAge)
-        spouseSsAnnual *= 1 + inputs.spouseSsCola;
+        spouseSsYearlyIndexed *= 1 + inputs.spouseSsCola;
       if (
         spouseCurrentAge >= inputs.spousePenStartAge &&
         inputs.spousePenMonthly > 0
       )
-        spousePenAnnual *= 1 + inputs.spousePenCola;
+        spousePenYearlyIndexed *= 1 + inputs.spousePenCola;
     }
 
     const annualIncreaseInSpending = (

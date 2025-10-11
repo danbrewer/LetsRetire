@@ -305,7 +305,7 @@ function withdrawalFactoryJS_createWithdrawalFactory(
       }
 
       targetedAccount.calculateEarnedInterest(
-        INTEREST_CALCULATION_EPOCH.BEGINNING_OF_YEAR,
+        INTEREST_CALCULATION_EPOCH.STARTING_BALANCE,
         true
       );
     } else if (accountType === "roth") {
@@ -319,7 +319,7 @@ function withdrawalFactoryJS_createWithdrawalFactory(
       targetedAccount.withdraw(withdrawalAmount);
 
       targetedAccount.calculateEarnedInterest(
-        INTEREST_CALCULATION_EPOCH.BEGINNING_OF_YEAR,
+        INTEREST_CALCULATION_EPOCH.STARTING_BALANCE,
         true
       );
     } else {
