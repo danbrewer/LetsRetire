@@ -128,6 +128,9 @@ function calculateRetirementYearData(inputs, accounts, benefitAmounts) {
       : undefined,
     filingStatus: inputs.filingStatus,
     useRmd: inputs.useRMD,
+    useSavings: inputs.useSavings,
+    useTrad401k: inputs.useTrad401k,
+    useRoth: inputs.useRoth,
     eligibleForSs() {
       return this.age >= this.ssStartAge;
     },
@@ -229,44 +232,79 @@ function calculateRetirementYearData(inputs, accounts, benefitAmounts) {
     accounts
   );
 
-  const expenditureTracker = {
-    _description: "Expenditures Breakdown",
-    budgeted: inputs.spendAtRetire,
-    additionalSpending: inputs.additionalSpending,
-    withdrawalsMade: {
-      fromSavings: 0,
-      from401k: 0,
-      fromRoth: 0,
-      total() {
-        return (this.fromSavings + this.from401k + this.fromRoth).asCurrency();
-      },
-    },
-    depositsMade: {
-      toSavings: 0,
-      to401k: 0,
-      toRoth: 0,
-      total() {
-        return this.toSavings + this.to401k + this.toRoth;
-      },
-    },
-    totalBudgeted() {
-      return (this.budgeted + this.additionalSpending).asCurrency();
-    },
-    actualExpenditures() {
-      return this.withdrawalsMade.total().asCurrency();
-    },
-    shortfall() {
-      return Math.max(0, this.totalBudgeted() - this.actualExpenditures());
-    },
-  };
+  // const expenditureTracker = {
+  //   _description: "Expenditures Breakdown",
+  //   budgeted: inputs.spendAtRetire,
+  //   additionalSpending: inputs.additionalSpending,
+  //   withdrawalsMade: {
+  //     fromSavings: 0,
+  //     from401k: 0,
+  //     fromRoth: 0,
+  //     total() {
+  //       return (this.fromSavings + this.from401k + this.fromRoth).asCurrency();
+  //     },
+  //   },
+  //   depositsMade: {
+  //     toSavings: 0,
+  //     to401k: 0,
+  //     toRoth: 0,
+  //     total() {
+  //       return this.toSavings + this.to401k + this.toRoth;
+  //     },
+  //   },
+  //   totalBudgeted() {
+  //     return (this.budgeted + this.additionalSpending).asCurrency();
+  //   },
+  //   actualExpenditures() {
+  //     return this.withdrawalsMade.total().asCurrency();
+  //   },
+  //   shortfall() {
+  //     return Math.max(0, this.totalBudgeted() - this.actualExpenditures());
+  //   },
+  // };
   // At this point we have gross income from pensions and taxable interest,
   // and we know the fixed portion of taxable income
   // We need to withdraw enough from accounts to meet the spend.total() need after taxes
   // We will use the withdrawal functions to handle tax calculations and account balance updates
+  debugger;
+  let spend = (inputs.spendAtRetire + inputs.additionalSpending).asCurrency();
+  let remainingSpend = spend;
   for (const accountType of inputs.order) {
-    if (expenditureTracker.shortfall() == 0) break;
+    if (remainingSpend <= 0) break;
 
-    withdrawalFactory.withdrawFromTargetedAccount(accountType);
+    let thisSpend = spend;
+    switch (accountType) {
+      case ACCOUNT_TYPES.TRADITIONAL_401K:
+        thisSpend *= 0.6;
+        break;
+      case ACCOUNT_TYPES.SAVINGS:
+        thisSpend *= 0.3;
+        break;
+      case ACCOUNT_TYPES.ROTH_IRA:
+        thisSpend *= 0.1;
+        break;
+    }
+
+    let amountWithdrawn = withdrawalFactory.withdrawFromTargetedAccount(
+      thisSpend,
+      accountType
+    );
+    remainingSpend -= amountWithdrawn;
+  }
+
+  // if anything hasn't already been accounted for, try taking it from Savings
+  if (remainingSpend > 0) {
+    remainingSpend = withdrawalFactory.withdrawFromTargetedAccount(
+      remainingSpend,
+      ACCOUNT_TYPES.SAVINGS
+    );
+  }
+
+  if (remainingSpend > 0) {
+    remainingSpend = withdrawalFactory.withdrawFromTargetedAccount(
+      remainingSpend,
+      ACCOUNT_TYPES.TRADITIONAL_401K
+    );
   }
 
   // Deposit interest earned into accounts

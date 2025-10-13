@@ -1,7 +1,7 @@
 // Include retirement.js as module
 const {
   log,
-  retirementJS_determine401kWithdrawalToHitNetTargetOf,
+  retirementJS_determine401kWithdrawalsToHitNetTargetOf,
   retirementJS_getTaxBrackets,
   retirementJS_getStandardDeduction,
   constsJS_FILING_STATUS,
@@ -106,7 +106,7 @@ const opts = {
   brackets,
 };
 
-const result = retirementJS_determine401kWithdrawalToHitNetTargetOf(
+const result = retirementJS_determine401kWithdrawalsToHitNetTargetOf(
   targetSpend_LessSavings,
   opts
 );

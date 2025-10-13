@@ -1,49 +1,54 @@
 class Transaction {
   #amount = 0;
-  #type = null;
-  #description = null;
+  #transactionType = null;
+  #category = null;
   #date = null;
 
   get amount() {
     return this.#amount;
   }
 
-  get type() {
-    return this.#type;
+  get transactionType() {
+    return this.#transactionType;
   }
 
-  get description() {
-    return this.#description;
+  get category() {
+    return this.#category;
   }
 
   get date() {
     return this.#date;
   }
 
-  constructor({ amount = 0, description, type, date = new Date() } = {}) {
-    if (!Object.values(TransactionType).includes(type)) {
+  constructor({
+    amount = 0,
+    transactionType,
+    category,
+    date = new Date(),
+  } = {}) {
+    if (!Object.values(TRANSACTION_TYPE).includes(transactionType)) {
       throw new Error(
-        `Invalid type: ${type}. Must be "deposit" or "withdrawal".`
+        `Invalid transaction type: ${transactionType}. Must be one of ${Object.values(TRANSACTION_TYPE).join(", ")}.`
       );
     }
-    if (!Object.values(TransactionDescriptions).includes(description)) {
+    if (!Object.values(TRANSACTION_CATEGORY).includes(category)) {
       throw new Error(
-        `Invalid description: ${description}. Must be one of ${Object.values(TransactionDescriptions).join(", ")}.`
+        `Invalid category: ${category}. Must be one of ${Object.values(TRANSACTION_CATEGORY).join(", ")}.`
       );
     }
-    this.amount = amount;
-    this.type = type;
-    this.description = description;
-    this.date = date;
+    this.#amount = amount;
+    this.#transactionType = transactionType;
+    this.#category = category;
+    this.#date = date;
   }
 }
 
-const TransactionType = Object.freeze({
+const TRANSACTION_TYPE = Object.freeze({
   DEPOSIT: "deposit",
   WITHDRAWAL: "withdrawal",
 });
 
-const TransactionDescriptions = Object.freeze({
+const TRANSACTION_CATEGORY = Object.freeze({
   INTEREST: "interest",
   DISBURSEMENT: "disbursement",
   OVERAGE: "overage",

@@ -233,6 +233,7 @@ function calc() {
       spouseSsAnnual: spouseSsYearlyIndexed,
       spousePenAnnual: spousePenYearlyIndexed,
     };
+    debugger;
     const yearData = calculateRetirementYearData(
       inputs,
       accounts,
@@ -311,4 +312,12 @@ function generateYearlyIndexedInputValues(inputs, yearIndex) {
   inputs.taxFreeIncomeAdjustment = getTaxFreeIncomeOverride(age).asCurrency();
   inputs.otherTaxableIncomeAdjustments =
     getTaxableIncomeOverride(age).asCurrency();
+
+  inputs.savingsUseAge = inputs.retireAge;
+  inputs.useRoth = age > inputs.rothUseAge;
+  inputs.trad401kUseAge = inputs.retireAge;
+
+  inputs.useSavings = age > inputs.savingsUseAge;
+  inputs.rothUseAge = inputs.retireAge;
+  inputs.useTrad401k = age > inputs.trad401kUseAge;
 }

@@ -45,3 +45,10 @@ const INTEREST_CALCULATION_EPOCH = {
   AVERAGE_BALANCE: "average", // based on average of starting and ending balances
   ENDING_BALANCE: "end", // based on ending balance
 };
+
+const ACCOUNT_TYPES = {
+  TRADITIONAL_401K: "traditional401k",
+  // ROTH_401K: "roth401k",
+  ROTH_IRA: "rothIra",
+  SAVINGS: "savings",
+};

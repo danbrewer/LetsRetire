@@ -32,6 +32,7 @@ function calculateWorkingYearData(inputs, yearIndex, salary, accounts) {
     filingStatus: inputs.filingStatus,
     retirementAccountRateOfReturn: inputs.ret401k,
     rothRateOfReturn: inputs.retRoth,
+    savingsRateOfReturn: inputs.retSavings,
     taxYear: TAX_BASE_YEAR + yearIndex,
     yearIndex: yearIndex,
     spend: inputs.spend,
@@ -115,22 +116,41 @@ function calculateWorkingYearData(inputs, yearIndex, salary, accounts) {
   // Calculations
   // **************
   // debugger;
-  accounts.traditional401k.deposits += employmentInfo.cap401kContribution();
-  accounts.traditional401k.calculateInterestForYear(
-    INTEREST_CALCULATION_EPOCH.AVERAGE_BALANCE,
-    false
+  accounts.traditional401k.deposit(
+    employmentInfo.cap401kContribution(),
+    TRANSACTION_CATEGORY.CONTRIBUTION,
+    fiscalData.taxYear
+  );
+  accounts.traditional401k.deposit(
+    accounts.traditional401k.calculateInterestForYear(
+      INTEREST_CALCULATION_EPOCH.AVERAGE_BALANCE,
+      fiscalData.taxYear
+    ),
+    TRANSACTION_CATEGORY.INTEREST,
+    fiscalData.taxYear
   );
 
-  accounts.savings.deposits += fiscalData.actualSavingsContribution;
-  accounts.savings.calculateInterestForYear(
-    INTEREST_CALCULATION_EPOCH.AVERAGE_BALANCE,
-    false
+  accounts.savings.deposit(
+    accounts.savings.calculateInterestForYear(
+      INTEREST_CALCULATION_EPOCH.IGNORE_DEPOSITS,
+      fiscalData.taxYear
+    ),
+    TRANSACTION_CATEGORY.INTEREST,
+    fiscalData.taxYear
   );
 
-  accounts.rothIra.deposits += employmentInfo.capRothContribution();
-  accounts.rothIra.calculateInterestForYear(
-    INTEREST_CALCULATION_EPOCH.AVERAGE_BALANCE,
-    false
+  accounts.rothIra.deposit(
+    employmentInfo.capRothContribution(),
+    TRANSACTION_CATEGORY.CONTRIBUTION,
+    fiscalData.taxYear
+  );
+  accounts.rothIra.deposit(
+    accounts.rothIra.calculateInterestForYear(
+      INTEREST_CALCULATION_EPOCH.IGNORE_DEPOSITS,
+      fiscalData.taxYear
+    ),
+    TRANSACTION_CATEGORY.INTEREST,
+    fiscalData.taxYear
   );
 
   const taxes = {
@@ -168,12 +188,18 @@ function calculateWorkingYearData(inputs, yearIndex, salary, accounts) {
     wagesTipsAndCompensation: salary,
     otherTaxableIncomeAdjustments:
       getTaxableIncomeOverride(demographics.age) || 0,
-    taxableInterestIncome: (
-      accounts.savings.startingBalance * inputs.retSavings
-    ).asCurrency(),
+    taxableInterestIncome: accounts.savings
+      .depositsForYear(fiscalData.taxYear, TRANSACTION_CATEGORY.INTEREST)
+      .asCurrency(),
     rollingOverIntoSavings: 0,
-    retirementAccountContributions: accounts.traditional401k.deposits,
-    rothIraContributions: accounts.rothIra.deposits,
+    retirementAccountContributions: accounts.traditional401k.depositsForYear(
+      fiscalData.taxYear,
+      TRANSACTION_CATEGORY.CONTRIBUTION
+    ),
+    rothIraContributions: accounts.rothIra.depositsForYear(
+      fiscalData.taxYear,
+      TRANSACTION_CATEGORY.CONTRIBUTION
+    ),
     federalTaxesOwed: 0,
     taxFreeIncomeAdjustment: getTaxFreeIncomeOverride(demographics.age) || 0,
     getTaxableIncome() {
@@ -242,9 +268,11 @@ function calculateWorkingYearData(inputs, yearIndex, salary, accounts) {
   fiscalData.determineActualSavingsContribution(income.getNetIncome);
 
   const withdrawals = {
-    retirementAccount: accounts.traditional401k.withdrawals,
-    savings: accounts.savings.withdrawals,
-    rothIra: accounts.rothIra.withdrawals,
+    retirementAccount: accounts.traditional401k.withdrawalsForYear(
+      fiscalData.taxYear
+    ),
+    savings: accounts.savings.withdrawalsForYear(fiscalData.taxYear),
+    rothIra: accounts.rothIra.withdrawalsForYear(fiscalData.taxYear),
     total() {
       return this.retirementAccount + this.savings + this.rothIra;
     },
@@ -300,8 +328,10 @@ function calculateWorkingYearData(inputs, yearIndex, salary, accounts) {
   // Update all the final values in the result object
   contributions.my401k = employmentInfo.cap401kContribution();
   contributions.myRoth = employmentInfo.capRothContribution();
-  contributions.savings =
-    accounts.savings.deposits - accounts.savings.interestEarned;
+  contributions.savings = accounts.savings.depositsForYear(
+    fiscalData.taxYear,
+    TRANSACTION_CATEGORY.CONTRIBUTION
+  );
   contributions.employerMatch = employmentInfo.employer401kMatch();
   contributions.calculationDetails = [
     withLabel("employmentInfo", employmentInfo),
@@ -327,13 +357,18 @@ function calculateWorkingYearData(inputs, yearIndex, salary, accounts) {
 
   // Add breakdown data
   result.savingsBreakdown = {
-    startingBalance: accounts.savings.startingBalance,
-    withdrawals: accounts.savings.withdrawals,
-    deposits: accounts.savings.deposits,
+    startingBalance: accounts.savings.startingBalanceForYear(
+      fiscalData.taxYear
+    ),
+    withdrawals: accounts.savings.withdrawalsForYear(fiscalData.taxYear),
+    deposits: accounts.savings.depositsForYear(fiscalData.taxYear),
     taxFreeIncomeDeposit: income.taxFreeIncomeAdjustment,
-    interestEarned: accounts.savings.interestEarned,
+    interestEarned: accounts.savings.depositsForYear(
+      fiscalData.taxYear,
+      TRANSACTION_CATEGORY.INTEREST
+    ),
     endingBalance: accounts.savings.endingBalanceForYear(fiscalData.taxYear),
-    growthRate: fiscalData.annualReturnRate * 100,
+    growthRate: fiscalData.savingsRateOfReturn,
     calculationDetails: [
       withLabel("savings", accounts.savings),
       withLabel(

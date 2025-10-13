@@ -155,18 +155,6 @@ function retirementJS_calculateIncomeWhen401kWithdrawalIs(
 ) {
   // Declare and initialize the result object at the top
   const result = {
-    // savingsInterestEarned: 0,
-    // allOtherIncome: 0,
-    // allTaxableIncome() {
-    //   return this.savingsInterestEarned + this.allOtherIncome;
-    // },
-    // federalTaxesPaid: 0,
-    // allNetIncome() {
-    //   return this.allTaxableIncome() - this.federalTaxesPaid;
-    // },
-    // allNetIncomeLessSavings() {
-    //   return this.allNetIncome() - this.savingsInterestEarned;
-    // },
     ssBreakdown: {},
     incomeBreakdown: {},
   };
@@ -230,6 +218,14 @@ function retirementJS_calculateIncomeWhen401kWithdrawalIs(
         this.socialSecurityIncome
       );
     },
+    rmdPortionOfAllIncome() {
+      return this.allIncome() > 0 ? this.rmd / this.allIncome() : 0;
+    },
+    retirementAccountWidthdrawaPortionOfAllIncome() {
+      return this.allIncome() > 0
+        ? this.retirementAccountWithdrawal / this.allIncome()
+        : 0;
+    },
     ssNonTaxablePortion() {
       return this.socialSecurityIncome - this.taxableSsIncome;
     },
@@ -287,8 +283,8 @@ function retirementJS_calculateIncomeWhen401kWithdrawalIs(
   return result;
 }
 
-function retirementJS_determine401kWithdrawalToHitNetTargetOf(
-  targetAmount,
+function retirementJS_determine401kWithdrawalsToHitNetTargetOf(
+  targetIncome,
   fixedIncomeFactors
 ) {
   // Declare and initialize the result object at the top
@@ -299,7 +295,7 @@ function retirementJS_determine401kWithdrawalToHitNetTargetOf(
   };
 
   let lo = 0,
-    hi = targetAmount * 2;
+    hi = targetIncome * 2;
 
   let income = {
     totalIncome: 0,
@@ -327,22 +323,22 @@ function retirementJS_determine401kWithdrawalToHitNetTargetOf(
       ),
     };
 
-    log.info(`Target income is $${targetAmount.asCurrency()}.`);
+    log.info(`Target income is $${targetIncome.asCurrency()}.`);
 
     const highLow =
       income.incomeBreakdown.netIncome().asCurrency() >
-      targetAmount.asCurrency()
+      targetIncome.asCurrency()
         ? "TOO HIGH"
         : income.incomeBreakdown.netIncome().asCurrency() <
-            targetAmount.asCurrency()
+            targetIncome.asCurrency()
           ? "TOO LOW"
           : "JUST RIGHT";
     const highLowTextColor =
       income.incomeBreakdown.netIncome().asCurrency() >
-      targetAmount.asCurrency()
+      targetIncome.asCurrency()
         ? "\x1b[31m"
         : income.incomeBreakdown.netIncome().asCurrency() <
-            targetAmount.asCurrency()
+            targetIncome.asCurrency()
           ? "\x1b[34m"
           : "\x1b[32m"; // Red for too high, Blue for too low, Green for just right
     log.info(
@@ -355,10 +351,10 @@ function retirementJS_determine401kWithdrawalToHitNetTargetOf(
 
     if (
       income.incomeBreakdown.netIncome().asCurrency() ==
-      targetAmount.asCurrency()
+      targetIncome.asCurrency()
     )
       break;
-    if (income.incomeBreakdown.netIncome() < targetAmount)
+    if (income.incomeBreakdown.netIncome() < targetIncome)
       lo = guestimate401kWithdrawal;
     else hi = guestimate401kWithdrawal;
     if (hi.asCurrency() - lo.asCurrency() <= fixedIncomeFactors.precision)
@@ -368,7 +364,12 @@ function retirementJS_determine401kWithdrawalToHitNetTargetOf(
   // Update all the final values in the result object
   result.net = income.incomeBreakdown.netIncome();
   result.withdrawalNeeded = hi;
+  result.rmd = fixedIncomeFactors.rmd;
   result.tax = income.tax;
+  result.calculationDetails = [
+    withLabel("income", income),
+    withLabel("fixedIncomeFactors", fixedIncomeFactors),
+  ];
 
   return result;
 }
@@ -491,7 +492,7 @@ if (typeof module !== "undefined" && module.exports) {
       retirementJS_determineFederalIncomeTax,
     retirementJS_calculateIncomeWhen401kWithdrawalIs:
       retirementJS_calculateIncomeWhen401kWithdrawalIs,
-    retirementJS_determine401kWithdrawalToHitNetTargetOf,
+    retirementJS_determine401kWithdrawalsToHitNetTargetOf,
     // Export some common tax brackets and standard deductions for convenience
     retirementJS_getTaxBrackets,
     retirementJS_getStandardDeduction,
