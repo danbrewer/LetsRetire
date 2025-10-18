@@ -55,6 +55,5 @@ const TRANSACTION_CATEGORY = Object.freeze({
   SHORTAGE: "shortage",
   TRANSFER: "transfer",
   CONTRIBUTION: "contribution",
-  WITHDRAWAL: "withdrawal",
-  DEPOSIT: "deposit",
+  INCOME: "income",
 });

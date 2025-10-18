@@ -151,7 +151,9 @@ function retirementJS_determineFederalIncomeTax(taxableIncome, brackets) {
 
 function retirementJS_calculateIncomeWhen401kWithdrawalIs(
   variableIncomeFactor,
-  fixedIncomeFactorsArg
+  incomeStreams,
+  demographics,
+  fiscalData
 ) {
   // Declare and initialize the result object at the top
   const result = {
@@ -159,18 +161,30 @@ function retirementJS_calculateIncomeWhen401kWithdrawalIs(
     incomeBreakdown: {},
   };
 
+  const standardDeduction = retirementJS_getStandardDeduction(
+    demographics.filingStatus,
+    fiscalData.taxYear, // year is already the actual year (e.g., 2040)
+    fiscalData.inflationRate
+  );
+
+  const taxBrackets = retirementJS_getTaxBrackets(
+    demographics.filingStatus,
+    fiscalData.taxYear,
+    fiscalData.inflationRate
+  );
+
   const fixedIncomeFactors = {
-    reportedEarnedInterest: 0,
-    myPension: 0,
-    spousePension: 0,
-    rmd: 0,
-    otherTaxableIncomeAdjustments: 0,
-    mySsBenefitsGross: 0,
-    spouseSsBenefitsGross: 0,
-    standardDeduction: 0,
-    taxBrackets: [],
-    precision: 0.01,
-    ...fixedIncomeFactorsArg,
+    reportedEarnedInterest: incomeStreams.reportedEarnedInterest,
+    myPension: incomeStreams.myPension,
+    spousePension: incomeStreams.spousePension,
+    rmd: incomeStreams.rmd,
+    otherTaxableIncomeAdjustments: incomeStreams.otherTaxableIncomeAdjustments,
+    mySsBenefitsGross: incomeStreams.mySs,
+    spouseSsBenefitsGross: incomeStreams.spouseSs,
+    standardDeduction: standardDeduction,
+    nonSsIncome: incomeStreams.nonSsIncome(),
+    ssIncome: incomeStreams.ssIncome(),
+    precision: 0.01, // Precision for binary search convergence
   };
 
   const ssBreakdown = {
@@ -207,6 +221,7 @@ function retirementJS_calculateIncomeWhen401kWithdrawalIs(
     socialSecurityIncome:
       ssBreakdown.inputs.myBenefits + ssBreakdown.inputs.spouseBenefits,
     taxableSsIncome: ssBreakdown.taxablePortion,
+    standardDeduction: standardDeduction,
     allIncome() {
       return (
         this.reportedEarnedInterest +
@@ -242,9 +257,7 @@ function retirementJS_calculateIncomeWhen401kWithdrawalIs(
       return this.allIncome() - this.federalIncomeTax;
     },
     netIncomeLessEarnedInterest() {
-      return (
-        this.allIncome() - this.federalIncomeTax - this.reportedEarnedInterest
-      );
+      return this.netIncome() - this.reportedEarnedInterest;
     },
     effectiveTaxRate() {
       if (this.allIncome() === 0) return 0;
@@ -267,8 +280,8 @@ function retirementJS_calculateIncomeWhen401kWithdrawalIs(
   };
 
   incomeBreakdown.federalIncomeTax = retirementJS_determineFederalIncomeTax(
-    incomeBreakdown.taxableIncome,
-    fixedIncomeFactors.taxBrackets
+    incomeBreakdown.taxableIncome(),
+    taxBrackets
   );
 
   // Update all the final values in the result object
@@ -285,7 +298,9 @@ function retirementJS_calculateIncomeWhen401kWithdrawalIs(
 
 function retirementJS_determine401kWithdrawalsToHitNetTargetOf(
   targetIncome,
-  fixedIncomeFactors
+  incomeStreams,
+  demographics,
+  fiscalData
 ) {
   // Declare and initialize the result object at the top
   const result = {
@@ -319,56 +334,52 @@ function retirementJS_determine401kWithdrawalsToHitNetTargetOf(
     income = {
       ...retirementJS_calculateIncomeWhen401kWithdrawalIs(
         guestimate401kWithdrawal,
-        fixedIncomeFactors
+        incomeStreams,
+        demographics,
+        fiscalData
       ),
     };
 
     log.info(`Target income is $${targetIncome.asCurrency()}.`);
 
+    const netIncome = income.incomeBreakdown
+      .netIncomeLessEarnedInterest()
+      .asCurrency();
+
     const highLow =
-      income.incomeBreakdown.netIncome().asCurrency() >
-      targetIncome.asCurrency()
+      netIncome > targetIncome.asCurrency()
         ? "TOO HIGH"
-        : income.incomeBreakdown.netIncome().asCurrency() <
-            targetIncome.asCurrency()
+        : netIncome < targetIncome.asCurrency()
           ? "TOO LOW"
           : "JUST RIGHT";
     const highLowTextColor =
-      income.incomeBreakdown.netIncome().asCurrency() >
-      targetIncome.asCurrency()
+      netIncome > targetIncome.asCurrency()
         ? "\x1b[31m"
-        : income.incomeBreakdown.netIncome().asCurrency() <
-            targetIncome.asCurrency()
+        : netIncome < targetIncome.asCurrency()
           ? "\x1b[34m"
           : "\x1b[32m"; // Red for too high, Blue for too low, Green for just right
     log.info(
       `When 401k withdrawal is $${guestimate401kWithdrawal.round(
         0
-      )} then the net income will be $${income.incomeBreakdown
-        .netIncome()
-        .round(0)} ${highLowTextColor}(${highLow})\x1b[0m`
+      )} then the net income will be $${netIncome} ${highLowTextColor}(${highLow})\x1b[0m`
     );
 
-    if (
-      income.incomeBreakdown.netIncome().asCurrency() ==
-      targetIncome.asCurrency()
-    )
-      break;
-    if (income.incomeBreakdown.netIncome() < targetIncome)
-      lo = guestimate401kWithdrawal;
+    if (netIncome == targetIncome.asCurrency()) break;
+    if (netIncome < targetIncome) lo = guestimate401kWithdrawal;
     else hi = guestimate401kWithdrawal;
-    if (hi.asCurrency() - lo.asCurrency() <= fixedIncomeFactors.precision)
-      break;
+    if (hi.asCurrency() - lo.asCurrency() <= 0.01) break;
   }
 
   // Update all the final values in the result object
-  result.net = income.incomeBreakdown.netIncome();
-  result.withdrawalNeeded = hi;
-  result.rmd = fixedIncomeFactors.rmd;
-  result.tax = income.tax;
+  result.net = income.incomeBreakdown
+    .netIncomeLessEarnedInterest()
+    .asCurrency();
+  result.withdrawalNeeded = hi.asCurrency();
+  result.rmd = incomeStreams.rmd;
+  result.tax = income.incomeBreakdown.federalIncomeTax.asCurrency();
   result.calculationDetails = [
     withLabel("income", income),
-    withLabel("fixedIncomeFactors", fixedIncomeFactors),
+    withLabel("incomeStreams", incomeStreams),
   ];
 
   return result;

@@ -4,11 +4,19 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
+        // {
+        //     "type": "chrome",
+        //     "request": "launch",
+        //     "name": "Launch Chrome against localhost",
+        //     "file": "${workspaceFolder}/one_page_retirement_calculator.html"
+        // },
         {
+            "name": "Attach to Chrome (Mac)",
             "type": "chrome",
-            "request": "launch",
-            "name": "Launch Chrome against localhost",
-            "file": "${workspaceFolder}/one_page_retirement_calculator.html"
+            "request": "attach",
+            "port": 9222,
+            "webRoot": "${workspaceFolder}"
         }
+
     ]
 }

@@ -130,27 +130,25 @@ class Account {
   }
 
   depositsForYear(yyyy, category = "") {
-    return this.#transactions
-      .filter((tx) =>
+    const transactions = this.#transactions.filter(
+      (tx) =>
         tx.transactionType === TRANSACTION_TYPE.DEPOSIT &&
         tx.date.getFullYear() === yyyy &&
-        category === ""
-          ? true
-          : tx.category === category
-      )
-      .reduce((sum, tx) => sum + tx.amount, 0);
+        (category === "" ? true : tx.category === category)
+    );
+    const total = transactions.reduce((sum, tx) => sum + tx.amount, 0);
+    return total;
   }
 
   withdrawalsForYear(yyyy, category = "") {
-    return this.#transactions
-      .filter((tx) =>
+    const transactions = this.#transactions.filter(
+      (tx) =>
         tx.transactionType === TRANSACTION_TYPE.WITHDRAWAL &&
         tx.date.getFullYear() === yyyy &&
-        category === ""
-          ? true
-          : tx.category === category
-      )
-      .reduce((sum, tx) => sum + tx.amount, 0);
+        (category === "" ? true : tx.category === category)
+    );
+    const total = transactions.reduce((sum, tx) => sum + tx.amount, 0);
+    return total;
   }
 
   transactionsForYear(yyyy, type = "") {

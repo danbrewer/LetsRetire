@@ -2069,7 +2069,11 @@ function parseInputParameters() {
     .map((s) => s.trim())
     .filter((s) => s.length > 0);
   if (inputs.order.length === 0) {
-    inputs.order = ["savings", "401k", "roth"];
+    inputs.order = [
+      ACCOUNT_TYPES.SAVINGS,
+      ACCOUNT_TYPES.TRADITIONAL_401K,
+      ACCOUNT_TYPES.ROTH_IRA,
+    ];
   }
 
   // Derived values

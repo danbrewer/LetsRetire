@@ -25,7 +25,11 @@ const testInputs = {
   pensionMonthlyAmount: 1500,
   spousePensionAge: 65,
   spousePensionMonthlyAmount: 1000,
-  order: ["savings", "401k", "roth"], // Default withdrawal order
+  order: [
+    ACCOUNT_TYPES.SAVINGS,
+    ACCOUNT_TYPES.TRADITIONAL_401K,
+    ACCOUNT_TYPES.ROTH_IRA,
+  ], // Default withdrawal order
 };
 
 // Test balances for age 62 (retirement year 1)

@@ -94,7 +94,6 @@ public
 .vscode-test
 
 # IDE and editor files
-.vscode/
 .idea/
 *.swp
 *.swo

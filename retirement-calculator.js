@@ -116,58 +116,6 @@ function calc() {
     lastCurrentAge = inputs.currentAge;
   }
 
-  // const interestCalculator = {
-  //   calculateInterest: (account, calculationIntensity, force) => {
-  //     if (force) {
-  //       account.deposits -= account.interestCalculations._interestEarned; // Remove previously calculated interest
-  //       account.interestCalculations._interestEarned = 0; // Reset to force recalculation
-  //     }
-
-  //     if (account.interestCalculations._interestEarned != 0) {
-  //       if (
-  //         account.interestCalculations._interestCalculationIntensity ===
-  //         calculationIntensity
-  //       ) {
-  //         return account.interestCalculations._interestEarned;
-  //       }
-  //       account.deposits -= account.interestCalculations._interestEarned; // Remove previously calculated interest
-  //     } // Already calculated
-
-  //     let earnedInterest = 0;
-  //     account.interestCalculations._interestCalculationIntensity =
-  //       calculationIntensity;
-  //     switch (calculationIntensity) {
-  //       case INTEREST_CALCULATION_EPOCH.END_OF_YEAR:
-  //         earnedInterest = (
-  //           account.startingBalance * account.interestCalculations._growthRate
-  //         ).asCurrency();
-  //         account.interestCalculations._interestCalculationMethod = `startingBalance * growthRate: ${account.startingBalance} * ${account.interestCalculations._growthRate}`;
-  //         break;
-  //       case INTEREST_CALCULATION_EPOCH.MID_YEAR:
-  //         // use the average of starting and ending balance
-  //         earnedInterest = (
-  //           ((account.endingBalance() + account.startingBalance) / 2) *
-  //           account.interestCalculations._growthRate
-  //         ).asCurrency();
-  //         account.interestCalculations._interestCalculationMethod = `(endingBalance + startingBalance) / 2 * growthRate: ${account.endingBalance()} + ${account.startingBalance} / 2 * ${account.interestCalculations._growthRate}`;
-  //         break;
-  //       case INTEREST_CALCULATION_EPOCH.BEGINNING_OF_YEAR:
-  //       default:
-  //         account.interestCalculations._interestCalculationIntensity =
-  //           INTEREST_CALCULATION_EPOCH.BEGINNING_OF_YEAR;
-  //         earnedInterest = (
-  //           (account.startingBalance - account.withdrawals) *
-  //           account.interestCalculations._growthRate
-  //         ).asCurrency();
-  //         account.interestCalculations._interestCalculationMethod = `(startingBalance - withdrawals) * growthRate: ${account.startingBalance} - ${account.withdrawals} * ${account.interestCalculations._growthRate}`;
-  //         break;
-  //     }
-  //     account.interestCalculations._interestEarned = earnedInterest;
-  //     account.deposits += earnedInterest;
-  //   },
-  // };
-
-  debugger;
   // Initialize balances object for tracking
   const accounts = {
     traditional401k: new Account(
@@ -221,7 +169,7 @@ function calc() {
 
   // Retirement years
   for (
-    let yearIndex = 0;
+    let yearIndex = inputs.totalWorkingYears;
     yearIndex < inputs.totalLivingYears - inputs.totalWorkingYears;
     yearIndex++
   ) {
@@ -233,7 +181,6 @@ function calc() {
       spouseSsAnnual: spouseSsYearlyIndexed,
       spousePenAnnual: spousePenYearlyIndexed,
     };
-    debugger;
     const yearData = calculateRetirementYearData(
       inputs,
       accounts,
@@ -254,16 +201,15 @@ function calc() {
     }
 
     // Step next year: Apply COLAs to benefits
-    if (age >= inputs.ssStartAge) ssYearlyIndexed *= 1 + inputs.ssCola;
-    if (age >= inputs.penStartAge && inputs.penMonthly > 0)
+    if (inputs.age >= inputs.ssStartAge) ssYearlyIndexed *= 1 + inputs.ssCola;
+    if (inputs.age >= inputs.penStartAge && inputs.penMonthly > 0)
       penYearlyIndexed *= 1 + inputs.penCola;
 
     if (inputs.hasSpouse) {
-      const spouseCurrentAge = inputs.spouseAge + (age - inputs.currentAge);
-      if (spouseCurrentAge >= inputs.spouseSsStartAge)
+      if (inputs.spouseAge >= inputs.spouseSsStartAge)
         spouseSsYearlyIndexed *= 1 + inputs.spouseSsCola;
       if (
-        spouseCurrentAge >= inputs.spousePenStartAge &&
+        inputs.spouseAge >= inputs.spousePenStartAge &&
         inputs.spousePenMonthly > 0
       )
         spousePenYearlyIndexed *= 1 + inputs.spousePenCola;
@@ -292,7 +238,7 @@ function calc() {
 
 // Helper to generate dynamic input values for a given year index
 function generateYearlyIndexedInputValues(inputs, yearIndex) {
-  const age = inputs.currentAge + inputs.totalWorkingYears + yearIndex;
+  const age = inputs.currentAge + yearIndex;
 
   inputs.yearIndex = yearIndex;
   inputs.age = age;
@@ -317,7 +263,7 @@ function generateYearlyIndexedInputValues(inputs, yearIndex) {
   inputs.useRoth = age > inputs.rothUseAge;
   inputs.trad401kUseAge = inputs.retireAge;
 
-  inputs.useSavings = age > inputs.savingsUseAge;
-  inputs.rothUseAge = inputs.retireAge;
-  inputs.useTrad401k = age > inputs.trad401kUseAge;
+  inputs.useSavings = true; // age > inputs.savingsUseAge;
+  inputs.rothUseAge = true; // inputs.retireAge;
+  inputs.useTrad401k = true; // age > inputs.trad401kUseAge;
 }
