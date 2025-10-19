@@ -184,23 +184,29 @@ function withdrawalFactoryJS_createWithdrawalFactory(
               TRANSACTION_CATEGORY.DISBURSEMENT
             );
             savingsAccount.deposit(
-              incomeResults.incomeBreakdown.netIncomeLessEarnedInterest(),
+              incomeResults.incomeBreakdown.netIncomeLessReportedEarnedInterest(),
               TRANSACTION_CATEGORY.INCOME
             );
             retirementAccountIncomeRecognized = true;
           }
-          let netWithdrawals = 0;
-          netWithdrawals +=
-            incomeResults.incomeBreakdown.translateGrossAmountToNet(
-              incomeStreams.rmd
-            );
-          const variableWitdrawalAmt =
-            incomeResults.incomeBreakdown.translateGrossAmountToNet(
-              varaibleWithdrawalAmt
-            );
-          netWithdrawals += variableWitdrawalAmt;
 
-          return netWithdrawals;
+          // let netWithdrawals = 0;
+          // netWithdrawals +=
+          //   incomeResults.incomeBreakdown.translateGrossAmountToNet(
+          //     incomeStreams.rmd
+          //   );
+          // const variableWitdrawalAmt =
+          //   incomeResults.incomeBreakdown.translateGrossAmountToNet(
+          //     varaibleWithdrawalAmt
+          //   );
+          // netWithdrawals += variableWitdrawalAmt;
+
+          return (
+            varaibleWithdrawalAmt -
+            incomeResults.incomeBreakdown.federalIncomeTax
+          );
+
+          // return netWithdrawals;
         }
         break;
       case ACCOUNT_TYPES.SAVINGS:

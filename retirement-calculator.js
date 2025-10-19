@@ -189,6 +189,8 @@ function calc() {
 
     yearData.accounts = { ...accounts };
 
+    yearData.dump();
+    debugger;
     calculations.push({
       year: new Date().getFullYear() + yearIndex,
       ...yearData,
@@ -243,16 +245,14 @@ function generateYearlyIndexedInputValues(inputs, yearIndex) {
   inputs.yearIndex = yearIndex;
   inputs.age = age;
   inputs.spouseAge = inputs.hasSpouse
-    ? inputs.spouseAge + (age - (inputs.currentAge + inputs.totalWorkingYears))
+    ? inputs.currentSpouseAge + yearIndex
     : undefined;
-  inputs.retirementYear =
-    new Date().getFullYear() + inputs.totalWorkingYears + yearIndex;
+  inputs.retirementYear = new Date().getFullYear() + yearIndex;
 
   inputs.additionalSpending = getSpendingOverride(age).asCurrency();
-  inputs.spend = inputs.spendingToday.adjustedForInflation(
-    inputs.inflation,
-    yearIndex
-  );
+  inputs.spend = inputs.spendingToday
+    .adjustedForInflation(inputs.inflation, yearIndex)
+    .asCurrency();
 
   inputs.taxableIncomeAdjustment = getTaxableIncomeOverride(age).asCurrency();
   inputs.taxFreeIncomeAdjustment = getTaxFreeIncomeOverride(age).asCurrency();

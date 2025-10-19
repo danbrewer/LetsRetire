@@ -146,7 +146,7 @@ function retirementJS_determineFederalIncomeTax(taxableIncome, brackets) {
   }
   // log.info(`Total tax calculated is $${tax.asCurrency()}.`);
 
-  return tax;
+  return tax.asCurrency();
 }
 
 function retirementJS_calculateIncomeWhen401kWithdrawalIs(
@@ -222,7 +222,7 @@ function retirementJS_calculateIncomeWhen401kWithdrawalIs(
       ssBreakdown.inputs.myBenefits + ssBreakdown.inputs.spouseBenefits,
     taxableSsIncome: ssBreakdown.taxablePortion,
     standardDeduction: standardDeduction,
-    allIncome() {
+    reportableIncome() {
       return (
         this.reportedEarnedInterest +
         this.myPension +
@@ -233,19 +233,21 @@ function retirementJS_calculateIncomeWhen401kWithdrawalIs(
         this.socialSecurityIncome
       );
     },
-    rmdPortionOfAllIncome() {
-      return this.allIncome() > 0 ? this.rmd / this.allIncome() : 0;
+    rmdPortionOfReportableIncome() {
+      return this.reportableIncome() > 0
+        ? this.rmd / this.reportableIncome()
+        : 0;
     },
-    retirementAccountWidthdrawaPortionOfAllIncome() {
-      return this.allIncome() > 0
-        ? this.retirementAccountWithdrawal / this.allIncome()
+    retirementAccountWidthdrawaPortionOfReportableIncome() {
+      return this.reportableIncome() > 0
+        ? (this.retirementAccountWithdrawal / this.reportableIncome()).round(3)
         : 0;
     },
     ssNonTaxablePortion() {
       return this.socialSecurityIncome - this.taxableSsIncome;
     },
     adjustedGrossIncome() {
-      return this.allIncome() - this.ssNonTaxablePortion();
+      return this.reportableIncome() - this.ssNonTaxablePortion();
     },
     // grossTaxableIncomeWithoutSs() {
     //   return this.nonSsIncome + this.retirementAccountWithdrawal;
@@ -254,18 +256,18 @@ function retirementJS_calculateIncomeWhen401kWithdrawalIs(
       return Math.max(0, this.adjustedGrossIncome() - this.standardDeduction);
     },
     netIncome() {
-      return this.allIncome() - this.federalIncomeTax;
+      return this.reportableIncome() - this.federalIncomeTax;
     },
-    netIncomeLessEarnedInterest() {
+    netIncomeLessReportedEarnedInterest() {
       return this.netIncome() - this.reportedEarnedInterest;
     },
     effectiveTaxRate() {
-      if (this.allIncome() === 0) return 0;
-      return this.federalIncomeTax / this.allIncome();
+      if (this.reportableIncome() === 0) return 0;
+      return (this.federalIncomeTax / this.reportableIncome()).round(3);
     },
     incomeAsPercentageOfGross(amount = 0) {
-      if (this.allIncome() === 0) return 0;
-      return amount / this.allIncome();
+      if (this.reportableIncome() === 0) return 0;
+      return amount / this.reportableIncome();
     },
     translateGrossAmountToNet(amount = 0) {
       return (
@@ -285,7 +287,7 @@ function retirementJS_calculateIncomeWhen401kWithdrawalIs(
   );
 
   // Update all the final values in the result object
-  // result.allTaxableIncome = incomeBreakdown.allIncome();
+  // result.allTaxableIncome = incomeBreakdown.reportableIncome();
   // result.taxableIncome = incomeBreakdown.taxableIncome();
   // result.federalTaxesPaid = incomeBreakdown.federalIncomeTax;
   // result.allNetIncome(){ = incomeBreakdown.netIncome();
@@ -343,7 +345,7 @@ function retirementJS_determine401kWithdrawalsToHitNetTargetOf(
     log.info(`Target income is $${targetIncome.asCurrency()}.`);
 
     const netIncome = income.incomeBreakdown
-      .netIncomeLessEarnedInterest()
+      .netIncomeLessReportedEarnedInterest()
       .asCurrency();
 
     const highLow =
@@ -372,7 +374,7 @@ function retirementJS_determine401kWithdrawalsToHitNetTargetOf(
 
   // Update all the final values in the result object
   result.net = income.incomeBreakdown
-    .netIncomeLessEarnedInterest()
+    .netIncomeLessReportedEarnedInterest()
     .asCurrency();
   result.withdrawalNeeded = hi.asCurrency();
   result.rmd = incomeStreams.rmd;
@@ -438,7 +440,7 @@ function retirementJS_getStandardDeduction(filingStatus, year, inflationRate) {
 
   // The year passed should be the actual tax year (e.g., 2025, 2026, 2052, etc.)
   // The adjustedForInflation expects years from the base (2025)
-  const yearsFromBase = correctedYear - 2025;
+  const yearsFromBase = correctedYear - TAX_BASE_YEAR;
 
   if (correctedFilingStatus === constsJS_FILING_STATUS.MARRIED_FILING_JOINTLY) {
     const baseAmount = constsJS_STANDARD_DEDUCTION_2025.mfj;
@@ -452,7 +454,7 @@ function retirementJS_getStandardDeduction(filingStatus, year, inflationRate) {
       );
       return 0;
     }
-    return adjusted;
+    return adjusted.asCurrency();
   } else {
     const baseAmount = constsJS_STANDARD_DEDUCTION_2025.single;
     const adjusted = baseAmount.adjustedForInflation(
@@ -465,7 +467,7 @@ function retirementJS_getStandardDeduction(filingStatus, year, inflationRate) {
       );
       return 0;
     }
-    return adjusted;
+    return adjusted.asCurrency();
   }
 }
 

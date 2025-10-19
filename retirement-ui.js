@@ -2016,6 +2016,7 @@ function parseInputParameters() {
   // Basic parameters
   const inputs = {
     currentAge: num("currentAge"),
+    currentSpouseAge: num("spouseAge"),
     retireAge: num("retireAge"),
     ssStartAge: num("ssStart"),
     penStartAge: num("penStart"),
@@ -2025,7 +2026,6 @@ function parseInputParameters() {
     spendingDecline: pct(num("spendingDecline")),
 
     // Spouse information
-    spouseAge: num("spouseAge"),
     spouseRetireAge: num("spouseRetireAge"),
     spouseSsMonthly: num("spouseSsMonthly"),
     spouseSsStartAge: num("spouseSsStart"),
@@ -2077,7 +2077,7 @@ function parseInputParameters() {
   }
 
   // Derived values
-  inputs.hasSpouse = inputs.spouseAge > 0;
+  inputs.hasSpouse = inputs.currentSpouseAge > 0;
   inputs.totalWorkingYears = inputs.retireAge - inputs.currentAge;
   inputs.totalLivingYears = inputs.endAge - inputs.currentAge;
   inputs.spendAtRetire =

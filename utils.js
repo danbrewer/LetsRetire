@@ -11,6 +11,14 @@ Number.prototype.asCurrency = function () {
   return this.round(0);
 };
 
+Number.prototype.minus = function (value) {
+  return this - value;
+};
+
+Number.prototype.plus = function (value) {
+  return this + value;
+};
+
 Number.prototype.adjustedForInflation = function (inflationRate, years) {
   const adjustedValue = this * Math.pow(1 + inflationRate, years);
   return adjustedValue;
