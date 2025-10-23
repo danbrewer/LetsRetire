@@ -56,4 +56,5 @@ const TRANSACTION_CATEGORY = Object.freeze({
   TRANSFER: "transfer",
   CONTRIBUTION: "contribution",
   INCOME: "income",
+  TAXES: "taxes",
 });

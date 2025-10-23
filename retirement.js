@@ -182,7 +182,8 @@ function retirementJS_calculateIncomeWhen401kWithdrawalIs(
     mySsBenefitsGross: incomeStreams.mySs,
     spouseSsBenefitsGross: incomeStreams.spouseSs,
     standardDeduction: standardDeduction,
-    nonSsIncome: incomeStreams.nonSsIncome(),
+    fixedIncomeStreams: incomeStreams.nonSsIncome(),
+    retirementAccount: variableIncomeFactor,
     ssIncome: incomeStreams.ssIncome(),
     precision: 0.01, // Precision for binary search convergence
   };
@@ -204,24 +205,23 @@ function retirementJS_calculateIncomeWhen401kWithdrawalIs(
     ..._calculateSsBenefits(
       fixedIncomeFactors.mySsBenefitsGross,
       fixedIncomeFactors.spouseSsBenefitsGross,
-      fixedIncomeFactors.nonSsIncome
+      fixedIncomeFactors.fixedIncomeStreams
     ),
   };
 
   const incomeBreakdown = {
-    reportedEarnedInterest: fixedIncomeFactors.reportedEarnedInterest,
     myPension: fixedIncomeFactors.myPension,
     spousePension: fixedIncomeFactors.spousePension,
     rmd: fixedIncomeFactors.rmd,
     otherTaxableIncomeAdjustments:
       fixedIncomeFactors.otherTaxableIncomeAdjustments,
     retirementAccountWithdrawal: variableIncomeFactor,
-    standardDeduction: fixedIncomeFactors.standardDeduction,
-    federalIncomeTax: 0,
-    socialSecurityIncome:
-      ssBreakdown.inputs.myBenefits + ssBreakdown.inputs.spouseBenefits,
+    // socialSecurityIncome:
+    //   ssBreakdown.inputs.myBenefits + ssBreakdown.inputs.spouseBenefits,
     taxableSsIncome: ssBreakdown.taxablePortion,
+    reportedEarnedInterest: fixedIncomeFactors.reportedEarnedInterest,
     standardDeduction: standardDeduction,
+    federalIncomeTax: 0,
     reportableIncome() {
       return (
         this.reportedEarnedInterest +
@@ -233,21 +233,29 @@ function retirementJS_calculateIncomeWhen401kWithdrawalIs(
         this.socialSecurityIncome
       );
     },
-    rmdPortionOfReportableIncome() {
-      return this.reportableIncome() > 0
-        ? this.rmd / this.reportableIncome()
-        : 0;
-    },
-    retirementAccountWidthdrawaPortionOfReportableIncome() {
-      return this.reportableIncome() > 0
-        ? (this.retirementAccountWithdrawal / this.reportableIncome()).round(3)
-        : 0;
-    },
-    ssNonTaxablePortion() {
-      return this.socialSecurityIncome - this.taxableSsIncome;
-    },
+    // rmdPortionOfReportableIncome() {
+    //   return this.reportableIncome() > 0
+    //     ? this.rmd / this.reportableIncome()
+    //     : 0;
+    // },
+    // retirementAccountWidthdrawaPortionOfReportableIncome() {
+    //   return this.reportableIncome() > 0
+    //     ? (this.retirementAccountWithdrawal / this.reportableIncome()).round(3)
+    //     : 0;
+    // },
+    // ssNonTaxablePortion() {
+    //   return this.socialSecurityIncome - this.taxableSsIncome;
+    // },
     adjustedGrossIncome() {
-      return this.reportableIncome() - this.ssNonTaxablePortion();
+      return (
+        this.reportedEarnedInterest +
+        this.myPension +
+        this.spousePension +
+        this.rmd +
+        this.otherTaxableIncomeAdjustments +
+        this.retirementAccountWithdrawal +
+        this.ssBreakdown.taxablePortion
+      );
     },
     // grossTaxableIncomeWithoutSs() {
     //   return this.nonSsIncome + this.retirementAccountWithdrawal;
@@ -260,6 +268,9 @@ function retirementJS_calculateIncomeWhen401kWithdrawalIs(
     },
     netIncomeLessReportedEarnedInterest() {
       return this.netIncome() - this.reportedEarnedInterest;
+    },
+    reportableIncomeLessReportedEarnedInterest() {
+      return this.reportableIncome() - this.reportedEarnedInterest;
     },
     effectiveTaxRate() {
       if (this.reportableIncome() === 0) return 0;

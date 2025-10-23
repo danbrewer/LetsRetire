@@ -260,10 +260,10 @@ function generateYearlyIndexedInputValues(inputs, yearIndex) {
     getTaxableIncomeOverride(age).asCurrency();
 
   inputs.savingsUseAge = inputs.retireAge;
-  inputs.useRoth = age > inputs.rothUseAge;
   inputs.trad401kUseAge = inputs.retireAge;
+  inputs.rothUseAge = inputs.retireAge;
 
   inputs.useSavings = true; // age > inputs.savingsUseAge;
-  inputs.rothUseAge = true; // inputs.retireAge;
   inputs.useTrad401k = true; // age > inputs.trad401kUseAge;
+  inputs.useRoth = true; //age > inputs.rothUseAge;
 }

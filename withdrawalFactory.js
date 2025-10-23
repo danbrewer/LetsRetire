@@ -98,13 +98,6 @@ function withdrawalFactoryJS_createWithdrawalFactory(
         return this.#account.withdrawalsForYear(fiscalData.taxYear);
       }
 
-      // calculateEarnedInterest(calculationIntensity) {
-      //   return this.#account.calculateInterestForYear(
-      //     calculationIntensity,
-      //     fiscalData.taxYear
-      //   );
-      // }
-
       endingBalanceForYear() {
         return this.#account.endingBalanceForYear(fiscalData.taxYear);
       }
@@ -120,21 +113,21 @@ function withdrawalFactoryJS_createWithdrawalFactory(
       getTargetedAccount(ACCOUNT_TYPES.TRADITIONAL_401K)
     );
 
-    const fixedIncomeFactors = {
-      reportedEarnedInterest: incomeStreams.reportedEarnedInterest,
-      myPension: incomeStreams.myPension,
-      spousePension: incomeStreams.spousePension,
-      rmd: incomeStreams.rmd,
-      otherTaxableIncomeAdjustments:
-        incomeStreams.otherTaxableIncomeAdjustments,
-      mySsBenefitsGross: incomeStreams.mySs,
-      spouseSsBenefitsGross: incomeStreams.spouseSs,
-      // standardDeduction: standardDeduction,
-      // taxBrackets: taxBrackets,
-      nonSsIncome: incomeStreams.nonSsIncome(),
-      ssIncome: incomeStreams.ssIncome(),
-      precision: 0.01, // Precision for binary search convergence
-    };
+    // const fixedIncomeFactors = {
+    //   reportedEarnedInterest: incomeStreams.reportedEarnedInterest,
+    //   myPension: incomeStreams.myPension,
+    //   spousePension: incomeStreams.spousePension,
+    //   rmd: incomeStreams.rmd,
+    //   otherTaxableIncomeAdjustments:
+    //     incomeStreams.otherTaxableIncomeAdjustments,
+    //   mySsBenefitsGross: incomeStreams.mySs,
+    //   spouseSsBenefitsGross: incomeStreams.spouseSs,
+    //   // standardDeduction: standardDeduction,
+    //   // taxBrackets: taxBrackets,
+    //   nonSsIncome: incomeStreams.nonSsIncome(),
+    //   ssIncome: incomeStreams.ssIncome(),
+    //   precision: 0.01, // Precision for binary search convergence
+    // };
 
     // Withdrawal amount to be determined
     switch (accountType) {
@@ -142,7 +135,7 @@ function withdrawalFactoryJS_createWithdrawalFactory(
         {
           if (retirementAccountIncomeRecognized) return 0; // already processed a 401k withdrawal this year
 
-          let varaibleWithdrawalAmt = 0;
+          let gross401kWithdrawal = 0;
 
           if (fiscalData.useTrad401k) {
             const withdrawals =
@@ -153,7 +146,7 @@ function withdrawalFactoryJS_createWithdrawalFactory(
                 fiscalData
               );
 
-            varaibleWithdrawalAmt = Math.min(
+            gross401kWithdrawal = Math.min(
               Math.max(
                 traditional401kAccount.availableFunds() - incomeStreams.rmd,
                 0
@@ -167,7 +160,7 @@ function withdrawalFactoryJS_createWithdrawalFactory(
             ssBreakdown: {},
             incomeBreakdown: {},
             ...retirementJS_calculateIncomeWhen401kWithdrawalIs(
-              varaibleWithdrawalAmt,
+              gross401kWithdrawal,
               incomeStreams,
               demographics,
               fiscalData
@@ -180,30 +173,24 @@ function withdrawalFactoryJS_createWithdrawalFactory(
               TRANSACTION_CATEGORY.DISBURSEMENT
             );
             traditional401kAccount.withdraw(
-              varaibleWithdrawalAmt,
+              gross401kWithdrawal,
               TRANSACTION_CATEGORY.DISBURSEMENT
             );
             savingsAccount.deposit(
-              incomeResults.incomeBreakdown.netIncomeLessReportedEarnedInterest(),
+              incomeResults.incomeBreakdown.reportableIncomeLessReportedEarnedInterest(),
               TRANSACTION_CATEGORY.INCOME
+            );
+            savingsAccount.withdraw(
+              incomeResults.incomeBreakdown.federalIncomeTax,
+              TRANSACTION_CATEGORY.TAXES
             );
             retirementAccountIncomeRecognized = true;
           }
 
-          // let netWithdrawals = 0;
-          // netWithdrawals +=
-          //   incomeResults.incomeBreakdown.translateGrossAmountToNet(
-          //     incomeStreams.rmd
-          //   );
-          // const variableWitdrawalAmt =
-          //   incomeResults.incomeBreakdown.translateGrossAmountToNet(
-          //     varaibleWithdrawalAmt
-          //   );
-          // netWithdrawals += variableWitdrawalAmt;
-
-          return (
-            varaibleWithdrawalAmt -
-            incomeResults.incomeBreakdown.federalIncomeTax
+          return Math.max(
+            gross401kWithdrawal -
+              incomeResults.incomeBreakdown.federalIncomeTax,
+            0
           );
 
           // return netWithdrawals;

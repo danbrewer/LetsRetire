@@ -346,9 +346,7 @@ function calculateRetirementYearData(inputs, accounts, benefitAmounts) {
     withdrawalBreakdown.roth = withdrawal;
   }
   if (shortfall > 0) {
-    // let thisSpend = spend * 0.6;
     const withdrawal = withdrawalFactory.withdrawFromTargetedAccount(
-      //accountPortioner.traditional401kAsk(),
       shortfall + estimatedFixedRecurringIncomeNet,
       ACCOUNT_TYPES.TRADITIONAL_401K,
       false
@@ -357,7 +355,7 @@ function calculateRetirementYearData(inputs, accounts, benefitAmounts) {
     withdrawalBreakdown.retirementAccount = withdrawal;
   }
 
-  // if anything hasn't already been accounted for, try taking it from Savings
+  // if anything hasn't already been accounted for (like income taxes due when 401k is empty), try taking it from Savings
   if (shortfall > 0) {
     shortfall -= withdrawalFactory.withdrawFromTargetedAccount(
       shortfall,
