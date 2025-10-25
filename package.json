@@ -1,4 +1,8 @@
 {
+  "scripts": {
+    "test": "node test_cSsBenefits.js",
+    "test:all": "node test_cSsBenefits.js && node test_nan_fix.js && node test_nan_prevention.js && node test_ui_defaults.js"
+  },
   "devDependencies": {
     "prettier": "^3.6.2"
   }

@@ -1,138 +1,138 @@
 // retirement.js
 
-function _calculateSsBenefits(mySsBenefits, spouseSsBenefits, nonSsIncome) {
-  // Declare and initialize the result object at the top
-  // debugger;
-  // debugger;
-  const ssBenefits = {
-    inputs: {
-      myBenefits: mySsBenefits || 0,
-      spouseBenefits: spouseSsBenefits || 0,
-      nonSsIncome: nonSsIncome || 0,
-    },
-    taxablePortion: 0,
-    oneHalfOfSSBenefits() {
-      return (0.5 * this.totalBenefits()).asCurrency();
-    },
-    // derived values
-    nonTaxablePortion() {
-      return this.totalBenefits() - this.taxablePortion;
-    },
-    totalBenefits() {
-      return (this.inputs.myBenefits + this.inputs.spouseBenefits).asCurrency();
-    },
-    myPortion() {
-      return (this.inputs.myBenefits / this.totalBenefits()).asCurrency();
-    },
-    spousePortion() {
-      return (this.inputs.spouseBenefits / this.totalBenefits()).asCurrency();
-    },
-    myTaxablePortion() {
-      return (this.myPortion() * this.taxablePortion).asCurrency();
-    },
-    spouseTaxablePortion() {
-      return (this.spousePortion() * this.taxablePortion).asCurrency();
-    },
-    myNonTaxablePortion() {
-      return (this.myPortion() * this.nonTaxablePortion()).asCurrency();
-    },
-    spouseNonTaxablePortion() {
-      return (this.spousePortion() * this.nonTaxablePortion()).asCurrency();
-    },
-    provisionalIncome() {
-      return (
-        this.oneHalfOfSSBenefits() + this.inputs.nonSsIncome
-      ).asCurrency();
-    },
-    calculationDetails: {},
-  };
+// function _calculateSsBenefits(mySsBenefits, spouseSsBenefits, nonSsIncome) {
+//   // Declare and initialize the result object at the top
+//   // debugger;
+//   // debugger;
+//   const ssBenefits = {
+//     inputs: {
+//       myBenefits: mySsBenefits || 0,
+//       spouseBenefits: spouseSsBenefits || 0,
+//       nonSsIncome: nonSsIncome || 0,
+//     },
+//     taxablePortion: 0,
+//     oneHalfOfSSBenefits() {
+//       return (0.5 * this.totalBenefits()).asCurrency();
+//     },
+//     // derived values
+//     nonTaxablePortion() {
+//       return this.totalBenefits() - this.taxablePortion;
+//     },
+//     totalBenefits() {
+//       return (this.inputs.myBenefits + this.inputs.spouseBenefits).asCurrency();
+//     },
+//     myPortion() {
+//       return (this.inputs.myBenefits / this.totalBenefits()).asCurrency();
+//     },
+//     spousePortion() {
+//       return (this.inputs.spouseBenefits / this.totalBenefits()).asCurrency();
+//     },
+//     myTaxablePortion() {
+//       return (this.myPortion() * this.taxablePortion).asCurrency();
+//     },
+//     spouseTaxablePortion() {
+//       return (this.spousePortion() * this.taxablePortion).asCurrency();
+//     },
+//     myNonTaxablePortion() {
+//       return (this.myPortion() * this.nonTaxablePortion()).asCurrency();
+//     },
+//     spouseNonTaxablePortion() {
+//       return (this.spousePortion() * this.nonTaxablePortion()).asCurrency();
+//     },
+//     provisionalIncome() {
+//       return (
+//         this.oneHalfOfSSBenefits() + this.inputs.nonSsIncome
+//       ).asCurrency();
+//     },
+//     calculationDetails: {},
+//   };
 
-  if (
-    isNaN(ssBenefits.totalBenefits()) ||
-    isNaN(ssBenefits.inputs.nonSsIncome)
-  ) {
-    log.error(
-      `determineTaxablePortionOfSocialSecurity received NaN values: result.totalBenefits() was ${ssBenefits.totalBenefits()}, allOtherIncome was ${
-        ssBenefits.allOtherIncome
-      }`
-    );
-    throw new Error("Invalid input: NaN values detected");
-  }
+//   if (
+//     isNaN(ssBenefits.totalBenefits()) ||
+//     isNaN(ssBenefits.inputs.nonSsIncome)
+//   ) {
+//     log.error(
+//       `determineTaxablePortionOfSocialSecurity received NaN values: result.totalBenefits() was ${ssBenefits.totalBenefits()}, allOtherIncome was ${
+//         ssBenefits.allOtherIncome
+//       }`
+//     );
+//     throw new Error("Invalid input: NaN values detected");
+//   }
 
-  const calculationDetails = {
-    method: "irs-rules",
-    totalBenefits: ssBenefits.totalBenefits(),
-    halfSSBenefit: ssBenefits.oneHalfOfSSBenefits(),
-    otherTaxableIncome: nonSsIncome,
-    provisionalIncome: ssBenefits.provisionalIncome(),
-    tier1Threshold: 32000,
-    incomeExceedingTier1: 0,
-    tier2Threshold: 44000,
-    incomeExceedingTier2: 0,
-    finalTaxableAmount: 0,
-  };
+//   const calculationDetails = {
+//     method: "irs-rules",
+//     totalBenefits: ssBenefits.totalBenefits(),
+//     halfSSBenefit: ssBenefits.oneHalfOfSSBenefits(),
+//     otherTaxableIncome: nonSsIncome,
+//     provisionalIncome: ssBenefits.provisionalIncome(),
+//     tier1Threshold: 32000,
+//     incomeExceedingTier1: 0,
+//     tier2Threshold: 44000,
+//     incomeExceedingTier2: 0,
+//     finalTaxableAmount: 0,
+//   };
 
-  ssBenefits.calculationDetails = calculationDetails;
+//   ssBenefits.calculationDetails = calculationDetails;
 
-  // Case 1: No social security is taxable
-  if (
-    calculationDetails.provisionalIncome <= calculationDetails.tier1Threshold
-  ) {
-    // Provisional income does not exceed Tier 1 threshold; no taxable SS
-    ssBenefits.taxablePortion = 0;
-    // debugger;
-    return ssBenefits;
-  }
+//   // Case 1: No social security is taxable
+//   if (
+//     calculationDetails.provisionalIncome <= calculationDetails.tier1Threshold
+//   ) {
+//     // Provisional income does not exceed Tier 1 threshold; no taxable SS
+//     ssBenefits.taxablePortion = 0;
+//     // debugger;
+//     return ssBenefits;
+//   }
 
-  // Case 2: Provisional income exceeds Tier 1 but not Tier 2
-  if (calculationDetails.provisionalIncome <= calculationDetails.threshold2) {
-    calculationDetails.incomeExceedingTier1 =
-      calculationDetails.provisionalIncome - calculationDetails.tier1Threshold;
+//   // Case 2: Provisional income exceeds Tier 1 but not Tier 2
+//   if (calculationDetails.provisionalIncome <= calculationDetails.threshold2) {
+//     calculationDetails.incomeExceedingTier1 =
+//       calculationDetails.provisionalIncome - calculationDetails.tier1Threshold;
 
-    let excessOfTier1TaxableAmt = (
-      0.5 * calculationDetails.incomeExceedingTier1
-    )
-      .asCurrency()
-      .asCurrency();
+//     let excessOfTier1TaxableAmt = (
+//       0.5 * calculationDetails.incomeExceedingTier1
+//     )
+//       .asCurrency()
+//       .asCurrency();
 
-    calculationDetails.finalTaxableAmount = Math.min(
-      (0.5 * ssBenefits.totalBenefits()).asCurrency(),
-      excessOfTier1TaxableAmt
-    ).asCurrency();
+//     calculationDetails.finalTaxableAmount = Math.min(
+//       (0.5 * ssBenefits.totalBenefits()).asCurrency(),
+//       excessOfTier1TaxableAmt
+//     ).asCurrency();
 
-    ssBenefits.taxablePortion = calculationDetails.finalTaxableAmount;
-    return ssBenefits;
-  }
+//     ssBenefits.taxablePortion = calculationDetails.finalTaxableAmount;
+//     return ssBenefits;
+//   }
 
-  // Case 3: Provisional income exceeds Tier 2
-  const excessOverTier2 =
-    ssBenefits.provisionalIncome() - calculationDetails.tier2Threshold;
+//   // Case 3: Provisional income exceeds Tier 2
+//   const excessOverTier2 =
+//     ssBenefits.provisionalIncome() - calculationDetails.tier2Threshold;
 
-  let taxableSsInExcessOfTier1Threshold =
-    0.5 *
-    (calculationDetails.tier2Threshold - calculationDetails.tier1Threshold);
-  let taxableSsInExcessOfTier2Threshold = (0.85 * excessOverTier2).asCurrency();
+//   let taxableSsInExcessOfTier1Threshold =
+//     0.5 *
+//     (calculationDetails.tier2Threshold - calculationDetails.tier1Threshold);
+//   let taxableSsInExcessOfTier2Threshold = (0.85 * excessOverTier2).asCurrency();
 
-  taxableSSAmount = Math.min(
-    (0.85 * ssBenefits.totalBenefits()).asCurrency(),
-    taxableSsInExcessOfTier1Threshold + taxableSsInExcessOfTier2Threshold
-  );
+//   taxableSSAmount = Math.min(
+//     (0.85 * ssBenefits.totalBenefits()).asCurrency(),
+//     taxableSsInExcessOfTier1Threshold + taxableSsInExcessOfTier2Threshold
+//   );
 
-  // Update calculation details
-  calculationDetails.incomeExceedingTier1 =
-    calculationDetails.tier2Threshold - calculationDetails.tier1Threshold;
-  calculationDetails.incomeExceedingTier2 = excessOverTier2;
-  calculationDetails.tier1TaxableAmount = taxableSsInExcessOfTier1Threshold;
-  calculationDetails.tier2TaxableAmount = Math.min(
-    (0.85 * ssBenefits.totalBenefits()).asCurrency() -
-      taxableSsInExcessOfTier1Threshold,
-    taxableSsInExcessOfTier2Threshold
-  );
+//   // Update calculation details
+//   calculationDetails.incomeExceedingTier1 =
+//     calculationDetails.tier2Threshold - calculationDetails.tier1Threshold;
+//   calculationDetails.incomeExceedingTier2 = excessOverTier2;
+//   calculationDetails.tier1TaxableAmount = taxableSsInExcessOfTier1Threshold;
+//   calculationDetails.tier2TaxableAmount = Math.min(
+//     (0.85 * ssBenefits.totalBenefits()).asCurrency() -
+//       taxableSsInExcessOfTier1Threshold,
+//     taxableSsInExcessOfTier2Threshold
+//   );
 
-  ssBenefits.taxablePortion = taxableSSAmount;
+//   ssBenefits.taxablePortion = taxableSSAmount;
 
-  return ssBenefits;
-}
+//   return ssBenefits;
+// }
 
 function retirementJS_determineFederalIncomeTax(taxableIncome, brackets) {
   let tax = 0,
@@ -173,129 +173,109 @@ function retirementJS_calculateIncomeWhen401kWithdrawalIs(
     fiscalData.inflationRate
   );
 
-  const fixedIncomeFactors = {
-    reportedEarnedInterest: incomeStreams.reportedEarnedInterest,
-    myPension: incomeStreams.myPension,
-    spousePension: incomeStreams.spousePension,
-    rmd: incomeStreams.rmd,
-    otherTaxableIncomeAdjustments: incomeStreams.otherTaxableIncomeAdjustments,
-    mySsBenefitsGross: incomeStreams.mySs,
-    spouseSsBenefitsGross: incomeStreams.spouseSs,
-    standardDeduction: standardDeduction,
-    fixedIncomeStreams: incomeStreams.nonSsIncome(),
-    retirementAccount: variableIncomeFactor,
-    ssIncome: incomeStreams.ssIncome(),
-    precision: 0.01, // Precision for binary search convergence
-  };
+  const ssBreakdown = SsBenefits.CalculateUsing(
+    incomeStreams.mySs,
+    incomeStreams.spouseSs,
+    incomeStreams.nonSsIncome()
+  );
 
-  const ssBreakdown = {
-    inputs: {},
-    taxablePortion: 0,
-    oneHalfOfSSBenefits: {},
-    nonTaxablePortion: {},
-    totalBenefits: {},
-    myPortion: {},
-    spousePortion: {},
-    myTaxablePortion: {},
-    spouseTaxablePortion: {},
-    myNonTaxablePortion: {},
-    spouseNonTaxablePortion: {},
-    provisionalIncome: {},
-    calculationDetails: {},
-    ..._calculateSsBenefits(
-      fixedIncomeFactors.mySsBenefitsGross,
-      fixedIncomeFactors.spouseSsBenefitsGross,
-      fixedIncomeFactors.fixedIncomeStreams
-    ),
-  };
+  // const ssBreakdown = {
+  //   inputs: {},
+  //   taxablePortion: 0,
+  //   oneHalfOfSSBenefits: {},
+  //   nonTaxablePortion: {},
+  //   totalBenefits: {},
+  //   myPortion: {},
+  //   spousePortion: {},
+  //   myTaxablePortion: {},
+  //   spouseTaxablePortion: {},
+  //   myNonTaxablePortion: {},
+  //   spouseNonTaxablePortion: {},
+  //   provisionalIncome: {},
+  //   calculationDetails: {},
+  //   ..._calculateSsBenefits(
+  //     incomeStreams.mySs,
+  //     incomeStreams.spouseSs,
+  //     incomeStreams.nonSsIncome()
+  //   ),
+  // };
 
-  const incomeBreakdown = {
-    myPension: fixedIncomeFactors.myPension,
-    spousePension: fixedIncomeFactors.spousePension,
-    rmd: fixedIncomeFactors.rmd,
-    otherTaxableIncomeAdjustments:
-      fixedIncomeFactors.otherTaxableIncomeAdjustments,
-    retirementAccountWithdrawal: variableIncomeFactor,
-    // socialSecurityIncome:
-    //   ssBreakdown.inputs.myBenefits + ssBreakdown.inputs.spouseBenefits,
-    taxableSsIncome: ssBreakdown.taxablePortion,
-    reportedEarnedInterest: fixedIncomeFactors.reportedEarnedInterest,
-    standardDeduction: standardDeduction,
-    federalIncomeTax: 0,
-    reportableIncome() {
-      return (
-        this.reportedEarnedInterest +
-        this.myPension +
-        this.spousePension +
-        this.rmd +
-        this.otherTaxableIncomeAdjustments +
-        this.retirementAccountWithdrawal +
-        this.socialSecurityIncome
-      );
-    },
-    // rmdPortionOfReportableIncome() {
-    //   return this.reportableIncome() > 0
-    //     ? this.rmd / this.reportableIncome()
-    //     : 0;
-    // },
-    // retirementAccountWidthdrawaPortionOfReportableIncome() {
-    //   return this.reportableIncome() > 0
-    //     ? (this.retirementAccountWithdrawal / this.reportableIncome()).round(3)
-    //     : 0;
-    // },
-    // ssNonTaxablePortion() {
-    //   return this.socialSecurityIncome - this.taxableSsIncome;
-    // },
-    adjustedGrossIncome() {
-      return (
-        this.reportedEarnedInterest +
-        this.myPension +
-        this.spousePension +
-        this.rmd +
-        this.otherTaxableIncomeAdjustments +
-        this.retirementAccountWithdrawal +
-        this.ssBreakdown.taxablePortion
-      );
-    },
-    // grossTaxableIncomeWithoutSs() {
-    //   return this.nonSsIncome + this.retirementAccountWithdrawal;
-    // },
-    taxableIncome() {
-      return Math.max(0, this.adjustedGrossIncome() - this.standardDeduction);
-    },
-    netIncome() {
-      return this.reportableIncome() - this.federalIncomeTax;
-    },
-    netIncomeLessReportedEarnedInterest() {
-      return this.netIncome() - this.reportedEarnedInterest;
-    },
-    reportableIncomeLessReportedEarnedInterest() {
-      return this.reportableIncome() - this.reportedEarnedInterest;
-    },
-    effectiveTaxRate() {
-      if (this.reportableIncome() === 0) return 0;
-      return (this.federalIncomeTax / this.reportableIncome()).round(3);
-    },
-    incomeAsPercentageOfGross(amount = 0) {
-      if (this.reportableIncome() === 0) return 0;
-      return amount / this.reportableIncome();
-    },
-    translateGrossAmountToNet(amount = 0) {
-      return (
-        this.incomeAsPercentageOfGross(amount) * this.netIncome()
-      ).asCurrency();
-    },
-    translateGrossAmountToPortionOfFederalIncomeTax(amount = 0) {
-      return (
-        this.incomeAsPercentageOfGross(amount) * this.federalIncomeTax
-      ).asCurrency();
-    },
-  };
-
-  incomeBreakdown.federalIncomeTax = retirementJS_determineFederalIncomeTax(
-    incomeBreakdown.taxableIncome(),
+  const incomeBreakdown = IncomeBreakdown.CreateFrom(
+    incomeStreams,
+    variableIncomeFactor,
+    ssBreakdown,
+    standardDeduction,
     taxBrackets
   );
+
+  // const incomeBreakdown = {
+  //   myPension: incomeStreams.myPension,
+  //   spousePension: incomeStreams.spousePension,
+  //   rmd: incomeStreams.rmd,
+  //   otherTaxableIncomeAdjustments: incomeStreams.otherTaxableIncomeAdjustments,
+  //   retirementAccountWithdrawal: variableIncomeFactor,
+  //   taxableSsIncome: ssBreakdown.taxablePortion,
+  //   reportedEarnedInterest: incomeStreams.reportedEarnedInterest,
+  //   standardDeduction: standardDeduction,
+  //   federalIncomeTax: 0,
+  //   reportableIncome() {
+  //     return (
+  //       this.reportedEarnedInterest +
+  //       this.myPension +
+  //       this.spousePension +
+  //       this.rmd +
+  //       this.otherTaxableIncomeAdjustments +
+  //       this.retirementAccountWithdrawal +
+  //       this.socialSecurityIncome
+  //     );
+  //   },
+  //   adjustedGrossIncome() {
+  //     return (
+  //       this.reportedEarnedInterest +
+  //       this.myPension +
+  //       this.spousePension +
+  //       this.rmd +
+  //       this.otherTaxableIncomeAdjustments +
+  //       this.retirementAccountWithdrawal +
+  //       this.ssBreakdown.taxablePortion
+  //     );
+  //   },
+  //   taxableIncome() {
+  //     return Math.max(0, this.adjustedGrossIncome() - this.standardDeduction);
+  //   },
+  //   netIncome() {
+  //     return this.reportableIncome() - this.federalIncomeTax;
+  //   },
+  //   netIncomeLessReportedEarnedInterest() {
+  //     return this.netIncome() - this.reportedEarnedInterest;
+  //   },
+  //   reportableIncomeLessReportedEarnedInterest() {
+  //     return this.reportableIncome() - this.reportedEarnedInterest;
+  //   },
+  //   effectiveTaxRate() {
+  //     if (this.reportableIncome() === 0) return 0;
+  //     return (this.federalIncomeTax / this.reportableIncome()).round(3);
+  //   },
+  //   incomeAsPercentageOfGross(amount = 0) {
+  //     if (this.reportableIncome() === 0) return 0;
+  //     return amount / this.reportableIncome();
+  //   },
+  //   translateGrossAmountToNet(amount = 0) {
+  //     return (
+  //       this.incomeAsPercentageOfGross(amount) * this.netIncome()
+  //     ).asCurrency();
+  //   },
+  //   translateGrossAmountToPortionOfFederalIncomeTax(amount = 0) {
+  //     return (
+  //       this.incomeAsPercentageOfGross(amount) * this.federalIncomeTax
+  //     ).asCurrency();
+  //   },
+  // };
+
+  // incomeBreakdown.federalIncomeTax = retirementJS_determineFederalIncomeTax(
+  //   incomeBreakdown.taxableIncome(),
+  //   taxBrackets
+  // );
 
   // Update all the final values in the result object
   // result.allTaxableIncome = incomeBreakdown.reportableIncome();

@@ -225,7 +225,7 @@ The key is understanding the **complete cash flow cycle** that occurs in the wit
 
 #### Step 1: Withdrawal from 401k Account
 ```javascript
-traditional401kAccount.withdraw(
+trad401kAccount.withdraw(
   varaibleWithdrawalAmt,
   TRANSACTION_CATEGORY.DISBURSEMENT
 );
@@ -327,12 +327,12 @@ An important edge case occurs when the 401k account has been exhausted. Understa
 
 ### The Code Logic for Depleted 401k
 
-When `traditional401kAccount.availableFunds()` returns 0, the withdrawal calculation becomes:
+When `trad401kAccount.availableFunds()` returns 0, the withdrawal calculation becomes:
 
 ```javascript
 varaibleWithdrawalAmt = Math.min(
   Math.max(
-    traditional401kAccount.availableFunds() - incomeStreams.rmd,  // = 0 - RMD = negative
+    trad401kAccount.availableFunds() - incomeStreams.rmd,  // = 0 - RMD = negative
     0
   ),
   withdrawals.withdrawalNeeded

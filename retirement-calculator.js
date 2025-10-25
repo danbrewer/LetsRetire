@@ -118,11 +118,7 @@ function calc() {
 
   // Initialize balances object for tracking
   const accounts = {
-    traditional401k: new Account(
-      "Traditional 401k",
-      inputs.trad401k,
-      inputs.ret401k
-    ),
+    trad401k: new Account("Traditional 401k", inputs.trad401k, inputs.ret401k),
     rothIra: new Account("Roth IRA", inputs.rothIRA, inputs.retRoth),
     savings: new Account("Savings", inputs.savings, inputs.retSavings),
   };
@@ -161,7 +157,7 @@ function calc() {
   }
 
   // Setup retirement years; calculate initial benefit amounts
-  const initialBenefits = calculateInitialBenefitAmounts(inputs);
+  const initialBenefits = common_calculateInitialBenefitAmounts(inputs);
   let ssYearlyIndexed = initialBenefits.ssAnnual;
   let penYearlyIndexed = initialBenefits.penAnnual;
   let spouseSsYearlyIndexed = initialBenefits.spouseSsAnnual;

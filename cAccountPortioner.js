@@ -29,15 +29,15 @@ class AccountPortioner {
       : 0;
   }
 
-  #traditional401kAvailable() {
+  #trad401kAvailable() {
     return this.#useSavings
-      ? this.#accounts.traditional401k.endingBalanceForYear(this.#taxYear)
+      ? this.#accounts.trad401k.endingBalanceForYear(this.#taxYear)
       : 0;
   }
 
-  #traditional401kPortion() {
+  #trad401kPortion() {
     return this.#totalAvailable() > 0
-      ? this.#traditional401kAvailable() / this.#totalAvailable()
+      ? this.#trad401kAvailable() / this.#totalAvailable()
       : 0;
   }
 
@@ -56,7 +56,7 @@ class AccountPortioner {
   #totalAvailable() {
     return (
       this.#savingsAvailable() +
-      this.#traditional401kAvailable() +
+      this.#trad401kAvailable() +
       this.#rothIraAvailable()
     );
   }
@@ -64,8 +64,8 @@ class AccountPortioner {
   savingsAsk() {
     return (this.#savingsPortion() * this.#ask).asCurrency();
   }
-  traditional401kAsk() {
-    return (this.#traditional401kPortion() * this.#ask).asCurrency();
+  trad401kAsk() {
+    return (this.#trad401kPortion() * this.#ask).asCurrency();
   }
   rothAsk() {
     return (this.#rothIraPortion() * this.#ask).asCurrency();
