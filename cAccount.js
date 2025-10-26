@@ -1,9 +1,16 @@
 // Create a class for the account
 class Account {
+  /** @type {Transaction[]} */
   #transactions = [];
+
+  /** @type {string} */
   #name = "";
+
+  /** @type {number} */
   #initialBalance = 0;
-  #interestRate = 0; // Annual interest rate as a decimal (e.g., 0.05 for 5%)
+
+  /** @type {number} Annual interest rate as a decimal (e.g., 0.05 for 5%) */
+  #interestRate = 0;
 
   #startingBalanceForYear(yyyy) {
     let startingBalance = this.initialBalance;
@@ -35,6 +42,11 @@ class Account {
     return endingBalance;
   }
 
+  /**
+   * @param {string} name - Name of the account
+   * @param {number} initialBalance - Initial balance of the account
+   * @param {number} interestRate - Annual interest rate as a decimal (e.g., 0.05 for 5%)
+   */
   constructor(name, initialBalance, interestRate) {
     this.#name = name;
     this.#initialBalance = initialBalance;

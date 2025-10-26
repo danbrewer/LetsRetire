@@ -1,6 +1,10 @@
 class TargetedAccount {
+  /** @type {Account} */
   #account = null;
 
+  /**
+   * @param {Account} account - Instance of Account class
+   */
   constructor(account) {
     this.#account = account;
   }
