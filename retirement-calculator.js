@@ -117,11 +117,11 @@ function calc() {
   }
 
   // Initialize balances object for tracking
-  const accounts = {
-    trad401k: new Account("Traditional 401k", inputs.trad401k, inputs.ret401k),
-    rothIra: new Account("Roth IRA", inputs.rothIRA, inputs.retRoth),
-    savings: new Account("Savings", inputs.savings, inputs.retSavings),
-  };
+  const accountGroup = new AccountGroup(
+    new Account("Trad 401k", inputs.trad401k, inputs.ret401k),
+    new Account("Trad Roth", inputs.rothIRA, inputs.retRoth),
+    new Account("Savings", inputs.savings, inputs.retSavings)
+  );
 
   // Reset calculations array
   calculations = [];
@@ -138,10 +138,10 @@ function calc() {
       inputs,
       y,
       currentSalary,
-      accounts
+      accountGroup
     );
 
-    yearData.accounts = { ...accounts };
+    yearData.accountGroup = { ...accountGroup };
 
     calculations.push({
       year: new Date().getFullYear() + y,
@@ -153,7 +153,6 @@ function calc() {
 
     // Update salary for next year
     currentSalary *= 1 + inputs.salaryGrowth;
-    // accounts.rollForward();
   }
 
   // Setup retirement years; calculate initial benefit amounts
@@ -171,19 +170,20 @@ function calc() {
   ) {
     generateYearlyIndexedInputValues(inputs, yearIndex);
 
-    const benefitAmounts = {
-      ssAnnual: ssYearlyIndexed,
-      penAnnual: penYearlyIndexed,
-      spouseSsAnnual: spouseSsYearlyIndexed,
-      spousePenAnnual: spousePenYearlyIndexed,
-    };
+    const benefitAmounts = new BenefitAmounts(
+      ssYearlyIndexed,
+      penYearlyIndexed,
+      spouseSsYearlyIndexed,
+      spousePenYearlyIndexed
+    );
+
     const yearData = calculateRetirementYearData(
       inputs,
-      accounts,
+      accountGroup,
       benefitAmounts
     );
 
-    yearData.accounts = { ...accounts };
+    yearData.accountGroup = { ...accountGroup };
 
     yearData.dump();
     debugger;
@@ -223,11 +223,8 @@ function calc() {
     ).asCurrency();
 
     inputs.spendAtRetire += annualIncreaseInSpending + annualDecreaseInSpending;
-    // accounts.rollForward();
   }
 
-  // console.log("Calculations: ", calculations);
-  // calculations.forEach((calc) => calc.accounts.dump());
   debugger;
 
   // Generate final output

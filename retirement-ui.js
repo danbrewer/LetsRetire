@@ -2012,101 +2012,165 @@ function initializeHelpIcons() {
 /**
  * Parse and validate input parameters for the retirement calculation
  */
+/**
+ * Parses input parameters from the UI form elements and creates a retirement calculation inputs object
+ *
+ * @description This function extracts values from various form elements on the page,
+ * processes them (converting percentages, parsing numbers), and creates an Inputs object
+ * with all the necessary data for retirement calculations.
+ *
+ * @returns {Inputs} A configured Inputs object containing:
+ *   - Personal information (ages, retirement timeline)
+ *   - Spouse information (if applicable)
+ *   - Employment and contribution data
+ *   - Account balances and expected returns
+ *   - Income sources (Social Security, pension)
+ *   - Tax settings and withdrawal order
+ *
+ * @throws {Error} Shows a toast error message if inputs are invalid (age validation fails)
+ *
+ * @example
+ * // Parse current form values and create inputs object
+ * const inputs = parseInputParameters();
+ * if (inputs) {
+ *   // Proceed with retirement calculations
+ *   calculateRetirement(inputs);
+ * }
+ *
+ * @see {@link Inputs} - The Inputs class constructor for parameter details
+ * @see {@link validateInputs} - Validation function used internally
+ *
+ * @since 1.0.0
+ */
 function parseInputParameters() {
   // Basic parameters
-  const inputs = {
-    currentAge: num("currentAge"),
-    currentSpouseAge: num("spouseAge"),
-    retireAge: num("retireAge"),
-    ssStartAge: num("ssStart"),
-    penStartAge: num("penStart"),
-    endAge: num("endAge"),
-    inflation: pct(num("inflation")),
-    spendingToday: num("spendingToday"),
-    spendingDecline: pct(num("spendingDecline")),
-
-    // Spouse information
-    spouseRetireAge: num("spouseRetireAge"),
-    spouseSsMonthly: num("spouseSsMonthly"),
-    spouseSsStartAge: num("spouseSsStart"),
-    spouseSsCola: pct(num("spouseSsCola")),
-    spousePenMonthly: num("spousePenMonthly"),
-    spousePenStartAge: num("spousePenStart"),
-    spousePenCola: pct(num("spousePenCola")),
-    spouseTaxSS: pct(num("spouseTaxSS")),
-    spouseTaxPension: pct(num("spouseTaxPension")),
-
-    // Employment and contributions
-    startingSalary: num("salary"),
-    salaryGrowth: pct(num("salaryGrowth")),
-    pretaxPct: pct(num("pretaxPct")),
-    rothPct: pct(num("rothPct")),
-    taxablePct: pct(num("taxablePct")),
-    matchCap: pct(num("matchCap")),
-    matchRate: pct(num("matchRate")),
-
-    // Account balances and returns
-    trad401k: num("balPre"),
-    rothIRA: num("balRoth"),
-    savings: num("balSavings"),
-    ret401k: pct(num("retPre")),
-    retRoth: pct(num("retRoth")),
-    retSavings: pct(num("retTax")),
-
-    // Income sources
-    ssMonthly: num("ssMonthly"),
-    ssCola: pct(num("ssCola")),
-    penMonthly: num("penMonthly"),
-    penCola: pct(num("penCola")),
-    // Tax rates and settings
-    filingStatus: $("filingStatus").value,
-    useRMD: $("useRMD").checked,
-  };
-
   // Parse withdrawal order
-  inputs.order = $("order")
+  let withdrawalOrder = $("order")
     .value.split(",")
     .map((s) => s.trim())
     .filter((s) => s.length > 0);
-  if (inputs.order.length === 0) {
-    inputs.order = [
+  if (withdrawalOrder.length === 0) {
+    withdrawalOrder = [
       ACCOUNT_TYPES.SAVINGS,
       ACCOUNT_TYPES.TRADITIONAL_401K,
       ACCOUNT_TYPES.ROTH_IRA,
     ];
   }
 
+  const inputs = new Inputs(
+    (currentAge = num("currentAge")),
+    (currentSpouseAge = num("spouseAge")),
+    (retireAge = num("retireAge")),
+    (ssStartAge = num("ssStart")),
+    (penStartAge = num("penStart")),
+    (endAge = num("endAge")),
+    (inflation = pct(num("inflation"))),
+    (spendingToday = num("spendingToday")),
+    (spendingDecline = pct(num("spendingDecline"))),
+    // Spouse information
+    (spouseRetireAge = num("spouseRetireAge")),
+    (spouseSsMonthly = num("spouseSsMonthly")),
+    (spouseSsStartAge = num("spouseSsStart")),
+    (spouseSsCola = pct(num("spouseSsCola"))),
+    (spousePenMonthly = num("spousePenMonthly")),
+    (spousePenStartAge = num("spousePenStartAge")),
+    (spousePenCola = pct(num("spousePenCola"))),
+    (spouseTaxSS = pct(num("spouseTaxSS"))),
+    (spouseTaxPension = pct(num("spouseTaxPension"))),
+    // Employment and contributions
+    (startingSalary = num("salary")),
+    (salaryGrowth = pct(num("salaryGrowth"))),
+    (pretaxPct = pct(num("pretaxPct"))),
+    (rothPct = pct(num("rothPct"))),
+    (taxablePct = pct(num("taxablePct"))),
+    (matchCap = pct(num("matchCap"))),
+    (matchRate = pct(num("matchRate"))),
+    // Account balances and returns
+    (trad401k = num("balPre")),
+    (rothIRA = num("balRoth")),
+    (savings = num("balSavings")),
+    (ret401k = pct(num("retPre"))),
+    (retRoth = pct(num("retRoth"))),
+    (retSavings = pct(num("retTax"))),
+    // Income sources
+    (ssMonthly = num("ssMonthly")),
+    (ssCola = pct(num("ssCola"))),
+    (penMonthly = num("penMonthly")),
+    (penCola = pct(num("penCola"))),
+    // Tax rates and settings
+    (filingStatus = $("filingStatus").value),
+    (useRMD = $("useRMD").checked),
+    (order = withdrawalOrder)
+  );
+
+  // const inputs = {
+  //   currentAge: num("currentAge"),
+  //   currentSpouseAge: num("spouseAge"),
+  //   retireAge: num("retireAge"),
+  //   ssStartAge: num("ssStart"),
+  //   penStartAge: num("penStart"),
+  //   endAge: num("endAge"),
+  //   inflation: pct(num("inflation")),
+  //   spendingToday: num("spendingToday"),
+  //   spendingDecline: pct(num("spendingDecline")),
+
+  //   // Spouse information
+  //   spouseRetireAge: num("spouseRetireAge"),
+  //   spouseSsMonthly: num("spouseSsMonthly"),
+  //   spouseSsStartAge: num("spouseSsStart"),
+  //   spouseSsCola: pct(num("spouseSsCola")),
+  //   spousePenMonthly: num("spousePenMonthly"),
+  //   spousePenStartAge: num("spousePenStart"),
+  //   spousePenCola: pct(num("spousePenCola")),
+  //   spouseTaxSS: pct(num("spouseTaxSS")),
+  //   spouseTaxPension: pct(num("spouseTaxPension")),
+
+  //   // Employment and contributions
+  //   startingSalary: num("salary"),
+  //   salaryGrowth: pct(num("salaryGrowth")),
+  //   pretaxPct: pct(num("pretaxPct")),
+  //   rothPct: pct(num("rothPct")),
+  //   taxablePct: pct(num("taxablePct")),
+  //   matchCap: pct(num("matchCap")),
+  //   matchRate: pct(num("matchRate")),
+
+  //   // Account balances and returns
+  //   trad401k: num("balPre"),
+  //   rothIRA: num("balRoth"),
+  //   savings: num("balSavings"),
+  //   ret401k: pct(num("retPre")),
+  //   retRoth: pct(num("retRoth")),
+  //   retSavings: pct(num("retTax")),
+
+  //   // Income sources
+  //   ssMonthly: num("ssMonthly"),
+  //   ssCola: pct(num("ssCola")),
+  //   penMonthly: num("penMonthly"),
+  //   penCola: pct(num("penCola")),
+  //   // Tax rates and settings
+  //   filingStatus: $("filingStatus").value,
+  //   useRMD: $("useRMD").checked,
+  // };
+
+  // inputs.order = withdrawalOrder;
+
   // Derived values
-  inputs.hasSpouse = inputs.currentSpouseAge > 0;
-  inputs.totalWorkingYears = inputs.retireAge - inputs.currentAge;
-  inputs.totalLivingYears = inputs.endAge - inputs.currentAge;
-  inputs.spendAtRetire =
-    inputs.spendingToday *
-    compoundedRate(inputs.inflation, inputs.totalWorkingYears);
+  // inputs.hasSpouse = inputs.currentSpouseAge > 0;
+  // inputs.totalWorkingYears = inputs.retireAge - inputs.currentAge;
+  // inputs.totalLivingYears = inputs.endAge - inputs.currentAge;
+  // inputs.spendAtRetire =
+  //   inputs.spendingToday *
+  //   compoundedRate(inputs.inflation, inputs.totalWorkingYears);
 
-  if (!validateInputs(inputs)) {
-    return null;
-  }
-
-  return inputs;
-}
-
-/**
- * Validate that the input parameters are valid
- */
-function validateInputs(inputs) {
-  if (
-    inputs.retireAge <= inputs.currentAge ||
-    inputs.endAge <= inputs.retireAge
-  ) {
+  if (!inputs.isValid()) {
     showToast(
       "Invalid Ages",
       "Please ensure: current age < retirement age < plan age.",
       "error"
     );
-    return false;
   }
-  return true;
+
+  return inputs;
 }
 
 function resetAll() {

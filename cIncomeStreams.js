@@ -23,6 +23,14 @@ class IncomeStreams {
   }
 
   // Factory method for backward compatibility and dependency injection
+  /**
+   * @param {Demographics} demographics - Instance of Demographics class
+   * @param {BenefitAmounts} benefitAmounts - Benefit amounts object containing pension and SS amounts
+   * @param {Object} accounts - Accounts object containing savings and 401k accounts
+   * @param {FiscalData} fiscalData - Instance of FiscalData class
+   * @param {Object} inputs - Input data object containing tax adjustments
+   * @returns {IncomeStreams} New IncomeStreams instance
+   */
   static CreateUsing(
     demographics,
     benefitAmounts,
