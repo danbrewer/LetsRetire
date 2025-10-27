@@ -1,4 +1,16 @@
 class IncomeBreakdown {
+  /**
+   * @param {number} myPension
+   * @param {number} spousePension
+   * @param {number} rmd
+   * @param {number} otherTaxableIncomeAdjustments
+   * @param {number} retirementAccountWithdrawal
+   * @param {number} taxableSsIncome
+   * @param {number} socialSecurityIncome
+   * @param {number} reportedEarnedInterest
+   * @param {number} standardDeduction
+   * @param {any} taxBrackets
+   */
   constructor(
     myPension,
     spousePension,
@@ -31,6 +43,13 @@ class IncomeBreakdown {
   }
 
   // Factory method for backward compatibility and dependency injection
+  /**
+   * @param {IncomeStreams} incomeStreams
+   * @param {number} variableIncomeFactor
+   * @param {SsBenefitsCalculator} ssBreakdown
+   * @param {number} standardDeduction
+   * @param {{ rate: number; upTo: number; }[]} taxBrackets
+   */
   static CreateFrom(
     incomeStreams,
     variableIncomeFactor,
@@ -135,6 +154,9 @@ class IncomeBreakdown {
     };
   }
 
+  /**
+   * @param {any} newTaxAmount
+   */
   updateFederalIncomeTax(newTaxAmount) {
     this.federalIncomeTax = newTaxAmount;
   }
@@ -147,12 +169,16 @@ class IncomeBreakdown {
     const reportable = this.reportableIncome();
     return reportable > 0 ? this.netIncome() / reportable : 0;
   }
+
+  static Empty() {
+    return new IncomeBreakdown(0, 0, 0, 0, 0, 0, 0, 0, 0, []);
+  }
 }
 
 // Create instance using the factory method for backward compatibility
-const incomeBreakdown = IncomeBreakdown.CreateFrom(
-  incomeStreams,
-  variableIncomeFactor,
-  ssBreakdown,
-  standardDeduction
-);
+// const incomeBreakdown = IncomeBreakdown.CreateFrom(
+//   incomeStreams,
+//   variableIncomeFactor,
+//   ssBreakdown,
+//   standardDeduction
+// );

@@ -203,71 +203,50 @@ class Inputs {
     /** @type {string[]} */
     this.order = order;
 
+    /** @type {number} */
+    this.totalWorkingYears = 0;
+    /** @type {number} */
+    this.totalLivingYears = 0;
+    /** @type {boolean} */
+    this.hasSpouse = false;
+    /** @type {number} */
+    this.spendAtRetire = 0;
+    /** @type {number} */
+    this.additionalSpending = 0;
+    /** @type {number} */
+    this.spend = 0;
+    /** @type {number} */
+    this.taxableIncomeAdjustment = 0;
+    /** @type {number} */
+    this.taxFreeIncomeAdjustment = 0;
+    /** @type {number} */
+    this.otherTaxableIncomeAdjustments = 0;
+
+    /** @type {number} */
+    this.savingsUseAge = this.retireAge;
+    /** @type {number} */
+    this.trad401kUseAge = this.retireAge;
+    /** @type {number} */
+    this.rothUseAge = this.retireAge;
+
+    /** @type {boolean} */
+    this.useSavings = false;
+    /** @type {boolean} */
+    this.useTrad401k = false;
+    /** @type {boolean} */
+    this.useRoth = false;
+
+    /** @type {number} */
+    this.retirementYear = 0;
+    /** @type {number} */
+    this.age = 0;
+    /** @type {number} */
+    this.yearIndex = 0;
+    /** @type {number} */
+    this.spouseAge = 0;
+
     // Calculate derived values
     this.#calculateDerivedValues();
-  }
-
-  /**
-   * Factory method to create from DOM form elements
-   * @returns {RetirementInputs} New RetirementInputs instance
-   */
-  static fromForm() {
-    // Parse withdrawal order
-    const orderString = $("order").value;
-    const order = orderString
-      .split(",")
-      .map((s) => s.trim())
-      .filter((s) => s.length > 0);
-
-    const finalOrder =
-      order.length === 0
-        ? [
-            ACCOUNT_TYPES.SAVINGS,
-            ACCOUNT_TYPES.TRADITIONAL_401K,
-            ACCOUNT_TYPES.ROTH_IRA,
-          ]
-        : order;
-
-    return new RetirementInputs(
-      num("currentAge"),
-      num("spouseAge"),
-      num("retireAge"),
-      num("ssStart"),
-      num("penStart"),
-      num("endAge"),
-      pct(num("inflation")),
-      num("spendingToday"),
-      pct(num("spendingDecline")),
-      num("spouseRetireAge"),
-      num("spouseSsMonthly"),
-      num("spouseSsStart"),
-      pct(num("spouseSsCola")),
-      num("spousePenMonthly"),
-      num("spousePenStart"),
-      pct(num("spousePenCola")),
-      pct(num("spouseTaxSS")),
-      pct(num("spouseTaxPension")),
-      num("salary"),
-      pct(num("salaryGrowth")),
-      pct(num("pretaxPct")),
-      pct(num("rothPct")),
-      pct(num("taxablePct")),
-      pct(num("matchCap")),
-      pct(num("matchRate")),
-      num("balPre"),
-      num("balRoth"),
-      num("balSavings"),
-      pct(num("retPre")),
-      pct(num("retRoth")),
-      pct(num("retTax")),
-      num("ssMonthly"),
-      pct(num("ssCola")),
-      num("penMonthly"),
-      pct(num("penCola")),
-      $("filingStatus").value,
-      $("useRMD").checked,
-      finalOrder
-    );
   }
 
   /**
@@ -358,27 +337,4 @@ class Inputs {
       },
     };
   }
-
-  // Method to update specific values and recalculate derived values
-  updateValue(property, value) {
-    if (this.hasOwnProperty(property)) {
-      this[property] = value;
-      this.#calculateDerivedValues();
-    }
-  }
-
-  // Method to create a copy with modifications
-  withModifications(modifications) {
-    const newData = { ...this, ...modifications };
-    return new RetirementInputs(newData);
-  }
 }
-
-// Create instance using the factory method for backward compatibility
-const inputs = RetirementInputs.fromForm();
-
-if (!inputs.isValid()) {
-  return null;
-}
-
-return inputs;

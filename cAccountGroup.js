@@ -17,7 +17,7 @@ class AccountGroup {
 
   /**
    * Factory method to create AccountGroup from input data
-   * @param {Object} inputs - Input data containing account balances and rates
+   * @param {Inputs} inputs - Input data containing account balances and rates
    * @returns {AccountGroup} New AccountGroup instance
    */
   static fromInputs(inputs) {
@@ -37,36 +37,55 @@ class AccountGroup {
     return [this.trad401k, this.rothIra, this.savings];
   }
 
+  /**
+   * @param {number} year
+   */
   getTotalBalance(year) {
     return this.getAllAccounts().reduce((total, account) => {
       return total + account.endingBalanceForYear(year);
     }, 0);
   }
 
+  /**
+   * @param {number} year
+   */
   getTotalStartingBalance(year) {
     return this.getAllAccounts().reduce((total, account) => {
       return total + account.startingBalanceForYear(year);
     }, 0);
   }
 
+  /**
+   * @param {number} year
+   */
   getTotalWithdrawals(year) {
     return this.getAllAccounts().reduce((total, account) => {
       return total + account.withdrawalsForYear(year);
     }, 0);
   }
 
+  /**
+   * @param {number} year
+   */
   getTotalDeposits(year) {
     return this.getAllAccounts().reduce((total, account) => {
       return total + account.depositsForYear(year);
     }, 0);
   }
 
+  /**
+   * @param {number} year
+   * @param {string} calculationMethod
+   */
   getTotalInterestEarned(year, calculationMethod) {
     return this.getAllAccounts().reduce((total, account) => {
       return total + account.calculateInterestForYear(calculationMethod, year);
     }, 0);
   }
 
+  /**
+   * @param {string} name
+   */
   getAccountByName(name) {
     switch (name.toLowerCase()) {
       case "traditional 401k":
@@ -82,10 +101,16 @@ class AccountGroup {
     }
   }
 
+  /**
+   * @param {number} year
+   */
   hasPositiveBalance(year) {
     return this.getTotalBalance(year) > 0;
   }
 
+  /**
+   * @param {number} year
+   */
   getBalanceBreakdown(year) {
     return {
       trad401k: this.trad401k.endingBalanceForYear(year),
@@ -95,6 +120,9 @@ class AccountGroup {
     };
   }
 
+  /**
+   * @param {number} year
+   */
   getAccountSummary(year) {
     return {
       trad401k: {
@@ -130,16 +158,19 @@ class AccountGroup {
     };
   }
 
-  // Method to apply interest rate changes to all accounts
-  updateInterestRates(trad401kRate, rothIraRate, savingsRate) {
-    // Note: Account class would need setter methods for this to work
-    // This is a placeholder for future implementation
-    console.warn(
-      "updateInterestRates method requires Account class to have rate setters"
-    );
-  }
+  //   // Method to apply interest rate changes to all accounts
+  //   updateInterestRates(trad401kRate, rothIraRate, savingsRate) {
+  //     // Note: Account class would need setter methods for this to work
+  //     // This is a placeholder for future implementation
+  //     console.warn(
+  //       "updateInterestRates method requires Account class to have rate setters"
+  //     );
+  //   }
 
   // Method to get accounts in withdrawal order
+  /**
+   * @param {string[]} withdrawalOrder
+   */
   getAccountsInOrder(withdrawalOrder) {
     if (!Array.isArray(withdrawalOrder)) {
       return this.getAllAccounts();
@@ -163,4 +194,4 @@ class AccountGroup {
 }
 
 // Create instance using the factory method for backward compatibility
-const accounts = AccountGroup.fromInputs(inputs);
+// const accounts = AccountGroup.fromInputs(inputs);

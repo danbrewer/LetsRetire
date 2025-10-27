@@ -1,3 +1,7 @@
+// ignore type-checking in this file for now
+
+// @ts-nocheck
+
 // Simple test to verify NaN prevention
 console.log("Testing NaN prevention...");
 

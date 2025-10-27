@@ -1,4 +1,11 @@
 class Demographics {
+  /**
+   * @param {number} age
+   * @param {number} ssStartAge
+   * @param {number} penStartAge
+   * @param {number} retirementYear
+   * @param {number} yearIndex
+   */
   constructor(
     age,
     ssStartAge,
@@ -8,9 +15,9 @@ class Demographics {
     isRetired = true,
     isWorking = false,
     hasSpouse = false,
-    spouseAge = undefined,
-    spouseSsStartAge = undefined,
-    spousePenStartAge = undefined,
+    spouseAge = 0,
+    spouseSsStartAge = Number.MAX_VALUE,
+    spousePenStartAge = Number.MAX_VALUE,
     filingStatus = "single"
   ) {
     this.age = age;
@@ -21,8 +28,8 @@ class Demographics {
     this.isWorking = isWorking;
     this.hasSpouse = hasSpouse;
     this.ageOfSpouse = spouseAge;
-    this.ssStartAgeOfSpouse = hasSpouse ? spouseSsStartAge : undefined;
-    this.penStartAgeOfSpouse = hasSpouse ? spousePenStartAge : undefined;
+    this.ssStartAgeOfSpouse = hasSpouse ? spouseSsStartAge : Number.MAX_VALUE;
+    this.penStartAgeOfSpouse = hasSpouse ? spousePenStartAge : Number.MAX_VALUE;
     this.filingStatus = filingStatus;
     this._description = `Retirement Year ${yearIndex + 1} (Age ${this.age}) (Year ${this.retirementYear})`;
   }
@@ -49,6 +56,10 @@ class Demographics {
   }
 
   // Method to update age for multi-year calculations
+  /**
+   * @param {number} newAge
+   * @param {number} yearIndex
+   */
   updateAge(newAge, yearIndex) {
     this.age = newAge;
     if (this.hasSpouse) {

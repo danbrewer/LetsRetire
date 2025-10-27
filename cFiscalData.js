@@ -1,4 +1,13 @@
 class FiscalData {
+  /**
+   * @param {number} inflationRate
+   * @param {string} filingStatus
+   * @param {number} retirementAccountRateOfReturn
+   * @param {number} rothRateOfReturn
+   * @param {number} savingsRateOfReturn
+   * @param {number} yearIndex
+   * @param {number} spend
+   */
   constructor(
     inflationRate,
     filingStatus,
@@ -34,6 +43,10 @@ class FiscalData {
   }
 
   // Method to update for next year
+  /**
+   * @param {number} newSpend
+   * @param {number} newYearIndex
+   */
   updateForNextYear(newSpend, newYearIndex) {
     this.spend = newSpend;
     this.yearIndex = newYearIndex;
@@ -60,6 +73,10 @@ class FiscalData {
   }
 
   // Method to enable/disable account usage
+  /**
+   * @param {any} accountType
+   * @param {boolean} enabled
+   */
   setAccountUsage(accountType, enabled) {
     switch (accountType) {
       case "rmd":

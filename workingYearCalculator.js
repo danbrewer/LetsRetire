@@ -28,28 +28,30 @@ function calculateWorkingYearData(inputs, yearIndex, salary, accountGroup) {
     savingsBreakdown: {},
     ssBreakdown: {},
     spouseSsBreakdown: {},
+    employmentInfo: {},
   };
 
   // debugger;
-  const fiscalData = {
-    _description: "Fiscal Year Data",
-    inflationRate: inputs.inflation,
-    filingStatus: inputs.filingStatus,
-    retirementAccountRateOfReturn: inputs.ret401k,
-    rothRateOfReturn: inputs.retRoth,
-    savingsRateOfReturn: inputs.retSavings,
-    taxYear: TAX_BASE_YEAR + yearIndex,
-    yearIndex: yearIndex,
-    spend: inputs.spend,
-    actualSavingsContribution: 0,
-    desiredSavingsContribution: (salary * inputs.taxablePct).asCurrency(),
-    determineActualSavingsContribution(netIncome) {
-      if (!netIncome || isNaN(netIncome)) return 0;
+  const fiscalData = FiscalData.CreateUsing(inputs, TAX_BASE_YEAR);
+  // {
+  //   _description: "Fiscal Year Data",
+  //   inflationRate: inputs.inflation,
+  //   filingStatus: inputs.filingStatus,
+  //   retirementAccountRateOfReturn: inputs.ret401k,
+  //   rothRateOfReturn: inputs.retRoth,
+  //   savingsRateOfReturn: inputs.retSavings,
+  //   taxYear: TAX_BASE_YEAR + yearIndex,
+  //   yearIndex: yearIndex,
+  //   spend: inputs.spend,
+  //   actualSavingsContribution: 0,
+  //   desiredSavingsContribution: (salary * inputs.taxablePct).asCurrency(),
+  //   determineActualSavingsContribution(netIncome) {
+  //     if (!netIncome || isNaN(netIncome)) return 0;
 
-      this.actualSavingsContribution = Math.max(netIncome - this.spend, 0);
-      return this.actualSavingsContribution;
-    },
-  };
+  //     this.actualSavingsContribution = Math.max(netIncome - this.spend, 0);
+  //     return this.actualSavingsContribution;
+  //   },
+  // };
 
   const demographics = {
     _description: "Demographics",
@@ -158,15 +160,17 @@ function calculateWorkingYearData(inputs, yearIndex, salary, accountGroup) {
     fiscalData.taxYear
   );
 
-  const taxes = {
-    _description: "Taxes",
-    grossIncome: 0,
-    standardDeduction: 0,
-    taxableIncome: 0,
-    federalTaxesOwed: 0,
-    otherTaxes: 0,
-    taxableIncomeAdjustment: 0,
-  };
+  // const taxes = {
+  //   _description: "Taxes",
+  //   grossIncome: 0,
+  //   standardDeduction: 0,
+  //   taxableIncome: 0,
+  //   federalTaxesOwed: 0,
+  //   otherTaxes: 0,
+  //   taxableIncomeAdjustment: 0,
+  // };
+
+  const taxes = new Taxes();
 
   const contributions = {
     _description: "Contributions Breakdown",
@@ -176,6 +180,7 @@ function calculateWorkingYearData(inputs, yearIndex, salary, accountGroup) {
     spouseRoth: 0,
     savings: 0,
     employerMatch: 0,
+    calculationDetails: [],
     total() {
       return (
         this.my401k +
@@ -317,6 +322,7 @@ function calculateWorkingYearData(inputs, yearIndex, salary, accountGroup) {
     totalIncome: 0,
     totalNetIncome: 0,
     grossTaxableIncome: 0,
+    calculationDetails: {},
   };
 
   balances.savings = accountGroup.savings.endingBalanceForYear(
@@ -342,10 +348,10 @@ function calculateWorkingYearData(inputs, yearIndex, salary, accountGroup) {
     TRANSACTION_CATEGORY.CONTRIBUTION
   );
   contributions.employerMatch = employmentInfo.employer401kMatch();
-  contributions.calculationDetails = [
-    withLabel("employmentInfo", employmentInfo),
-    withLabel("accountGroup.savings", accountGroup.savings),
-  ];
+  // contributions.calculationDetails = [
+  //   withLabel("employmentInfo", employmentInfo),
+  //   withLabel("accountGroup.savings", accountGroup.savings),
+  // ];
 
   // Note: Spouse contributions not handled in working year calculations
 

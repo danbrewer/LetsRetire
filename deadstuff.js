@@ -1,3 +1,7 @@
+// ignore type-checking in this file for now
+
+// @ts-nocheck
+
 /**
  * Calculate Social Security taxation for a given year
  */

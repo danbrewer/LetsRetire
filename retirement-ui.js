@@ -1,3 +1,7 @@
+// ignore type-checking in this file for now
+
+// @ts-nocheck
+
 const $ = (id) => document.getElementById(id);
 const num = (id) => Number($(id).value || 0);
 const pct = (v) => (isNaN(v) ? 0 : Number(v) / 100);

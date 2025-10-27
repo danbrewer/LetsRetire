@@ -1,4 +1,15 @@
 class IncomeStreams {
+  /**
+   * @param {number} myPension
+   * @param {any} reportedEarnedInterest
+   * @param {number} spousePension
+   * @param {number} mySs
+   * @param {number} spouseSs
+   * @param {number} rmd
+   * @param {any} taxableIncomeAdjustment
+   * @param {any} taxFreeIncomeAdjustment
+   * @param {any} otherTaxableIncomeAdjustments
+   */
   constructor(
     myPension,
     reportedEarnedInterest,
@@ -26,9 +37,9 @@ class IncomeStreams {
   /**
    * @param {Demographics} demographics - Instance of Demographics class
    * @param {BenefitAmounts} benefitAmounts - Benefit amounts object containing pension and SS amounts
-   * @param {Object} accounts - Accounts object containing savings and 401k accounts
+   * @param {AccountGroup} accounts - Accounts object containing savings and 401k accounts
    * @param {FiscalData} fiscalData - Instance of FiscalData class
-   * @param {Object} inputs - Input data object containing tax adjustments
+   * @param {Inputs} inputs - Input data object containing tax adjustments
    * @returns {IncomeStreams} New IncomeStreams instance
    */
   static CreateUsing(
@@ -55,7 +66,7 @@ class IncomeStreams {
     const rmd = common_calculateRMD(
       fiscalData.useRmd,
       demographics.age,
-      accounts.trad401k.startingBalance
+      accounts.trad401k.startingBalanceForYear(fiscalData.taxYear)
     );
 
     return new IncomeStreams(

@@ -1,11 +1,16 @@
 class AccountPortioner {
-  #accounts = {};
+  #accounts;
   #taxYear = 0;
   #useSavings = false;
   #use401k = false;
   #useRothIRA = false;
   #ask = 0;
 
+  /**
+   * @param {AccountGroup} accounts
+   * @param {FiscalData} fiscalData
+   * @param {number} spend
+   */
   constructor(accounts, fiscalData, spend) {
     this.#accounts = accounts;
 

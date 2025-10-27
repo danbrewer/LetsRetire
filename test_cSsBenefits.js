@@ -1,3 +1,7 @@
+// ignore type-checking in this file for now
+
+// @ts-nocheck
+
 // Test script for cSsBenefits.js
 // Tests the SsBenefitsCalculator class and Social Security taxation calculations
 

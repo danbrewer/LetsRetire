@@ -16,7 +16,12 @@ class SsBenefitsCalculator {
     ).asCurrency();
   }
 
-  constructor(myBenefits = 0, spouseBenefits = 0, nonSsIncome = 0) {
+  /**
+   * @param {number} myBenefits
+   * @param {number} spouseBenefits
+   * @param {number} nonSsIncome
+   */
+  constructor(myBenefits, spouseBenefits, nonSsIncome) {
     this.myBenefits = myBenefits;
     this.spouseBenefits = spouseBenefits;
     this.nonSsIncome = nonSsIncome;
@@ -28,6 +33,10 @@ class SsBenefitsCalculator {
     this.spousePortion = 0;
     this.provisionalIncome = 0;
     this.calculationDetails = {};
+
+    this.myPortion = 0;
+    this.spousePortion = 0;
+    this.nonTaxablePortion = 0;
 
     this.#initialize();
   }
@@ -41,11 +50,11 @@ class SsBenefitsCalculator {
   }
 
   myNonTaxablePortion() {
-    return (this.myPortion * this.nonTaxablePortion()).asCurrency();
+    return (this.myPortion * this.nonTaxablePortion).asCurrency();
   }
 
   spouseNonTaxablePortion() {
-    return (this.spousePortion * this.nonTaxablePortion()).asCurrency();
+    return (this.spousePortion * this.nonTaxablePortion).asCurrency();
   }
 
   // Private method to calculate the taxable portion based on IRS rules
@@ -59,18 +68,20 @@ class SsBenefitsCalculator {
       throw new Error("Invalid input: NaN values detected");
     }
 
-    const calculationDetails = {
-      method: "irs-rules",
-      totalBenefits: this.totalBenefits,
-      halfSSBenefit: this.oneHalfOfSSBenefits,
-      otherTaxableIncome: this.nonSsIncome,
-      provisionalIncome: this.provisionalIncome,
-      tier1Threshold: 32000,
-      incomeExceedingTier1: 0,
-      tier2Threshold: 44000,
-      incomeExceedingTier2: 0,
-      finalTaxableAmount: 0,
-    };
+    const calculationDetails = new SsCalculationDetails(
+      /* method */ "irs-rules",
+      /* totalBenefits */ this.totalBenefits,
+      /* halfSSBenefit */ this.oneHalfOfSSBenefits,
+      /* otherTaxableIncome */ this.nonSsIncome,
+      /* provisionalIncome */ this.provisionalIncome,
+      /* tier1Threshold */ 32000,
+      /* incomeExceedingTier1 */ 0,
+      /* tier2Threshold */ 44000,
+      /* incomeExceedingTier2 */ 0,
+      /* finalTaxableAmount */ 0,
+      /* tier1TaxableAmount */ 0,
+      /* tier2TaxableAmount */ 0
+    );
 
     this.calculationDetails = calculationDetails;
 
@@ -155,6 +166,9 @@ class SsBenefitsCalculator {
   }
 
   // Method to recalculate with new non-SS income
+  /**
+   * @param {number} newNonSsIncome
+   */
   updateNonSsIncome(newNonSsIncome) {
     this.nonSsIncome = newNonSsIncome;
     this.#initialize();
@@ -188,6 +202,11 @@ class SsBenefitsCalculator {
   //   );
   // }
 
+  /**
+   * @param {number | undefined} [mySsBenefits]
+   * @param {number | undefined} [spouseSsBenefits]
+   * @param {number | undefined} [nonSsIncome]
+   */
   static CalculateUsing(mySsBenefits, spouseSsBenefits, nonSsIncome) {
     const ssBenefits = new SsBenefitsCalculator(
       mySsBenefits || 0,
@@ -200,9 +219,13 @@ class SsBenefitsCalculator {
 
     return ssBenefits;
   }
+
+  static Empty() {
+    return new SsBenefitsCalculator(0, 0, 0);
+  }
 }
 
-// Export for Node.js testing
-if (typeof module !== "undefined" && module.exports) {
-  module.exports = { SsBenefitsCalculator };
-}
+// // Export for Node.js testing
+// if (typeof module !== "undefined" && module.exports) {
+//   module.exports = { SsBenefitsCalculator };
+// }

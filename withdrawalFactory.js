@@ -1,32 +1,44 @@
 /**
  * Create withdrawal function for a specific retirement year
+ * @param {IncomeStreams} incomeStreams
+ * @param {FiscalData} fiscalData
+ * @param {Demographics} demographics
+ * @param {AccountGroup} accounts
  */
 function withdrawalFactoryJS_createWithdrawalFactory(
-  incomeStreams = {},
-  fiscalData = {},
-  demographics = {},
-  accounts = {}
+  incomeStreams,
+  fiscalData,
+  demographics,
+  accounts
 ) {
   let retirementAccountIncomeRecognized = false;
-
-  let incomeResults = {
-    ssBreakdown: {},
-    incomeBreakdown: {},
-  };
 
   // **************
   // Sanity checks
   // **************
-  if (accounts.length === 0 || !accounts) {
+  if (!accounts) {
     console.error(`accounts is null or undefined.  This is a fatal error`);
-    return result;
+    throw new Error("accounts is required");
   }
   // **************
 
+  /**
+   * @param {number} amount
+   * @param {string} accountType
+   */
   function withdrawFromTargetedAccount(amount, accountType, trialRun = true) {
-    const savingsAccount = new TargetedAccount(accounts.savings);
-    const rothAccount = new TargetedAccount(accounts.rothIra);
-    const trad401kAccount = new TargetedAccount(accounts.trad401k);
+    const savingsAccount = new TargetedAccount(
+      accounts.savings,
+      fiscalData.taxYear
+    );
+    const rothAccount = new TargetedAccount(
+      accounts.rothIra,
+      fiscalData.taxYear
+    );
+    const trad401kAccount = new TargetedAccount(
+      accounts.trad401k,
+      fiscalData.taxYear
+    );
 
     // Withdrawal amount to be determined
     switch (accountType) {
@@ -51,16 +63,12 @@ function withdrawalFactoryJS_createWithdrawalFactory(
         }
 
         // Calculate actual net using the sophisticated tax calculation
-        incomeResults = {
-          ssBreakdown: {},
-          incomeBreakdown: {},
-          ...retirementJS_calculateIncomeWhen401kWithdrawalIs(
-            gross401kWithdrawal,
-            incomeStreams,
-            demographics,
-            fiscalData
-          ),
-        };
+        let incomeResults = retirementJS_calculateIncomeWhen401kWithdrawalIs(
+          gross401kWithdrawal,
+          incomeStreams,
+          demographics,
+          fiscalData
+        );
 
         if (!trialRun) {
           trad401kAccount.withdraw(
@@ -98,7 +106,7 @@ function withdrawalFactoryJS_createWithdrawalFactory(
         if (fundsAvailable == 0) return 0;
 
         // Determine how much to withdraw to meet the desired spend
-        withdrawalAmount = Math.min(fundsAvailable, fundsNeeded);
+        let withdrawalAmount = Math.min(fundsAvailable, fundsNeeded);
 
         if (!trialRun) {
           // Reduce the account balance by the net received amount
@@ -118,7 +126,7 @@ function withdrawalFactoryJS_createWithdrawalFactory(
         if (fundsAvailable == 0) return 0;
 
         // Determine how much to withdraw to meet the desired spend
-        withdrawalAmount = Math.min(fundsAvailable, fundsNeeded);
+        let withdrawalAmount = Math.min(fundsAvailable, fundsNeeded);
 
         if (!trialRun) {
           // Reduce the account balance by the net received amount

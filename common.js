@@ -1,9 +1,15 @@
 // Required Minimum Distribution (RMD) calculation
 // Based on IRS Uniform Lifetime Table for 2024+
+/**
+ * @param {boolean} useRmd
+ * @param {number} age
+ * @param {number} retirementAccountBalance
+ */
 function common_calculateRMD(useRmd, age, retirementAccountBalance) {
   if (!useRmd || age < 73 || retirementAccountBalance <= 0) return 0;
 
   // IRS Uniform Lifetime Table (simplified version for common ages)
+  /** @type {Record<number, number>} */
   const lifeFactor = {
     73: 26.5,
     74: 25.5,
@@ -39,7 +45,7 @@ function common_calculateRMD(useRmd, age, retirementAccountBalance) {
   // For ages beyond 100, use declining factors
   let factor;
   if (age <= 100) {
-    factor = lifeFactor[age] || lifeFactor[100];
+    factor = lifeFactor[age] ?? lifeFactor[100];
   } else {
     // Linear decline after 100
     factor = Math.max(1.0, lifeFactor[100] - (age - 100) * 0.1);
@@ -49,6 +55,9 @@ function common_calculateRMD(useRmd, age, retirementAccountBalance) {
 }
 
 // Function to calculate initial benefit amounts for retirement
+/**
+ * @param {Inputs} inputs
+ */
 function common_calculateInitialBenefitAmounts(inputs) {
   // Declare and initialize the result object at the top
   const result = {

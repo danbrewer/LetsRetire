@@ -1,5 +1,7 @@
 // retirement.js
 
+// const { SsBenefitsCalculator } = require("./cSsBenefitsCalculator");
+
 // function _calculateSsBenefits(mySsBenefits, spouseSsBenefits, nonSsIncome) {
 //   // Declare and initialize the result object at the top
 //   // debugger;
@@ -134,6 +136,10 @@
 //   return ssBenefits;
 // }
 
+/**
+ * @param {number} taxableIncome
+ * @param {{ rate: number; upTo: number; }[]} brackets
+ */
 function retirementJS_determineFederalIncomeTax(taxableIncome, brackets) {
   let tax = 0,
     prev = 0;
@@ -149,18 +155,95 @@ function retirementJS_determineFederalIncomeTax(taxableIncome, brackets) {
   return tax.asCurrency();
 }
 
+/**
+ * Calculate comprehensive income breakdown when a specific 401k withdrawal amount is applied.
+ *
+ * This function performs a complete income calculation for a retirement year by:
+ * 1. Determining the appropriate tax brackets and standard deduction for the given year
+ * 2. Calculating Social Security benefit taxation based on total provisional income
+ * 3. Creating a detailed income breakdown including all sources (pension, SS, interest, RMD)
+ * 4. Computing federal taxes and net income after applying the variable 401k withdrawal
+ *
+ * The function is commonly used in iterative calculations to determine optimal withdrawal
+ * strategies or to model income scenarios with different retirement account distributions.
+ *
+ * @param {number} variableIncomeFactor - The 401k/traditional retirement account withdrawal
+ *   amount to include in income calculations. This variable amount affects both reportable
+ *   income and Social Security taxation calculations.
+ *
+ * @param {IncomeStreams} incomeStreams - Collection of all income sources containing:
+ *   - mySs: Primary person's Social Security benefits
+ *   - spouseSs: Spouse's Social Security benefits (if applicable)
+ *   - myPension: Primary person's pension income
+ *   - spousePension: Spouse's pension income (if applicable)
+ *   - reportedEarnedInterest: Taxable interest income from savings
+ *   - rmd: Required Minimum Distribution amounts
+ *   - otherTaxableIncomeAdjustments: Additional taxable income sources
+ *   - nonSsIncome(): Method returning total non-Social Security income
+ *
+ * @param {Demographics} demographics - Demographic information containing:
+ *   - filingStatus: Tax filing status ("single", "married_filing_jointly", etc.)
+ *   - age: Current age for eligibility determinations
+ *   - Other demographic data used for benefit calculations
+ *
+ * @param {FiscalData} fiscalData - Financial and tax calculation parameters containing:
+ *   - taxYear: The actual tax year for calculations (e.g., 2025, 2026, 2052)
+ *   - inflationRate: Annual inflation rate for adjusting tax brackets and deductions
+ *   - yearIndex: Zero-based retirement year index
+ *   - Other fiscal parameters for calculations
+ *
+ * @returns {IncomeRs} Comprehensive income calculation results containing:
+ *   - ssBreakdown: Social Security taxation breakdown with taxable/non-taxable portions,
+ *     provisional income calculations, and detailed methodology
+ *   - incomeBreakdown: Complete income analysis including reportable income, taxable income,
+ *     federal taxes, net income, and utility methods for income analysis
+ *
+ * @throws {Error} When required properties are missing from input objects
+ * @throws {Error} When tax calculation methods fail due to invalid data
+ *
+ * @example
+ * // Calculate income with $50,000 401k withdrawal
+ * const incomeStreams = IncomeStreams.CreateUsing(demographics, benefits, accounts, fiscal, inputs);
+ * const demographics = Demographics.CreateUsing(inputs, true, false);
+ * const fiscalData = FiscalData.CreateUsing(inputs, 2025);
+ *
+ * const results = retirementJS_calculateIncomeWhen401kWithdrawalIs(
+ *   50000, incomeStreams, demographics, fiscalData
+ * );
+ *
+ * console.log(`Total reportable income: ${results.incomeBreakdown.reportableIncome()}`);
+ * console.log(`Federal taxes: ${results.incomeBreakdown.federalIncomeTax}`);
+ * console.log(`Net income: ${results.incomeBreakdown.netIncome()}`);
+ * console.log(`Taxable SS benefits: ${results.ssBreakdown.totalTaxablePortion()}`);
+ *
+ * @example
+ * // Use in iterative withdrawal optimization
+ * for (let withdrawal = 0; withdrawal <= 100000; withdrawal += 5000) {
+ *   const results = retirementJS_calculateIncomeWhen401kWithdrawalIs(
+ *     withdrawal, incomeStreams, demographics, fiscalData
+ *   );
+ *   const netIncome = results.incomeBreakdown.netIncome();
+ *   if (netIncome >= targetNetIncome) {
+ *     console.log(`Optimal withdrawal: ${withdrawal}`);
+ *     break;
+ *   }
+ * }
+ *
+ * @see {@link SsBenefits.CalculateUsing} For Social Security taxation methodology
+ * @see {@link IncomeBreakdown.CreateFrom} For income breakdown calculation details
+ * @see {@link retirementJS_getTaxBrackets} For tax bracket determination
+ * @see {@link retirementJS_getStandardDeduction} For standard deduction calculation
+ * @see {@link IncomeRs} For result structure and utility methods
+ *
+ * @since 1.0.0
+ * @author Retirement Calculator System
+ */
 function retirementJS_calculateIncomeWhen401kWithdrawalIs(
   variableIncomeFactor,
   incomeStreams,
   demographics,
   fiscalData
 ) {
-  // Declare and initialize the result object at the top
-  const result = {
-    ssBreakdown: {},
-    incomeBreakdown: {},
-  };
-
   const standardDeduction = retirementJS_getStandardDeduction(
     demographics.filingStatus,
     fiscalData.taxYear, // year is already the actual year (e.g., 2040)
@@ -173,7 +256,7 @@ function retirementJS_calculateIncomeWhen401kWithdrawalIs(
     fiscalData.inflationRate
   );
 
-  const ssBreakdown = SsBenefits.CalculateUsing(
+  const ssBreakdown = SsBenefitsCalculator.CalculateUsing(
     incomeStreams.mySs,
     incomeStreams.spouseSs,
     incomeStreams.nonSsIncome()
@@ -283,12 +366,15 @@ function retirementJS_calculateIncomeWhen401kWithdrawalIs(
   // result.federalTaxesPaid = incomeBreakdown.federalIncomeTax;
   // result.allNetIncome(){ = incomeBreakdown.netIncome();
 
-  result.ssBreakdown = ssBreakdown;
-  result.incomeBreakdown = incomeBreakdown;
-
-  return result;
+  return new IncomeRs(ssBreakdown, incomeBreakdown);
 }
 
+/**
+ * @param {number} targetIncome
+ * @param {IncomeStreams} incomeStreams
+ * @param {Demographics} demographics
+ * @param {FiscalData} fiscalData
+ */
 function retirementJS_determine401kWithdrawalsToHitNetTargetOf(
   targetIncome,
   incomeStreams,
@@ -300,18 +386,21 @@ function retirementJS_determine401kWithdrawalsToHitNetTargetOf(
     net: 0,
     withdrawalNeeded: 0,
     tax: 0,
+    rmd: 0,
+    calculationDetails: {},
   };
 
   let lo = 0,
     hi = targetIncome * 2;
 
+  /** @type {{ totalIncome: number, taxableIncome: number, tax: number, netIncome: number, ssBreakdown: SsBenefitsCalculator, incomeBreakdown: IncomeBreakdown}} */
   let income = {
     totalIncome: 0,
     taxableIncome: 0,
     tax: 0,
     netIncome: 0,
-    ssBreakdown: {},
-    incomeBreakdown: {},
+    ssBreakdown: SsBenefitsCalculator.Empty(),
+    incomeBreakdown: IncomeBreakdown.Empty(),
   };
 
   for (let i = 0; i < 80; i++) {
@@ -324,14 +413,15 @@ function retirementJS_determine401kWithdrawalsToHitNetTargetOf(
       `Guestimate 401k withdrawal: $${guestimate401kWithdrawal.asCurrency()}`
     );
 
-    income = {
-      ...retirementJS_calculateIncomeWhen401kWithdrawalIs(
-        guestimate401kWithdrawal,
-        incomeStreams,
-        demographics,
-        fiscalData
-      ),
-    };
+    let incomeRs = retirementJS_calculateIncomeWhen401kWithdrawalIs(
+      guestimate401kWithdrawal,
+      incomeStreams,
+      demographics,
+      fiscalData
+    );
+
+    income.incomeBreakdown = incomeRs.incomeBreakdown;
+    income.ssBreakdown = incomeRs.ssBreakdown;
 
     log.info(`Target income is $${targetIncome.asCurrency()}.`);
 
@@ -378,6 +468,11 @@ function retirementJS_determine401kWithdrawalsToHitNetTargetOf(
   return result;
 }
 
+/**
+ * @param {string} filingStatus
+ * @param {number} year
+ * @param {number} inflationRate
+ */
 function retirementJS_getTaxBrackets(filingStatus, year, inflationRate) {
   // The year passed is the actual tax year (e.g., 2025, 2026, 2052, etc.)
   // The adjustedForInflation expects years from the base (2025)
@@ -396,6 +491,11 @@ function retirementJS_getTaxBrackets(filingStatus, year, inflationRate) {
   }
 }
 
+/**
+ * @param {string} filingStatus
+ * @param {number} year
+ * @param {number} inflationRate
+ */
 function retirementJS_getStandardDeduction(filingStatus, year, inflationRate) {
   // Handle potential parameter order issues or missing parameters
   let correctedFilingStatus = filingStatus;
@@ -463,6 +563,10 @@ function retirementJS_getStandardDeduction(filingStatus, year, inflationRate) {
 }
 
 // Wrapper function for backward compatibility with existing calls
+/**
+ * @param {number} adjustedGrossIncome
+ * @param {number} standardDeduction
+ */
 function retirementJS_calculateTaxableIncome(
   adjustedGrossIncome,
   standardDeduction
@@ -471,6 +575,9 @@ function retirementJS_calculateTaxableIncome(
 }
 
 // Wrapper for federal tax calculation using retirement.js functions
+/**
+ * @param {number} taxableIncome
+ */
 function retirementJS_calculateFederalTax(
   taxableIncome,
   filingStatus = constsJS_FILING_STATUS.SINGLE,
@@ -487,21 +594,21 @@ function retirementJS_calculateFederalTax(
 
 // ---------------- MODULE EXPORTS ----------------
 
-// Only export as module if we're in Node.js environment
-if (typeof module !== "undefined" && module.exports) {
-  module.exports = {
-    log,
-    determineTaxablePortionOfSocialSecurity: _calculateSsBenefits,
-    retirementJS_determineFederalIncomeTax:
-      retirementJS_determineFederalIncomeTax,
-    retirementJS_calculateIncomeWhen401kWithdrawalIs:
-      retirementJS_calculateIncomeWhen401kWithdrawalIs,
-    retirementJS_determine401kWithdrawalsToHitNetTargetOf,
-    // Export some common tax brackets and standard deductions for convenience
-    retirementJS_getTaxBrackets,
-    retirementJS_getStandardDeduction,
-    constsJS_FILING_STATUS,
-    round: Number.prototype.round,
-    adjustedForInflation: Number.prototype.adjustedForInflation,
-  };
-}
+// // Only export as module if we're in Node.js environment
+// if (typeof module !== "undefined" && module.exports) {
+//   module.exports = {
+//     log,
+//     determineTaxablePortionOfSocialSecurity: _calculateSsBenefits,
+//     retirementJS_determineFederalIncomeTax:
+//       retirementJS_determineFederalIncomeTax,
+//     retirementJS_calculateIncomeWhen401kWithdrawalIs:
+//       retirementJS_calculateIncomeWhen401kWithdrawalIs,
+//     retirementJS_determine401kWithdrawalsToHitNetTargetOf,
+//     // Export some common tax brackets and standard deductions for convenience
+//     retirementJS_getTaxBrackets,
+//     retirementJS_getStandardDeduction,
+//     constsJS_FILING_STATUS,
+//     round: Number.prototype.round,
+//     adjustedForInflation: Number.prototype.adjustedForInflation,
+//   };
+// }

@@ -2,87 +2,87 @@
 
 // Add Number prototype extensions needed by retirement.js functions
 
-// Add default implementations for UI override functions when not available
-if (typeof getTaxableIncomeOverride === "undefined") {
-  const globalThis = (function () {
-    return (
-      this ||
-      (typeof window !== "undefined"
-        ? window
-        : typeof global !== "undefined"
-          ? global
-          : {})
-    );
-  })();
+// // Add default implementations for UI override functions when not available
+// if (typeof getTaxableIncomeOverride === "undefined") {
+//   const globalThis = (function () {
+//     return (
+//       this ||
+//       (typeof window !== "undefined"
+//         ? window
+//         : typeof global !== "undefined"
+//           ? global
+//           : {})
+//     );
+//   })();
 
-  globalThis.getTaxableIncomeOverride = function getTaxableIncomeOverride(age) {
-    return 0; // Default to no override
-  };
-}
+//   globalThis.getTaxableIncomeOverride = function getTaxableIncomeOverride(age) {
+//     return 0; // Default to no override
+//   };
+// }
 
-if (typeof getTaxFreeIncomeOverride === "undefined") {
-  const globalThis = (function () {
-    return (
-      this ||
-      (typeof window !== "undefined"
-        ? window
-        : typeof global !== "undefined"
-          ? global
-          : {})
-    );
-  })();
+// if (typeof getTaxFreeIncomeOverride === "undefined") {
+//   const globalThis = (function () {
+//     return (
+//       this ||
+//       (typeof window !== "undefined"
+//         ? window
+//         : typeof global !== "undefined"
+//           ? global
+//           : {})
+//     );
+//   })();
 
-  globalThis.getTaxFreeIncomeOverride = function getTaxFreeIncomeOverride(age) {
-    return 0; // Default to no override
-  };
-}
+//   globalThis.getTaxFreeIncomeOverride = function getTaxFreeIncomeOverride(age) {
+//     return 0; // Default to no override
+//   };
+// }
 
-if (typeof getSpendingOverride === "undefined") {
-  const globalThis = (function () {
-    return (
-      this ||
-      (typeof window !== "undefined"
-        ? window
-        : typeof global !== "undefined"
-          ? global
-          : {})
-    );
-  })();
+// if (typeof getSpendingOverride === "undefined") {
+//   const globalThis = (function () {
+//     return (
+//       this ||
+//       (typeof window !== "undefined"
+//         ? window
+//         : typeof global !== "undefined"
+//           ? global
+//           : {})
+//     );
+//   })();
 
-  globalThis.getSpendingOverride = function getSpendingOverride(age) {
-    return null; // Default to no override
-  };
-}
+//   globalThis.getSpendingOverride = function getSpendingOverride(age) {
+//     return null; // Default to no override
+//   };
+// }
 
-if (typeof setSpendingFieldValue === "undefined") {
-  const globalThis = (function () {
-    return (
-      this ||
-      (typeof window !== "undefined"
-        ? window
-        : typeof global !== "undefined"
-          ? global
-          : {})
-    );
-  })();
+// if (typeof setSpendingFieldValue === "undefined") {
+//   const globalThis = (function () {
+//     return (
+//       this ||
+//       (typeof window !== "undefined"
+//         ? window
+//         : typeof global !== "undefined"
+//           ? global
+//           : {})
+//     );
+//   })();
 
-  globalThis.setSpendingFieldValue = function setSpendingFieldValue(
-    age,
-    value
-  ) {
-    // No-op in non-UI context
-  };
-}
+//   globalThis.setSpendingFieldValue = function setSpendingFieldValue(
+//     age,
+//     value
+//   ) {
+//     // No-op in non-UI context
+//   };
+// }
 
-if (typeof require === "function") {
-  // Running in Node.js
-  const {
-    constsJS_FILING_STATUS,
-    retirementJS_determineFederalIncomeTax,
-    retirementJS_getTaxBrackets,
-    retirementJS_getStandardDeduction,
-  } = require("./retirement");
-}
+// if (typeof require === "function") {
+//   // Running in Node.js
+//   const {
+//     constsJS_FILING_STATUS,
+//     retirementJS_determineFederalIncomeTax,
+//     retirementJS_getTaxBrackets,
+//     retirementJS_getStandardDeduction,
+//   } = require("./retirement");
+// }
 
 function calc() {
   // Track previous ages to only regenerate spending fields when they change
@@ -232,14 +232,16 @@ function calc() {
 }
 
 // Helper to generate dynamic input values for a given year index
+/**
+ * @param {Inputs} inputs
+ * @param {number} yearIndex
+ */
 function generateYearlyIndexedInputValues(inputs, yearIndex) {
   const age = inputs.currentAge + yearIndex;
 
   inputs.yearIndex = yearIndex;
   inputs.age = age;
-  inputs.spouseAge = inputs.hasSpouse
-    ? inputs.currentSpouseAge + yearIndex
-    : undefined;
+  inputs.spouseAge = inputs.hasSpouse ? inputs.currentSpouseAge + yearIndex : 0;
   inputs.retirementYear = new Date().getFullYear() + yearIndex;
 
   inputs.additionalSpending = getSpendingOverride(age).asCurrency();

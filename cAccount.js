@@ -12,9 +12,14 @@ class Account {
   /** @type {number} Annual interest rate as a decimal (e.g., 0.05 for 5%) */
   #interestRate = 0;
 
+  /**
+   * @param {number} yyyy
+   */
   #startingBalanceForYear(yyyy) {
     let startingBalance = this.initialBalance;
-    for (const tx of this.#transactions.sort((a, b) => a.date - b.date)) {
+    for (const tx of this.#transactions.sort(
+      (a, b) => a.date.getTime() - b.date.getTime()
+    )) {
       if (tx.date.getFullYear() < yyyy) {
         if (tx.transactionType === TRANSACTION_TYPE.DEPOSIT) {
           startingBalance += tx.amount;
@@ -26,9 +31,14 @@ class Account {
     return startingBalance;
   }
 
+  /**
+   * @param {number} yyyy
+   */
   #endingBalanceForYear(yyyy) {
     let endingBalance = this.#startingBalanceForYear(yyyy);
-    for (const tx of this.#transactions.sort((a, b) => a.date - b.date)) {
+    for (const tx of this.#transactions.sort(
+      (a, b) => a.date.getTime() - b.date.getTime()
+    )) {
       if (tx.date.getFullYear() === yyyy) {
         if (tx.transactionType === TRANSACTION_TYPE.DEPOSIT) {
           endingBalance += tx.amount;
@@ -65,22 +75,32 @@ class Account {
     return this.#interestRate;
   }
 
+  /**
+   * @param {number} amount
+   * @param {string} category
+   * @param {number} yyyy
+   */
   deposit(amount, category, yyyy) {
     if (amount < 0) {
       throw new Error("Deposit amount must be positive.");
     }
     this.#transactions.push(
-      new Transaction({
+      new Transaction(
         amount,
-        transactionType: TRANSACTION_TYPE.DEPOSIT,
-        category: category,
-        date: new Date(yyyy, 0, 1), // Set to January 1st of the given year
-      })
+        TRANSACTION_TYPE.DEPOSIT,
+        category,
+        new Date(yyyy, 0, 1) // Set to January 1st of the given year
+      )
     );
 
     return amount;
   }
 
+  /**
+   * @param {number} amount
+   * @param {string} category
+   * @param {number} yyyy
+   */
   withdrawal(amount, category, yyyy) {
     if (amount < 0) {
       throw new Error("Withdrawal amount must be positive.");
@@ -92,18 +112,22 @@ class Account {
       );
     }
     this.#transactions.push(
-      new Transaction({
-        amount: withdrawalAmount,
-        transactionType: TRANSACTION_TYPE.WITHDRAWAL,
-        category: category,
-        date: new Date(yyyy, 0, 1), // Set to January 1st of the given year
-      })
+      new Transaction(
+        withdrawalAmount,
+        TRANSACTION_TYPE.WITHDRAWAL,
+        category,
+        new Date(yyyy, 0, 1) // Set to January 1st of the given year
+      )
     );
 
     return withdrawalAmount;
   }
 
   // Method to calculate interest earned over a year
+  /**
+   * @param {string} intensity
+   * @param {number} yyyy
+   */
   calculateInterestForYear(intensity, yyyy) {
     let interestEarned = 0;
     switch (intensity) {
@@ -141,6 +165,9 @@ class Account {
     return interestEarned;
   }
 
+  /**
+   * @param {number} yyyy
+   */
   depositsForYear(yyyy, category = "") {
     const transactions = this.#transactions.filter(
       (tx) =>
@@ -152,6 +179,9 @@ class Account {
     return total;
   }
 
+  /**
+   * @param {number} yyyy
+   */
   withdrawalsForYear(yyyy, category = "") {
     const transactions = this.#transactions.filter(
       (tx) =>
@@ -163,6 +193,9 @@ class Account {
     return total;
   }
 
+  /**
+   * @param {number} yyyy
+   */
   transactionsForYear(yyyy, type = "") {
     return this.#transactions.filter((tx) =>
       tx.date.getFullYear() === yyyy && type === ""
@@ -171,10 +204,16 @@ class Account {
     );
   }
 
+  /**
+   * @param {number} yyyy
+   */
   startingBalanceForYear(yyyy) {
     return this.#startingBalanceForYear(yyyy);
   }
 
+  /**
+   * @param {number} yyyy
+   */
   endingBalanceForYear(yyyy) {
     return this.#endingBalanceForYear(yyyy);
   }

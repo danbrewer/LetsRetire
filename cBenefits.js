@@ -101,23 +101,39 @@ class BenefitAmounts {
   }
 
   // Method to update specific benefits
+  /**
+   * @param {number} amount
+   */
   updateMySocialSecurity(amount) {
     this.ssAnnual = amount;
   }
 
+  /**
+   * @param {number} amount
+   */
   updateMyPension(amount) {
     this.penAnnual = amount;
   }
 
+  /**
+   * @param {number} amount
+   */
   updateSpouseSocialSecurity(amount) {
     this.spouseSsAnnual = amount;
   }
 
+  /**
+   * @param {number} amount
+   */
   updateSpousePension(amount) {
     this.spousePenAnnual = amount;
   }
 
   // Method to apply inflation adjustment to all benefits
+  /**
+   * @param {number} inflationRate
+   * @param {number} years
+   */
   applyInflationAdjustment(inflationRate, years) {
     const adjustmentFactor = Math.pow(1 + inflationRate, years);
 
@@ -130,10 +146,10 @@ class BenefitAmounts {
   }
 }
 
-// Create instance using the factory method for backward compatibility
-const benefitAmounts = BenefitAmounts.fromIndexedAmounts(
-  ssYearlyIndexed,
-  penYearlyIndexed,
-  spouseSsYearlyIndexed,
-  spousePenYearlyIndexed
-);
+// // Create instance using the factory method for backward compatibility
+// const benefitAmounts = BenefitAmounts.fromIndexedAmounts(
+//   ssYearlyIndexed,
+//   penYearlyIndexed,
+//   spouseSsYearlyIndexed,
+//   spousePenYearlyIndexed
+// );

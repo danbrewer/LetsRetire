@@ -61,30 +61,7 @@ function calculateRetirementYearData(inputs, accounts, benefitAmounts) {
   LOG_LEVEL = 0;
 
   // Declare and initialize the result object at the top
-  const result = RetirementYearData();
-  //   demographics: {},
-  //   fiscalData: {},
-  //   expenditures: {},
-  //   contributions: {},
-  //   withdrawals: {},
-  //   balances: {},
-  //   pen: {},
-  //   savings: {},
-  //   ss: {},
-  //   incomeStreams: {},
-  //   incomeBreakdown: {},
-  //   taxes: {},
-  //   totals: {},
-  //   myPensionBenefits: {},
-  //   spousePensionBenefits: {},
-  //   mySsBenefits: {},
-  //   spouseSsBenefits: {},
-
-  //   savingsBreakdown: {},
-  //   withdrawalBreakdown: {},
-  //   ssBreakdown: {},
-  //   pensionBreakdown: {},
-  // };
+  const result = new RetirementYearData();
 
   const demographics = Demographics.CreateUsing(inputs, true, false);
 

@@ -1,0 +1,31 @@
+{
+  "compilerOptions": {
+    /* 🔍 Core checking options */
+    "checkJs": true,            // Enable type-checking for .js files
+    "noEmit": true,             // Don't output .js files — just check types
+    "allowJs": true,            // Allow JS input files
+    "strict": true,             // Enable all strict type checks
+    "esModuleInterop": true,    // Fix import/export interop for CommonJS modules
+    "module": "esnext",         // Use modern ES modules
+    "target": "es2020",         // Modern JS features (adjust as needed)
+    "moduleResolution": "node", // Resolve imports like Node.js does
+    "forceConsistentCasingInFileNames": true, // Catch case mismatches in imports
+
+    /* 🧠 Helpful extras */
+    "noImplicitAny": true,      // Warn when something has implicit "any" type
+    "strictNullChecks": true,   // Catch undefined/null usage
+    "noUnusedLocals": true,     // Warn about unused variables
+    "noUnusedParameters": true, // Warn about unused function parameters
+    "noImplicitReturns": true,  // Warn if not all code paths return a value
+    "skipLibCheck": true        // Speed up by skipping type-checking of node_modules
+  },
+  "include": [
+    "**/*",  // your source directory
+    // "scripts/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "build"
+  ]
+}

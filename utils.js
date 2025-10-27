@@ -2,29 +2,55 @@
 // Number prototype helpers
 // =====================
 
+/**
+ * @this {number}
+ * @param {number} [decimals=0]
+ * @returns {number}
+ */
 Number.prototype.round = function (decimals = 0) {
   const factor = Math.pow(10, decimals);
   return Math.round(this * factor) / factor;
 };
 
+/**
+ * @this {number}
+ * @returns {number}
+ */
 Number.prototype.asCurrency = function () {
   return this.round(0);
 };
 
+/**
+ * @this {number}
+ * @param {number} value
+ * @returns {number}
+ */
 Number.prototype.minus = function (value) {
   return this - value;
 };
 
+/**
+ * @this {number}
+ * @param {number} value
+ * @returns {number}
+ */
 Number.prototype.plus = function (value) {
   return this + value;
 };
 
+/**
+ * @this {number}
+ * @param {number} inflationRate
+ * @param {number} years
+ * @returns {number}
+ */
 Number.prototype.adjustedForInflation = function (inflationRate, years) {
   const adjustedValue = this * Math.pow(1 + inflationRate, years);
   return adjustedValue;
 };
 
-const compoundedRate = (r, n) => Math.pow(1 + r, n);
+const compoundedRate = (/** @type {number} */ r, /** @type {number} */ n) =>
+  Math.pow(1 + r, n);
 
 // =====================
 // Function helpers
@@ -33,6 +59,9 @@ const compoundedRate = (r, n) => Math.pow(1 + r, n);
 // Extracts the textual parameter list exactly as written.
 // Supports: normal functions, methods, async, and arrow functions.
 // If it's a single-identifier arrow param (no parentheses), returns that identifier.
+/**
+ * @param {{ toString: () => string; }} fn
+ */
 function getParamText(fn) {
   const src = fn.toString().trim();
 
@@ -48,10 +77,16 @@ function getParamText(fn) {
   return null;
 }
 
+// Safe formatting of values for logging/dumping
+
+/**
+ * @param {any} value
+ */
 function safeFormat(value) {
   try {
     if (typeof value === "string") return JSON.stringify(value);
     if (value && typeof value === "object") {
+      // @ts-ignore
       return JSON.stringify(value, (k, v) => (v === undefined ? null : v));
     }
     return String(value);
@@ -64,18 +99,22 @@ function safeFormat(value) {
 // String helpers
 // =====================
 
-function dedent(strings, ...values) {
-  const raw = String.raw({ raw: strings }, ...values);
-  const lines = raw.split("\n");
-  const nonEmpty = lines.filter((line) => line.trim().length > 0);
-  const indent = Math.min(
-    ...nonEmpty.map((line) => line.match(/^(\s*)/)[0].length)
-  );
-  return lines
-    .map((line) => line.slice(indent))
-    .join("\n")
-    .trim();
-}
+// /**
+//  * @param {any} strings
+//  * @param {any[]} values
+//  */
+// function dedent(strings, ...values) {
+//   const raw = String.raw({ raw: strings }, ...values);
+//   const lines = raw.split("\n");
+//   const nonEmpty = lines.filter((line) => line.trim().length > 0);
+//   const indent = Math.min(
+//     ...nonEmpty.map((line) => line.match(/^(\s*)/)[0].length)
+//   );
+//   return lines
+//     .map((line) => line.slice(indent))
+//     .join("\n")
+//     .trim();
+// }
 
 // =====================
 // Logging
@@ -91,33 +130,48 @@ const LEVELS = {
 };
 
 const log = {
+  /**
+   * @param {number} level
+   */
   _shouldLog(level) {
-    return LEVELS[level] <= LOG_LEVEL;
+    return level <= LOG_LEVEL;
   },
 
+  /**
+   * @param {string[]} args
+   */
   error(...args) {
-    if (this._shouldLog("ERROR")) {
+    if (this._shouldLog(LEVELS.ERROR)) {
       const ts = new Date().toTimeString();
       console.error(`[ERROR] [${ts}]`, ...args);
     }
   },
 
+  /**
+   * @param {string[]} args
+   */
   warn(...args) {
-    if (this._shouldLog("WARN")) {
+    if (this._shouldLog(LEVELS.WARN)) {
       const ts = new Date().toTimeString();
       console.warn(`[WARN]  [${ts}]`, ...args);
     }
   },
 
+  /**
+   * @param {(string | undefined)[]} args
+   */
   info(...args) {
-    if (this._shouldLog("INFO")) {
+    if (this._shouldLog(LEVELS.INFO)) {
       const ts = ""; // could add timestamp if you like
       console.info(`[INFO]  ${ts}`, ...args);
     }
   },
 
+  /**
+   * @param {any[]} args
+   */
   debug(...args) {
-    if (this._shouldLog("DEBUG")) {
+    if (this._shouldLog(LEVELS.DEBUG)) {
       const ts = new Date().toTimeString();
       console.debug(`[DEBUG] [${ts}]`, ...args);
     }
@@ -134,12 +188,15 @@ const DUMP_LABEL = Symbol("dumpLabel");
 /**
  * Attach a pretty label (e.g., "incomeResults.incomeBreakdown") to any value
  * so it prints as a heading when dumped.
+ * @param {string} label
+ * @param {any} value
  */
 function withLabel(label, value) {
   if (value !== Object(value)) {
     return { [DUMP_LABEL]: label, value };
   }
   if (Object.prototype.hasOwnProperty.call(value, DUMP_LABEL)) {
+    // @ts-ignore
     value[DUMP_LABEL] = label; // update
   } else {
     Object.defineProperty(value, DUMP_LABEL, {
@@ -153,6 +210,10 @@ function withLabel(label, value) {
 }
 
 // Choose a heading for objects/functions when no explicit label was provided.
+/**
+ * @param {any} value
+ * @param {string} fallback
+ */
 function _labelFor(value, fallback) {
   if (value && value[DUMP_LABEL]) return value[DUMP_LABEL];
 
@@ -182,7 +243,7 @@ Object.defineProperty(Object.prototype, "dump", {
   enumerable: false,
   configurable: true,
   writable: true,
-  value: function (title, depth = 0) {
+  value: function (/** @type {any} */ title, depth = 0) {
     const indent = "  ".repeat(depth);
     const colWidth = 30; // adjust for alignment width
 
@@ -230,6 +291,7 @@ Object.defineProperty(Object.prototype, "dump", {
                 }
               } catch (e) {
                 console.log(
+                  // @ts-ignore
                   `${indent}    - [function threw: ${e?.message ?? e}]`
                 );
               }
@@ -259,6 +321,7 @@ Object.defineProperty(Object.prototype, "dump", {
             );
           } catch (e) {
             console.log(
+              // @ts-ignore
               `${indent}- ${(key + "()").padEnd(colWidth)} [function threw: ${e?.message ?? e}]`
             );
           }
@@ -305,6 +368,7 @@ Object.defineProperty(Object.prototype, "dump", {
             );
           } catch (e) {
             console.log(
+              // @ts-ignore
               `${indent}- ${key.padEnd(colWidth)} [getter threw: ${e?.message ?? e}]`
             );
           }
@@ -315,6 +379,10 @@ Object.defineProperty(Object.prototype, "dump", {
 });
 
 // helper: align numbers right, strings left
+/**
+ * @param {any} val
+ * @param {number} width
+ */
 function alignValue(val, width) {
   if (typeof val === "number") {
     return String(val).padStart(width);

@@ -1,3 +1,7 @@
+// ignore type-checking in this file for now
+
+// @ts-nocheck
+
 // Test script to verify NaN fix in retirement calculations
 
 // First load retirement.js to make its functions available
