@@ -311,23 +311,23 @@ class EmploymentInfo {
    * @param {number} [updates.employeeMatchCap] - New match cap
    * @param {number} [updates.matchRate] - New match rate
    */
-  updateEmploymentInfo(updates) {
-    if (updates.salary !== undefined) {
-      this.salary = updates.salary;
-    }
-    if (updates.pretaxContributionPercentage !== undefined) {
-      this.pretaxContributionPercentage = updates.pretaxContributionPercentage;
-    }
-    if (updates.rothContributionPercentage !== undefined) {
-      this.rothContributionPercentage = updates.rothContributionPercentage;
-    }
-    if (updates.employeeMatchCap !== undefined) {
-      this.employeeMatchCap = updates.employeeMatchCap;
-    }
-    if (updates.matchRate !== undefined) {
-      this.matchRate = updates.matchRate;
-    }
-  }
+  //   updateEmploymentInfo(updates) {
+  //     if (updates.salary !== undefined) {
+  //       this.salary = updates.salary;
+  //     }
+  //     if (updates.pretaxContributionPercentage !== undefined) {
+  //       this.pretaxContributionPercentage = updates.pretaxContributionPercentage;
+  //     }
+  //     if (updates.rothContributionPercentage !== undefined) {
+  //       this.rothContributionPercentage = updates.rothContributionPercentage;
+  //     }
+  //     if (updates.employeeMatchCap !== undefined) {
+  //       this.employeeMatchCap = updates.employeeMatchCap;
+  //     }
+  //     if (updates.matchRate !== undefined) {
+  //       this.matchRate = updates.matchRate;
+  //     }
+  //   }
 
   /**
    * Factory method to create an EmploymentInfo from input data and salary.
