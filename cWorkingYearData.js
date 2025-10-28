@@ -21,19 +21,20 @@ class WorkingYearData {
    * @param {Object} [totals={}] - Summary totals for income, contributions, and balances
    * @param {Object} [contributions={}] - Retirement account contribution amounts
    * @param {Object} [withdrawals={}] - Account withdrawal amounts (typically minimal during working years)
-   * @param {Object} [balances={}] - Current account balances across all retirement accounts
+   * @param {Balances} [balances={}] - Current account balances across all retirement accounts
    * @param {Object} [pen={}] - Pension-related information and calculations
    * @param {Object} [ss={}] - Social Security information and projections
    * @param {Object} [savings={}] - Savings account data and calculations
    * @param {Object} [retirementAccount={}] - Traditional 401k/IRA account data
    * @param {Object} [roth={}] - Roth IRA account data and calculations
-   * @param {Object} [income={}] - Income breakdown from all sources
-   * @param {Object} [taxes={}] - Tax calculations and effective rates
+   * @param {WorkingYearIncome} [income={}] - Income breakdown from all sources
+   * @param {Taxes} [taxes={}] - Tax calculations and effective rates
    * @param {Object} [pensionBreakdown={}] - Detailed pension analysis
    * @param {Object} [spousePensionBreakdown={}] - Spouse pension analysis (if applicable)
    * @param {Object} [savingsBreakdown={}] - Detailed savings account breakdown
    * @param {Object} [ssBreakdown={}] - Social Security calculation breakdown
    * @param {Object} [spouseSsBreakdown={}] - Spouse Social Security breakdown (if applicable)
+   * @param {AccountGroup} [accountGroup=new AccountGroup()] - Group of all retirement accounts
    */
   constructor(
     description = "",
@@ -42,19 +43,20 @@ class WorkingYearData {
     totals = {},
     contributions = {},
     withdrawals = {},
-    balances = {},
+    balances,
     pen = {},
     ss = {},
     savings = {},
     retirementAccount = {},
     roth = {},
-    income = {},
-    taxes = {},
+    income,
+    taxes,
     pensionBreakdown = {},
     spousePensionBreakdown = {},
     savingsBreakdown = {},
     ssBreakdown = {},
-    spouseSsBreakdown = {}
+    spouseSsBreakdown = {},
+    accountGroup
   ) {
     this._description = description;
     this.demographics = demographics;
@@ -75,6 +77,8 @@ class WorkingYearData {
     this.savingsBreakdown = savingsBreakdown;
     this.ssBreakdown = ssBreakdown;
     this.spouseSsBreakdown = spouseSsBreakdown;
+    this.employmentInfo = EmploymentInfo.Empty();
+    this.accountGroup = accountGroup;
   }
 
   /**
@@ -118,45 +122,45 @@ class WorkingYearData {
     return this.balances.total();
   }
 
-  /**
-   * Gets the total annual contributions if available.
-   *
-   * @returns {number} Total contributions for the year, or 0 if unavailable
-   */
-  getTotalContributions() {
-    if (!this.contributions || typeof this.contributions.total !== "function") {
-      return 0;
-    }
-    return this.contributions.total();
-  }
+  //   /**
+  //    * Gets the total annual contributions if available.
+  //    *
+  //    * @returns {number} Total contributions for the year, or 0 if unavailable
+  //    */
+  //   getTotalContributions() {
+  //     if (!this.contributions || typeof this.contributions.total !== "function") {
+  //       return 0;
+  //     }
+  //     return this.contributions.total();
+  //   }
 
-  /**
-   * Gets the net income for the year if available.
-   *
-   * @returns {number} Net income after taxes, or 0 if unavailable
-   */
-  getNetIncome() {
-    if (!this.income || typeof this.income.netIncome === "undefined") {
-      return 0;
-    }
-    return typeof this.income.netIncome === "function"
-      ? this.income.netIncome()
-      : this.income.netIncome;
-  }
+  //   /**
+  //    * Gets the net income for the year if available.
+  //    *
+  //    * @returns {number} Net income after taxes, or 0 if unavailable
+  //    */
+  //   getNetIncome() {
+  //     if (!this.income || typeof this.income.netIncome === "undefined") {
+  //       return 0;
+  //     }
+  //     return typeof this.income.netIncome === "function"
+  //       ? this.income.netIncome()
+  //       : this.income.netIncome;
+  //   }
 
-  /**
-   * Gets the effective tax rate if available.
-   *
-   * @returns {number} Effective tax rate as decimal, or 0 if unavailable
-   */
-  getEffectiveTaxRate() {
-    if (!this.taxes || typeof this.taxes.effectiveTaxRate === "undefined") {
-      return 0;
-    }
-    return typeof this.taxes.effectiveTaxRate === "function"
-      ? this.taxes.effectiveTaxRate()
-      : this.taxes.effectiveTaxRate;
-  }
+  //   /**
+  //    * Gets the effective tax rate if available.
+  //    *
+  //    * @returns {number} Effective tax rate as decimal, or 0 if unavailable
+  //    */
+  //   getEffectiveTaxRate() {
+  //     if (!this.taxes || typeof this.taxes.effectiveTaxRate === "undefined") {
+  //       return 0;
+  //     }
+  //     return typeof this.taxes.effectiveTaxRate === "function"
+  //       ? this.taxes.effectiveTaxRate()
+  //       : this.taxes.effectiveTaxRate;
+  //   }
 
   /**
    * Checks if this working year has spouse-related data.
@@ -189,10 +193,10 @@ class WorkingYearData {
   getSummary() {
     return {
       age: this.getCurrentAge(),
-      netIncome: this.getNetIncome(),
-      totalContributions: this.getTotalContributions(),
+      netIncome: this.income?.getNetIncome(),
+      //   totalContributions: this.getTotalContributions(),
       totalBalance: this.getTotalRetirementBalance(),
-      effectiveTaxRate: this.getEffectiveTaxRate(),
+      effectiveTaxRate: this.taxes?.effectiveTaxRate,
       hasSpouse: this.hasSpouseData(),
       taxYear:
         this.fiscalData && this.fiscalData.taxYear

@@ -176,6 +176,10 @@ class IncomeRs {
   static CreateUsing(ssBreakdown, incomeBreakdown) {
     return new IncomeRs(ssBreakdown, incomeBreakdown);
   }
+
+  static Empty() {
+    return new IncomeRs(SsBenefitsCalculator.Empty(), IncomeBreakdown.Empty());
+  }
 }
 
 // Maintain backward compatibility - note: empty objects are no longer supported

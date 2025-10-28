@@ -35,6 +35,7 @@ class IncomeBreakdown {
     this.standardDeduction = standardDeduction;
     this.federalIncomeTax = federalIncomeTax;
     this.taxBrackets = taxBrackets;
+    this.actualEarnedInterest = 0;
 
     this.federalIncomeTax = retirementJS_determineFederalIncomeTax(
       this.taxableIncome(),

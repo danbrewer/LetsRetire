@@ -305,6 +305,10 @@ class Taxes {
   //       description
   //     );
   //   }
+
+  static Empty() {
+    return new Taxes(0, 0, 0, 0, 0, 0, "Taxes");
+  }
 }
 
 // Maintain backward compatibility with the original object structure

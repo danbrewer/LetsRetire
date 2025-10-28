@@ -191,6 +191,14 @@ class AccountGroup {
       })
       .filter((account) => account !== null);
   }
+
+  static Empty() {
+    return new AccountGroup(
+      Account.Empty("Traditional 401k"),
+      Account.Empty("Roth IRA"),
+      Account.Empty("Savings")
+    );
+  }
 }
 
 // Create instance using the factory method for backward compatibility

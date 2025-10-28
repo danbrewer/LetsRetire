@@ -1,3 +1,7 @@
+// ignore type-checking in this file for now
+
+// @ts-nocheck
+
 // SS Breakdown Popup Functions
 function showSsBreakdown(yearIndex) {
   const calculation = calculations[yearIndex];

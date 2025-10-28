@@ -128,7 +128,7 @@ function calc() {
 
   let currentSalary = inputs.startingSalary;
   let totalTaxes = 0;
-  let maxDrawdown = { year: null, value: Infinity };
+  // let maxDrawdown = { year: null, value: Infinity };
 
   // Working years
   for (let y = 0; y < inputs.totalWorkingYears; y++) {
@@ -141,7 +141,7 @@ function calc() {
       accountGroup
     );
 
-    yearData.accountGroup = { ...accountGroup };
+    yearData.accountGroup = accountGroup;
 
     calculations.push({
       year: new Date().getFullYear() + y,
@@ -149,7 +149,7 @@ function calc() {
     });
 
     // Track total taxes paid during working years
-    totalTaxes += yearData.taxes;
+    totalTaxes += yearData.taxes?.federalTaxesOwed || 0;
 
     // Update salary for next year
     currentSalary *= 1 + inputs.salaryGrowth;
@@ -183,20 +183,20 @@ function calc() {
       benefitAmounts
     );
 
-    yearData.accountGroup = { ...accountGroup };
+    yearData.accountGroup = accountGroup;
 
-    yearData.dump();
+    // yearData.dump();
     debugger;
     calculations.push({
       year: new Date().getFullYear() + yearIndex,
       ...yearData,
     });
 
-    const totalBal = yearData.balances.total();
-    totalTaxes += yearData.taxes.federalTaxes;
-    if (totalBal < maxDrawdown.value) {
-      maxDrawdown = { year: yearData.year, value: totalBal };
-    }
+    // const totalBal = yearData.balances.total();
+    totalTaxes += yearData.taxes.federalTaxesOwed;
+    // if (totalBal < maxDrawdown.value) {
+    //   maxDrawdown = { year: inputs.y, value: totalBal };
+    // }
 
     // Step next year: Apply COLAs to benefits
     if (inputs.age >= inputs.ssStartAge) ssYearlyIndexed *= 1 + inputs.ssCola;
@@ -228,7 +228,7 @@ function calc() {
   debugger;
 
   // Generate final output
-  generateOutputAndSummary(inputs, rows, totalTaxes, maxDrawdown);
+  // generateOutputAndSummary(inputs, rows); //, totalTaxes, maxDrawdown);
 }
 
 // Helper to generate dynamic input values for a given year index

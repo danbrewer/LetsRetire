@@ -13,6 +13,8 @@ function withdrawalFactoryJS_createWithdrawalFactory(
 ) {
   let retirementAccountIncomeRecognized = false;
 
+  /** @type {IncomeRs} */
+  let incomeResults = IncomeRs.Empty();
   // **************
   // Sanity checks
   // **************
@@ -63,7 +65,7 @@ function withdrawalFactoryJS_createWithdrawalFactory(
         }
 
         // Calculate actual net using the sophisticated tax calculation
-        let incomeResults = retirementJS_calculateIncomeWhen401kWithdrawalIs(
+        incomeResults = retirementJS_calculateIncomeWhen401kWithdrawalIs(
           gross401kWithdrawal,
           incomeStreams,
           demographics,

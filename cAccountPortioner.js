@@ -2,8 +2,8 @@ class AccountPortioner {
   #accounts;
   #taxYear = 0;
   #useSavings = false;
-  #use401k = false;
-  #useRothIRA = false;
+  // #use401k = false;
+  // #useRothIRA = false;
   #ask = 0;
 
   /**
@@ -15,8 +15,8 @@ class AccountPortioner {
     this.#accounts = accounts;
 
     this.#useSavings = fiscalData.useSavings;
-    this.#use401k = fiscalData.useTrad401k;
-    this.#useRothIRA = fiscalData.useRoth;
+    // this.#use401k = fiscalData.useTrad401k;
+    // this.#useRothIRA = fiscalData.useRoth;
     this.#taxYear = fiscalData.taxYear;
 
     this.#ask = spend;

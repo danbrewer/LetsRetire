@@ -181,4 +181,8 @@ class FiscalData {
       taxBaseYear
     );
   }
+
+  static Empty() {
+    return new FiscalData(0, "", 0, 0, 0, 0, 0);
+  }
 }

@@ -5,13 +5,13 @@ class RetirementYearData {
    * @param {Object} expenditures - Expenditure data
    * @param {Object} contributions - Contribution data
    * @param {Object} withdrawals - Withdrawal data
-   * @param {Object} balances - Account balance data
+   * @param {Balances} balances - Account balance data
    * @param {Object} pen - Pension data
    * @param {Object} savings - Savings account data
    * @param {Object} ss - Social Security data
    * @param {IncomeStreams} incomeStreams - Instance of IncomeStreams class
    * @param {IncomeBreakdown} incomeBreakdown - Instance of IncomeBreakdown class
-   * @param {Object} taxes - Tax data
+   * @param {Taxes} taxes - Tax data
    * @param {Object} totals - Total calculations
    * @param {Object} myPensionBenefits - My pension benefit data
    * @param {Object} spousePensionBenefits - Spouse pension benefit data
@@ -19,22 +19,23 @@ class RetirementYearData {
    * @param {Object} spouseSsBenefits - Spouse Social Security benefit data
    * @param {Object} savingsBreakdown - Savings breakdown data
    * @param {Object} withdrawalBreakdown - Withdrawal breakdown data
-   * @param {SsBenefits} ssBreakdown - Instance of SsBenefits class
+   * @param {SsBenefitsCalculator} ssBreakdown - Instance of SsBenefits class
    * @param {Object} pensionBreakdown - Pension breakdown data
+   * @param {AccountGroup} accountGroup - Instance of AccountGroup class
    */
   constructor(
-    demographics = {},
-    fiscalData = {},
+    demographics,
+    fiscalData,
     expenditures = {},
     contributions = {},
     withdrawals = {},
-    balances = {},
+    balances,
     pen = {},
     savings = {},
     ss = {},
-    incomeStreams = {},
-    incomeBreakdown = {},
-    taxes = {},
+    incomeStreams,
+    incomeBreakdown,
+    taxes,
     totals = {},
     myPensionBenefits = {},
     spousePensionBenefits = {},
@@ -42,8 +43,9 @@ class RetirementYearData {
     spouseSsBenefits = {},
     savingsBreakdown = {},
     withdrawalBreakdown = {},
-    ssBreakdown = {},
-    pensionBreakdown = {}
+    ssBreakdown,
+    pensionBreakdown = {},
+    accountGroup
   ) {
     this._description = "Retirement Year Result Data";
 
@@ -62,7 +64,7 @@ class RetirementYearData {
     /** @type {Object} */
     this.withdrawals = withdrawals;
 
-    /** @type {Object} */
+    /** @type {Balances} */
     this.balances = balances;
 
     /** @type {Object} */
@@ -80,7 +82,7 @@ class RetirementYearData {
     /** @type {IncomeBreakdown} */
     this.incomeBreakdown = incomeBreakdown;
 
-    /** @type {Object} */
+    /** @type {Taxes} */
     this.taxes = taxes;
 
     /** @type {Object} */
@@ -104,19 +106,49 @@ class RetirementYearData {
     /** @type {Object} */
     this.withdrawalBreakdown = withdrawalBreakdown;
 
-    /** @type {SsBenefits} */
+    /** @type {SsBenefitsCalculator} */
     this.ssBreakdown = ssBreakdown;
 
     /** @type {Object} */
     this.pensionBreakdown = pensionBreakdown;
+
+    this.retirementAccountBreakdown = RetirementAccountBreakdown.Empty();
+    this.rothAccountBreakdown = RetirementAccountBreakdown.Empty();
+    this.accountGroup = accountGroup;
   }
 
   // Factory method for backward compatibility
-  static createEmpty() {
-    return new RetirementYearData();
+  static Empty() {
+    return new RetirementYearData(
+      Demographics.Empty(),
+      FiscalData.Empty(),
+      {},
+      {},
+      {},
+      Balances.Empty(),
+      {},
+      {},
+      {},
+      IncomeStreams.Empty(),
+      IncomeBreakdown.Empty(),
+      Taxes.Empty(),
+      {},
+      {},
+      {},
+      {},
+      {},
+      {},
+      {},
+      SsBenefitsCalculator.Empty(),
+      {},
+      AccountGroup.Empty()
+    );
   }
 
   // Factory method to create from existing data
+  /**
+   * @param {{ demographics: Demographics; fiscalData: FiscalData; expenditures: Object | undefined; contributions: Object | undefined; withdrawals: Object | undefined; balances: Balances; pen: Object | undefined; savings: Object | undefined; ss: Object | undefined; incomeStreams: IncomeStreams; incomeBreakdown: IncomeBreakdown; taxes: Taxes; totals: Object | undefined; myPensionBenefits: Object | undefined; spousePensionBenefits: Object | undefined; mySsBenefits: Object | undefined; spouseSsBenefits: Object | undefined; savingsBreakdown: Object | undefined; withdrawalBreakdown: Object | undefined; ssBreakdown: SsBenefitsCalculator; pensionBreakdown: Object | undefined; }} data
+   */
   static fromData(data) {
     return new RetirementYearData(
       data.demographics,
@@ -139,7 +171,8 @@ class RetirementYearData {
       data.savingsBreakdown,
       data.withdrawalBreakdown,
       data.ssBreakdown,
-      data.pensionBreakdown
+      data.pensionBreakdown,
+      AccountGroup.Empty()
     );
   }
 
@@ -154,12 +187,13 @@ class RetirementYearData {
     return 0;
   }
 
-  getTotalExpenses() {
-    if (this.expenditures && typeof this.expenditures.total === "number") {
-      return this.expenditures.total;
-    }
-    return 0;
-  }
+  //   getTotalExpenses() {
+  //     // this.acc
+  //     // if (this.expenditures && typeof this.expenditures.total === "number") {
+  //     //   return this.expenditures.total;
+  //     // }
+  //     // return 0;
+  //   }
 
   getNetIncome() {
     if (
@@ -172,19 +206,16 @@ class RetirementYearData {
   }
 
   getTotalTaxes() {
-    if (this.taxes && typeof this.taxes.total === "number") {
-      return this.taxes.total;
-    }
-    return 0;
+    return this.taxes.getTotalTaxes();
   }
 
-  hasDeficit() {
-    return this.getNetIncome() < this.getTotalExpenses();
-  }
+  //   hasDeficit() {
+  //     return this.getNetIncome() < this.getTotalExpenses();
+  //   }
 
-  getSurplusOrDeficit() {
-    return this.getNetIncome() - this.getTotalExpenses();
-  }
+  //   getSurplusOrDeficit() {
+  //     return this.getNetIncome() - this.getTotalExpenses();
+  //   }
 
   getTotalAccountBalances() {
     if (!this.balances || typeof this.balances !== "object") return 0;
@@ -204,37 +235,41 @@ class RetirementYearData {
       year: this.fiscalData?.taxYear || "Unknown",
       age: this.demographics?.age || "Unknown",
       totalIncome: this.getTotalIncome(),
-      totalExpenses: this.getTotalExpenses(),
+      //   totalExpenses: this.getTotalExpenses(),
       netIncome: this.getNetIncome(),
       totalTaxes: this.getTotalTaxes(),
-      surplusDeficit: this.getSurplusOrDeficit(),
+      //   surplusDeficit: this.getSurplusOrDeficit(),
       totalBalances: this.getTotalAccountBalances(),
-      hasDeficit: this.hasDeficit(),
+      //   hasDeficit: this.hasDeficit(),
     };
   }
 
-  // Method to update specific sections
-  updateSection(sectionName, data) {
-    if (this.hasOwnProperty(sectionName)) {
-      this[sectionName] = data;
-    }
-  }
+  //   // Method to update specific sections
+  //   /**
+  //      * @param {PropertyKey} sectionName
+  //      * @param {any} data
+  //      */
+  //   updateSection(sectionName, data) {
+  //     if (this.hasOwnProperty(sectionName)) {
+  //       this[sectionName] = data;
+  //     }
+  //   }
 
-  // Method to validate data completeness
-  isComplete() {
-    const requiredSections = [
-      "demographics",
-      "fiscalData",
-      "incomeStreams",
-      "incomeBreakdown",
-      "expenditures",
-      "balances",
-    ];
+  //   // Method to validate data completeness
+  //   isComplete() {
+  //     const requiredSections = [
+  //       "demographics",
+  //       "fiscalData",
+  //       "incomeStreams",
+  //       "incomeBreakdown",
+  //       "expenditures",
+  //       "balances",
+  //     ];
 
-    return requiredSections.every(
-      (section) => this[section] && Object.keys(this[section]).length > 0
-    );
-  }
+  //     return requiredSections.every(
+  //       (section) => this[section] && Object.keys(this[section]).length > 0
+  //     );
+  //   }
 
   // Method to get breakdown by category
   getBreakdowns() {
@@ -248,4 +283,4 @@ class RetirementYearData {
 }
 
 // Create instance using the factory method for backward compatibility
-const result = RetirementYearData.createEmpty();
+const result = RetirementYearData.Empty();

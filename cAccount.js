@@ -217,4 +217,11 @@ class Account {
   endingBalanceForYear(yyyy) {
     return this.#endingBalanceForYear(yyyy);
   }
+
+  /**
+   * @param {string} accountName
+   */
+  static Empty(accountName) {
+    return new Account(accountName, 0, 0);
+  }
 }

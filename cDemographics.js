@@ -158,6 +158,23 @@ class Demographics {
       inputs.filingStatus
     );
   }
+
+  static Empty() {
+    return new Demographics(
+      0,
+      0,
+      0,
+      0,
+      0,
+      false,
+      false,
+      false,
+      0,
+      0,
+      0,
+      "single"
+    );
+  }
 }
 
 // Create instance using the factory method for compatibility

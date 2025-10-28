@@ -31,6 +31,7 @@ class IncomeStreams {
     this.taxableIncomeAdjustment = taxableIncomeAdjustment;
     this.taxFreeIncomeAdjustment = taxFreeIncomeAdjustment;
     this.otherTaxableIncomeAdjustments = otherTaxableIncomeAdjustments;
+    this.actualEarnedInterest = 0;
   }
 
   // Factory method for backward compatibility and dependency injection
@@ -148,6 +149,10 @@ class IncomeStreams {
         this.taxableIncomeAdjustment + this.otherTaxableIncomeAdjustments,
       taxFreeAdjustments: this.taxFreeIncomeAdjustment,
     };
+  }
+
+  static Empty() {
+    return new IncomeStreams(0, 0, 0, 0, 0, 0, 0, 0, 0);
   }
 }
 

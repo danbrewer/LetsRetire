@@ -1,3 +1,7 @@
+// ignore type-checking in this file for now
+
+// @ts-nocheck
+
 /**
  * Export Total Net Income Breakdown to CSV
  */
