@@ -291,6 +291,11 @@ function retirementJS_calculateIncomeWhen401kWithdrawalIs(
     taxBrackets
   );
 
+  incomeBreakdown.federalIncomeTax = retirementJS_determineFederalIncomeTax(
+    incomeBreakdown.taxableIncome(),
+    taxBrackets
+  );
+
   // const incomeBreakdown = {
   //   myPension: incomeStreams.myPension,
   //   spousePension: incomeStreams.spousePension,

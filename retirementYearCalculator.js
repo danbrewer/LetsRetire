@@ -270,11 +270,13 @@ function calculateRetirementYearData(inputs, accounts, benefitAmounts) {
   // };
   //
 
-  const withdrawals = Withdrawals.CreateUsing(
-    accounts,
-    incomeStreams,
-    fiscalData
-  );
+  // const withdrawals = Withdrawals.CreateUsing(
+  //   accounts,
+  //   incomeStreams,
+  //   fiscalData
+  // );
+
+  // const deposits = Deposits.CreateUsing(accounts, incomeStreams, fiscalData);
 
   // {
   //   _description: "Withdrawals Breakdown",
@@ -491,7 +493,7 @@ function calculateRetirementYearData(inputs, accounts, benefitAmounts) {
   // Update all the final values in the result object
   // result.expenditures = expenditureTracker.totalBudgeted();
 
-  result.withdrawals = withdrawals;
+  // result.withdrawals = withdrawals;
   result.ss = ssIncome;
 
   // result.pen = pensionIncome;
@@ -526,102 +528,102 @@ function calculateRetirementYearData(inputs, accounts, benefitAmounts) {
 
   console.log(description);
 
-  // const debugData = {
-  //   age: demographics.age,
-  //   spend: fiscalData.spend,
-  //   income: {
-  //     total: result.incomeStreams.totalIncome(),
-  //     breakdown: {
-  //       socialSec: result.incomeStreams.ssIncome(),
-  //       pension: result.incomeStreams.pensionIncome(),
-  //       interest: accounts.savings
-  //         .calculateInterestForYear(
-  //           INTEREST_CALCULATION_EPOCH.IGNORE_DEPOSITS,
-  //           fiscalData.taxYear
-  //         )
-  //         .asCurrency(),
-  //       rmd: result.incomeStreams.rmd,
-  //       otherTaxableIncome: result.incomeStreams.otherTaxableIncomeAdjustments,
-  //       taxFreeIncome: result.incomeStreams.taxFreeIncomeAdjustment,
-  //     },
-  //   },
-  //   federalTaxes: taxes.federalTaxesOwed,
-  //   netIncome: incomeResults.incomeBreakdown.netIncome,
-  //   deposits: {
-  //     total: deposits.total().asCurrency(),
-  //     breakdown: {
-  //       savings: deposits.savings,
-  //       roth: deposits.roth,
-  //       trad401k: deposits.trad401k,
-  //     },
-  //   },
-  //   withdrawals: {
-  //     total: withdrawals.total(),
-  //     breakdown: {
-  //       savings: withdrawals.savings,
-  //       roth: withdrawals.roth,
-  //       trad401k: withdrawals.trad401k,
-  //       rmd: withdrawals.rmd,
-  //     },
-  //   },
-  //   accounts: { ...accounts },
-  // };
+  const debugData = {
+    age: demographics.age,
+    spend: fiscalData.spend,
+    income: {
+      total: result.incomeStreams.totalIncome(),
+      breakdown: {
+        socialSec: result.incomeStreams.ssIncome(),
+        pension: result.incomeStreams.pensionIncome(),
+        interest: accounts.savings
+          .calculateInterestForYear(
+            INTEREST_CALCULATION_EPOCH.IGNORE_DEPOSITS,
+            fiscalData.taxYear
+          )
+          .asCurrency(),
+        rmd: result.incomeStreams.rmd,
+        otherTaxableIncome: result.incomeStreams.otherTaxableIncomeAdjustments,
+        taxFreeIncome: result.incomeStreams.taxFreeIncomeAdjustment,
+      },
+    },
+    federalTaxes: taxes.federalTaxesOwed,
+    netIncome: incomeResults.incomeBreakdown.netIncome,
+    deposits: {
+      total() {
+        return this.roth + this.savings + this.trad401k;
+      },
+      savings: accounts.savings.depositsForYear(fiscalData.taxYear),
+      roth: accounts.rothIra.depositsForYear(fiscalData.taxYear),
+      trad401k: accounts.trad401k.depositsForYear(fiscalData.taxYear),
+    },
+    withdrawals: {
+      total() {
+        return this.roth + this.savings + this.trad401k;
+      },
+      savings: accounts.savings.withdrawalsForYear(fiscalData.taxYear),
+      roth: accounts.rothIra.withdrawalsForYear(fiscalData.taxYear),
+      trad401k: accounts.trad401k.withdrawalsForYear(fiscalData.taxYear),
+    },
+    accounts: { ...accounts },
+  };
 
-  // const temp = {
-  //   income: {
-  //     netIncome: incomeResults.incomeBreakdown
-  //       .netIncomeLessReportedEarnedInterest()
-  //       .asCurrency(),
-  //     interestIncome: savings.earnedInterest,
-  //     spend: fiscalData.spend.asCurrency(),
-  //     shortfall: Math.max(
-  //       fiscalData.spend -
-  //         savings.earnedInterest -
-  //         accounts.savings.depositsForYear(fiscalData.taxYear),
-  //       0
-  //     ).asCurrency(),
-  //     overage: Math.max(
-  //       accounts.savings.depositsForYear(fiscalData.taxYear) -
-  //         savings.earnedInterest -
-  //         fiscalData.spend,
-  //       0
-  //     ).asCurrency(),
-  //   },
-  //   savings: {
-  //     startingBalance: accounts.savings
-  //       .startingBalanceForYear(fiscalData.taxYear)
-  //       .asCurrency(),
-  //     withdrawals: accounts.savings
-  //       .withdrawalsForYear(fiscalData.taxYear)
-  //       .asCurrency(),
-  //     deposits: accounts.savings
-  //       .depositsForYear(fiscalData.taxYear)
-  //       .asCurrency(),
-  //     endingBalance: accounts.savings
-  //       .endingBalanceForYear(fiscalData.taxYear)
-  //       .asCurrency(),
-  //     // interestEarned: accounts.savings
-  //     //   .depositsForYear(fiscalData.taxYear, TRANSACTION_CATEGORY.INTEREST)
-  //     //   .asCurrency(),
-  //   },
-  //   trad401k: {
-  //     startingBalance: accounts.trad401k
-  //       .startingBalanceForYear(fiscalData.taxYear)
-  //       .asCurrency(),
-  //     withdrawals: accounts.trad401k.withdrawalsForYear(fiscalData.taxYear),
-  //     deposits: accounts.trad401k
-  //       .depositsForYear(fiscalData.taxYear)
-  //       .asCurrency(),
-  //     endingBalance: accounts.trad401k
-  //       .endingBalanceForYear(fiscalData.taxYear)
-  //       .asCurrency(),
-  //     interestEarned: accounts.trad401k
-  //       .depositsForYear(fiscalData.taxYear, TRANSACTION_CATEGORY.INTEREST)
-  //       .asCurrency(),
-  //   },
-  // };
+  const temp = {
+    income: {
+      netIncome: incomeResults.incomeBreakdown
+        .netIncomeLessReportedEarnedInterest()
+        .asCurrency(),
+      interestIncome: savings.earnedInterest,
+      spend: fiscalData.spend.asCurrency(),
+      shortfall: Math.max(
+        fiscalData.spend -
+          savings.earnedInterest -
+          accounts.savings.depositsForYear(fiscalData.taxYear),
+        0
+      ).asCurrency(),
+      overage: Math.max(
+        accounts.savings.depositsForYear(fiscalData.taxYear) -
+          savings.earnedInterest -
+          fiscalData.spend,
+        0
+      ).asCurrency(),
+    },
+    savings: {
+      startingBalance: accounts.savings
+        .startingBalanceForYear(fiscalData.taxYear)
+        .asCurrency(),
+      withdrawals: accounts.savings
+        .withdrawalsForYear(fiscalData.taxYear)
+        .asCurrency(),
+      deposits: accounts.savings
+        .depositsForYear(fiscalData.taxYear)
+        .asCurrency(),
+      endingBalance: accounts.savings
+        .endingBalanceForYear(fiscalData.taxYear)
+        .asCurrency(),
+      // interestEarned: accounts.savings
+      //   .depositsForYear(fiscalData.taxYear, TRANSACTION_CATEGORY.INTEREST)
+      //   .asCurrency(),
+    },
+    trad401k: {
+      startingBalance: accounts.trad401k
+        .startingBalanceForYear(fiscalData.taxYear)
+        .asCurrency(),
+      withdrawals: accounts.trad401k.withdrawalsForYear(fiscalData.taxYear),
+      deposits: accounts.trad401k
+        .depositsForYear(fiscalData.taxYear)
+        .asCurrency(),
+      endingBalance: accounts.trad401k
+        .endingBalanceForYear(fiscalData.taxYear)
+        .asCurrency(),
+      interestEarned: accounts.trad401k
+        .depositsForYear(fiscalData.taxYear, TRANSACTION_CATEGORY.INTEREST)
+        .asCurrency(),
+    },
+  };
 
-  // temp.dump("Balances");
+  debugData.dump("Debug Data");
+  temp.dump("Balances");
   // debugger;
   // debugData.dump("debugData");
   // accounts.savings.dump("Savings");

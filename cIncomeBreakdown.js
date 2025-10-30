@@ -37,10 +37,7 @@ class IncomeBreakdown {
     this.taxBrackets = taxBrackets;
     this.actualEarnedInterest = 0;
 
-    this.federalIncomeTax = retirementJS_determineFederalIncomeTax(
-      this.taxableIncome(),
-      taxBrackets
-    );
+    this.federalIncomeTax = 0;
   }
 
   // Factory method for backward compatibility and dependency injection

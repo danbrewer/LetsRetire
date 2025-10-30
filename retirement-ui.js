@@ -2,10 +2,29 @@
 
 // @ts-nocheck
 
-const $ = (id) => document.getElementById(id);
-const num = (id) => Number($(id).value || 0);
-const pct = (v) => (isNaN(v) ? 0 : Number(v) / 100);
-const fmt = (n) =>
+const $ = (/** @type {string} */ id) => document.getElementById(id);
+const num = (/** @type {string} */ id) => {
+  const el = $(id);
+
+  if (el === null || typeof el === "undefined") {
+    console.log(`Element with id '${id}' not found.`);
+    throw new Error(`Element with id '${id}' not found.`);
+  }
+
+  let val;
+  if (
+    el instanceof HTMLInputElement ||
+    el instanceof HTMLSelectElement ||
+    el instanceof HTMLTextAreaElement
+  ) {
+    val = el.value;
+  } else {
+    val = undefined;
+  }
+  return Number(val || 0);
+};
+const pct = (/** @type {number} */ v) => (isNaN(v) ? 0 : Number(v) / 100);
+const fmt = (/** @type {number} */ n) =>
   n.toLocaleString(undefined, {
     style: "currency",
     currency: "USD",
@@ -2077,7 +2096,7 @@ function parseInputParameters() {
     (spouseSsStartAge = num("spouseSsStart")),
     (spouseSsCola = pct(num("spouseSsCola"))),
     (spousePenMonthly = num("spousePenMonthly")),
-    (spousePenStartAge = num("spousePenStartAge")),
+    (spousePenStartAge = num("spousePenStart")),
     (spousePenCola = pct(num("spousePenCola"))),
     (spouseTaxSS = pct(num("spouseTaxSS"))),
     (spouseTaxPension = pct(num("spouseTaxPension"))),
