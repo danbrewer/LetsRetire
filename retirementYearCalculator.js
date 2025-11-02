@@ -16,7 +16,7 @@
  *   - ret401k: 401k growth rate
  *   - retRoth: Roth IRA growth rate
  *   - retirement year and age information
- * @param {AccountGroup} accounts - Collection of retirement accounts including:
+ * @param {AccountsManager} accounts - Collection of retirement accounts including:
  *   - savings: Savings account instance
  *   - trad401k: Traditional 401k account instance
  *   - rothIra: Roth IRA account instance

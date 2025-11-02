@@ -1,4 +1,4 @@
-class AccountGroup {
+class AccountsManager {
   /**
    * @param {Account} trad401k - Traditional 401k account instance
    * @param {Account} rothIra - Roth IRA account instance
@@ -18,7 +18,7 @@ class AccountGroup {
   /**
    * Factory method to create AccountGroup from input data
    * @param {Inputs} inputs - Input data containing account balances and rates
-   * @returns {AccountGroup} New AccountGroup instance
+   * @returns {AccountsManager} New AccountGroup instance
    */
   static fromInputs(inputs) {
     const trad401k = new Account(
@@ -29,7 +29,7 @@ class AccountGroup {
     const rothIra = new Account("Roth IRA", inputs.rothIRA, inputs.retRoth);
     const savings = new Account("Savings", inputs.savings, inputs.retSavings);
 
-    return new AccountGroup(trad401k, rothIra, savings);
+    return new AccountsManager(trad401k, rothIra, savings);
   }
 
   // Utility methods for account group analysis
@@ -193,7 +193,7 @@ class AccountGroup {
   }
 
   static Empty() {
-    return new AccountGroup(
+    return new AccountsManager(
       Account.Empty("Traditional 401k"),
       Account.Empty("Roth IRA"),
       Account.Empty("Savings")

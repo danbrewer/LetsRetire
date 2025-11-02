@@ -34,7 +34,7 @@ class WorkingYearData {
    * @param {Object} [savingsBreakdown={}] - Detailed savings account breakdown
    * @param {Object} [ssBreakdown={}] - Social Security calculation breakdown
    * @param {Object} [spouseSsBreakdown={}] - Spouse Social Security breakdown (if applicable)
-   * @param {AccountGroup} [accountGroup=new AccountGroup()] - Group of all retirement accounts
+   * @param {AccountsManager} [accountGroup=new AccountGroup()] - Group of all retirement accounts
    */
   constructor(
     description = "",

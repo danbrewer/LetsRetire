@@ -7,7 +7,7 @@ class AccountPortioner {
   #ask = 0;
 
   /**
-   * @param {AccountGroup} accounts
+   * @param {AccountsManager} accounts
    * @param {FiscalData} fiscalData
    * @param {number} spend
    */

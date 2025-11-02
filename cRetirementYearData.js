@@ -21,7 +21,7 @@ class RetirementYearData {
    * @param {Object} withdrawalBreakdown - Withdrawal breakdown data
    * @param {SsBenefitsCalculator} ssBreakdown - Instance of SsBenefits class
    * @param {Object} pensionBreakdown - Pension breakdown data
-   * @param {AccountGroup} accountGroup - Instance of AccountGroup class
+   * @param {AccountsManager} accountGroup - Instance of AccountGroup class
    */
   constructor(
     demographics,
@@ -141,7 +141,7 @@ class RetirementYearData {
       {},
       SsBenefitsCalculator.Empty(),
       {},
-      AccountGroup.Empty()
+      AccountsManager.Empty()
     );
   }
 
@@ -172,7 +172,7 @@ class RetirementYearData {
       data.withdrawalBreakdown,
       data.ssBreakdown,
       data.pensionBreakdown,
-      AccountGroup.Empty()
+      AccountsManager.Empty()
     );
   }
 

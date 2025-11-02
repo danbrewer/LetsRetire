@@ -117,7 +117,7 @@ function calc() {
   }
 
   // Initialize balances object for tracking
-  const accountGroup = new AccountGroup(
+  const accountGroup = new AccountsManager(
     new Account("Trad 401k", inputs.trad401k, inputs.ret401k),
     new Account("Trad Roth", inputs.rothIRA, inputs.retRoth),
     new Account("Savings", inputs.savings, inputs.retSavings)
@@ -134,11 +134,16 @@ function calc() {
   for (let y = 0; y < inputs.totalWorkingYears; y++) {
     generateYearlyIndexedInputValues(inputs, y);
 
+    const accountYear = AccountYear.FromAccountsManager(
+      accountGroup,
+      TAX_BASE_YEAR + y
+    );
+
     const yearData = calculateWorkingYearData(
       inputs,
       y,
       currentSalary,
-      accountGroup
+      accountYear
     );
 
     yearData.accountGroup = accountGroup;

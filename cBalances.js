@@ -173,7 +173,7 @@ class Balances {
    * extracting ending balances from an AccountGroup for a specific tax year.
    * It handles the account balance calculations and currency formatting automatically.
    *
-   * @param {AccountGroup} accounts - AccountGroup instance containing all accounts
+   * @param {AccountsManager} accounts - AccountGroup instance containing all accounts
    * @param {FiscalData} fiscalData - Fiscal data containing the target tax year
    * @param {string} [description="Account Balances"] - Optional description
    *

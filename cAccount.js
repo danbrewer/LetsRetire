@@ -1,3 +1,8 @@
+class ACCOUNT_TYPES {}
+ACCOUNT_TYPES.SAVINGS = "savings";
+ACCOUNT_TYPES.TRADITIONAL_401K = "trad401k";
+ACCOUNT_TYPES.ROTH_IRA = "rothIra";
+
 // Create a class for the account
 class Account {
   /** @type {Transaction[]} */

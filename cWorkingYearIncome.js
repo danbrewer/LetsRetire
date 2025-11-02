@@ -346,7 +346,7 @@ class WorkingYearIncome {
    *
    * @param {number} salary - Annual salary amount
    * @param {Demographics} demographics - Demographic information including age
-   * @param {AccountGroup} accountGroup - Account group with savings and retirement accounts
+   * @param {AccountYear} accountYear - Account group with savings and retirement accounts
    * @param {FiscalData} fiscalData - Fiscal data containing the target tax year
    * @param {string} [description="Income"] - Optional description
    *
@@ -371,7 +371,7 @@ class WorkingYearIncome {
   static CreateUsing(
     salary,
     demographics,
-    accountGroup,
+    accountYear,
     fiscalData,
     description = "Income"
   ) {
@@ -391,14 +391,14 @@ class WorkingYearIncome {
     // Get interest income from savings account
     let taxableInterestIncome = 0;
     if (
-      accountGroup.savings &&
-      typeof accountGroup.savings.depositsForYear === "function"
+      accountYear.savings &&
+      typeof accountYear.savings.depositsForYear === "function"
     ) {
       const interestCategory =
         typeof TRANSACTION_CATEGORY !== "undefined"
           ? TRANSACTION_CATEGORY.INTEREST
           : "interest";
-      const interestAmount = accountGroup.savings.depositsForYear(
+      const interestAmount = accountYear.savings.depositsForYear(
         fiscalData.taxYear,
         interestCategory
       );
@@ -411,14 +411,14 @@ class WorkingYearIncome {
     // Get retirement account contributions
     let retirementAccountContributions = 0;
     if (
-      accountGroup.trad401k &&
-      typeof accountGroup.trad401k.depositsForYear === "function"
+      accountYear.trad401k &&
+      typeof accountYear.trad401k.depositsForYear === "function"
     ) {
       const contributionCategory =
         typeof TRANSACTION_CATEGORY !== "undefined"
           ? TRANSACTION_CATEGORY.CONTRIBUTION
           : "contribution";
-      retirementAccountContributions = accountGroup.trad401k.depositsForYear(
+      retirementAccountContributions = accountYear.trad401k.depositsForYear(
         fiscalData.taxYear,
         contributionCategory
       );
@@ -427,14 +427,14 @@ class WorkingYearIncome {
     // Get Roth IRA contributions
     let rothIraContributions = 0;
     if (
-      accountGroup.rothIra &&
-      typeof accountGroup.rothIra.depositsForYear === "function"
+      accountYear.rothIra &&
+      typeof accountYear.rothIra.depositsForYear === "function"
     ) {
       const contributionCategory =
         typeof TRANSACTION_CATEGORY !== "undefined"
           ? TRANSACTION_CATEGORY.CONTRIBUTION
           : "contribution";
-      rothIraContributions = accountGroup.rothIra.depositsForYear(
+      rothIraContributions = accountYear.rothIra.depositsForYear(
         fiscalData.taxYear,
         contributionCategory
       );

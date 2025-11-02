@@ -277,7 +277,7 @@ class Withdrawals {
    * extracting withdrawal amounts from an AccountGroup and income breakdown for
    * a specific tax year. It handles the withdrawal calculations automatically.
    *
-   * @param {AccountGroup} accounts - AccountGroup instance containing all accounts
+   * @param {AccountsManager} accounts - AccountGroup instance containing all accounts
    * @param {IncomeStreams} incomeStreams - Income breakdown containing RMD information
    * @param {FiscalData} fiscalData - Fiscal data containing the target tax year
    * @param {string} [description="Withdrawals Breakdown"] - Optional description

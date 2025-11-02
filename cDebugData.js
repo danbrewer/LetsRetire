@@ -20,7 +20,7 @@ class DebugData {
    * @param {number} netIncome - Net income after taxes
    * @param {Deposits} deposits - Deposits object containing deposit data
    * @param {Withdrawals} withdrawals - Withdrawals object containing withdrawal data
-   * @param {AccountGroup} [accounts] - Account group data
+   * @param {AccountsManager} [accounts] - Account group data
    * @param {string} [description="Debug Data"] - Descriptive label
    */
   constructor(
@@ -304,7 +304,7 @@ class DebugData {
    * @param {IncomeBreakdown} incomeBreakdown - Income streams object with calculation methods
    * @param {Deposits} deposits - Deposits information
    * @param {Withdrawals} withdrawals - Withdrawals information
-   * @param {AccountGroup} accounts - Account group with all account types
+   * @param {AccountsManager} accounts - Account group with all account types
    * @param {Taxes} taxes - Tax calculation results:
    * @param {string} [description="Debug Data"] - Optional description
    *

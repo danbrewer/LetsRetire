@@ -222,7 +222,7 @@ class Deposits {
    * extracting deposit amounts from an AccountGroup and income breakdown for
    * a specific tax year. It handles the deposit calculations automatically.
    *
-   * @param {AccountGroup} accounts - AccountGroup instance containing all accounts
+   * @param {AccountsManager} accounts - AccountGroup instance containing all accounts
    * @param {FiscalData} fiscalData - Fiscal data containing the target tax year
    * @param {string} [description="Deposits Breakdown"] - Optional description
    *

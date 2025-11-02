@@ -7,6 +7,7 @@ class FiscalData {
    * @param {number} savingsRateOfReturn
    * @param {number} yearIndex
    * @param {number} spend
+   * @param {number} taxYear
    */
   constructor(
     inflationRate,
@@ -16,11 +17,11 @@ class FiscalData {
     savingsRateOfReturn,
     yearIndex,
     spend,
+    taxYear,
     useRmd = false,
     useSavings = true,
     useTrad401k = true,
-    useRoth = true,
-    taxBaseYear = TAX_BASE_YEAR
+    useRoth = true
   ) {
     this._description = "Fiscal Year Data";
     this.inflationRate = inflationRate;
@@ -28,7 +29,7 @@ class FiscalData {
     this.retirementAccountRateOfReturn = retirementAccountRateOfReturn;
     this.rothRateOfReturn = rothRateOfReturn;
     this.savingsRateOfReturn = savingsRateOfReturn;
-    this.taxYear = taxBaseYear + yearIndex;
+    this.taxYear = taxYear;
     this.yearIndex = yearIndex;
     this.spend = spend;
     this.useRmd = useRmd;
@@ -117,7 +118,7 @@ class FiscalData {
    *   - useTrad401k: Boolean flag to allow traditional 401k withdrawals
    *   - useRoth: Boolean flag to allow Roth IRA withdrawals
    *
-   * @param {number} [taxBaseYear=TAX_BASE_YEAR] - Base year for tax calculations.
+   * @param {number} taxYear - Base year for tax calculations.
    *   Defaults to the global TAX_BASE_YEAR constant. Used to calculate the
    *   actual tax year by adding the yearIndex.
    *
@@ -165,7 +166,7 @@ class FiscalData {
    * @static
    * @since 1.0.0
    */
-  static CreateUsing(inputs, taxBaseYear = TAX_BASE_YEAR) {
+  static CreateUsing(inputs, taxYear) {
     return new FiscalData(
       inputs.inflation,
       inputs.filingStatus,
@@ -174,15 +175,15 @@ class FiscalData {
       inputs.retSavings,
       inputs.yearIndex,
       inputs.spend,
+      taxYear,
       inputs.useRMD,
       inputs.useSavings,
       inputs.useTrad401k,
-      inputs.useRoth,
-      taxBaseYear
+      inputs.useRoth
     );
   }
 
   static Empty() {
-    return new FiscalData(0, "", 0, 0, 0, 0, 0);
+    return new FiscalData(0, "", 0, 0, 0, 0, 0, 0);
   }
 }

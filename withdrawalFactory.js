@@ -3,7 +3,7 @@
  * @param {IncomeStreams} incomeStreams
  * @param {FiscalData} fiscalData
  * @param {Demographics} demographics
- * @param {AccountGroup} accounts
+ * @param {AccountsManager} accounts
  */
 function withdrawalFactoryJS_createWithdrawalFactory(
   incomeStreams,

@@ -38,7 +38,7 @@ class IncomeStreams {
   /**
    * @param {Demographics} demographics - Instance of Demographics class
    * @param {BenefitAmounts} benefitAmounts - Benefit amounts object containing pension and SS amounts
-   * @param {AccountGroup} accounts - Accounts object containing savings and 401k accounts
+   * @param {AccountsManager} accounts - Accounts object containing savings and 401k accounts
    * @param {FiscalData} fiscalData - Instance of FiscalData class
    * @param {Inputs} inputs - Input data object containing tax adjustments
    * @returns {IncomeStreams} New IncomeStreams instance

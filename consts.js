@@ -44,8 +44,3 @@ INTEREST_CALCULATION_EPOCH.IGNORE_DEPOSITS = "ignore_deposits"; // based on star
 INTEREST_CALCULATION_EPOCH.IGNORE_WITHDRAWALS = "ignore_withdrawals"; // based on starting balance + deposits
 INTEREST_CALCULATION_EPOCH.AVERAGE_BALANCE = "average"; // based on average of starting and ending balances
 INTEREST_CALCULATION_EPOCH.ENDING_BALANCE = "end"; // based on ending balance
-
-class ACCOUNT_TYPES {}
-ACCOUNT_TYPES.SAVINGS = "savings";
-ACCOUNT_TYPES.TRADITIONAL_401K = "trad401k";
-ACCOUNT_TYPES.ROTH_IRA = "rothIra";
