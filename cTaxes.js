@@ -37,7 +37,6 @@ class Taxes {
     this.federalTaxesOwed = federalTaxesOwed;
     this.otherTaxes = otherTaxes;
     this.taxableIncomeAdjustment = taxableIncomeAdjustment;
-    this.effectiveTaxRate = 0;
   }
 
   /**
@@ -63,7 +62,7 @@ class Taxes {
    *
    * @returns {number} Effective tax rate as decimal (e.g., 0.22 for 22%)
    */
-  getEffectiveTaxRate() {
+  get effectiveTaxRate() {
     if (this.grossIncome === 0) return 0;
     return this.federalTaxesOwed / this.grossIncome;
   }
@@ -74,7 +73,7 @@ class Taxes {
    *
    * @returns {number} Approximate marginal tax rate as decimal
    */
-  getMarginalTaxRate() {
+  get marginalTaxRate() {
     if (this.taxableIncome === 0) return 0;
     return this.federalTaxesOwed / this.taxableIncome;
   }
@@ -84,7 +83,7 @@ class Taxes {
    *
    * @returns {number} Total taxes owed from all sources
    */
-  getTotalTaxes() {
+  get totalTaxes() {
     return this.federalTaxesOwed + this.otherTaxes;
   }
 
@@ -93,8 +92,8 @@ class Taxes {
    *
    * @returns {number} Gross income minus total taxes
    */
-  getNetIncome() {
-    return this.grossIncome - this.getTotalTaxes();
+  get netIncome() {
+    return this.grossIncome - this.totalTaxes;
   }
 
   /**
@@ -102,7 +101,7 @@ class Taxes {
    *
    * @returns {number} Gross income after taxable income adjustments
    */
-  getAdjustedGrossIncome() {
+  get adjustedGrossIncome() {
     return this.grossIncome - this.taxableIncomeAdjustment;
   }
 
@@ -111,8 +110,8 @@ class Taxes {
    *
    * @returns {number} Calculated taxable income (AGI minus standard deduction, minimum 0)
    */
-  getCalculatedTaxableIncome() {
-    return Math.max(0, this.getAdjustedGrossIncome() - this.standardDeduction);
+  get calculatedTaxableIncome() {
+    return Math.max(0, this.adjustedGrossIncome - this.standardDeduction);
   }
 
   /**
@@ -141,7 +140,7 @@ class Taxes {
     }
 
     // Effective tax rate should be reasonable (less than 100%)
-    if (this.getEffectiveTaxRate() > 1) {
+    if (this.effectiveTaxRate > 1) {
       return false;
     }
 
@@ -166,14 +165,14 @@ class Taxes {
   getSummary() {
     return {
       grossIncome: this.grossIncome,
-      adjustedGrossIncome: this.getAdjustedGrossIncome(),
+      adjustedGrossIncome: this.adjustedGrossIncome,
       standardDeduction: this.standardDeduction,
       taxableIncome: this.taxableIncome,
       federalTaxes: this.federalTaxesOwed,
       otherTaxes: this.otherTaxes,
-      totalTaxes: this.getTotalTaxes(),
-      netIncome: this.getNetIncome(),
-      effectiveTaxRate: (this.getEffectiveTaxRate() * 100).toFixed(2) + "%",
+      totalTaxes: this.totalTaxes,
+      netIncome: this.netIncome,
+      effectiveTaxRate: (this.effectiveTaxRate * 100).toFixed(2) + "%",
       isValid: this.isCalculationValid(),
     };
   }

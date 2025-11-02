@@ -34,100 +34,19 @@ function calculateWorkingYearData(inputs, yearIndex, salary, accountGroup) {
 
   // debugger;
   const fiscalData = FiscalData.CreateUsing(inputs, TAX_BASE_YEAR + yearIndex);
-  // {
-  //   _description: "Fiscal Year Data",
-  //   inflationRate: inputs.inflation,
-  //   filingStatus: inputs.filingStatus,
-  //   retirementAccountRateOfReturn: inputs.ret401k,
-  //   rothRateOfReturn: inputs.retRoth,
-  //   savingsRateOfReturn: inputs.retSavings,
-  //   taxYear: TAX_BASE_YEAR + yearIndex,
-  //   yearIndex: yearIndex,
-  //   spend: inputs.spend,
-  //   actualSavingsContribution: 0,
-  //   desiredSavingsContribution: (salary * inputs.taxablePct).asCurrency(),
-  //   determineActualSavingsContribution(netIncome) {
-  //     if (!netIncome || isNaN(netIncome)) return 0;
-
-  //     this.actualSavingsContribution = Math.max(netIncome - this.spend, 0);
-  //     return this.actualSavingsContribution;
-  //   },
-  // };
-
   const demographics = Demographics.CreateUsing(inputs, false, true);
-  // const demographics = {
-  //   _description: "Demographics",
-  //   age: inputs.currentAge + yearIndex,
-  //   ssStartAge: inputs.ssStartAge,
-  //   penStartAge: inputs.penStartAge,
-  //   retirementYear:
-  //     new Date().getFullYear() + inputs.totalWorkingYears + yearIndex,
-  //   isRetired: false,
-  //   isWorking: true,
-  //   hasSpouse: inputs.hasSpouse,
-  //   filingStatus: inputs.filingStatus,
-  //   eligibleForSs() {
-  //     return this.age >= this.ssStartAge;
-  //   },
-  //   hasPen() {
-  //     return this.age >= this.penStartAge;
-  //   },
-  // };
-
-  // const employmentInfo = {
-  //   _description: "Employment Info",
-  //   salary: salary,
-  //   pretaxContributionPercentage: inputs.pretaxPct,
-  //   rothContributionPercentage: inputs.rothPct,
-  //   employeeMatchCap: inputs.matchCap,
-  //   matchRate: inputs.matchRate,
-  //   desired401kContribution() {
-  //     return (this.salary * this.pretaxContributionPercentage).asCurrency();
-  //   },
-  //   desiredRothContribution() {
-  //     return (this.salary * this.rothContributionPercentage).asCurrency();
-  //   },
-  //   electiveScale() {
-  //     let electiveLimit =
-  //       EMPLOYEE_401K_LIMIT_2025 +
-  //       (demographics.age >= 50 ? EMPLOYEE_401K_CATCHUP_50 : 0);
-  //     const totalDesiredContribution =
-  //       this.desired401kContribution() + this.desiredRothContribution();
-  //     let scale =
-  //       totalDesiredContribution > 0
-  //         ? Math.min(1, electiveLimit / totalDesiredContribution)
-  //         : 1;
-  //     return scale;
-  //   },
-  //   cap401kContribution() {
-  //     return (
-  //       this.desired401kContribution() * this.electiveScale()
-  //     ).asCurrency();
-  //   },
-  //   capRothContribution() {
-  //     return (
-  //       this.desiredRothContribution() * this.electiveScale()
-  //     ).asCurrency();
-  //   },
-  //   emp401kContributionPct() {
-  //     return this.salary > 0 ? this.cap401kContribution() / this.salary : 0;
-  //   },
-  //   employer401kMatch() {
-  //     return (
-  //       Math.min(this.emp401kContributionPct(), this.employeeMatchCap) *
-  //       this.salary *
-  //       this.matchRate
-  //     ).asCurrency();
-  //   },
-  // };
-  const employmentInfo = EmploymentInfo.CreateUsing(salary, inputs);
+  const employmentInfo = EmploymentInfo.CreateUsing(
+    demographics,
+    salary,
+    inputs
+  );
 
   // **************
   // Calculations
   // **************
   // debugger;
   accountGroup.trad401k.deposit(
-    employmentInfo.cap401kContribution(),
+    employmentInfo.max401kContribution,
     TRANSACTION_CATEGORY.CONTRIBUTION,
     fiscalData.taxYear
   );
@@ -150,7 +69,7 @@ function calculateWorkingYearData(inputs, yearIndex, salary, accountGroup) {
   );
 
   accountGroup.rothIra.deposit(
-    employmentInfo.capRothContribution(),
+    employmentInfo.rothMaxContribution,
     TRANSACTION_CATEGORY.CONTRIBUTION,
     fiscalData.taxYear
   );
@@ -263,7 +182,7 @@ function calculateWorkingYearData(inputs, yearIndex, salary, accountGroup) {
     fiscalData
   );
 
-  taxes.taxableIncome = income.getAdjustedGrossIncome();
+  taxes.taxableIncome = income.adjustedGrossIncome;
 
   taxes.standardDeduction = retirementJS_getStandardDeduction(
     demographics.filingStatus,
@@ -277,10 +196,6 @@ function calculateWorkingYearData(inputs, yearIndex, salary, accountGroup) {
     fiscalData.taxYear,
     fiscalData.inflationRate
   );
-  taxes.effectiveTaxRate =
-    income.getGrossIncome() > 0
-      ? taxes.federalTaxesOwed / income.getGrossIncome()
-      : 0;
 
   income.federalTaxesOwed = taxes.federalTaxesOwed;
 
@@ -347,19 +262,19 @@ function calculateWorkingYearData(inputs, yearIndex, salary, accountGroup) {
     fiscalData.taxYear
   );
 
-  totals.totalIncome = income.getAllIncomeSources();
-  totals.totalNetIncome = income.getNetIncome();
-  totals.grossTaxableIncome = income.getGrossIncome();
+  totals.totalIncome = income.allIncomeSources;
+  totals.totalNetIncome = income.netIncome;
+  totals.grossTaxableIncome = income.grossIncome;
   totals.calculationDetails = withLabel("income", income);
 
   // Update all the final values in the result object
-  contributions.my401k = employmentInfo.cap401kContribution();
-  contributions.myRoth = employmentInfo.capRothContribution();
+  contributions.my401k = employmentInfo.max401kContribution;
+  contributions.myRoth = employmentInfo.rothMaxContribution;
   contributions.savings = accountGroup.savings.depositsForYear(
     fiscalData.taxYear,
     TRANSACTION_CATEGORY.CONTRIBUTION
   );
-  contributions.employerMatch = employmentInfo.employer401kMatch();
+  contributions.employerMatch = employmentInfo.employer401kMatch;
   // contributions.calculationDetails = [
   //   withLabel("employmentInfo", employmentInfo),
   //   withLabel("accountGroup.savings", accountGroup.savings),

@@ -59,7 +59,7 @@ function withdrawalFactoryJS_createWithdrawalFactory(
             );
 
           gross401kWithdrawal = Math.min(
-            Math.max(trad401kAccount.availableFunds() - incomeStreams.rmd, 0),
+            Math.max(trad401kAccount.availableFunds - incomeStreams.rmd, 0),
             withdrawals.withdrawalNeeded
           );
         }
@@ -104,7 +104,7 @@ function withdrawalFactoryJS_createWithdrawalFactory(
         if (!fiscalData.useSavings) return 0; // already processed a savings withdrawal this year
 
         const fundsNeeded = amount;
-        const fundsAvailable = savingsAccount.availableFunds();
+        const fundsAvailable = savingsAccount.availableFunds;
 
         if (fundsAvailable == 0) return 0;
 
@@ -124,7 +124,7 @@ function withdrawalFactoryJS_createWithdrawalFactory(
       case ACCOUNT_TYPES.ROTH_IRA: {
         // Roth withdrawal (no tax impact)
         const fundsNeeded = amount;
-        const fundsAvailable = rothAccount.availableFunds();
+        const fundsAvailable = rothAccount.availableFunds;
 
         if (fundsAvailable == 0) return 0;
 

@@ -69,7 +69,7 @@ class SsCalculationDetails {
    *
    * @returns {string} Taxation tier: "none", "tier1", or "tier2"
    */
-  getTaxationTier() {
+  get taxationTier() {
     if (this.provisionalIncome <= this.tier1Threshold) {
       return "none";
     } else if (this.provisionalIncome <= this.tier2Threshold) {
@@ -84,7 +84,7 @@ class SsCalculationDetails {
    *
    * @returns {number} Percentage as decimal (0.0 to 0.85)
    */
-  getTaxablePercentage() {
+  get taxablePercentage() {
     if (this.totalBenefits === 0) return 0;
     return this.finalTaxableAmount / this.totalBenefits;
   }
@@ -94,7 +94,7 @@ class SsCalculationDetails {
    *
    * @returns {number} Non-taxable Social Security amount
    */
-  getNonTaxableAmount() {
+  get nonTaxableAmount() {
     return this.totalBenefits - this.finalTaxableAmount;
   }
 
@@ -103,7 +103,7 @@ class SsCalculationDetails {
    *
    * @returns {boolean} True if calculation appears valid
    */
-  isCalculationValid() {
+  get isCalculationValid() {
     // Basic validation checks
     if (
       this.finalTaxableAmount < 0 ||
@@ -140,12 +140,12 @@ class SsCalculationDetails {
    */
   getSummary() {
     return {
-      tier: this.getTaxationTier(),
-      taxablePercentage: this.getTaxablePercentage(),
+      tier: this.taxationTier,
+      taxablePercentage: this.taxablePercentage,
       taxableAmount: this.finalTaxableAmount,
-      nonTaxableAmount: this.getNonTaxableAmount(),
+      nonTaxableAmount: this.nonTaxableAmount,
       provisionalIncome: this.provisionalIncome,
-      isValid: this.isCalculationValid(),
+      isValid: this.isCalculationValid,
     };
   }
 

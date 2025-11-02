@@ -56,7 +56,7 @@ class Balances {
    *
    * @returns {number} Sum of all account balances
    */
-  total() {
+  get allBalances() {
     return this.savings + this.trad401k + this.rothIra;
   }
 
@@ -65,7 +65,7 @@ class Balances {
    *
    * @returns {number} Combined retirement account balance
    */
-  getTotalRetirementAccounts() {
+  get retirementAccountBalances() {
     return this.trad401k + this.rothIra;
   }
 
@@ -77,8 +77,8 @@ class Balances {
    *   - trad401kPercent: Percentage in traditional 401k
    *   - rothIraPercent: Percentage in Roth IRA
    */
-  getAllocationPercentages() {
-    const total = this.total();
+  get allocationPercentages() {
+    const total = this.allBalances;
     if (total === 0) {
       return {
         savingsPercent: 0,
@@ -99,7 +99,7 @@ class Balances {
    *
    * @returns {boolean} True if any account balance is negative
    */
-  hasNegativeBalances() {
+  get hasNegativeBalances() {
     return this.savings < 0 || this.trad401k < 0 || this.rothIra < 0;
   }
 
@@ -138,11 +138,11 @@ class Balances {
       savings: this.savings,
       trad401k: this.trad401k,
       rothIra: this.rothIra,
-      total: this.total(),
-      retirementTotal: this.getTotalRetirementAccounts(),
-      allocations: this.getAllocationPercentages(),
+      total: this.allBalances,
+      retirementTotal: this.retirementAccountBalances,
+      allocations: this.allocationPercentages,
       largestAccount: this.getLargestAccount(),
-      hasNegativeBalances: this.hasNegativeBalances(),
+      hasNegativeBalances: this.hasNegativeBalances,
     };
   }
 

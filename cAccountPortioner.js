@@ -66,13 +66,13 @@ class AccountPortioner {
     );
   }
 
-  savingsAsk() {
+  get savingsAsk() {
     return (this.#savingsPortion() * this.#ask).asCurrency();
   }
-  trad401kAsk() {
+  get trad401kAsk() {
     return (this.#trad401kPortion() * this.#ask).asCurrency();
   }
-  rothAsk() {
+  get rothAsk() {
     return (this.#rothIraPortion() * this.#ask).asCurrency();
   }
 }

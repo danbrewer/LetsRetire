@@ -34,19 +34,19 @@ class Demographics {
     this._description = `Retirement Year ${yearIndex + 1} (Age ${this.age}) (Year ${this.retirementYear})`;
   }
 
-  eligibleForSs() {
+  get isSubjectEligibleForSs() {
     return this.age >= this.ssStartAge;
   }
 
-  eligibleForPension() {
+  get isSubjectEligibleForPension() {
     return this.age >= this.penStartAge;
   }
 
-  spouseEligibleForSs() {
+  get isPartnerEligibleForSs() {
     return this.hasSpouse && this.ageOfSpouse >= this.ssStartAgeOfSpouse;
   }
 
-  spouseEligibleForPension() {
+  get isPartnerEligibleForPension() {
     return this.hasSpouse && this.ageOfSpouse >= this.penStartAgeOfSpouse;
   }
 
@@ -55,26 +55,26 @@ class Demographics {
     return this._description;
   }
 
-  // Method to update age for multi-year calculations
-  /**
-   * @param {number} newAge
-   * @param {number} yearIndex
-   */
-  updateAge(newAge, yearIndex) {
-    this.age = newAge;
-    if (this.hasSpouse) {
-      this.ageOfSpouse = this.ageOfSpouse + 1; // Assuming spouse ages at same rate
-    }
-    this._description = `Retirement Year ${yearIndex + 1} (Age ${this.age}) (Year ${this.retirementYear + yearIndex})`;
-  }
+  //   // Method to update age for multi-year calculations
+  //   /**
+  //    * @param {number} newAge
+  //    * @param {number} yearIndex
+  //    */
+  //   updateAge(newAge, yearIndex) {
+  //     this.age = newAge;
+  //     if (this.hasSpouse) {
+  //       this.ageOfSpouse = this.ageOfSpouse + 1; // Assuming spouse ages at same rate
+  //     }
+  //     this._description = `Retirement Year ${yearIndex + 1} (Age ${this.age}) (Year ${this.retirementYear + yearIndex})`;
+  //   }
 
   // Method to get current eligibility status
-  getEligibilityStatus() {
+  getEligibilityStatuses() {
     return {
-      primarySs: this.eligibleForSs(),
-      primaryPension: this.eligibleForPension(),
-      spouseSs: this.spouseEligibleForSs(),
-      spousePension: this.spouseEligibleForPension(),
+      isSubjectEligibleForSs: this.isSubjectEligibleForSs,
+      isSubjectEligibleForPension: this.isSubjectEligibleForPension,
+      isSpouseEligibleForSs: this.isPartnerEligibleForSs,
+      isSpouseEligibleForPension: this.isPartnerEligibleForPension,
     };
   }
 
@@ -136,7 +136,7 @@ class Demographics {
    * console.log(demographics.spouseEligibleForSs()); // false (63 < 67)
    *
    * @see {@link Demographics#constructor} For detailed parameter descriptions
-   * @see {@link Demographics#getEligibilityStatus} For checking all benefit eligibilities
+   * @see {@link Demographics#getEligibilityStatuses} For checking all benefit eligibilities
    * @see {@link Inputs} For complete input object structure
    *
    * @static

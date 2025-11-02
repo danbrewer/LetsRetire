@@ -62,7 +62,7 @@ class IncomeBreakdown {
       incomeStreams.otherTaxableIncomeAdjustments,
       variableIncomeFactor,
       ssBreakdown.taxablePortion,
-      incomeStreams.ssIncome(), // Total SS income (both taxable and non-taxable)
+      incomeStreams.ssIncome, // Total SS income (both taxable and non-taxable)
       incomeStreams.reportedEarnedInterest,
       standardDeduction,
       taxBrackets,

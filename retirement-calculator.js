@@ -183,8 +183,6 @@ function calc() {
       benefitAmounts
     );
 
-    yearData.accountGroup = accountGroup;
-
     // yearData.dump();
     debugger;
     calculations.push({

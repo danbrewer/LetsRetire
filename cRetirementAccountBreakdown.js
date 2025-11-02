@@ -82,7 +82,7 @@ class RetirementAccountBreakdown {
    *
    * @returns {number} Actual return rate as decimal
    */
-  getActualReturnRate() {
+  get actualReturnRate() {
     const averageBalance = (this.startingBalance + this.endingBalance) / 2;
     if (averageBalance === 0) return 0;
     return this.interestEarned / averageBalance;
@@ -93,7 +93,7 @@ class RetirementAccountBreakdown {
    *
    * @returns {number} Net contributions for the year
    */
-  getNetContributions() {
+  get netContributions() {
     return this.deposits - this.withdrawals;
   }
 
@@ -103,7 +103,7 @@ class RetirementAccountBreakdown {
    *
    * @returns {boolean} True if calculation is consistent within rounding tolerance
    */
-  isBalanceCalculationValid() {
+  get isBalanceCalculationValid() {
     const calculatedEnding =
       this.startingBalance +
       this.deposits +
@@ -156,11 +156,11 @@ class RetirementAccountBreakdown {
       netChange: this.getNetChange(),
       deposits: this.deposits,
       withdrawals: this.withdrawals,
-      netContributions: this.getNetContributions(),
+      netContributions: this.netContributions,
       interestEarned: this.interestEarned,
       growthRate: this.growthRate,
-      actualReturnRate: (this.getActualReturnRate() * 100).toFixed(2) + "%",
-      isValid: this.isBalanceCalculationValid(),
+      actualReturnRate: (this.actualReturnRate * 100).toFixed(2) + "%",
+      isValid: this.isBalanceCalculationValid,
       expectedBalanceWithGrowthOnly: this.getExpectedBalanceWithGrowthOnly(),
       cashFlowImpact: this.getCashFlowImpact(),
     };

@@ -5,10 +5,10 @@ class SsBenefitsCalculator {
     this.oneHalfOfSSBenefits = (0.5 * this.totalBenefits).asCurrency();
 
     this.myPortion = (
-      this.hasBenefits() ? this.myBenefits / this.totalBenefits : 0
+      this.hasBenefits ? this.myBenefits / this.totalBenefits : 0
     ).asCurrency();
     this.spousePortion = (
-      this.hasBenefits() ? this.spouseBenefits / this.totalBenefits : 0
+      this.hasBenefits ? this.spouseBenefits / this.totalBenefits : 0
     ).asCurrency();
 
     this.provisionalIncome = (
@@ -41,19 +41,19 @@ class SsBenefitsCalculator {
     this.#initialize();
   }
 
-  myTaxablePortion() {
+  get myTaxablePortion() {
     return (this.myPortion * this.taxablePortion).asCurrency();
   }
 
-  spouseTaxablePortion() {
+  get spouseTaxablePortion() {
     return (this.spousePortion * this.taxablePortion).asCurrency();
   }
 
-  myNonTaxablePortion() {
+  get myNonTaxablePortion() {
     return (this.myPortion * this.nonTaxablePortion).asCurrency();
   }
 
-  spouseNonTaxablePortion() {
+  get spouseNonTaxablePortion() {
     return (this.spousePortion * this.nonTaxablePortion).asCurrency();
   }
 
@@ -148,11 +148,11 @@ class SsBenefitsCalculator {
   }
 
   // Utility methods for analyzing benefits
-  hasBenefits() {
+  get hasBenefits() {
     return this.totalBenefits > 0;
   }
 
-  getTaxationSummary() {
+  get taxationSummary() {
     return {
       totalBenefits: this.totalBenefits,
       taxablePortion: this.taxablePortion,

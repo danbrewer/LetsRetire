@@ -10,11 +10,11 @@ class TargetedAccount {
     this.#taxYear = taxYear;
   }
 
-  getStartingBalance() {
+  get startingBalance() {
     return this.#account.startingBalanceForYear(this.#taxYear);
   }
 
-  availableFunds() {
+  get availableFunds() {
     return Math.max(this.#account.endingBalanceForYear(this.#taxYear), 0);
   }
 
@@ -34,11 +34,11 @@ class TargetedAccount {
     return this.#account.withdrawal(v, category, this.#taxYear);
   }
 
-  withdrawals() {
+  get withdrawals() {
     return this.#account.withdrawalsForYear(this.#taxYear);
   }
 
-  endingBalanceForYear() {
+  get endingBalanceForYear() {
     return this.#account.endingBalanceForYear(this.#taxYear);
   }
 }

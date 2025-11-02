@@ -50,7 +50,7 @@ class IncomeStreams {
     fiscalData,
     inputs
   ) {
-    const myPension = demographics.eligibleForPension()
+    const myPension = demographics.isSubjectEligibleForPension
       ? benefitAmounts.penAnnual
       : 0;
     const reportedEarnedInterest = accounts.savings
@@ -60,8 +60,10 @@ class IncomeStreams {
       )
       .asCurrency();
     const spousePension = 0;
-    const mySs = demographics.eligibleForSs() ? benefitAmounts.ssAnnual : 0;
-    const spouseSs = demographics.spouseEligibleForSs()
+    const mySs = demographics.isSubjectEligibleForSs
+      ? benefitAmounts.ssAnnual
+      : 0;
+    const spouseSs = demographics.isPartnerEligibleForSs
       ? benefitAmounts.spouseSsAnnual
       : 0;
     const rmd = common_calculateRMD(
@@ -83,7 +85,7 @@ class IncomeStreams {
     );
   }
 
-  totalIncome() {
+  get totalIncome() {
     return (
       this.myPension +
       this.spousePension +
@@ -96,7 +98,7 @@ class IncomeStreams {
     );
   }
 
-  taxableIncome() {
+  get taxableIncome() {
     return (
       this.myPension +
       this.spousePension +
@@ -108,15 +110,15 @@ class IncomeStreams {
     );
   }
 
-  ssIncome() {
+  get ssIncome() {
     return this.mySs + this.spouseSs;
   }
 
-  pensionIncome() {
+  get pensionIncome() {
     return this.myPension + this.spousePension;
   }
 
-  nonSsIncome() {
+  get nonSsIncome() {
     return (
       this.myPension +
       this.spousePension +
@@ -127,22 +129,22 @@ class IncomeStreams {
   }
 
   // Utility methods for income stream management
-  hasSocialSecurityIncome() {
-    return this.ssIncome() > 0;
+  get hasSocialSecurityIncome() {
+    return this.ssIncome > 0;
   }
 
-  hasPensionIncome() {
-    return this.pensionIncome() > 0;
+  get hasPensionIncome() {
+    return this.pensionIncome > 0;
   }
 
-  hasRmdIncome() {
+  get hasRmdIncome() {
     return this.rmd > 0;
   }
 
-  getIncomeBreakdown() {
+  get incomeBreakdown() {
     return {
-      pension: this.pensionIncome(),
-      socialSecurity: this.ssIncome(),
+      pension: this.pensionIncome,
+      socialSecurity: this.ssIncome,
       rmd: this.rmd,
       earnedInterest: this.reportedEarnedInterest,
       taxableAdjustments:

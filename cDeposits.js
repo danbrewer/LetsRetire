@@ -77,7 +77,7 @@ class Deposits {
    *
    * @returns {number} Combined retirement account deposits
    */
-  getTotalRetirementDeposits() {
+  get totalRetirementDeposits() {
     return this.trad401k + this.roth;
   }
 
@@ -90,7 +90,7 @@ class Deposits {
    *   - rothPercent: Percentage from Roth IRA
    *   - rmdPercent: Percentage from RMD
    */
-  getDepositPercentages() {
+  get depositPercentages() {
     if (this.total === 0) {
       return {
         trad401kPercent: 0,
@@ -111,7 +111,7 @@ class Deposits {
    *
    * @returns {boolean} True if any deposit is negative
    */
-  hasNegativeDeposits() {
+  get hasNegativeDeposits() {
     return this.trad401k < 0 || this.savings < 0 || this.roth < 0;
   }
 
@@ -122,7 +122,7 @@ class Deposits {
    *   - source: Name of the account with largest deposit
    *   - amount: The deposit amount
    */
-  getLargestDeposit() {
+  get largestDeposit() {
     const amounts = {
       trad401k: this.trad401k,
       savings: this.savings,
@@ -144,7 +144,7 @@ class Deposits {
    *
    * @returns {boolean} True if total deposits are greater than zero
    */
-  hasDeposits() {
+  get hasDeposits() {
     return this.total > 0;
   }
 
@@ -170,11 +170,11 @@ class Deposits {
       savings: this.savings,
       roth: this.roth,
       total: this.total,
-      retirementTotal: this.getTotalRetirementDeposits(),
-      percentages: this.getDepositPercentages(),
-      largestDeposit: this.getLargestDeposit(),
-      hasNegativeDeposits: this.hasNegativeDeposits(),
-      hasDeposits: this.hasDeposits(),
+      retirementTotal: this.totalRetirementDeposits,
+      percentages: this.depositPercentages,
+      largestDeposit: this.largestDeposit,
+      hasNegativeDeposits: this.hasNegativeDeposits,
+      hasDeposits: this.hasDeposits,
     };
   }
 

@@ -116,10 +116,10 @@ class WorkingYearData {
    * @returns {number} Total balance across all retirement accounts, or 0 if unavailable
    */
   getTotalRetirementBalance() {
-    if (!this.balances || typeof this.balances.total !== "function") {
+    if (!this.balances || typeof this.balances.allBalances !== "function") {
       return 0;
     }
-    return this.balances.total();
+    return this.balances.allBalances;
   }
 
   //   /**
@@ -193,7 +193,7 @@ class WorkingYearData {
   getSummary() {
     return {
       age: this.getCurrentAge(),
-      netIncome: this.income?.getNetIncome(),
+      netIncome: this.income?.netIncome,
       //   totalContributions: this.getTotalContributions(),
       totalBalance: this.getTotalRetirementBalance(),
       effectiveTaxRate: this.taxes?.effectiveTaxRate,

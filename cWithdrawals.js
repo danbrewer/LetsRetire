@@ -90,7 +90,7 @@ class Withdrawals {
    *
    * @returns {number} Combined retirement account withdrawals
    */
-  getTotalRetirementWithdrawals() {
+  get totalRetirementWithdrawals() {
     return this.trad401k + this.roth;
   }
 
@@ -100,7 +100,7 @@ class Withdrawals {
    *
    * @returns {number} Combined taxable withdrawals
    */
-  getTotalTaxableWithdrawals() {
+  get totalTaxableWithdrawals() {
     return this.trad401k + this.roth;
   }
 
@@ -113,7 +113,7 @@ class Withdrawals {
    *   - rothPercent: Percentage from Roth IRA
    *   - rmdPercent: Percentage from RMD
    */
-  getWithdrawalPercentages() {
+  get withdrawalPercentages() {
     const total = this.total;
     if (total === 0) {
       return {
@@ -137,7 +137,7 @@ class Withdrawals {
    *
    * @returns {boolean} True if any withdrawal is negative
    */
-  hasNegativeWithdrawals() {
+  get hasNegativeWithdrawals() {
     return (
       this.trad401k < 0 || this.savings < 0 || this.roth < 0 || this.rmd < 0
     );
@@ -173,7 +173,7 @@ class Withdrawals {
    *
    * @returns {boolean} True if total withdrawals are greater than zero
    */
-  hasWithdrawals() {
+  get hasWithdrawals() {
     return this.total > 0;
   }
 
@@ -200,12 +200,12 @@ class Withdrawals {
       roth: this._roth,
       rmd: this.rmd,
       total: this.total,
-      retirementTotal: this.getTotalRetirementWithdrawals(),
-      taxableTotal: this.getTotalTaxableWithdrawals(),
-      percentages: this.getWithdrawalPercentages(),
+      retirementTotal: this.totalRetirementWithdrawals,
+      taxableTotal: this.totalTaxableWithdrawals,
+      percentages: this.withdrawalPercentages,
       largestWithdrawal: this.getLargestWithdrawal(),
-      hasNegativeWithdrawals: this.hasNegativeWithdrawals(),
-      hasWithdrawals: this.hasWithdrawals(),
+      hasNegativeWithdrawals: this.hasNegativeWithdrawals,
+      hasWithdrawals: this.hasWithdrawals,
     };
   }
 
@@ -257,7 +257,6 @@ class Withdrawals {
    * });
    * console.log(withdrawals.total()); // 30000
    *
-   * @static
    * @since 1.0.0
    */
   static Empty(description = "Withdrawals Breakdown") {

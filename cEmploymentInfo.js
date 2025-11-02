@@ -12,6 +12,7 @@ class EmploymentInfo {
   /**
    * Creates a new EmploymentInfo instance with employment and contribution data.
    *
+   * @param {number} [age = 0] - Employee age for contribution calculations
    * @param {number} [salary=0] - Annual salary amount
    * @param {number} [pretaxContributionPercentage=0] - Pretax 401k contribution percentage (as decimal)
    * @param {number} [rothContributionPercentage=0] - Roth 401k contribution percentage (as decimal)
@@ -20,6 +21,7 @@ class EmploymentInfo {
    * @param {string} [description="Employment Info"] - Descriptive label
    */
   constructor(
+    age = 0,
     salary = 0,
     pretaxContributionPercentage = 0,
     rothContributionPercentage = 0,
@@ -27,6 +29,7 @@ class EmploymentInfo {
     matchRate = 0,
     description = "Employment Info"
   ) {
+    this._age = age;
     this._description = description;
     this.salary = salary;
     this.pretaxContributionPercentage = pretaxContributionPercentage;
@@ -58,7 +61,7 @@ class EmploymentInfo {
    *
    * @returns {number} Desired pretax contribution amount as currency
    */
-  desired401kContribution() {
+  get desired401kContribution() {
     return (this.salary * this.pretaxContributionPercentage).asCurrency();
   }
 
@@ -67,7 +70,7 @@ class EmploymentInfo {
    *
    * @returns {number} Desired Roth contribution amount as currency
    */
-  desiredRothContribution() {
+  get desiredRothContribution() {
     return (this.salary * this.rothContributionPercentage).asCurrency();
   }
 
@@ -77,10 +80,9 @@ class EmploymentInfo {
    * This method determines what percentage of desired contributions can actually be made
    * based on annual contribution limits and catch-up provisions for employees 50+.
    *
-   * @param {number} [age=0] - Employee age for catch-up calculation
    * @returns {number} Scaling factor (0-1) to apply to desired contributions
    */
-  electiveScale(age = 0) {
+  getElectiveScale() {
     // Use global constants if available, otherwise use 2025 values as defaults
     const baseLimit =
       typeof EMPLOYEE_401K_LIMIT_2025 !== "undefined"
@@ -91,9 +93,9 @@ class EmploymentInfo {
         ? EMPLOYEE_401K_CATCHUP_50
         : 7500;
 
-    let electiveLimit = baseLimit + (age >= 50 ? catchupLimit : 0);
+    let electiveLimit = baseLimit + (this._age >= 50 ? catchupLimit : 0);
     const totalDesiredContribution =
-      this.desired401kContribution() + this.desiredRothContribution();
+      this.desired401kContribution + this.desiredRothContribution;
     let scale =
       totalDesiredContribution > 0
         ? Math.min(1, electiveLimit / totalDesiredContribution)
@@ -104,35 +106,32 @@ class EmploymentInfo {
   /**
    * Calculates the actual pretax 401k contribution after applying IRS limits.
    *
-   * @param {number} [age=0] - Employee age for limit calculation
    * @returns {number} Capped pretax contribution amount as currency
    */
-  cap401kContribution(age = 0) {
+  get max401kContribution() {
     return (
-      this.desired401kContribution() * this.electiveScale(age)
+      this.desired401kContribution * this.getElectiveScale()
     ).asCurrency();
   }
 
   /**
    * Calculates the actual Roth 401k contribution after applying IRS limits.
    *
-   * @param {number} [age=0] - Employee age for limit calculation
    * @returns {number} Capped Roth contribution amount as currency
    */
-  capRothContribution(age = 0) {
+  get rothMaxContribution() {
     return (
-      this.desiredRothContribution() * this.electiveScale(age)
+      this.desiredRothContribution * this.getElectiveScale()
     ).asCurrency();
   }
 
   /**
    * Calculates the effective employee 401k contribution percentage after caps.
    *
-   * @param {number} [age=0] - Employee age for calculation
    * @returns {number} Actual contribution percentage as decimal
    */
-  emp401kContributionPct(age = 0) {
-    return this.salary > 0 ? this.cap401kContribution(age) / this.salary : 0;
+  get emp401kContributionPct() {
+    return this.salary > 0 ? this.max401kContribution / this.salary : 0;
   }
 
   /**
@@ -141,12 +140,11 @@ class EmploymentInfo {
    * The match is calculated on the lesser of the employee's actual contribution
    * percentage or the employer's matching cap, multiplied by the match rate.
    *
-   * @param {number} [age=0] - Employee age for contribution calculation
    * @returns {number} Employer match amount as currency
    */
-  employer401kMatch(age = 0) {
+  get employer401kMatch() {
     return (
-      Math.min(this.emp401kContributionPct(age), this.employeeMatchCap) *
+      Math.min(this.emp401kContributionPct, this.employeeMatchCap) *
       this.salary *
       this.matchRate
     ).asCurrency();
@@ -155,40 +153,36 @@ class EmploymentInfo {
   /**
    * Calculates the total employee contribution (pretax + Roth) after caps.
    *
-   * @param {number} [age=0] - Employee age for calculation
    * @returns {number} Total employee contribution amount
    */
-  getTotalEmployeeContribution(age = 0) {
-    return this.cap401kContribution(age) + this.capRothContribution(age);
+  get totalEmployeeContribution() {
+    return this.max401kContribution + this.rothMaxContribution;
   }
 
   /**
    * Calculates the total contribution percentage (employee + employer).
    *
-   * @param {number} [age=0] - Employee age for calculation
    * @returns {number} Total contribution percentage as decimal
    */
-  getTotalContributionPct(age = 0) {
+  get totalContributionPct() {
     if (this.salary <= 0) return 0;
     return (
-      (this.getTotalEmployeeContribution(age) + this.employer401kMatch(age)) /
-      this.salary
+      (this.totalEmployeeContribution + this.employer401kMatch) / this.salary
     );
   }
 
   /**
    * Gets the contribution split between pretax and Roth.
    *
-   * @param {number} [age=0] - Employee age for calculation
    * @returns {Object} Object containing:
    *   - pretaxAmount: Pretax contribution amount
    *   - rothAmount: Roth contribution amount
    *   - pretaxPercentage: Pretax as percentage of total
    *   - rothPercentage: Roth as percentage of total
    */
-  getContributionSplit(age = 0) {
-    const pretaxAmount = this.cap401kContribution(age);
-    const rothAmount = this.capRothContribution(age);
+  get contributionSplit() {
+    const pretaxAmount = this.max401kContribution;
+    const rothAmount = this.rothMaxContribution;
     const total = pretaxAmount + rothAmount;
 
     return {
@@ -202,10 +196,9 @@ class EmploymentInfo {
   /**
    * Calculates the amount of unused contribution capacity.
    *
-   * @param {number} [age=0] - Employee age for limit calculation
    * @returns {number} Unused contribution capacity amount
    */
-  getUnusedContributionCapacity(age = 0) {
+  get unusedContributionCapacity() {
     const baseLimit =
       typeof EMPLOYEE_401K_LIMIT_2025 !== "undefined"
         ? EMPLOYEE_401K_LIMIT_2025
@@ -215,8 +208,8 @@ class EmploymentInfo {
         ? EMPLOYEE_401K_CATCHUP_50
         : 7500;
 
-    const electiveLimit = baseLimit + (age >= 50 ? catchupLimit : 0);
-    const actualContribution = this.getTotalEmployeeContribution(age);
+    const electiveLimit = baseLimit + (this._age >= 50 ? catchupLimit : 0);
+    const actualContribution = this.totalEmployeeContribution;
     return Math.max(0, electiveLimit - actualContribution);
   }
 
@@ -271,11 +264,10 @@ class EmploymentInfo {
   /**
    * Creates a comprehensive summary of employment and contribution information.
    *
-   * @param {number} [age=0] - Employee age for calculations
    * @returns {Object} Summary containing all employment info and calculated values
    */
-  getSummary(age = 0) {
-    const contributionSplit = this.getContributionSplit(age);
+  getSummary() {
+    const contributionSplit = this.contributionSplit;
     const validation = this.validate();
 
     return {
@@ -286,16 +278,15 @@ class EmploymentInfo {
         (this.rothContributionPercentage * 100).toFixed(1) + "%",
       employeeMatchCap: (this.employeeMatchCap * 100).toFixed(1) + "%",
       matchRate: (this.matchRate * 100).toFixed(1) + "%",
-      desired401kContribution: this.desired401kContribution(),
-      desiredRothContribution: this.desiredRothContribution(),
-      cap401kContribution: this.cap401kContribution(age),
-      capRothContribution: this.capRothContribution(age),
-      totalEmployeeContribution: this.getTotalEmployeeContribution(age),
-      employer401kMatch: this.employer401kMatch(age),
-      totalContributionPct:
-        (this.getTotalContributionPct(age) * 100).toFixed(1) + "%",
-      electiveScale: this.electiveScale(age),
-      unusedCapacity: this.getUnusedContributionCapacity(age),
+      desired401kContribution: this.desired401kContribution,
+      desiredRothContribution: this.desiredRothContribution,
+      cap401kContribution: this.max401kContribution,
+      capRothContribution: this.rothMaxContribution,
+      totalEmployeeContribution: this.totalEmployeeContribution,
+      employer401kMatch: this.employer401kMatch,
+      totalContributionPct: (this.totalContributionPct * 100).toFixed(1) + "%",
+      electiveScale: this.getElectiveScale(),
+      unusedCapacity: this.unusedContributionCapacity,
       contributionSplit: contributionSplit,
       validation: validation,
     };
@@ -335,6 +326,7 @@ class EmploymentInfo {
    * This method provides a convenient way to construct EmploymentInfo objects
    * from the standard inputs structure used throughout the retirement calculator.
    *
+   * @param {Demographics} demographics - Fiscal data context for contribution limits
    * @param {number} salary - Annual salary amount
    * @param {Inputs} inputs - Input configuration containing contribution percentages and match info
    * @param {string} [description="Employment Info"] - Optional description
@@ -351,8 +343,14 @@ class EmploymentInfo {
    * @static
    * @since 1.0.0
    */
-  static CreateUsing(salary, inputs, description = "Employment Info") {
+  static CreateUsing(
+    demographics,
+    salary,
+    inputs,
+    description = "Employment Info"
+  ) {
     return new EmploymentInfo(
+      demographics.age,
       salary,
       inputs.pretaxPct || 0,
       inputs.rothPct || 0,
@@ -365,6 +363,7 @@ class EmploymentInfo {
   /**
    * Factory method to create an EmploymentInfo from individual values.
    *
+   * @param {number} age - Employee age for contribution calculations
    * @param {number} salary - Annual salary amount
    * @param {number} pretaxPct - Pretax contribution percentage (as decimal)
    * @param {number} rothPct - Roth contribution percentage (as decimal)
@@ -388,6 +387,7 @@ class EmploymentInfo {
    * @since 1.0.0
    */
   static CreateFrom(
+    age,
     salary,
     pretaxPct,
     rothPct,
@@ -396,6 +396,7 @@ class EmploymentInfo {
     description = "Employment Info"
   ) {
     return new EmploymentInfo(
+      age,
       salary,
       pretaxPct,
       rothPct,
@@ -423,7 +424,7 @@ class EmploymentInfo {
    * @since 1.0.0
    */
   static Empty(description = "Employment Info") {
-    return new EmploymentInfo(0, 0, 0, 0, 0, description);
+    return new EmploymentInfo(0, 0, 0, 0, 0, 0, description);
   }
 }
 

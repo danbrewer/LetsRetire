@@ -54,7 +54,7 @@ class IncomeRs {
    *
    * @returns {boolean} True if SS breakdown contains calculation methods
    */
-  hasSsBreakdown() {
+  get hasSsBreakdown() {
     return (
       this.ssBreakdown != undefined &&
       typeof this.ssBreakdown === "object" &&
@@ -67,7 +67,7 @@ class IncomeRs {
    *
    * @returns {boolean} True if income breakdown contains calculation methods
    */
-  hasIncomeBreakdown() {
+  get hasIncomeBreakdown() {
     return (
       this.incomeBreakdown != undefined &&
       typeof this.incomeBreakdown === "object" &&
@@ -80,7 +80,7 @@ class IncomeRs {
    *
    * @returns {number} Total taxable SS benefits, or 0 if breakdown unavailable
    */
-  getTotalTaxableSsBenefits() {
+  get totalTaxableSsBenefits() {
     return this.ssBreakdown.taxablePortion;
   }
 
@@ -89,9 +89,9 @@ class IncomeRs {
    *
    * @returns {number} Total reportable income, or 0 if breakdown unavailable
    */
-  getTotalReportableIncome() {
+  get totalReportableIncome() {
     if (
-      !this.hasIncomeBreakdown() ||
+      !this.hasIncomeBreakdown ||
       typeof this.incomeBreakdown.reportableIncome !== "function"
     ) {
       return 0;
@@ -104,9 +104,9 @@ class IncomeRs {
    *
    * @returns {number} Total taxable income, or 0 if breakdown unavailable
    */
-  getTotalTaxableIncome() {
+  get totalTaxableIncome() {
     if (
-      !this.hasIncomeBreakdown() ||
+      !this.hasIncomeBreakdown ||
       typeof this.incomeBreakdown.taxableIncome !== "function"
     ) {
       return 0;
@@ -119,9 +119,9 @@ class IncomeRs {
    *
    * @returns {number} Net income after taxes, or 0 if breakdown unavailable
    */
-  getNetIncome() {
+  get netIncome() {
     if (
-      !this.hasIncomeBreakdown() ||
+      !this.hasIncomeBreakdown ||
       typeof this.incomeBreakdown.netIncome !== "function"
     ) {
       return 0;
@@ -141,11 +141,11 @@ class IncomeRs {
    */
   getSummary() {
     return {
-      totalTaxableSs: this.getTotalTaxableSsBenefits(),
-      totalReportableIncome: this.getTotalReportableIncome(),
-      totalTaxableIncome: this.getTotalTaxableIncome(),
-      netIncome: this.getNetIncome(),
-      hasValidData: this.hasSsBreakdown() && this.hasIncomeBreakdown(),
+      totalTaxableSs: this.totalTaxableSsBenefits,
+      totalReportableIncome: this.totalReportableIncome,
+      totalTaxableIncome: this.totalTaxableIncome,
+      netIncome: this.netIncome,
+      hasValidData: this.hasSsBreakdown && this.hasIncomeBreakdown,
     };
   }
 

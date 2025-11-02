@@ -52,11 +52,11 @@ class BenefitAmounts {
     return this.getTotalSocialSecurity() + this.getTotalPension();
   }
 
-  hasSocialSecurityBenefits() {
+  get subjectHasSocialSecurityBenefits() {
     return this.getTotalSocialSecurity() > 0;
   }
 
-  hasPensionBenefits() {
+  get subjectHasPensionBenefits() {
     return this.getTotalPension() > 0;
   }
 
@@ -64,27 +64,27 @@ class BenefitAmounts {
     return this.getTotalBenefits() > 0;
   }
 
-  getMySocialSecurity() {
+  get subjectSocialSecurity() {
     return this.ssAnnual;
   }
 
-  getMyPension() {
+  get subjectPension() {
     return this.penAnnual;
   }
 
-  getSpouseSocialSecurity() {
+  get partnerSocialSecurity() {
     return this.spouseSsAnnual;
   }
 
-  getSpousePension() {
+  get partnerPension() {
     return this.spousePenAnnual;
   }
 
-  getMyTotalBenefits() {
+  get subjectTotalBenefits() {
     return this.ssAnnual + this.penAnnual;
   }
 
-  getSpouseTotalBenefits() {
+  get partnerTotalBenefits() {
     return this.spouseSsAnnual + this.spousePenAnnual;
   }
 
@@ -104,28 +104,28 @@ class BenefitAmounts {
   /**
    * @param {number} amount
    */
-  updateMySocialSecurity(amount) {
+  updateSubjectSocialSecurity(amount) {
     this.ssAnnual = amount;
   }
 
   /**
    * @param {number} amount
    */
-  updateMyPension(amount) {
+  updateSubjectPension(amount) {
     this.penAnnual = amount;
   }
 
   /**
    * @param {number} amount
    */
-  updateSpouseSocialSecurity(amount) {
+  updatePartnerSocialSecurity(amount) {
     this.spouseSsAnnual = amount;
   }
 
   /**
    * @param {number} amount
    */
-  updateSpousePension(amount) {
+  updatePartnerPension(amount) {
     this.spousePenAnnual = amount;
   }
 

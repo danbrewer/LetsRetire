@@ -21,7 +21,6 @@ class WorkingYearIncome {
    * @param {number} [rothIraContributions=0] - After-tax Roth IRA contributions
    * @param {number} [federalTaxesOwed=0] - Federal tax liability
    * @param {number} [taxFreeIncomeAdjustment=0] - Tax-free income adjustments
-   * @param {number} [spendableIncome=0] - Available spendable income
    * @param {string} [description="Income"] - Descriptive label
    */
   constructor(
@@ -33,7 +32,6 @@ class WorkingYearIncome {
     rothIraContributions = 0,
     federalTaxesOwed = 0,
     taxFreeIncomeAdjustment = 0,
-    spendableIncome = 0,
     description = "Income"
   ) {
     this._description = description;
@@ -45,7 +43,6 @@ class WorkingYearIncome {
     this.rothIraContributions = rothIraContributions;
     this.federalTaxesOwed = federalTaxesOwed;
     this.taxFreeIncomeAdjustment = taxFreeIncomeAdjustment;
-    this.spendableIncome = spendableIncome;
   }
 
   /**
@@ -76,7 +73,7 @@ class WorkingYearIncome {
    * @returns {number} Calculated taxable income
    */
   getTaxableIncome(standardDeduction = 0) {
-    const adjustedGrossIncome = this.getAdjustedGrossIncome();
+    const adjustedGrossIncome = this.adjustedGrossIncome;
 
     // Use global tax calculation function if available
     if (typeof retirementJS_calculateTaxableIncome === "function") {
@@ -95,7 +92,7 @@ class WorkingYearIncome {
    *
    * @returns {number} Total income from all sources
    */
-  getAllIncomeSources() {
+  get allIncomeSources() {
     return (
       this.wagesTipsAndCompensation +
       this.otherTaxableIncomeAdjustments +
@@ -109,7 +106,7 @@ class WorkingYearIncome {
    *
    * @returns {number} Gross taxable income before deductions
    */
-  getGrossIncome() {
+  get grossIncome() {
     return (
       this.wagesTipsAndCompensation +
       this.otherTaxableIncomeAdjustments +
@@ -122,11 +119,8 @@ class WorkingYearIncome {
    *
    * @returns {number} Adjusted gross income (AGI)
    */
-  getAdjustedGrossIncome() {
-    return Math.max(
-      this.getGrossIncome() - this.retirementAccountContributions,
-      0
-    );
+  get adjustedGrossIncome() {
+    return Math.max(this.grossIncome - this.retirementAccountContributions, 0);
   }
 
   /**
@@ -134,8 +128,8 @@ class WorkingYearIncome {
    *
    * @returns {number} Net income after taxes
    */
-  getNetIncome() {
-    return Math.max(this.getGrossIncome() - this.federalTaxesOwed, 0);
+  get netIncome() {
+    return Math.max(this.grossIncome - this.federalTaxesOwed, 0);
   }
 
   /**
@@ -146,11 +140,9 @@ class WorkingYearIncome {
    *
    * @returns {number} Available spendable income
    */
-  getSpendableIncome() {
+  get spendableIncome() {
     return Math.max(
-      this.getNetIncome() +
-        this.taxFreeIncomeAdjustment -
-        this.rothIraContributions,
+      this.netIncome + this.taxFreeIncomeAdjustment - this.rothIraContributions,
       0
     );
   }
@@ -160,8 +152,8 @@ class WorkingYearIncome {
    *
    * @returns {number} Effective tax rate as decimal (e.g., 0.22 for 22%)
    */
-  getEffectiveTaxRate() {
-    const grossIncome = this.getGrossIncome();
+  get effectiveTaxRate() {
+    const grossIncome = this.grossIncome;
     if (grossIncome <= 0) return 0;
     return this.federalTaxesOwed / grossIncome;
   }
@@ -171,8 +163,8 @@ class WorkingYearIncome {
    *
    * @returns {number} Savings rate as decimal (e.g., 0.15 for 15%)
    */
-  getSavingsRate() {
-    const grossIncome = this.getGrossIncome();
+  get savingsRate() {
+    const grossIncome = this.grossIncome;
     if (grossIncome <= 0) return 0;
     return (
       (this.retirementAccountContributions + this.rothIraContributions) /
@@ -185,10 +177,10 @@ class WorkingYearIncome {
    *
    * @returns {number} Spendable income rate as decimal
    */
-  getSpendableIncomeRate() {
-    const grossIncome = this.getGrossIncome();
+  get spendableIncomeRate() {
+    const grossIncome = this.grossIncome;
     if (grossIncome <= 0) return 0;
-    return this.getSpendableIncome() / grossIncome;
+    return this.spendableIncome / grossIncome;
   }
 
   /**
@@ -200,9 +192,9 @@ class WorkingYearIncome {
    *   - interest: Interest income as percentage
    *   - taxFree: Tax-free adjustments as percentage
    */
-  getIncomeBreakdown() {
-    const grossIncome = this.getGrossIncome();
-    const allIncome = this.getAllIncomeSources();
+  get incomeBreakdown() {
+    const grossIncome = this.grossIncome;
+    const allIncome = this.allIncomeSources;
 
     return {
       wages: grossIncome > 0 ? this.wagesTipsAndCompensation / grossIncome : 0,
@@ -246,7 +238,7 @@ class WorkingYearIncome {
     // Check if contributions exceed gross income by a reasonable margin
     const totalContributions =
       this.retirementAccountContributions + this.rothIraContributions;
-    const grossIncome = this.getGrossIncome();
+    const grossIncome = this.grossIncome;
     if (totalContributions > grossIncome * 1.5) {
       errors.push(
         "Total retirement contributions seem unusually high relative to gross income"
@@ -266,7 +258,7 @@ class WorkingYearIncome {
    * @returns {Object} Summary containing all income metrics and calculations
    */
   getSummary(standardDeduction = 0) {
-    const incomeBreakdown = this.getIncomeBreakdown();
+    const incomeBreakdown = this.incomeBreakdown;
     const validation = this.validate();
 
     return {
@@ -277,12 +269,12 @@ class WorkingYearIncome {
       taxFreeIncomeAdjustment: this.taxFreeIncomeAdjustment,
 
       // Calculated income metrics
-      allIncomeSources: this.getAllIncomeSources(),
-      grossIncome: this.getGrossIncome(),
-      adjustedGrossIncome: this.getAdjustedGrossIncome(),
+      allIncomeSources: this.allIncomeSources,
+      grossIncome: this.grossIncome,
+      adjustedGrossIncome: this.adjustedGrossIncome,
       taxableIncome: this.getTaxableIncome(standardDeduction),
-      netIncome: this.getNetIncome(),
-      spendableIncome: this.getSpendableIncome(),
+      netIncome: this.netIncome,
+      spendableIncome: this.spendableIncome,
 
       // Deductions and contributions
       retirementAccountContributions: this.retirementAccountContributions,
@@ -290,10 +282,9 @@ class WorkingYearIncome {
       federalTaxesOwed: this.federalTaxesOwed,
 
       // Calculated rates
-      effectiveTaxRate: (this.getEffectiveTaxRate() * 100).toFixed(2) + "%",
-      savingsRate: (this.getSavingsRate() * 100).toFixed(2) + "%",
-      spendableIncomeRate:
-        (this.getSpendableIncomeRate() * 100).toFixed(2) + "%",
+      effectiveTaxRate: (this.effectiveTaxRate * 100).toFixed(2) + "%",
+      savingsRate: (this.savingsRate * 100).toFixed(2) + "%",
+      spendableIncomeRate: (this.spendableIncomeRate * 100).toFixed(2) + "%",
 
       // Breakdown and validation
       incomeBreakdown: incomeBreakdown,
@@ -342,9 +333,9 @@ class WorkingYearIncome {
     if (updates.taxFreeIncomeAdjustment !== undefined) {
       this.taxFreeIncomeAdjustment = updates.taxFreeIncomeAdjustment;
     }
-    if (updates.spendableIncome !== undefined) {
-      this.spendableIncome = updates.spendableIncome;
-    }
+    // if (updates.spendableIncome !== undefined) {
+    //   this.spendableIncome = updates.spendableIncome;
+    // }
   }
 
   /**
@@ -458,7 +449,6 @@ class WorkingYearIncome {
       rothIraContributions,
       0, // federalTaxesOwed - to be calculated separately
       taxFreeIncomeAdjustment,
-      0, // spendableIncome - to be calculated separately
       description
     );
   }
@@ -510,7 +500,6 @@ class WorkingYearIncome {
       rothContrib,
       taxes,
       taxFree,
-      0, // spendableIncome - calculated separately
       description
     );
   }
@@ -533,7 +522,7 @@ class WorkingYearIncome {
    * @since 1.0.0
    */
   static Empty(description = "Income") {
-    return new WorkingYearIncome(0, 0, 0, 0, 0, 0, 0, 0, 0, description);
+    return new WorkingYearIncome(0, 0, 0, 0, 0, 0, 0, 0, description);
   }
 }
 

@@ -115,7 +115,7 @@ function calculateRetirementYearData(inputs, accounts, benefitAmounts) {
 
   if (shortfall > 0) {
     const withdrawal = withdrawalFactory.withdrawFromTargetedAccount(
-      accountPortioner.savingsAsk(),
+      accountPortioner.savingsAsk,
       ACCOUNT_TYPES.SAVINGS
     );
     shortfall -= withdrawal;
@@ -125,7 +125,7 @@ function calculateRetirementYearData(inputs, accounts, benefitAmounts) {
   if (shortfall > 0) {
     // let thisSpend = spend * 0.1;
     const withdrawal = withdrawalFactory.withdrawFromTargetedAccount(
-      accountPortioner.rothAsk(),
+      accountPortioner.rothAsk,
       ACCOUNT_TYPES.ROTH_IRA
     );
     shortfall -= withdrawal;
@@ -203,8 +203,8 @@ function calculateRetirementYearData(inputs, accounts, benefitAmounts) {
   const mySsBenefits = {
     _description: "Social Security Benefits Breakdown",
     income: incomeStreams.mySs,
-    taxablePortion: incomeResults.ssBreakdown.myTaxablePortion(),
-    nonTaxablePortion: incomeResults.ssBreakdown.myNonTaxablePortion(),
+    taxablePortion: incomeResults.ssBreakdown.myTaxablePortion,
+    nonTaxablePortion: incomeResults.ssBreakdown.myNonTaxablePortion,
     portionOfTotalBenefits: incomeResults.ssBreakdown.myPortion,
     calculationDetails: [
       withLabel("incomeResults.ssBreakdown", incomeResults.ssBreakdown),
@@ -217,11 +217,11 @@ function calculateRetirementYearData(inputs, accounts, benefitAmounts) {
   const ssIncome = {
     _description: "Social Security Income",
     mySsGross: incomeResults.ssBreakdown.myPortion,
-    myTaxablePortion: incomeResults.ssBreakdown.myTaxablePortion(),
-    myNonTaxablePortion: incomeResults.ssBreakdown.myNonTaxablePortion(),
+    myTaxablePortion: incomeResults.ssBreakdown.myTaxablePortion,
+    myNonTaxablePortion: incomeResults.ssBreakdown.myNonTaxablePortion,
     spouseSsGross: incomeResults.ssBreakdown.spousePortion,
-    spouseTaxablePortion: incomeResults.ssBreakdown.spouseTaxablePortion() || 0,
-    spouseNonTaxable: incomeResults.ssBreakdown.spouseNonTaxablePortion() || 0,
+    spouseTaxablePortion: incomeResults.ssBreakdown.spouseTaxablePortion || 0,
+    spouseNonTaxable: incomeResults.ssBreakdown.spouseNonTaxablePortion || 0,
     provisionalIncome: incomeResults.ssBreakdown.provisionalIncome,
     calculationDetails: withLabel(
       "incomeResults.ssBreakdown",
@@ -467,8 +467,8 @@ function calculateRetirementYearData(inputs, accounts, benefitAmounts) {
   const spouseSsBenefits = {
     _description: "Spouse Social Security Benefits Breakdown",
     income: incomeStreams.spouseSs,
-    taxablePortion: incomeResults.ssBreakdown.spouseTaxablePortion(),
-    nonTaxablePortion: incomeResults.ssBreakdown.spouseNonTaxablePortion(),
+    taxablePortion: incomeResults.ssBreakdown.spouseTaxablePortion,
+    nonTaxablePortion: incomeResults.ssBreakdown.spouseNonTaxablePortion,
     portionOfTotalBenefits: incomeResults.ssBreakdown.spousePortion,
     calculationDetails: [
       withLabel("incomeResults.ssBreakdown", incomeResults.ssBreakdown),

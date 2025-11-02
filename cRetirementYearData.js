@@ -177,7 +177,7 @@ class RetirementYearData {
   }
 
   // Utility methods for retirement year data analysis
-  getTotalIncome() {
+  get totalIncome() {
     if (
       this.incomeStreams &&
       typeof this.incomeStreams.totalIncome === "function"
@@ -195,7 +195,7 @@ class RetirementYearData {
   //     // return 0;
   //   }
 
-  getNetIncome() {
+  get netIncome() {
     if (
       this.incomeBreakdown &&
       typeof this.incomeBreakdown.netIncome === "function"
@@ -205,8 +205,8 @@ class RetirementYearData {
     return 0;
   }
 
-  getTotalTaxes() {
-    return this.taxes.getTotalTaxes();
+  get totalTaxes() {
+    return this.taxes.totalTaxes;
   }
 
   //   hasDeficit() {
@@ -217,16 +217,8 @@ class RetirementYearData {
   //     return this.getNetIncome() - this.getTotalExpenses();
   //   }
 
-  getTotalAccountBalances() {
-    if (!this.balances || typeof this.balances !== "object") return 0;
-
-    let total = 0;
-    Object.values(this.balances).forEach((balance) => {
-      if (typeof balance === "number") {
-        total += balance;
-      }
-    });
-    return total;
+  get totalAccountBalances() {
+    return this.balances.allBalances;
   }
 
   // Method to get a summary of the retirement year
@@ -234,12 +226,12 @@ class RetirementYearData {
     return {
       year: this.fiscalData?.taxYear || "Unknown",
       age: this.demographics?.age || "Unknown",
-      totalIncome: this.getTotalIncome(),
+      totalIncome: this.totalIncome(),
       //   totalExpenses: this.getTotalExpenses(),
-      netIncome: this.getNetIncome(),
-      totalTaxes: this.getTotalTaxes(),
+      netIncome: this.netIncome,
+      totalTaxes: this.totalTaxes,
       //   surplusDeficit: this.getSurplusOrDeficit(),
-      totalBalances: this.getTotalAccountBalances(),
+      totalBalances: this.totalAccountBalances,
       //   hasDeficit: this.hasDeficit(),
     };
   }
