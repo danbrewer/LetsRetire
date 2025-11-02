@@ -96,7 +96,8 @@ function calculateRetirementYearData(inputs, accounts, benefitAmounts) {
   // reduce the spend temporarily to determine the shortfall that needs to be covered by 401k, savings, and roth
 
   const estimatedFixedRecurringIncomeNet =
-    estimatedIncomeBefore401kWithdrawal.incomeBreakdown.netIncomeLessReportedEarnedInterest();
+    estimatedIncomeBefore401kWithdrawal.incomeBreakdown
+      .netIncomeLessReportedEarnedInterest;
 
   // reduce the spend by the estimated net income from SS, Pension, etc
   let shortfall = fiscalData.spend - estimatedFixedRecurringIncomeNet; // whittle down recurring net income by 5%
@@ -109,15 +110,8 @@ function calculateRetirementYearData(inputs, accounts, benefitAmounts) {
 
   // let totalWithdrawals = 0;
 
-  const withdrawalBreakdown = {
-    retirementAccount: 0,
-    savings: 0,
-    roth: 0,
-    rmd: incomeStreams.rmd,
-    totalWithdrawals() {
-      return this.retirementAccount + this.savings + this.roth + this.rmd;
-    },
-  };
+  const withdrawals = Withdrawals.Empty();
+  const deposits = Deposits.Empty();
 
   if (shortfall > 0) {
     const withdrawal = withdrawalFactory.withdrawFromTargetedAccount(
@@ -125,7 +119,7 @@ function calculateRetirementYearData(inputs, accounts, benefitAmounts) {
       ACCOUNT_TYPES.SAVINGS
     );
     shortfall -= withdrawal;
-    withdrawalBreakdown.savings = withdrawal;
+    // withdrawals._savings = withdrawal;
   }
 
   if (shortfall > 0) {
@@ -135,7 +129,7 @@ function calculateRetirementYearData(inputs, accounts, benefitAmounts) {
       ACCOUNT_TYPES.ROTH_IRA
     );
     shortfall -= withdrawal;
-    withdrawalBreakdown.roth = withdrawal;
+    // withdrawals._roth = withdrawal;
   }
   if (shortfall > 0) {
     const withdrawal = withdrawalFactory.withdrawFromTargetedAccount(
@@ -144,7 +138,7 @@ function calculateRetirementYearData(inputs, accounts, benefitAmounts) {
       false
     );
     shortfall -= withdrawal;
-    withdrawalBreakdown.retirementAccount = withdrawal;
+    // withdrawals._trad401k = withdrawal;
   }
 
   // if anything hasn't already been accounted for (like income taxes due when 401k is empty), try taking it from Savings
@@ -171,6 +165,8 @@ function calculateRetirementYearData(inputs, accounts, benefitAmounts) {
     "interest",
     fiscalData.taxYear
   );
+
+  // deposits.savings += incomeStreams.actualEarnedInterest;
 
   const actualSpend = Math.min(
     accounts.savings.endingBalanceForYear(fiscalData.taxYear),
@@ -310,10 +306,10 @@ function calculateRetirementYearData(inputs, accounts, benefitAmounts) {
 
   const totals = {
     _description: "Totals Breakdown",
-    reportableIncome: incomeResults.incomeBreakdown.reportableIncome(),
-    taxableIncome: incomeResults.incomeBreakdown.taxableIncome(),
+    reportableIncome: incomeResults.incomeBreakdown.reportableIncome,
+    taxableIncome: incomeResults.incomeBreakdown.taxableIncome,
     netIncome:
-      incomeResults.incomeBreakdown.netIncomeLessReportedEarnedInterest(),
+      incomeResults.incomeBreakdown.netIncomeLessReportedEarnedInterest,
     calculationDetails: [
       withLabel("incomeResults.incomeBreakdown", incomeResults.incomeBreakdown),
     ],
@@ -512,7 +508,7 @@ function calculateRetirementYearData(inputs, accounts, benefitAmounts) {
 
   // Add breakdown data
   result.incomeBreakdown = incomeResults.incomeBreakdown;
-  result.withdrawalBreakdown = withdrawalBreakdown;
+  result.withdrawalBreakdown = withdrawals;
   result.ssBreakdown = incomeResults.ssBreakdown;
   result.pensionBreakdown = pensionBreakdown;
   result.savingsBreakdown = savingsBreakdown;
@@ -528,51 +524,20 @@ function calculateRetirementYearData(inputs, accounts, benefitAmounts) {
 
   console.log(description);
 
-  const debugData = {
-    age: demographics.age,
-    spend: fiscalData.spend,
-    income: {
-      total: result.incomeStreams.totalIncome(),
-      breakdown: {
-        socialSec: result.incomeStreams.ssIncome(),
-        pension: result.incomeStreams.pensionIncome(),
-        interest: accounts.savings
-          .calculateInterestForYear(
-            INTEREST_CALCULATION_EPOCH.IGNORE_DEPOSITS,
-            fiscalData.taxYear
-          )
-          .asCurrency(),
-        rmd: result.incomeStreams.rmd,
-        otherTaxableIncome: result.incomeStreams.otherTaxableIncomeAdjustments,
-        taxFreeIncome: result.incomeStreams.taxFreeIncomeAdjustment,
-      },
-    },
-    federalTaxes: taxes.federalTaxesOwed,
-    netIncome: incomeResults.incomeBreakdown.netIncome,
-    deposits: {
-      total() {
-        return this.roth + this.savings + this.trad401k;
-      },
-      savings: accounts.savings.depositsForYear(fiscalData.taxYear),
-      roth: accounts.rothIra.depositsForYear(fiscalData.taxYear),
-      trad401k: accounts.trad401k.depositsForYear(fiscalData.taxYear),
-    },
-    withdrawals: {
-      total() {
-        return this.roth + this.savings + this.trad401k;
-      },
-      savings: accounts.savings.withdrawalsForYear(fiscalData.taxYear),
-      roth: accounts.rothIra.withdrawalsForYear(fiscalData.taxYear),
-      trad401k: accounts.trad401k.withdrawalsForYear(fiscalData.taxYear),
-    },
-    accounts: { ...accounts },
-  };
+  const debugData = DebugData.CreateUsing(
+    demographics,
+    fiscalData,
+    incomeResults.incomeBreakdown,
+    deposits,
+    withdrawals,
+    accounts,
+    taxes
+  );
 
   const temp = {
     income: {
-      netIncome: incomeResults.incomeBreakdown
-        .netIncomeLessReportedEarnedInterest()
-        .asCurrency(),
+      netIncome:
+        incomeResults.incomeBreakdown.netIncomeLessReportedEarnedInterest.asCurrency(),
       interestIncome: savings.earnedInterest,
       spend: fiscalData.spend.asCurrency(),
       shortfall: Math.max(

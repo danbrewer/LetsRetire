@@ -82,7 +82,8 @@ function withdrawalFactoryJS_createWithdrawalFactory(
             TRANSACTION_CATEGORY.DISBURSEMENT
           );
           savingsAccount.deposit(
-            incomeResults.incomeBreakdown.reportableIncomeLessReportedEarnedInterest(),
+            incomeResults.incomeBreakdown
+              .reportableIncomeLessReportedEarnedInterest,
             TRANSACTION_CATEGORY.INCOME
           );
           savingsAccount.withdraw(

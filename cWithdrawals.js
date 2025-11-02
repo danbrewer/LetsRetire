@@ -13,27 +13,37 @@ class Withdrawals {
   /**
    * Creates a new Withdrawals instance with withdrawal data from all account types.
    *
-   * @param {number} [trad401k=0] - Traditional 401k withdrawals for the year
-   * @param {number} [savings=0] - Savings account withdrawals for the year
-   * @param {number} [roth=0] - Roth IRA withdrawals for the year
-   * @param {number} [rmd=0] - Required Minimum Distribution amount
+   * @param {Account} trad401k - Traditional 401k deposits for the year
+   * @param {Account} savings - Savings account deposits for the year
+   * @param {Account}  roth - Roth IRA deposits for the year
+   * @param {number} taxYear - The tax year for which these deposits apply
    * @param {any[]} [calculationDetails=[]] - Reference objects for debugging and analysis
    * @param {string} [description="Withdrawals Breakdown"] - Descriptive label for this withdrawal snapshot
    */
   constructor(
-    trad401k = 0,
-    savings = 0,
-    roth = 0,
-    rmd = 0,
+    trad401k,
+    savings,
+    roth,
+    taxYear,
     calculationDetails = [],
     description = "Withdrawals Breakdown"
   ) {
     this._description = description;
-    this.trad401k = trad401k;
-    this.savings = savings;
-    this.roth = roth;
-    this.rmd = rmd;
+    this._trad401k = trad401k;
+    this._savings = savings;
+    this._roth = roth;
+    this._taxYear = taxYear;
+    // this.rmd = rmd;
     this.calculationDetails = calculationDetails;
+  }
+
+  get rmd() {
+    // RMD is typically part of income streams, but we can calculate it here if needed
+    // For now, we return 0 as a placeholder
+    return this._trad401k.withdrawalsForYear(
+      this._taxYear,
+      TRANSACTION_CATEGORY.RMD
+    );
   }
 
   /**
@@ -43,6 +53,18 @@ class Withdrawals {
    */
   get description() {
     return this._description;
+  }
+
+  get savings() {
+    return this._savings.withdrawalsForYear(this._taxYear);
+  }
+
+  get roth() {
+    return this._roth.withdrawalsForYear(this._taxYear);
+  }
+
+  get trad401k() {
+    return this._trad401k.withdrawalsForYear(this._taxYear) - this.rmd;
   }
 
   /**
@@ -59,7 +81,7 @@ class Withdrawals {
    *
    * @returns {number} Sum of all withdrawals including RMD
    */
-  total() {
+  get total() {
     return this.trad401k + this.savings + this.roth + this.rmd;
   }
 
@@ -79,7 +101,7 @@ class Withdrawals {
    * @returns {number} Combined taxable withdrawals
    */
   getTotalTaxableWithdrawals() {
-    return this.trad401k + this.savings;
+    return this.trad401k + this.roth;
   }
 
   /**
@@ -92,7 +114,7 @@ class Withdrawals {
    *   - rmdPercent: Percentage from RMD
    */
   getWithdrawalPercentages() {
-    const total = this.total();
+    const total = this.total;
     if (total === 0) {
       return {
         trad401kPercent: 0,
@@ -152,7 +174,7 @@ class Withdrawals {
    * @returns {boolean} True if total withdrawals are greater than zero
    */
   hasWithdrawals() {
-    return this.total() > 0;
+    return this.total > 0;
   }
 
   /**
@@ -173,11 +195,11 @@ class Withdrawals {
    */
   getSummary() {
     return {
-      trad401k: this.trad401k,
-      savings: this.savings,
-      roth: this.roth,
+      trad401k: this._trad401k,
+      savings: this._savings,
+      roth: this._roth,
       rmd: this.rmd,
-      total: this.total(),
+      total: this.total,
       retirementTotal: this.getTotalRetirementWithdrawals(),
       taxableTotal: this.getTotalTaxableWithdrawals(),
       percentages: this.getWithdrawalPercentages(),
@@ -239,7 +261,14 @@ class Withdrawals {
    * @since 1.0.0
    */
   static Empty(description = "Withdrawals Breakdown") {
-    return new Withdrawals(0, 0, 0, 0, [], description);
+    return new Withdrawals(
+      new Account("trad401k", 0, 0),
+      new Account("savings", 0, 0),
+      new Account("roth", 0, 0),
+      0,
+      [],
+      description
+    );
   }
 
   /**
@@ -275,10 +304,9 @@ class Withdrawals {
     fiscalData,
     description = "Withdrawals Breakdown"
   ) {
-    const trad401k = accounts.trad401k.withdrawalsForYear(fiscalData.taxYear);
-    const savings = accounts.savings.withdrawalsForYear(fiscalData.taxYear);
-    const roth = accounts.rothIra.withdrawalsForYear(fiscalData.taxYear);
-    const rmd = incomeStreams.rmd;
+    const trad401k = accounts.trad401k;
+    const savings = accounts.savings;
+    const roth = accounts.rothIra;
 
     const calculationDetails = [];
     if (typeof withLabel === "function") {
@@ -294,7 +322,7 @@ class Withdrawals {
       trad401k,
       savings,
       roth,
-      rmd,
+      fiscalData.taxYear,
       calculationDetails,
       description
     );
@@ -303,10 +331,10 @@ class Withdrawals {
   /**
    * Factory method to create a Withdrawals instance from individual withdrawal amounts.
    *
-   * @param {number} trad401k - Traditional 401k withdrawal amount
-   * @param {number} savings - Savings withdrawal amount
-   * @param {number} roth - Roth IRA withdrawal amount
-   * @param {number} rmd - RMD amount
+   * @param {Account} trad401k - Traditional 401k withdrawal amount
+   * @param {Account} savings - Savings withdrawal amount
+   * @param {Account} roth - Roth IRA withdrawal amount
+   * @param {number} taxYear - tax year
    * @param {string} [description="Withdrawals Breakdown"] - Optional description
    *
    * @returns {Withdrawals} A new Withdrawals instance with specified amounts
@@ -323,10 +351,10 @@ class Withdrawals {
     trad401k,
     savings,
     roth,
-    rmd,
+    taxYear,
     description = "Withdrawals Breakdown"
   ) {
-    return new Withdrawals(trad401k, savings, roth, rmd, [], description);
+    return new Withdrawals(trad401k, savings, roth, taxYear, [], description);
   }
 }
 

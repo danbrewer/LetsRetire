@@ -292,7 +292,7 @@ function retirementJS_calculateIncomeWhen401kWithdrawalIs(
   );
 
   incomeBreakdown.federalIncomeTax = retirementJS_determineFederalIncomeTax(
-    incomeBreakdown.taxableIncome(),
+    incomeBreakdown.taxableIncome,
     taxBrackets
   );
 
@@ -430,9 +430,8 @@ function retirementJS_determine401kWithdrawalsToHitNetTargetOf(
 
     log.info(`Target income is $${targetIncome.asCurrency()}.`);
 
-    const netIncome = income.incomeBreakdown
-      .netIncomeLessReportedEarnedInterest()
-      .asCurrency();
+    const netIncome =
+      income.incomeBreakdown.netIncomeLessReportedEarnedInterest.asCurrency();
 
     const highLow =
       netIncome > targetIncome.asCurrency()
@@ -459,9 +458,8 @@ function retirementJS_determine401kWithdrawalsToHitNetTargetOf(
   }
 
   // Update all the final values in the result object
-  result.net = income.incomeBreakdown
-    .netIncomeLessReportedEarnedInterest()
-    .asCurrency();
+  result.net =
+    income.incomeBreakdown.netIncomeLessReportedEarnedInterest.asCurrency();
   result.withdrawalNeeded = hi.asCurrency();
   result.rmd = incomeStreams.rmd;
   result.tax = income.incomeBreakdown.federalIncomeTax.asCurrency();

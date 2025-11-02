@@ -70,7 +70,7 @@ class IncomeBreakdown {
     );
   }
 
-  reportableIncome() {
+  get reportableIncome() {
     return (
       this.reportedEarnedInterest +
       this.myPension +
@@ -82,7 +82,7 @@ class IncomeBreakdown {
     );
   }
 
-  adjustedGrossIncome() {
+  get adjustedGrossIncome() {
     return (
       this.reportedEarnedInterest +
       this.myPension +
@@ -94,35 +94,47 @@ class IncomeBreakdown {
     );
   }
 
-  taxableIncome() {
-    return Math.max(0, this.adjustedGrossIncome() - this.standardDeduction);
+  get totalIncome() {
+    return (
+      this.reportedEarnedInterest +
+      this.myPension +
+      this.spousePension +
+      this.rmd +
+      this.otherTaxableIncomeAdjustments +
+      this.retirementAccountWithdrawal +
+      this.socialSecurityIncome
+    );
   }
 
-  netIncome() {
-    return this.reportableIncome() - this.federalIncomeTax;
+  get taxableIncome() {
+    return Math.max(0, this.adjustedGrossIncome - this.standardDeduction);
   }
 
-  netIncomeLessReportedEarnedInterest() {
-    return this.netIncome() - this.reportedEarnedInterest;
+  get netIncome() {
+    return this.reportableIncome - this.federalIncomeTax;
   }
 
-  reportableIncomeLessReportedEarnedInterest() {
-    return this.reportableIncome() - this.reportedEarnedInterest;
+  get netIncomeLessReportedEarnedInterest() {
+    return this.netIncome - this.reportedEarnedInterest;
   }
 
-  effectiveTaxRate() {
-    if (this.reportableIncome() === 0) return 0;
-    return (this.federalIncomeTax / this.reportableIncome()).round(3);
+  get reportableIncomeLessReportedEarnedInterest() {
+    return this.reportableIncome - this.reportedEarnedInterest;
+  }
+
+  get effectiveTaxRate() {
+    if (this.reportableIncome === 0) return 0;
+    return (this.federalIncomeTax / this.reportableIncome).round(3);
   }
 
   incomeAsPercentageOfGross(amount = 0) {
-    if (this.reportableIncome() === 0) return 0;
-    return amount / this.reportableIncome();
+    if (this.reportableIncome === 0) return 0;
+    return amount / this.reportableIncome;
   }
 
   translateGrossAmountToNet(amount = 0) {
     return (
-      this.incomeAsPercentageOfGross(amount) * this.netIncome()
+      this.incomeAsPercentageOfGross(amount) * this.netIncome
     ).asCurrency();
   }
 
@@ -159,13 +171,13 @@ class IncomeBreakdown {
     this.federalIncomeTax = newTaxAmount;
   }
 
-  hasPositiveTaxableIncome() {
-    return this.taxableIncome() > 0;
+  get hasPositiveTaxableIncome() {
+    return this.taxableIncome > 0;
   }
 
-  getAfterTaxIncomeRatio() {
-    const reportable = this.reportableIncome();
-    return reportable > 0 ? this.netIncome() / reportable : 0;
+  get afterTaxIncomeRatio() {
+    const reportable = this.reportableIncome;
+    return reportable > 0 ? this.netIncome / reportable : 0;
   }
 
   static Empty() {

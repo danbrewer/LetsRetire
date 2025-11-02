@@ -200,7 +200,7 @@ class RetirementYearData {
       this.incomeBreakdown &&
       typeof this.incomeBreakdown.netIncome === "function"
     ) {
-      return this.incomeBreakdown.netIncome();
+      return this.incomeBreakdown.netIncome;
     }
     return 0;
   }

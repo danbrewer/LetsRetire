@@ -6,6 +6,7 @@ const TRANSACTION_TYPE = Object.freeze({
 const TRANSACTION_CATEGORY = Object.freeze({
   INTEREST: "interest",
   DISBURSEMENT: "disbursement",
+  RMD: "rmd",
   OVERAGE: "overage",
   SHORTAGE: "shortage",
   TRANSFER: "transfer",

@@ -96,7 +96,7 @@ class IncomeRs {
     ) {
       return 0;
     }
-    return this.incomeBreakdown.reportableIncome();
+    return this.incomeBreakdown.reportableIncome;
   }
 
   /**
@@ -111,7 +111,7 @@ class IncomeRs {
     ) {
       return 0;
     }
-    return this.incomeBreakdown.taxableIncome();
+    return this.incomeBreakdown.taxableIncome;
   }
 
   /**
@@ -126,7 +126,7 @@ class IncomeRs {
     ) {
       return 0;
     }
-    return this.incomeBreakdown.netIncome();
+    return this.incomeBreakdown.netIncome;
   }
 
   /**
