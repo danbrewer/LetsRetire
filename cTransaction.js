@@ -41,6 +41,7 @@ class Transaction {
   #amount;
   #transactionType;
   #category;
+  #party;
   /** @type {Date} */
   #date;
 
@@ -56,17 +57,28 @@ class Transaction {
     return this.#category;
   }
 
+  get party() {
+    return this.#party;
+  }
+
   get date() {
     return this.#date;
   }
 
   /**
-   * @param {number} amount
-   * @param {string} [transactionType]
-   * @param {string} [category]
+   * @param {number} amount - The amount of the transaction
+   * @param {string} [transactionType] - The type of transaction
+   * @param {string} [category] - The category of the transaction
    * @param {Date} [date] - Transaction date, defaults to current date
+   * @param {string} [party] - The party associated with the transaction
    */
-  constructor(amount, transactionType, category, date = new Date()) {
+  constructor(
+    amount,
+    transactionType,
+    category,
+    date = new Date(),
+    party = ""
+  ) {
     if (transactionType && !isValidTransactionType(transactionType)) {
       throw new Error(
         `Invalid transaction type: ${transactionType}. Must be one of ${Object.values(TRANSACTION_TYPE).join(", ")}.`
@@ -80,6 +92,7 @@ class Transaction {
     this.#amount = amount;
     this.#transactionType = transactionType;
     this.#category = category;
+    this.#party = party;
     this.#date = date;
   }
 }

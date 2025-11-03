@@ -44,7 +44,7 @@ function withdrawalFactoryJS_createWithdrawalFactory(
 
     // Withdrawal amount to be determined
     switch (accountType) {
-      case ACCOUNT_TYPES.TRADITIONAL_401K: {
+      case ACCOUNT_TYPES.SUBJECT_TRAD_401K: {
         if (retirementAccountIncomeRecognized) return 0; // already processed a 401k withdrawal this year
 
         let gross401kWithdrawal = 0;
@@ -100,7 +100,7 @@ function withdrawalFactoryJS_createWithdrawalFactory(
 
         // return netWithdrawals;
       }
-      case ACCOUNT_TYPES.SAVINGS: {
+      case ACCOUNT_TYPES.SUBJECT_SAVINGS: {
         if (!fiscalData.useSavings) return 0; // already processed a savings withdrawal this year
 
         const fundsNeeded = amount;
@@ -121,7 +121,7 @@ function withdrawalFactoryJS_createWithdrawalFactory(
 
         return withdrawalAmount;
       }
-      case ACCOUNT_TYPES.ROTH_IRA: {
+      case ACCOUNT_TYPES.SUBJECT_TRAD_ROTH: {
         // Roth withdrawal (no tax impact)
         const fundsNeeded = amount;
         const fundsAvailable = rothAccount.availableFunds;

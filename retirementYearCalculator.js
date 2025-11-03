@@ -116,7 +116,7 @@ function calculateRetirementYearData(inputs, accounts, benefitAmounts) {
   if (shortfall > 0) {
     const withdrawal = withdrawalFactory.withdrawFromTargetedAccount(
       accountPortioner.savingsAsk,
-      ACCOUNT_TYPES.SAVINGS
+      ACCOUNT_TYPES.SUBJECT_SAVINGS
     );
     shortfall -= withdrawal;
     // withdrawals._savings = withdrawal;
@@ -126,7 +126,7 @@ function calculateRetirementYearData(inputs, accounts, benefitAmounts) {
     // let thisSpend = spend * 0.1;
     const withdrawal = withdrawalFactory.withdrawFromTargetedAccount(
       accountPortioner.rothAsk,
-      ACCOUNT_TYPES.ROTH_IRA
+      ACCOUNT_TYPES.SUBJECT_TRAD_ROTH
     );
     shortfall -= withdrawal;
     // withdrawals._roth = withdrawal;
@@ -134,7 +134,7 @@ function calculateRetirementYearData(inputs, accounts, benefitAmounts) {
   if (shortfall > 0) {
     const withdrawal = withdrawalFactory.withdrawFromTargetedAccount(
       shortfall + estimatedFixedRecurringIncomeNet,
-      ACCOUNT_TYPES.TRADITIONAL_401K,
+      ACCOUNT_TYPES.SUBJECT_TRAD_401K,
       false
     );
     shortfall -= withdrawal;
@@ -145,7 +145,7 @@ function calculateRetirementYearData(inputs, accounts, benefitAmounts) {
   if (shortfall > 0) {
     shortfall -= withdrawalFactory.withdrawFromTargetedAccount(
       shortfall,
-      ACCOUNT_TYPES.SAVINGS,
+      ACCOUNT_TYPES.SUBJECT_SAVINGS,
       false
     );
   }

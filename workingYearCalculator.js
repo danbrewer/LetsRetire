@@ -9,28 +9,6 @@
 function calculateWorkingYearData(inputs, yearIndex, salary, accountYear) {
   // Declare and initialize the result object at the top
   const result = WorkingYearData.CreateEmpty();
-  // const result = {
-  //   _description: "",
-  //   demographics: {},
-  //   fiscalData: {},
-  //   totals: {},
-  //   contributions: {},
-  //   withdrawals: {},
-  //   balances: {},
-  //   pen: {},
-  //   ss: {},
-  //   savings: {},
-  //   retirementAccount: {},
-  //   roth: {},
-  //   income: {},
-  //   taxes: {},
-  //   pensionBreakdown: {},
-  //   spousePensionBreakdown: {},
-  //   savingsBreakdown: {},
-  //   ssBreakdown: {},
-  //   spouseSsBreakdown: {},
-  //   employmentInfo: {},
-  // };
 
   // debugger;
   const fiscalData = FiscalData.CreateUsing(inputs, TAX_BASE_YEAR + yearIndex);
@@ -46,12 +24,12 @@ function calculateWorkingYearData(inputs, yearIndex, salary, accountYear) {
   // **************
   // debugger;
   accountYear.deposit(
-    ACCOUNT_TYPES.TRADITIONAL_401K,
+    ACCOUNT_TYPES.SUBJECT_TRAD_401K,
     TRANSACTION_CATEGORY.CONTRIBUTION,
     employmentInfo.max401kContribution
   );
   accountYear.deposit(
-    ACCOUNT_TYPES.TRADITIONAL_401K,
+    ACCOUNT_TYPES.SUBJECT_TRAD_401K,
     TRANSACTION_CATEGORY.INTEREST,
     accountYear.trad401k.calculateInterestForYear(
       INTEREST_CALCULATION_EPOCH.AVERAGE_BALANCE,
@@ -60,7 +38,7 @@ function calculateWorkingYearData(inputs, yearIndex, salary, accountYear) {
   );
 
   accountYear.deposit(
-    ACCOUNT_TYPES.SAVINGS,
+    ACCOUNT_TYPES.SUBJECT_SAVINGS,
     TRANSACTION_CATEGORY.INTEREST,
     accountYear.savings.calculateInterestForYear(
       INTEREST_CALCULATION_EPOCH.IGNORE_DEPOSITS,
@@ -69,13 +47,13 @@ function calculateWorkingYearData(inputs, yearIndex, salary, accountYear) {
   );
 
   accountYear.deposit(
-    ACCOUNT_TYPES.ROTH_IRA,
+    ACCOUNT_TYPES.SUBJECT_TRAD_ROTH,
     TRANSACTION_CATEGORY.CONTRIBUTION,
     employmentInfo.rothMaxContribution
   );
 
   accountYear.deposit(
-    ACCOUNT_TYPES.ROTH_IRA,
+    ACCOUNT_TYPES.SUBJECT_TRAD_ROTH,
     TRANSACTION_CATEGORY.INTEREST,
     accountYear.rothIra.calculateInterestForYear(
       INTEREST_CALCULATION_EPOCH.IGNORE_DEPOSITS,
@@ -83,98 +61,17 @@ function calculateWorkingYearData(inputs, yearIndex, salary, accountYear) {
     )
   );
 
-  // const taxes = {
-  //   _description: "Taxes",
-  //   grossIncome: 0,
-  //   standardDeduction: 0,
-  //   taxableIncome: 0,
-  //   federalTaxesOwed: 0,
-  //   otherTaxes: 0,
-  //   taxableIncomeAdjustment: 0,
-  // };
-
   const taxes = new Taxes();
 
-  const contributions = {
-    _description: "Contributions Breakdown",
-    my401k: 0,
-    myRoth: 0,
-    spouse401k: 0,
-    spouseRoth: 0,
-    savings: 0,
-    employerMatch: 0,
-    calculationDetails: [],
-    total() {
-      return (
-        this.my401k +
-        this.myRoth +
-        this.spouse401k +
-        this.spouseRoth +
-        this.savings +
-        this.employerMatch
-      );
-    },
-  };
-
-  // const income = {
-  //   _description: "Income",
-  //   wagesTipsAndCompensation: salary,
-  //   otherTaxableIncomeAdjustments:
-  //     getTaxableIncomeOverride(demographics.age) || 0,
-  //   taxableInterestIncome: accountGroup.savings
-  //     .depositsForYear(fiscalData.taxYear, TRANSACTION_CATEGORY.INTEREST)
-  //     .asCurrency(),
-  //   rollingOverIntoSavings: 0,
-  //   retirementAccountContributions: accountGroup.trad401k.depositsForYear(
-  //     fiscalData.taxYear,
-  //     TRANSACTION_CATEGORY.CONTRIBUTION
-  //   ),
-  //   rothIraContributions: accountGroup.rothIra.depositsForYear(
-  //     fiscalData.taxYear,
-  //     TRANSACTION_CATEGORY.CONTRIBUTION
-  //   ),
-  //   federalTaxesOwed: 0,
-  //   taxFreeIncomeAdjustment: getTaxFreeIncomeOverride(demographics.age) || 0,
-  //   getTaxableIncome() {
-  //     return retirementJS_calculateTaxableIncome(
-  //       this.getAdjustedGrossIncome(),
-  //       taxes.standardDeduction
-  //     );
-  //   },
-  //   spendableIncome: 0,
-  //   getAllIncomeSources() {
-  //     return (
-  //       this.wagesTipsAndCompensation +
-  //       this.otherTaxableIncomeAdjustments +
-  //       this.taxFreeIncomeAdjustment +
-  //       this.taxableInterestIncome
-  //     );
-  //   },
-  //   getGrossIncome() {
-  //     return (
-  //       this.wagesTipsAndCompensation +
-  //       this.otherTaxableIncomeAdjustments +
-  //       this.taxableInterestIncome
-  //     );
-  //   },
-  //   getAdjustedGrossIncome() {
-  //     return Math.max(
-  //       this.getGrossIncome() - this.retirementAccountContributions,
-  //       0
-  //     );
-  //   },
-  //   getNetIncome() {
-  //     return Math.max(this.getGrossIncome() - this.federalTaxesOwed, 0);
-  //   },
-  //   getSpendableIncome() {
-  //     return Math.max(
-  //       this.netIncome() +
-  //         this.taxFreeIncomeAdjustment -
-  //         this.rothIraContributions,
-  //       0
-  //     );
-  //   },
-  // };
+  const contributions = Contributions.CreateUsing(
+    accountYear,
+    employmentInfo,
+    undefined,
+    [
+      withLabel("employmentInfo", employmentInfo),
+      withLabel("accountGroup.savings", accountYear),
+    ]
+  );
 
   const income = WorkingYearIncome.CreateUsing(
     salary,
@@ -215,16 +112,6 @@ function calculateWorkingYearData(inputs, yearIndex, salary, accountYear) {
   };
 
   const balances = Balances.Empty();
-
-  // const balances = {
-  //   _description: "Account Balances",
-  //   savings: 0,
-  //   trad401k: 0,
-  //   rothIra: 0,
-  //   total() {
-  //     return this.savings + this.trad401k + this.rothIra;
-  //   },
-  // };
 
   const pen = {
     _description: "Pension Benefits",
@@ -269,13 +156,13 @@ function calculateWorkingYearData(inputs, yearIndex, salary, accountYear) {
   totals.calculationDetails = withLabel("income", income);
 
   // Update all the final values in the result object
-  contributions.my401k = employmentInfo.max401kContribution;
-  contributions.myRoth = employmentInfo.rothMaxContribution;
-  contributions.savings = accountYear.savings.depositsForYear(
-    fiscalData.taxYear,
-    TRANSACTION_CATEGORY.CONTRIBUTION
-  );
-  contributions.employerMatch = employmentInfo.employer401kMatch;
+  // contributions.my401k = employmentInfo.max401kContribution;
+  // contributions.myRoth = employmentInfo.rothMaxContribution;
+  // contributions.savings = accountYear.getDeposits(
+  //   ACCOUNT_TYPES.SUBJECT_SAVINGS,
+  //   TRANSACTION_CATEGORY.CONTRIBUTION
+  // );
+  // contributions.employerMatch = employmentInfo.employer401kMatch;
   // contributions.calculationDetails = [
   //   withLabel("employmentInfo", employmentInfo),
   //   withLabel("accountGroup.savings", accountGroup.savings),

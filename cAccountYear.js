@@ -39,6 +39,19 @@ class AccountYear {
 
   /**
    * @param {string} accountName
+   * @param {string | undefined} category
+   */
+  getDeposits(accountName, category) {
+    const account = this.#accountsManager.getAccountByName(accountName);
+    if (account) {
+      return account.depositsForYear(this.#taxYear, category);
+    } else {
+      throw new Error(`Account not found: ${accountName}`);
+    }
+  }
+
+  /**
+   * @param {string} accountName
    * @param {string} category
    * @param {number} amount
    */
@@ -46,6 +59,19 @@ class AccountYear {
     const account = this.#accountsManager.getAccountByName(accountName);
     if (account) {
       account.withdrawal(amount, category, this.#taxYear);
+    } else {
+      throw new Error(`Account not found: ${accountName}`);
+    }
+  }
+
+  /**
+   * @param {string} accountName
+   * @param {string | undefined} category
+   */
+  getWithdrawals(accountName, category) {
+    const account = this.#accountsManager.getAccountByName(accountName);
+    if (account) {
+      return account.withdrawalsForYear(this.#taxYear, category);
     } else {
       throw new Error(`Account not found: ${accountName}`);
     }

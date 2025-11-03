@@ -259,7 +259,7 @@ function retirementJS_calculateIncomeWhen401kWithdrawalIs(
   const ssBreakdown = SsBenefitsCalculator.CalculateUsing(
     incomeStreams.mySs,
     incomeStreams.spouseSs,
-    incomeStreams.nonSsIncome()
+    incomeStreams.nonSsIncome
   );
 
   // const ssBreakdown = {

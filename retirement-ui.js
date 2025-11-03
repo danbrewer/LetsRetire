@@ -2074,9 +2074,9 @@ function parseInputParameters() {
     .filter((s) => s.length > 0);
   if (withdrawalOrder.length === 0) {
     withdrawalOrder = [
-      ACCOUNT_TYPES.SAVINGS,
-      ACCOUNT_TYPES.TRADITIONAL_401K,
-      ACCOUNT_TYPES.ROTH_IRA,
+      ACCOUNT_TYPES.SUBJECT_SAVINGS,
+      ACCOUNT_TYPES.SUBJECT_TRAD_401K,
+      ACCOUNT_TYPES.SUBJECT_TRAD_ROTH,
     ];
   }
 

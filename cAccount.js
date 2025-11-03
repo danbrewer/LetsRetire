@@ -1,7 +1,10 @@
 class ACCOUNT_TYPES {}
-ACCOUNT_TYPES.SAVINGS = "savings";
-ACCOUNT_TYPES.TRADITIONAL_401K = "trad401k";
-ACCOUNT_TYPES.ROTH_IRA = "rothIra";
+ACCOUNT_TYPES.SUBJECT_SAVINGS = "savings";
+ACCOUNT_TYPES.SUBJECT_TRAD_401K = "trad401k";
+ACCOUNT_TYPES.SUBJECT_TRAD_ROTH = "rothIra";
+ACCOUNT_TYPES.PARTNER_SAVINGS = "partner_savings";
+ACCOUNT_TYPES.PARTNER_TRAD_401K = "partner_trad401k";
+ACCOUNT_TYPES.PARTNER_TRAD_ROTH = "partner_rothIra";
 
 // Create a class for the account
 class Account {
@@ -84,8 +87,9 @@ class Account {
    * @param {number} amount
    * @param {string} category
    * @param {number} yyyy
+   * @param {string} [party]
    */
-  deposit(amount, category, yyyy) {
+  deposit(amount, category, yyyy, party = "") {
     if (amount < 0) {
       throw new Error("Deposit amount must be positive.");
     }
@@ -94,7 +98,8 @@ class Account {
         amount,
         TRANSACTION_TYPE.DEPOSIT,
         category,
-        new Date(yyyy, 0, 1) // Set to January 1st of the given year
+        new Date(yyyy, 0, 1), // Set to January 1st of the given year
+        party
       )
     );
 
@@ -102,11 +107,12 @@ class Account {
   }
 
   /**
-   * @param {number} amount
-   * @param {string} category
-   * @param {number} yyyy
+   * @param {number} amount - Amount to withdraw
+   * @param {string} category - Category of the withdrawal
+   * @param {number} yyyy - Year of the withdrawal
+   * @param {string} [party] - Optional party associated with the withdrawal
    */
-  withdrawal(amount, category, yyyy) {
+  withdrawal(amount, category, yyyy, party = "") {
     if (amount < 0) {
       throw new Error("Withdrawal amount must be positive.");
     }
@@ -121,7 +127,8 @@ class Account {
         withdrawalAmount,
         TRANSACTION_TYPE.WITHDRAWAL,
         category,
-        new Date(yyyy, 0, 1) // Set to January 1st of the given year
+        new Date(yyyy, 0, 1), // Set to January 1st of the given year
+        party
       )
     );
 
@@ -173,12 +180,13 @@ class Account {
   /**
    * @param {number} yyyy
    */
-  depositsForYear(yyyy, category = "") {
+  depositsForYear(yyyy, category = "", party = "") {
     const transactions = this.#transactions.filter(
       (tx) =>
         tx.transactionType === TRANSACTION_TYPE.DEPOSIT &&
         tx.date.getFullYear() === yyyy &&
-        (category === "" ? true : tx.category === category)
+        (category === "" ? true : tx.category === category) &&
+        (party === "" ? true : tx.party === party)
     );
     const total = transactions.reduce((sum, tx) => sum + tx.amount, 0);
     return total;

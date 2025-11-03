@@ -19,7 +19,7 @@ class WorkingYearData {
    * @param {FiscalData} [fiscalData={}] - Fiscal parameters including tax year,
    *   inflation rates, and spending amounts
    * @param {Object} [totals={}] - Summary totals for income, contributions, and balances
-   * @param {Object} [contributions={}] - Retirement account contribution amounts
+   * @param {Contributions | undefined} [contributions={}] - Retirement account contribution amounts
    * @param {Object} [withdrawals={}] - Account withdrawal amounts (typically minimal during working years)
    * @param {Balances} [balances={}] - Current account balances across all retirement accounts
    * @param {Object} [pen={}] - Pension-related information and calculations
@@ -41,7 +41,7 @@ class WorkingYearData {
     demographics,
     fiscalData,
     totals = {},
-    contributions = {},
+    contributions,
     withdrawals = {},
     balances,
     pen = {},
