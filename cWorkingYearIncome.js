@@ -45,14 +45,14 @@ class WorkingYearIncome {
     this.taxFreeIncomeAdjustment = taxFreeIncomeAdjustment;
   }
 
-  /**
-   * Gets the descriptive label for this income data.
-   *
-   * @returns {string} Description of the income data
-   */
-  get description() {
-    return this._description;
-  }
+  //   /**
+  //    * Gets the descriptive label for this income data.
+  //    *
+  //    * @returns {string} Description of the income data
+  //    */
+  //   get description() {
+  //     return this._description;
+  //   }
 
   /**
    * Sets a new description for this income data.
@@ -347,7 +347,6 @@ class WorkingYearIncome {
    * @param {number} salary - Annual salary amount
    * @param {Demographics} demographics - Demographic information including age
    * @param {AccountYear} accountYear - Account group with savings and retirement accounts
-   * @param {FiscalData} fiscalData - Fiscal data containing the target tax year
    * @param {string} [description="Income"] - Optional description
    *
    * @returns {WorkingYearIncome} A new income instance with account-derived data
@@ -372,7 +371,6 @@ class WorkingYearIncome {
     salary,
     demographics,
     accountYear,
-    fiscalData,
     description = "Income"
   ) {
     // Get taxable income override if function exists
@@ -390,55 +388,26 @@ class WorkingYearIncome {
 
     // Get interest income from savings account
     let taxableInterestIncome = 0;
-    if (
-      accountYear.savings &&
-      typeof accountYear.savings.depositsForYear === "function"
-    ) {
-      const interestCategory =
-        typeof TRANSACTION_CATEGORY !== "undefined"
-          ? TRANSACTION_CATEGORY.INTEREST
-          : "interest";
-      const interestAmount = accountYear.savings.depositsForYear(
-        fiscalData.taxYear,
-        interestCategory
-      );
-      taxableInterestIncome =
-        typeof interestAmount.asCurrency === "function"
-          ? interestAmount.asCurrency()
-          : interestAmount;
-    }
 
-    // Get retirement account contributions
-    let retirementAccountContributions = 0;
-    if (
-      accountYear.trad401k &&
-      typeof accountYear.trad401k.depositsForYear === "function"
-    ) {
-      const contributionCategory =
-        typeof TRANSACTION_CATEGORY !== "undefined"
-          ? TRANSACTION_CATEGORY.CONTRIBUTION
-          : "contribution";
-      retirementAccountContributions = accountYear.trad401k.depositsForYear(
-        fiscalData.taxYear,
-        contributionCategory
-      );
-    }
+    const interestAmount = accountYear.getDeposits(
+      ACCOUNT_TYPES.SAVINGS,
+      TRANSACTION_CATEGORY.INTEREST
+    );
+    taxableInterestIncome =
+      typeof interestAmount.asCurrency === "function"
+        ? interestAmount.asCurrency()
+        : interestAmount;
+
+    const retirementAccountContributions = accountYear.getDeposits(
+      ACCOUNT_TYPES.TRAD_401K,
+      TRANSACTION_CATEGORY.CONTRIBUTION
+    );
 
     // Get Roth IRA contributions
-    let rothIraContributions = 0;
-    if (
-      accountYear.rothIra &&
-      typeof accountYear.rothIra.depositsForYear === "function"
-    ) {
-      const contributionCategory =
-        typeof TRANSACTION_CATEGORY !== "undefined"
-          ? TRANSACTION_CATEGORY.CONTRIBUTION
-          : "contribution";
-      rothIraContributions = accountYear.rothIra.depositsForYear(
-        fiscalData.taxYear,
-        contributionCategory
-      );
-    }
+    const rothIraContributions = accountYear.getDeposits(
+      ACCOUNT_TYPES.TRAD_ROTH,
+      TRANSACTION_CATEGORY.CONTRIBUTION
+    );
 
     return new WorkingYearIncome(
       salary,

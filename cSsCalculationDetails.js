@@ -55,14 +55,14 @@ class SsCalculationDetails {
     this.tier2TaxableAmount = tier2TaxableAmount;
   }
 
-  /**
-   * Gets the descriptive label for this calculation details object.
-   *
-   * @returns {string} Description of the calculation details
-   */
-  get description() {
-    return this._description;
-  }
+  //   /**
+  //    * Gets the descriptive label for this calculation details object.
+  //    *
+  //    * @returns {string} Description of the calculation details
+  //    */
+  //   get description() {
+  //     return this._description;
+  //   }
 
   /**
    * Determines which taxation tier applies based on provisional income.

@@ -38,14 +38,14 @@ class EmploymentInfo {
     this.matchRate = matchRate;
   }
 
-  /**
-   * Gets the descriptive label for this employment info.
-   *
-   * @returns {string} Description of the employment info
-   */
-  get description() {
-    return this._description;
-  }
+  //   /**
+  //    * Gets the descriptive label for this employment info.
+  //    *
+  //    * @returns {string} Description of the employment info
+  //    */
+  //   get description() {
+  //     return this._description;
+  //   }
 
   /**
    * Sets a new description for this employment info.

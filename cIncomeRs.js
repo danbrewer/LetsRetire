@@ -40,14 +40,14 @@ class IncomeRs {
     this.incomeBreakdown = incomeBreakdown;
   }
 
-  /**
-   * Gets the descriptive label for this income results object.
-   *
-   * @returns {string} Description of the income results
-   */
-  get description() {
-    return this._description;
-  }
+  //   /**
+  //    * Gets the descriptive label for this income results object.
+  //    *
+  //    * @returns {string} Description of the income results
+  //    */
+  //   get description() {
+  //     return this._description;
+  //   }
 
   /**
    * Checks if Social Security breakdown data is available and valid.

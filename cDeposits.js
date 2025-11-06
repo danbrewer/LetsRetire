@@ -33,14 +33,14 @@ class Deposits {
     this._taxYear = taxYear;
   }
 
-  /**
-   * Gets the descriptive label for this deposit breakdown.
-   *
-   * @returns {string} Description of the deposits
-   */
-  get description() {
-    return this._description;
-  }
+  // /**
+  //  * Gets the descriptive label for this deposit breakdown.
+  //  *
+  //  * @returns {string} Description of the deposits
+  //  */
+  // get description() {
+  //   return this._description;
+  // }
 
   /**
    * Sets a new description for this deposit breakdown.

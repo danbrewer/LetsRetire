@@ -78,9 +78,9 @@ class Inputs {
     filingStatus = "single",
     useRMD = false,
     order = [
-      ACCOUNT_TYPES.SUBJECT_SAVINGS,
-      ACCOUNT_TYPES.SUBJECT_TRAD_401K,
-      ACCOUNT_TYPES.SUBJECT_TRAD_ROTH,
+      ACCOUNT_TYPES.SAVINGS,
+      ACCOUNT_TYPES.TRAD_401K,
+      ACCOUNT_TYPES.TRAD_ROTH,
     ]
   ) {
     // Personal information

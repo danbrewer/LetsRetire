@@ -32,44 +32,23 @@ class Contributions {
     this.calculationDetails = calculationDetails;
   }
 
-  get subject401k() {
+  get tradRoth() {
     return this.#accountYear.getDeposits(
-      ACCOUNT_TYPES.SUBJECT_TRAD_401K,
+      ACCOUNT_TYPES.TRAD_ROTH,
       TRANSACTION_CATEGORY.CONTRIBUTION
     );
   }
 
-  get subjectRoth() {
+  get savings() {
     return this.#accountYear.getDeposits(
-      ACCOUNT_TYPES.SUBJECT_TRAD_ROTH,
+      ACCOUNT_TYPES.SAVINGS,
       TRANSACTION_CATEGORY.CONTRIBUTION
     );
   }
 
-  get subjectSavings() {
+  get trad401k() {
     return this.#accountYear.getDeposits(
-      ACCOUNT_TYPES.SUBJECT_SAVINGS,
-      TRANSACTION_CATEGORY.CONTRIBUTION
-    );
-  }
-
-  get partner401k() {
-    return this.#accountYear.getDeposits(
-      ACCOUNT_TYPES.PARTNER_TRAD_401K,
-      TRANSACTION_CATEGORY.CONTRIBUTION
-    );
-  }
-
-  get partnerRoth() {
-    return this.#accountYear.getDeposits(
-      ACCOUNT_TYPES.PARTNER_TRAD_ROTH,
-      TRANSACTION_CATEGORY.CONTRIBUTION
-    );
-  }
-
-  get partnerSavings() {
-    return this.#accountYear.getDeposits(
-      ACCOUNT_TYPES.PARTNER_SAVINGS,
+      ACCOUNT_TYPES.TRAD_401K,
       TRANSACTION_CATEGORY.CONTRIBUTION
     );
   }
@@ -80,14 +59,7 @@ class Contributions {
    * @returns {number} Total contribution amount
    */
   get total() {
-    return (
-      this.subject401k +
-      this.subjectRoth +
-      this.partner401k +
-      this.partnerRoth +
-      this.partnerSavings +
-      this.subjectSavings
-    );
+    return this.trad401k + this.tradRoth + this.savings;
   }
 
   //   /**
@@ -111,9 +83,7 @@ class Contributions {
    * @returns {number} Total retirement account contributions
    */
   get retirementContributionsTotal() {
-    return (
-      this.partner401k + this.partnerRoth + this.subject401k + this.subjectRoth
-    );
+    return this.trad401k + this.tradRoth;
   }
 
   /**
@@ -122,7 +92,7 @@ class Contributions {
    * @returns {number} Total 401k contributions
    */
   get trad401kContributions() {
-    return this.partner401k + this.subject401k;
+    return this.trad401k + this.trad401k;
   }
 
   /**
@@ -131,7 +101,7 @@ class Contributions {
    * @returns {number} Total Roth IRA contributions
    */
   get rothContributions() {
-    return this.partnerRoth + this.subjectRoth;
+    return this.tradRoth;
   }
 
   //   /**

@@ -84,17 +84,15 @@ class AccountsManager {
   }
 
   /**
-   * @param {string} name
+   * @param {ACCOUNT_TYPES} name
    */
   getAccountByName(name) {
-    switch (name.toLowerCase()) {
-      case "traditional 401k":
-      case "trad401k":
+    switch (name) {
+      case ACCOUNT_TYPES.TRAD_401K:
         return this.trad401k;
-      case "roth ira":
-      case "rothira":
+      case ACCOUNT_TYPES.TRAD_ROTH:
         return this.rothIra;
-      case "savings":
+      case ACCOUNT_TYPES.SAVINGS:
         return this.savings;
       default:
         return null;

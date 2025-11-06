@@ -1,30 +1,28 @@
 class AccountPortioner {
   #accounts;
-  #taxYear = 0;
   #useSavings = false;
   // #use401k = false;
   // #useRothIRA = false;
   #ask = 0;
 
   /**
-   * @param {AccountsManager} accounts
+   * @param {AccountYear} accountYear
    * @param {FiscalData} fiscalData
    * @param {number} spend
    */
-  constructor(accounts, fiscalData, spend) {
-    this.#accounts = accounts;
+  constructor(accountYear, fiscalData, spend) {
+    this.#accounts = accountYear;
 
     this.#useSavings = fiscalData.useSavings;
     // this.#use401k = fiscalData.useTrad401k;
     // this.#useRothIRA = fiscalData.useRoth;
-    this.#taxYear = fiscalData.taxYear;
 
     this.#ask = spend;
   }
 
   #savingsAvailable() {
     return this.#useSavings
-      ? this.#accounts.savings.endingBalanceForYear(this.#taxYear)
+      ? this.#accounts.getEndingBalance(ACCOUNT_TYPES.SAVINGS)
       : 0;
   }
 
@@ -36,7 +34,7 @@ class AccountPortioner {
 
   #trad401kAvailable() {
     return this.#useSavings
-      ? this.#accounts.trad401k.endingBalanceForYear(this.#taxYear)
+      ? this.#accounts.getEndingBalance(ACCOUNT_TYPES.TRAD_401K)
       : 0;
   }
 
@@ -48,7 +46,7 @@ class AccountPortioner {
 
   #rothIraAvailable() {
     return this.#useSavings
-      ? this.#accounts.rothIra.endingBalanceForYear(this.#taxYear)
+      ? this.#accounts.getEndingBalance(ACCOUNT_TYPES.TRAD_ROTH)
       : 0;
   }
 

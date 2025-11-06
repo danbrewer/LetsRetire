@@ -20,7 +20,7 @@ class DebugData {
    * @param {number} netIncome - Net income after taxes
    * @param {Deposits} deposits - Deposits object containing deposit data
    * @param {Withdrawals} withdrawals - Withdrawals object containing withdrawal data
-   * @param {AccountsManager} [accounts] - Account group data
+   * @param {AccountYear} [accountYear] - Account group data
    * @param {string} [description="Debug Data"] - Descriptive label
    */
   constructor(
@@ -31,7 +31,7 @@ class DebugData {
     netIncome,
     deposits,
     withdrawals,
-    accounts,
+    accountYear,
     description = "Debug Data"
   ) {
     this._demographics = demographics;
@@ -42,17 +42,17 @@ class DebugData {
     this._netIncome = netIncome;
     this._deposits = deposits;
     this._withdrawals = withdrawals;
-    this.accounts = accounts;
+    this.accounts = accountYear;
   }
 
-  /**
-   * Gets the descriptive label for this debug data.
-   *
-   * @returns {string} Description of the debug data
-   */
-  get description() {
-    return this._description;
-  }
+  //   /**
+  //    * Gets the descriptive label for this debug data.
+  //    *
+  //    * @returns {string} Description of the debug data
+  //    */
+  //   get description() {
+  //     return this._description;
+  //   }
 
   get spend() {
     return this._fiscalData.spend;
@@ -304,7 +304,7 @@ class DebugData {
    * @param {IncomeBreakdown} incomeBreakdown - Income streams object with calculation methods
    * @param {Deposits} deposits - Deposits information
    * @param {Withdrawals} withdrawals - Withdrawals information
-   * @param {AccountsManager} accounts - Account group with all account types
+   * @param {AccountYear} accountYear - Account group with all account types
    * @param {Taxes} taxes - Tax calculation results:
    * @param {string} [description="Debug Data"] - Optional description
    *
@@ -332,7 +332,7 @@ class DebugData {
     incomeBreakdown,
     deposits,
     withdrawals,
-    accounts,
+    accountYear,
     taxes,
     description = "Debug Data"
   ) {
@@ -437,7 +437,7 @@ class DebugData {
       incomeBreakdown.netIncome,
       deposits,
       withdrawals,
-      accounts,
+      accountYear,
       description
     );
   }

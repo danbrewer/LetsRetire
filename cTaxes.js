@@ -39,14 +39,14 @@ class Taxes {
     this.taxableIncomeAdjustment = taxableIncomeAdjustment;
   }
 
-  /**
-   * Gets the descriptive label for this tax calculation.
-   *
-   * @returns {string} Description of the tax calculation
-   */
-  get description() {
-    return this._description;
-  }
+  //   /**
+  //    * Gets the descriptive label for this tax calculation.
+  //    *
+  //    * @returns {string} Description of the tax calculation
+  //    */
+  //   get description() {
+  //     return this._description;
+  //   }
 
   /**
    * Sets a new description for this tax calculation.

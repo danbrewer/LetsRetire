@@ -146,11 +146,11 @@ function calc() {
       accountYear
     );
 
-    yearData.accountGroup = accountGroup;
+    yearData.accountYear = accountYear;
 
     calculations.push({
       year: new Date().getFullYear() + y,
-      ...yearData,
+      yearData,
     });
 
     // Track total taxes paid during working years
@@ -182,9 +182,14 @@ function calc() {
       spousePenYearlyIndexed
     );
 
+    const accountYear = AccountYear.FromAccountsManager(
+      accountGroup,
+      TAX_BASE_YEAR + yearIndex
+    );
+
     const yearData = calculateRetirementYearData(
       inputs,
-      accountGroup,
+      accountYear,
       benefitAmounts
     );
 
@@ -192,7 +197,7 @@ function calc() {
     debugger;
     calculations.push({
       year: new Date().getFullYear() + yearIndex,
-      ...yearData,
+      yearData,
     });
 
     // const totalBal = yearData.balances.total();

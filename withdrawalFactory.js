@@ -3,13 +3,13 @@
  * @param {IncomeStreams} incomeStreams
  * @param {FiscalData} fiscalData
  * @param {Demographics} demographics
- * @param {AccountsManager} accounts
+ * @param {AccountYear} accountYear
  */
 function withdrawalFactoryJS_createWithdrawalFactory(
   incomeStreams,
   fiscalData,
   demographics,
-  accounts
+  accountYear
 ) {
   let retirementAccountIncomeRecognized = false;
 
@@ -18,7 +18,7 @@ function withdrawalFactoryJS_createWithdrawalFactory(
   // **************
   // Sanity checks
   // **************
-  if (!accounts) {
+  if (!accountYear) {
     console.error(`accounts is null or undefined.  This is a fatal error`);
     throw new Error("accounts is required");
   }
@@ -29,22 +29,22 @@ function withdrawalFactoryJS_createWithdrawalFactory(
    * @param {string} accountType
    */
   function withdrawFromTargetedAccount(amount, accountType, trialRun = true) {
-    const savingsAccount = new TargetedAccount(
-      accounts.savings,
-      fiscalData.taxYear
-    );
-    const rothAccount = new TargetedAccount(
-      accounts.rothIra,
-      fiscalData.taxYear
-    );
-    const trad401kAccount = new TargetedAccount(
-      accounts.trad401k,
-      fiscalData.taxYear
-    );
+    // const savingsAccount = new TargetedAccount(
+    //   accountYear.savings,
+    //   fiscalData.taxYear
+    // );
+    // const rothAccount = new TargetedAccount(
+    //   accountYear.rothIra,
+    //   fiscalData.taxYear
+    // );
+    // const trad401kAccount = new TargetedAccount(
+    //   accountYear.trad401k,
+    //   fiscalData.taxYear
+    // );
 
     // Withdrawal amount to be determined
     switch (accountType) {
-      case ACCOUNT_TYPES.SUBJECT_TRAD_401K: {
+      case ACCOUNT_TYPES.TRAD_401K: {
         if (retirementAccountIncomeRecognized) return 0; // already processed a 401k withdrawal this year
 
         let gross401kWithdrawal = 0;
@@ -59,7 +59,11 @@ function withdrawalFactoryJS_createWithdrawalFactory(
             );
 
           gross401kWithdrawal = Math.min(
-            Math.max(trad401kAccount.availableFunds - incomeStreams.rmd, 0),
+            Math.max(
+              accountYear.getAvailableFunds([ACCOUNT_TYPES.TRAD_401K]) -
+                incomeStreams.rmd,
+              0
+            ),
             withdrawals.withdrawalNeeded
           );
         }
@@ -73,24 +77,27 @@ function withdrawalFactoryJS_createWithdrawalFactory(
         );
 
         if (!trialRun) {
-          trad401kAccount.withdraw(
-            incomeStreams.rmd,
-            TRANSACTION_CATEGORY.DISBURSEMENT
+          accountYear.withdrawal(
+            ACCOUNT_TYPES.TRAD_401K,
+            TRANSACTION_CATEGORY.DISBURSEMENT,
+            gross401kWithdrawal
           );
-          trad401kAccount.withdraw(
-            gross401kWithdrawal,
-            TRANSACTION_CATEGORY.DISBURSEMENT
+          accountYear.withdrawal(
+            ACCOUNT_TYPES.TRAD_401K,
+            TRANSACTION_CATEGORY.DISBURSEMENT,
+            incomeStreams.rmd
           );
-          savingsAccount.deposit(
+          accountYear.deposit(
+            ACCOUNT_TYPES.SAVINGS,
+            TRANSACTION_CATEGORY.INCOME,
             incomeResults.incomeBreakdown
-              .reportableIncomeLessReportedEarnedInterest,
-            TRANSACTION_CATEGORY.INCOME
+              .reportableIncomeLessReportedEarnedInterest
           );
-          savingsAccount.withdraw(
-            incomeResults.incomeBreakdown.federalIncomeTax,
-            TRANSACTION_CATEGORY.TAXES
+          accountYear.withdrawal(
+            ACCOUNT_TYPES.SAVINGS,
+            TRANSACTION_CATEGORY.TAXES,
+            incomeResults.incomeBreakdown.federalIncomeTax
           );
-          retirementAccountIncomeRecognized = true;
         }
 
         return Math.max(
@@ -100,11 +107,13 @@ function withdrawalFactoryJS_createWithdrawalFactory(
 
         // return netWithdrawals;
       }
-      case ACCOUNT_TYPES.SUBJECT_SAVINGS: {
+      case ACCOUNT_TYPES.SAVINGS: {
         if (!fiscalData.useSavings) return 0; // already processed a savings withdrawal this year
 
         const fundsNeeded = amount;
-        const fundsAvailable = savingsAccount.availableFunds;
+        const fundsAvailable = accountYear.getAvailableFunds([
+          ACCOUNT_TYPES.SAVINGS,
+        ]);
 
         if (fundsAvailable == 0) return 0;
 
@@ -113,18 +122,21 @@ function withdrawalFactoryJS_createWithdrawalFactory(
 
         if (!trialRun) {
           // Reduce the account balance by the net received amount
-          savingsAccount.withdraw(
-            withdrawalAmount,
-            TRANSACTION_CATEGORY.DISBURSEMENT
+          accountYear.withdrawal(
+            ACCOUNT_TYPES.SAVINGS,
+            TRANSACTION_CATEGORY.DISBURSEMENT,
+            withdrawalAmount
           );
         }
 
         return withdrawalAmount;
       }
-      case ACCOUNT_TYPES.SUBJECT_TRAD_ROTH: {
+      case ACCOUNT_TYPES.TRAD_ROTH: {
         // Roth withdrawal (no tax impact)
         const fundsNeeded = amount;
-        const fundsAvailable = rothAccount.availableFunds;
+        const fundsAvailable = accountYear.getAvailableFunds([
+          ACCOUNT_TYPES.TRAD_ROTH,
+        ]);
 
         if (fundsAvailable == 0) return 0;
 
@@ -133,9 +145,10 @@ function withdrawalFactoryJS_createWithdrawalFactory(
 
         if (!trialRun) {
           // Reduce the account balance by the net received amount
-          rothAccount.withdraw(
-            withdrawalAmount,
-            TRANSACTION_CATEGORY.DISBURSEMENT
+          accountYear.withdrawal(
+            ACCOUNT_TYPES.TRAD_ROTH,
+            TRANSACTION_CATEGORY.DISBURSEMENT,
+            withdrawalAmount
           );
         }
 

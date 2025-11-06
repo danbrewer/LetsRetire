@@ -38,7 +38,7 @@ class IncomeStreams {
   /**
    * @param {Demographics} demographics - Instance of Demographics class
    * @param {BenefitAmounts} benefitAmounts - Benefit amounts object containing pension and SS amounts
-   * @param {AccountsManager} accounts - Accounts object containing savings and 401k accounts
+   * @param {AccountYear} accountYear - Accounts object containing savings and 401k accounts
    * @param {FiscalData} fiscalData - Instance of FiscalData class
    * @param {Inputs} inputs - Input data object containing tax adjustments
    * @returns {IncomeStreams} New IncomeStreams instance
@@ -46,19 +46,17 @@ class IncomeStreams {
   static CreateUsing(
     demographics,
     benefitAmounts,
-    accounts,
+    accountYear,
     fiscalData,
     inputs
   ) {
     const myPension = demographics.isSubjectEligibleForPension
       ? benefitAmounts.penAnnual
       : 0;
-    const reportedEarnedInterest = accounts.savings
-      .calculateInterestForYear(
-        INTEREST_CALCULATION_EPOCH.STARTING_BALANCE,
-        fiscalData.taxYear
-      )
-      .asCurrency();
+    const reportedEarnedInterest = accountYear.calculateInterestForYear(
+      ACCOUNT_TYPES.SAVINGS,
+      INTEREST_CALCULATION_EPOCH.STARTING_BALANCE
+    );
     const spousePension = 0;
     const mySs = demographics.isSubjectEligibleForSs
       ? benefitAmounts.ssAnnual
@@ -69,7 +67,7 @@ class IncomeStreams {
     const rmd = common_calculateRMD(
       fiscalData.useRmd,
       demographics.age,
-      accounts.trad401k.startingBalanceForYear(fiscalData.taxYear)
+      accountYear.getStartingBalance(ACCOUNT_TYPES.TRAD_401K)
     );
 
     return new IncomeStreams(

@@ -1,10 +1,7 @@
 class ACCOUNT_TYPES {}
-ACCOUNT_TYPES.SUBJECT_SAVINGS = "savings";
-ACCOUNT_TYPES.SUBJECT_TRAD_401K = "trad401k";
-ACCOUNT_TYPES.SUBJECT_TRAD_ROTH = "rothIra";
-ACCOUNT_TYPES.PARTNER_SAVINGS = "partner_savings";
-ACCOUNT_TYPES.PARTNER_TRAD_401K = "partner_trad401k";
-ACCOUNT_TYPES.PARTNER_TRAD_ROTH = "partner_rothIra";
+ACCOUNT_TYPES.SAVINGS = "savings";
+ACCOUNT_TYPES.TRAD_401K = "trad401k";
+ACCOUNT_TYPES.TRAD_ROTH = "rothIra";
 
 // Create a class for the account
 class Account {
@@ -76,7 +73,7 @@ class Account {
   }
 
   get initialBalance() {
-    return this.#initialBalance;
+    return this.#initialBalance.asCurrency();
   }
 
   get interestRate() {
@@ -103,7 +100,7 @@ class Account {
       )
     );
 
-    return amount;
+    return amount.asCurrency();
   }
 
   /**
@@ -132,7 +129,7 @@ class Account {
       )
     );
 
-    return withdrawalAmount;
+    return withdrawalAmount.asCurrency();
   }
 
   // Method to calculate interest earned over a year
@@ -174,11 +171,13 @@ class Account {
         ).asCurrency();
         break;
     }
-    return interestEarned;
+    return interestEarned.asCurrency();
   }
 
   /**
    * @param {number} yyyy
+   * @param {string | undefined} [category = ""]
+   * @param {string | undefined} [party = ""]
    */
   depositsForYear(yyyy, category = "", party = "") {
     const transactions = this.#transactions.filter(
@@ -189,11 +188,12 @@ class Account {
         (party === "" ? true : tx.party === party)
     );
     const total = transactions.reduce((sum, tx) => sum + tx.amount, 0);
-    return total;
+    return total.asCurrency();
   }
 
   /**
    * @param {number} yyyy
+   * @param {string | undefined} [category = ""]
    */
   withdrawalsForYear(yyyy, category = "") {
     const transactions = this.#transactions.filter(
@@ -203,7 +203,7 @@ class Account {
         (category === "" ? true : tx.category === category)
     );
     const total = transactions.reduce((sum, tx) => sum + tx.amount, 0);
-    return total;
+    return total.asCurrency();
   }
 
   /**
@@ -221,14 +221,14 @@ class Account {
    * @param {number} yyyy
    */
   startingBalanceForYear(yyyy) {
-    return this.#startingBalanceForYear(yyyy);
+    return this.#startingBalanceForYear(yyyy).asCurrency();
   }
 
   /**
    * @param {number} yyyy
    */
   endingBalanceForYear(yyyy) {
-    return this.#endingBalanceForYear(yyyy);
+    return this.#endingBalanceForYear(yyyy).asCurrency();
   }
 
   /**

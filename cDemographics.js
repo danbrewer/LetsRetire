@@ -50,10 +50,10 @@ class Demographics {
     return this.hasSpouse && this.ageOfSpouse >= this.penStartAgeOfSpouse;
   }
 
-  // Getter for description to maintain compatibility
-  get description() {
-    return this._description;
-  }
+  //   // Getter for description to maintain compatibility
+  //   get description() {
+  //     return this._description;
+  //   }
 
   //   // Method to update age for multi-year calculations
   //   /**

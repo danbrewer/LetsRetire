@@ -46,14 +46,14 @@ class Withdrawals {
     );
   }
 
-  /**
-   * Gets the descriptive label for this withdrawal breakdown.
-   *
-   * @returns {string} Description of the withdrawals
-   */
-  get description() {
-    return this._description;
-  }
+  //   /**
+  //    * Gets the descriptive label for this withdrawal breakdown.
+  //    *
+  //    * @returns {string} Description of the withdrawals
+  //    */
+  //   get description() {
+  //     return this._description;
+  //   }
 
   get savings() {
     return this._savings.withdrawalsForYear(this._taxYear);

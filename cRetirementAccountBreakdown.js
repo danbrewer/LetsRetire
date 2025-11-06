@@ -39,14 +39,14 @@ class RetirementAccountBreakdown {
     this.endingBalance = endingBalance;
   }
 
-  /**
-   * Gets the descriptive label for this account breakdown.
-   *
-   * @returns {string} Description of the account breakdown
-   */
-  get description() {
-    return this._description;
-  }
+  //   /**
+  //    * Gets the descriptive label for this account breakdown.
+  //    *
+  //    * @returns {string} Description of the account breakdown
+  //    */
+  //   get description() {
+  //     return this._description;
+  //   }
 
   /**
    * Sets a new description for this account breakdown.
@@ -97,106 +97,106 @@ class RetirementAccountBreakdown {
     return this.deposits - this.withdrawals;
   }
 
-  /**
-   * Validates the account balance calculation for consistency.
-   * Formula: Starting Balance + Deposits + Interest - Withdrawals = Ending Balance
-   *
-   * @returns {boolean} True if calculation is consistent within rounding tolerance
-   */
-  get isBalanceCalculationValid() {
-    const calculatedEnding =
-      this.startingBalance +
-      this.deposits +
-      this.interestEarned -
-      this.withdrawals;
-    const tolerance = 0.01; // Allow for rounding differences
-    return Math.abs(calculatedEnding - this.endingBalance) <= tolerance;
-  }
+  //   /**
+  //    * Validates the account balance calculation for consistency.
+  //    * Formula: Starting Balance + Deposits + Interest - Withdrawals = Ending Balance
+  //    *
+  //    * @returns {boolean} True if calculation is consistent within rounding tolerance
+  //    */
+  //   get isBalanceCalculationValid() {
+  //     const calculatedEnding =
+  //       this.startingBalance +
+  //       this.deposits +
+  //       this.interestEarned -
+  //       this.withdrawals;
+  //     const tolerance = 0.01; // Allow for rounding differences
+  //     return Math.abs(calculatedEnding - this.endingBalance) <= tolerance;
+  //   }
 
-  /**
-   * Gets the expected ending balance based on the growth rate.
-   * This is what the balance would be with just growth, no deposits/withdrawals.
-   *
-   * @returns {number} Expected balance with growth only
-   */
-  getExpectedBalanceWithGrowthOnly() {
-    return this.startingBalance * (1 + this.getGrowthRateAsDecimal());
-  }
+  //   /**
+  //    * Gets the expected ending balance based on the growth rate.
+  //    * This is what the balance would be with just growth, no deposits/withdrawals.
+  //    *
+  //    * @returns {number} Expected balance with growth only
+  //    */
+  //   getExpectedBalanceWithGrowthOnly() {
+  //     return this.startingBalance * (1 + this.getGrowthRateAsDecimal());
+  //   }
 
-  /**
-   * Calculates the impact of deposits and withdrawals on the account.
-   *
-   * @returns {number} Difference between actual and expected (growth-only) ending balance
-   */
-  getCashFlowImpact() {
-    return this.endingBalance - this.getExpectedBalanceWithGrowthOnly();
-  }
+  //   /**
+  //    * Calculates the impact of deposits and withdrawals on the account.
+  //    *
+  //    * @returns {number} Difference between actual and expected (growth-only) ending balance
+  //    */
+  //   getCashFlowImpact() {
+  //     return this.endingBalance - this.getExpectedBalanceWithGrowthOnly();
+  //   }
 
-  /**
-   * Creates a comprehensive summary of account activity and performance.
-   *
-   * @returns {Object} Summary containing:
-   *   - startingBalance: Beginning balance
-   *   - endingBalance: Ending balance
-   *   - netChange: Total change in balance
-   *   - deposits: Total deposits/contributions
-   *   - withdrawals: Total withdrawals
-   *   - netContributions: Net contribution amount
-   *   - interestEarned: Investment gains
-   *   - growthRate: Formatted growth rate
-   *   - actualReturnRate: Calculated actual return rate
-   *   - isValid: Whether balance calculation is consistent
-   *   - expectedBalanceWithGrowthOnly: Balance with growth only
-   *   - cashFlowImpact: Impact of cash flows on balance
-   */
-  getSummary() {
-    return {
-      startingBalance: this.startingBalance,
-      endingBalance: this.endingBalance,
-      netChange: this.getNetChange(),
-      deposits: this.deposits,
-      withdrawals: this.withdrawals,
-      netContributions: this.netContributions,
-      interestEarned: this.interestEarned,
-      growthRate: this.growthRate,
-      actualReturnRate: (this.actualReturnRate * 100).toFixed(2) + "%",
-      isValid: this.isBalanceCalculationValid,
-      expectedBalanceWithGrowthOnly: this.getExpectedBalanceWithGrowthOnly(),
-      cashFlowImpact: this.getCashFlowImpact(),
-    };
-  }
+  //   /**
+  //    * Creates a comprehensive summary of account activity and performance.
+  //    *
+  //    * @returns {Object} Summary containing:
+  //    *   - startingBalance: Beginning balance
+  //    *   - endingBalance: Ending balance
+  //    *   - netChange: Total change in balance
+  //    *   - deposits: Total deposits/contributions
+  //    *   - withdrawals: Total withdrawals
+  //    *   - netContributions: Net contribution amount
+  //    *   - interestEarned: Investment gains
+  //    *   - growthRate: Formatted growth rate
+  //    *   - actualReturnRate: Calculated actual return rate
+  //    *   - isValid: Whether balance calculation is consistent
+  //    *   - expectedBalanceWithGrowthOnly: Balance with growth only
+  //    *   - cashFlowImpact: Impact of cash flows on balance
+  //    */
+  //   getSummary() {
+  //     return {
+  //       startingBalance: this.startingBalance,
+  //       endingBalance: this.endingBalance,
+  //       netChange: this.getNetChange(),
+  //       deposits: this.deposits,
+  //       withdrawals: this.withdrawals,
+  //       netContributions: this.netContributions,
+  //       interestEarned: this.interestEarned,
+  //       growthRate: this.growthRate,
+  //       actualReturnRate: (this.actualReturnRate * 100).toFixed(2) + "%",
+  //       isValid: this.isBalanceCalculationValid,
+  //       expectedBalanceWithGrowthOnly: this.getExpectedBalanceWithGrowthOnly(),
+  //       cashFlowImpact: this.getCashFlowImpact(),
+  //     };
+  //   }
 
-  /**
-   * Updates account breakdown values for corrections or adjustments.
-   *
-   * @param {Object} updates - Object containing breakdown updates:
-   * @param {number} [updates.startingBalance] - New starting balance
-   * @param {number} [updates.withdrawals] - New withdrawal amount
-   * @param {number} [updates.interestEarned] - New interest earned
-   * @param {number} [updates.deposits] - New deposit amount
-   * @param {number} [updates.endingBalance] - New ending balance
-   * @param {string} [updates.growthRate] - New growth rate (as formatted string)
-   */
-  updateBreakdown(updates) {
-    if (updates.startingBalance !== undefined) {
-      this.startingBalance = updates.startingBalance;
-    }
-    if (updates.withdrawals !== undefined) {
-      this.withdrawals = updates.withdrawals;
-    }
-    if (updates.interestEarned !== undefined) {
-      this.interestEarned = updates.interestEarned;
-    }
-    if (updates.deposits !== undefined) {
-      this.deposits = updates.deposits;
-    }
-    if (updates.endingBalance !== undefined) {
-      this.endingBalance = updates.endingBalance;
-    }
-    if (updates.growthRate !== undefined) {
-      this.growthRate = updates.growthRate;
-    }
-  }
+  //   /**
+  //    * Updates account breakdown values for corrections or adjustments.
+  //    *
+  //    * @param {Object} updates - Object containing breakdown updates:
+  //    * @param {number} [updates.startingBalance] - New starting balance
+  //    * @param {number} [updates.withdrawals] - New withdrawal amount
+  //    * @param {number} [updates.interestEarned] - New interest earned
+  //    * @param {number} [updates.deposits] - New deposit amount
+  //    * @param {number} [updates.endingBalance] - New ending balance
+  //    * @param {string} [updates.growthRate] - New growth rate (as formatted string)
+  //    */
+  //   updateBreakdown(updates) {
+  //     if (updates.startingBalance !== undefined) {
+  //       this.startingBalance = updates.startingBalance;
+  //     }
+  //     if (updates.withdrawals !== undefined) {
+  //       this.withdrawals = updates.withdrawals;
+  //     }
+  //     if (updates.interestEarned !== undefined) {
+  //       this.interestEarned = updates.interestEarned;
+  //     }
+  //     if (updates.deposits !== undefined) {
+  //       this.deposits = updates.deposits;
+  //     }
+  //     if (updates.endingBalance !== undefined) {
+  //       this.endingBalance = updates.endingBalance;
+  //     }
+  //     if (updates.growthRate !== undefined) {
+  //       this.growthRate = updates.growthRate;
+  //     }
+  //   }
 
   /**
    * Factory method to create a RetirementAccountBreakdown from account and input data.

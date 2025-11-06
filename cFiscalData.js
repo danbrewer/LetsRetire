@@ -38,10 +38,10 @@ class FiscalData {
     this.useRoth = useRoth;
   }
 
-  // Getter for description to maintain compatibility
-  get description() {
-    return this._description;
-  }
+  //   // Getter for description to maintain compatibility
+  //   get description() {
+  //     return this._description;
+  //   }
 
   // Method to update for next year
   /**

@@ -34,7 +34,7 @@ class WorkingYearData {
    * @param {Object} [savingsBreakdown={}] - Detailed savings account breakdown
    * @param {Object} [ssBreakdown={}] - Social Security calculation breakdown
    * @param {Object} [spouseSsBreakdown={}] - Spouse Social Security breakdown (if applicable)
-   * @param {AccountsManager} [accountGroup=new AccountGroup()] - Group of all retirement accounts
+   * @param {AccountYear} [accountYear=new AccountYear()] - View of accounts for fiscal year
    */
   constructor(
     description = "",
@@ -56,7 +56,7 @@ class WorkingYearData {
     savingsBreakdown = {},
     ssBreakdown = {},
     spouseSsBreakdown = {},
-    accountGroup
+    accountYear
   ) {
     this._description = description;
     this.demographics = demographics;
@@ -78,17 +78,17 @@ class WorkingYearData {
     this.ssBreakdown = ssBreakdown;
     this.spouseSsBreakdown = spouseSsBreakdown;
     this.employmentInfo = EmploymentInfo.Empty();
-    this.accountGroup = accountGroup;
+    this.accountYear = accountYear;
   }
 
-  /**
-   * Gets the descriptive label for this working year data.
-   *
-   * @returns {string} Description of the working year data
-   */
-  get description() {
-    return this._description;
-  }
+  //   /**
+  //    * Gets the descriptive label for this working year data.
+  //    *
+  //    * @returns {string} Description of the working year data
+  //    */
+  //   get description() {
+  //     return this._description;
+  //   }
 
   /**
    * Sets a new description for this working year data.

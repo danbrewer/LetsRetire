@@ -10,37 +10,45 @@
  * @since 1.0.0
  */
 class Balances {
+  #accountYear;
+
   /**
    * Creates a new Balances instance with account balance data.
    *
-   * @param {number} [savings=0] - Savings account ending balance
-   * @param {number} [trad401k=0] - Traditional 401k account ending balance
-   * @param {number} [rothIra=0] - Roth IRA account ending balance
+   * @param {AccountYear} accountYear -Accounting year
    * @param {any} [calculationDetails=null] - Reference to underlying account objects for debugging
    * @param {string} [description="Account Balances"] - Descriptive label for this balance snapshot
    */
   constructor(
-    savings = 0,
-    trad401k = 0,
-    rothIra = 0,
+    accountYear,
     calculationDetails = null,
     description = "Account Balances"
   ) {
     this._description = description;
-    this.savings = savings;
-    this.trad401k = trad401k;
-    this.rothIra = rothIra;
+    this.#accountYear = accountYear;
     this.calculationDetails = calculationDetails;
   }
 
-  /**
-   * Gets the descriptive label for this balance snapshot.
-   *
-   * @returns {string} Description of the account balances
-   */
-  get description() {
-    return this._description;
+  get savings() {
+    return this.#accountYear.getEndingBalance(ACCOUNT_TYPES.SAVINGS);
   }
+
+  get trad401k() {
+    return this.#accountYear.getEndingBalance(ACCOUNT_TYPES.TRAD_401K);
+  }
+
+  get rothIra() {
+    return this.#accountYear.getEndingBalance(ACCOUNT_TYPES.TRAD_ROTH);
+  }
+
+  //   /**
+  //    * Gets the descriptive label for this balance snapshot.
+  //    *
+  //    * @returns {string} Description of the account balances
+  //    */
+  //   get description() {
+  //     return this._description;
+  //   }
 
   /**
    * Sets a new description for this balance snapshot.
@@ -173,8 +181,7 @@ class Balances {
    * extracting ending balances from an AccountGroup for a specific tax year.
    * It handles the account balance calculations and currency formatting automatically.
    *
-   * @param {AccountsManager} accounts - AccountGroup instance containing all accounts
-   * @param {FiscalData} fiscalData - Fiscal data containing the target tax year
+   * @param {AccountYear} accountYear - AccountYear instance containing account data
    * @param {string} [description="Account Balances"] - Optional description
    *
    * @returns {Balances} A new Balances instance with current account balances
@@ -191,64 +198,16 @@ class Balances {
    * @static
    * @since 1.0.0
    */
-  static CreateUsing(accounts, fiscalData, description = "Account Balances") {
-    const savings = accounts.savings
-      .endingBalanceForYear(fiscalData.taxYear)
-      .asCurrency();
-
-    const trad401k = accounts.trad401k
-      .endingBalanceForYear(fiscalData.taxYear)
-      .asCurrency();
-
-    const rothIra = accounts.rothIra
-      .endingBalanceForYear(fiscalData.taxYear)
-      .asCurrency();
-
+  static CreateUsing(accountYear, description = "Account Balances") {
     const calculationDetails =
       typeof withLabel === "function"
-        ? withLabel("accountBalances", accounts)
-        : accounts;
+        ? withLabel("accountBalances", accountYear)
+        : accountYear;
 
-    return new Balances(
-      savings,
-      trad401k,
-      rothIra,
-      calculationDetails,
-      description
-    );
-  }
-
-  /**
-   * Factory method to create a Balances instance from individual balance amounts.
-   *
-   * @param {number} savings - Savings account balance
-   * @param {number} trad401k - Traditional 401k balance
-   * @param {number} rothIra - Roth IRA balance
-   * @param {string} [description="Account Balances"] - Optional description
-   *
-   * @returns {Balances} A new Balances instance with specified balances
-   *
-   * @example
-   * // Create balances from known amounts
-   * const balances = Balances.CreateFrom(50000, 300000, 150000);
-   * console.log(balances.total()); // 500000
-   *
-   * @static
-   * @since 1.0.0
-   */
-  static CreateFrom(
-    savings,
-    trad401k,
-    rothIra,
-    description = "Account Balances"
-  ) {
-    return new Balances(savings, trad401k, rothIra, null, description);
+    return new Balances(accountYear, calculationDetails, description);
   }
 
   static Empty() {
-    return new Balances(0, 0, 0, null, "Empty Balances");
+    return new Balances(AccountYear.Empty());
   }
 }
-
-// Maintain backward compatibility - this will need account and fiscal data context
-// const balances = Balances.CreateUsing(accounts, fiscalData);
