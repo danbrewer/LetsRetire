@@ -185,8 +185,28 @@ class AccountYear {
     return this.#accountsManager.getBalanceBreakdown(this.#taxYear);
   }
 
-  getAccountSummary() {
-    return this.#accountsManager.getAccountSummary(this.#taxYear);
+  getAccountsSummary() {
+    /** @type {Record<string, any>} */
+    const summaries = {};
+    for (const accountType of Object.values(ACCOUNT_TYPES)) {
+      summaries[accountType] = this.getAccountSummary(accountType);
+    }
+    return summaries;
+  }
+
+  /**
+   * @param {string} accountType
+   */
+  getAccountSummary(accountType) {
+    const account = this.#getAccountByName(accountType);
+    return {
+      name: account.name,
+      startingBalance: account.startingBalanceForYear(this.#taxYear),
+      endingBalance: account.endingBalanceForYear(this.#taxYear),
+      deposits: account.depositsForYear(this.#taxYear),
+      withdrawals: account.withdrawalsForYear(this.#taxYear),
+      interestRate: account.interestRate,
+    };
   }
 
   //   // Method to apply interest rate changes to all accounts

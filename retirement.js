@@ -287,8 +287,7 @@ function retirementJS_calculateIncomeWhen401kWithdrawalIs(
     incomeStreams,
     variableIncomeFactor,
     ssBreakdown,
-    standardDeduction,
-    taxBrackets
+    standardDeduction
   );
 
   incomeBreakdown.federalIncomeTax = retirementJS_determineFederalIncomeTax(

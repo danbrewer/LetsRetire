@@ -2,6 +2,7 @@ class ACCOUNT_TYPES {}
 ACCOUNT_TYPES.SAVINGS = "savings";
 ACCOUNT_TYPES.TRAD_401K = "trad401k";
 ACCOUNT_TYPES.TRAD_ROTH = "rothIra";
+ACCOUNT_TYPES.REVENUE = "revenue";
 
 // Create a class for the account
 class Account {
@@ -63,6 +64,14 @@ class Account {
    * @param {number} interestRate - Annual interest rate as a decimal (e.g., 0.05 for 5%)
    */
   constructor(name, initialBalance, interestRate) {
+    // Validate that name matches one of the ACCOUNT_TYPES values
+    const validAccountTypes = Object.values(ACCOUNT_TYPES);
+    if (!validAccountTypes.includes(name)) {
+      throw new Error(
+        `Invalid account type: ${name}. Must be one of: ${validAccountTypes.join(", ")}`
+      );
+    }
+
     this.#name = name;
     this.#initialBalance = initialBalance;
     this.#interestRate = interestRate; // Annual interest rate as a decimal (e.g., 0.05 for 5%)

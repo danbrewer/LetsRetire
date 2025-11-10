@@ -13,6 +13,14 @@ const TRANSACTION_CATEGORY = Object.freeze({
   CONTRIBUTION: "contribution",
   INCOME: "income",
   TAXES: "taxes",
+  SPEND: "spend",
+  INCOME_FROM_ALL_SAVINGS: "income_from_savings",
+  INCOME_FROM_ALL_401K: "income_from_401k",
+  INCOME_FROM_ALL_RMD: "income_from_rmd",
+  INCOME_FROM_ALL_ROTH: "income_from_roth",
+  INCOME_FROM_ALL_OTHER: "income_from_other",
+  INCOME_FROM_ALL_SS: "income_from_ss",
+  INCOME_FROM_ALL_PENSION: "income_from_pensions",
 });
 
 /**

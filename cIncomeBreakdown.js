@@ -9,7 +9,7 @@ class IncomeBreakdown {
    * @param {number} socialSecurityIncome
    * @param {number} reportedEarnedInterest
    * @param {number} standardDeduction
-   * @param {any} taxBrackets
+   *
    */
   constructor(
     myPension,
@@ -20,9 +20,7 @@ class IncomeBreakdown {
     taxableSsIncome,
     socialSecurityIncome,
     reportedEarnedInterest,
-    standardDeduction,
-    taxBrackets,
-    federalIncomeTax = 0
+    standardDeduction
   ) {
     this.myPension = myPension;
     this.spousePension = spousePension;
@@ -33,9 +31,9 @@ class IncomeBreakdown {
     this.socialSecurityIncome = socialSecurityIncome;
     this.reportedEarnedInterest = reportedEarnedInterest;
     this.standardDeduction = standardDeduction;
-    this.federalIncomeTax = federalIncomeTax;
-    this.taxBrackets = taxBrackets;
-    this.actualEarnedInterest = 0;
+    // this.federalIncomeTax = federalIncomeTax;
+    // this.#taxBrackets = taxBrackets;
+    // this.actualEarnedInterest = 0;
 
     this.federalIncomeTax = 0;
   }
@@ -46,14 +44,14 @@ class IncomeBreakdown {
    * @param {number} variableIncomeFactor
    * @param {SsBenefitsCalculator} ssBreakdown
    * @param {number} standardDeduction
-   * @param {{ rate: number; upTo: number; }[]} taxBrackets
-   */
+   **/
+  //   @param {{ rate: number; upTo: number; }[]} taxBrackets
+
   static CreateFrom(
     incomeStreams,
     variableIncomeFactor,
     ssBreakdown,
-    standardDeduction,
-    taxBrackets
+    standardDeduction
   ) {
     return new IncomeBreakdown(
       incomeStreams.myPension,
@@ -64,9 +62,7 @@ class IncomeBreakdown {
       ssBreakdown.taxablePortion,
       incomeStreams.ssIncome, // Total SS income (both taxable and non-taxable)
       incomeStreams.reportedEarnedInterest,
-      standardDeduction,
-      taxBrackets,
-      0 // federalIncomeTax starts at 0
+      standardDeduction
     );
   }
 
@@ -181,7 +177,7 @@ class IncomeBreakdown {
   }
 
   static Empty() {
-    return new IncomeBreakdown(0, 0, 0, 0, 0, 0, 0, 0, 0, []);
+    return new IncomeBreakdown(0, 0, 0, 0, 0, 0, 0, 0, 0);
   }
 }
 

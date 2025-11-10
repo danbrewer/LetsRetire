@@ -3,8 +3,9 @@ class AccountsManager {
    * @param {Account} trad401k - Traditional 401k account instance
    * @param {Account} rothIra - Roth IRA account instance
    * @param {Account} savings - Savings account instance
+   * @param {Account} income - Income account instance
    */
-  constructor(trad401k, rothIra, savings) {
+  constructor(trad401k, rothIra, savings, income) {
     /** @type {Account} */
     this.trad401k = trad401k;
 
@@ -13,6 +14,9 @@ class AccountsManager {
 
     /** @type {Account} */
     this.savings = savings;
+
+    /** @type {Account} */
+    this.income = income;
   }
 
   /**
@@ -22,19 +26,32 @@ class AccountsManager {
    */
   static fromInputs(inputs) {
     const trad401k = new Account(
-      "Traditional 401k",
-      inputs.trad401k,
-      inputs.ret401k
+      ACCOUNT_TYPES.TRAD_401K,
+      inputs.trad401kStartingBalance,
+      inputs.trad401kInterestRate
     );
-    const rothIra = new Account("Roth IRA", inputs.rothIRA, inputs.retRoth);
-    const savings = new Account("Savings", inputs.savings, inputs.retSavings);
+    const rothIra = new Account(
+      ACCOUNT_TYPES.TRAD_ROTH,
+      inputs.tradRothStartingBalance,
+      inputs.tradRothInterestRate
+    );
+    const savings = new Account(
+      ACCOUNT_TYPES.SAVINGS,
+      inputs.savingsStartingBalance,
+      inputs.savingsInterestRate
+    );
 
-    return new AccountsManager(trad401k, rothIra, savings);
+    return new AccountsManager(
+      trad401k,
+      rothIra,
+      savings,
+      Account.Empty(ACCOUNT_TYPES.REVENUE)
+    );
   }
 
   // Utility methods for account group analysis
   getAllAccounts() {
-    return [this.trad401k, this.rothIra, this.savings];
+    return [this.trad401k, this.rothIra, this.savings, this.income];
   }
 
   /**
@@ -94,8 +111,10 @@ class AccountsManager {
         return this.rothIra;
       case ACCOUNT_TYPES.SAVINGS:
         return this.savings;
+      case ACCOUNT_TYPES.REVENUE:
+        return this.income;
       default:
-        return null;
+        throw new Error(`Account not found: ${name}`);
     }
   }
 
@@ -126,10 +145,10 @@ class AccountsManager {
       trad401k: {
         name: this.trad401k.name,
         startingBalance: this.trad401k.startingBalanceForYear(year),
-        endingBalance: this.trad401k.endingBalanceForYear(year),
         withdrawals: this.trad401k.withdrawalsForYear(year),
-        deposits: this.trad401k.depositsForYear(year),
         interestRate: this.trad401k.interestRate,
+        deposits: this.trad401k.depositsForYear(year),
+        endingBalance: this.trad401k.endingBalanceForYear(year),
       },
       rothIra: {
         name: this.rothIra.name,
@@ -192,9 +211,10 @@ class AccountsManager {
 
   static Empty() {
     return new AccountsManager(
-      Account.Empty("Traditional 401k"),
-      Account.Empty("Roth IRA"),
-      Account.Empty("Savings")
+      Account.Empty(ACCOUNT_TYPES.TRAD_401K),
+      Account.Empty(ACCOUNT_TYPES.TRAD_ROTH),
+      Account.Empty(ACCOUNT_TYPES.SAVINGS),
+      Account.Empty(ACCOUNT_TYPES.REVENUE)
     );
   }
 }

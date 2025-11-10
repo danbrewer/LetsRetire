@@ -105,10 +105,7 @@ class IncomeRs {
    * @returns {number} Total taxable income, or 0 if breakdown unavailable
    */
   get totalTaxableIncome() {
-    if (
-      !this.hasIncomeBreakdown ||
-      typeof this.incomeBreakdown.taxableIncome !== "function"
-    ) {
+    if (!this.hasIncomeBreakdown) {
       return 0;
     }
     return this.incomeBreakdown.taxableIncome;

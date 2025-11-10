@@ -11,8 +11,6 @@ function withdrawalFactoryJS_createWithdrawalFactory(
   demographics,
   accountYear
 ) {
-  let retirementAccountIncomeRecognized = false;
-
   /** @type {IncomeRs} */
   let incomeResults = IncomeRs.Empty();
   // **************
@@ -29,24 +27,9 @@ function withdrawalFactoryJS_createWithdrawalFactory(
    * @param {string} accountType
    */
   function withdrawFromTargetedAccount(amount, accountType, trialRun = true) {
-    // const savingsAccount = new TargetedAccount(
-    //   accountYear.savings,
-    //   fiscalData.taxYear
-    // );
-    // const rothAccount = new TargetedAccount(
-    //   accountYear.rothIra,
-    //   fiscalData.taxYear
-    // );
-    // const trad401kAccount = new TargetedAccount(
-    //   accountYear.trad401k,
-    //   fiscalData.taxYear
-    // );
-
     // Withdrawal amount to be determined
     switch (accountType) {
       case ACCOUNT_TYPES.TRAD_401K: {
-        if (retirementAccountIncomeRecognized) return 0; // already processed a 401k withdrawal this year
-
         let gross401kWithdrawal = 0;
 
         if (fiscalData.useTrad401k) {
@@ -82,6 +65,12 @@ function withdrawalFactoryJS_createWithdrawalFactory(
             TRANSACTION_CATEGORY.DISBURSEMENT,
             gross401kWithdrawal
           );
+
+          accountYear.deposit(
+            ACCOUNT_TYPES.REVENUE,
+            TRANSACTION_CATEGORY.INCOME_FROM_ALL_401K,
+            gross401kWithdrawal
+          );
           accountYear.withdrawal(
             ACCOUNT_TYPES.TRAD_401K,
             TRANSACTION_CATEGORY.DISBURSEMENT,
@@ -104,8 +93,6 @@ function withdrawalFactoryJS_createWithdrawalFactory(
           gross401kWithdrawal - incomeResults.incomeBreakdown.federalIncomeTax,
           0
         );
-
-        // return netWithdrawals;
       }
       case ACCOUNT_TYPES.SAVINGS: {
         if (!fiscalData.useSavings) return 0; // already processed a savings withdrawal this year
@@ -125,6 +112,11 @@ function withdrawalFactoryJS_createWithdrawalFactory(
           accountYear.withdrawal(
             ACCOUNT_TYPES.SAVINGS,
             TRANSACTION_CATEGORY.DISBURSEMENT,
+            withdrawalAmount
+          );
+          accountYear.deposit(
+            ACCOUNT_TYPES.REVENUE,
+            TRANSACTION_CATEGORY.INCOME_FROM_ALL_SAVINGS,
             withdrawalAmount
           );
         }
@@ -148,6 +140,11 @@ function withdrawalFactoryJS_createWithdrawalFactory(
           accountYear.withdrawal(
             ACCOUNT_TYPES.TRAD_ROTH,
             TRANSACTION_CATEGORY.DISBURSEMENT,
+            withdrawalAmount
+          );
+          accountYear.deposit(
+            ACCOUNT_TYPES.REVENUE,
+            TRANSACTION_CATEGORY.INCOME_FROM_ALL_ROTH,
             withdrawalAmount
           );
         }

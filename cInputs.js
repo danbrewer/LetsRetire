@@ -163,22 +163,22 @@ class Inputs {
 
     // Account balances and returns
     /** @type {number} */
-    this.trad401k = trad401k;
+    this.trad401kStartingBalance = trad401k;
 
     /** @type {number} */
-    this.rothIRA = rothIRA;
+    this.tradRothStartingBalance = rothIRA;
 
     /** @type {number} */
-    this.savings = savings;
+    this.savingsStartingBalance = savings;
 
     /** @type {number} */
-    this.ret401k = ret401k;
+    this.trad401kInterestRate = ret401k;
 
     /** @type {number} */
-    this.retRoth = retRoth;
+    this.tradRothInterestRate = retRoth;
 
     /** @type {number} */
-    this.retSavings = retSavings;
+    this.savingsInterestRate = retSavings;
 
     // Income sources
     /** @type {number} */
@@ -285,9 +285,9 @@ class Inputs {
     return (
       this.inflation >= 0 &&
       this.spendingToday >= 0 &&
-      this.ret401k >= 0 &&
-      this.retRoth >= 0 &&
-      this.retSavings >= 0
+      this.trad401kInterestRate >= 0 &&
+      this.tradRothInterestRate >= 0 &&
+      this.savingsInterestRate >= 0
     );
   }
 
@@ -300,7 +300,11 @@ class Inputs {
   }
 
   getTotalAccountBalance() {
-    return this.trad401k + this.rothIRA + this.savings;
+    return (
+      this.trad401kStartingBalance +
+      this.tradRothStartingBalance +
+      this.savingsStartingBalance
+    );
   }
 
   getTotalMonthlyBenefits() {

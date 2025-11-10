@@ -210,30 +210,6 @@ class Withdrawals {
   }
 
   /**
-   * Updates withdrawal values for corrections or adjustments.
-   *
-   * @param {Object} updates - Object containing withdrawal updates:
-   *   - trad401k: New traditional 401k withdrawal amount
-   *   - savings: New savings withdrawal amount
-   *   - roth: New Roth IRA withdrawal amount
-   *   - rmd: New RMD amount
-   */
-  //   updateWithdrawals(updates) {
-  //     if (updates.trad401k !== undefined) {
-  //       this.trad401k = updates.trad401k;
-  //     }
-  //     if (updates.savings !== undefined) {
-  //       this.savings = updates.savings;
-  //     }
-  //     if (updates.roth !== undefined) {
-  //       this.roth = updates.roth;
-  //     }
-  //     if (updates.rmd !== undefined) {
-  //       this.rmd = updates.rmd;
-  //     }
-  //   }
-
-  /**
    * Factory method to create an empty Withdrawals instance with all values set to zero.
    *
    * This method provides a convenient way to initialize a Withdrawals object with

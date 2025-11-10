@@ -1,89 +1,5 @@
 // retirement-calculator.js
 
-// Add Number prototype extensions needed by retirement.js functions
-
-// // Add default implementations for UI override functions when not available
-// if (typeof getTaxableIncomeOverride === "undefined") {
-//   const globalThis = (function () {
-//     return (
-//       this ||
-//       (typeof window !== "undefined"
-//         ? window
-//         : typeof global !== "undefined"
-//           ? global
-//           : {})
-//     );
-//   })();
-
-//   globalThis.getTaxableIncomeOverride = function getTaxableIncomeOverride(age) {
-//     return 0; // Default to no override
-//   };
-// }
-
-// if (typeof getTaxFreeIncomeOverride === "undefined") {
-//   const globalThis = (function () {
-//     return (
-//       this ||
-//       (typeof window !== "undefined"
-//         ? window
-//         : typeof global !== "undefined"
-//           ? global
-//           : {})
-//     );
-//   })();
-
-//   globalThis.getTaxFreeIncomeOverride = function getTaxFreeIncomeOverride(age) {
-//     return 0; // Default to no override
-//   };
-// }
-
-// if (typeof getSpendingOverride === "undefined") {
-//   const globalThis = (function () {
-//     return (
-//       this ||
-//       (typeof window !== "undefined"
-//         ? window
-//         : typeof global !== "undefined"
-//           ? global
-//           : {})
-//     );
-//   })();
-
-//   globalThis.getSpendingOverride = function getSpendingOverride(age) {
-//     return null; // Default to no override
-//   };
-// }
-
-// if (typeof setSpendingFieldValue === "undefined") {
-//   const globalThis = (function () {
-//     return (
-//       this ||
-//       (typeof window !== "undefined"
-//         ? window
-//         : typeof global !== "undefined"
-//           ? global
-//           : {})
-//     );
-//   })();
-
-//   globalThis.setSpendingFieldValue = function setSpendingFieldValue(
-//     age,
-//     value
-//   ) {
-//     // No-op in non-UI context
-//   };
-// }
-
-// if (typeof require === "function") {
-//   // Running in Node.js
-//   const {
-//     constsJS_FILING_STATUS,
-//     retirementJS_determineFederalIncomeTax,
-//     retirementJS_getTaxBrackets,
-//     retirementJS_getStandardDeduction,
-//   } = require("./retirement");
-// }
-
 function calc() {
   // Track previous ages to only regenerate spending fields when they change
   let lastRetireAge = null;
@@ -118,9 +34,22 @@ function calc() {
 
   // Initialize balances object for tracking
   const accountGroup = new AccountsManager(
-    new Account("Trad 401k", inputs.trad401k, inputs.ret401k),
-    new Account("Trad Roth", inputs.rothIRA, inputs.retRoth),
-    new Account("Savings", inputs.savings, inputs.retSavings)
+    new Account(
+      ACCOUNT_TYPES.TRAD_401K,
+      inputs.trad401kStartingBalance,
+      inputs.trad401kInterestRate
+    ),
+    new Account(
+      ACCOUNT_TYPES.TRAD_ROTH,
+      inputs.tradRothStartingBalance,
+      inputs.tradRothInterestRate
+    ),
+    new Account(
+      ACCOUNT_TYPES.SAVINGS,
+      inputs.savingsStartingBalance,
+      inputs.savingsInterestRate
+    ),
+    new Account(ACCOUNT_TYPES.REVENUE, 0, 0)
   );
 
   // Reset calculations array
@@ -141,7 +70,6 @@ function calc() {
 
     const yearData = calculateWorkingYearData(
       inputs,
-      y,
       currentSalary,
       accountYear
     );
@@ -193,7 +121,10 @@ function calc() {
       benefitAmounts
     );
 
-    // yearData.dump();
+    // debugger;
+    // accountYear.getAccountsSummary().dump();
+
+    yearData.dump();
     debugger;
     calculations.push({
       year: new Date().getFullYear() + yearIndex,

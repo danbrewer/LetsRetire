@@ -1,23 +1,21 @@
 class FiscalData {
   /**
    * @param {number} inflationRate
-   * @param {string} filingStatus
    * @param {number} retirementAccountRateOfReturn
    * @param {number} rothRateOfReturn
    * @param {number} savingsRateOfReturn
    * @param {number} yearIndex
    * @param {number} spend
-   * @param {number} taxYear
+   * @param {number} taxYearBase
    */
   constructor(
     inflationRate,
-    filingStatus,
     retirementAccountRateOfReturn,
     rothRateOfReturn,
     savingsRateOfReturn,
     yearIndex,
     spend,
-    taxYear,
+    taxYearBase,
     useRmd = false,
     useSavings = true,
     useTrad401k = true,
@@ -25,11 +23,10 @@ class FiscalData {
   ) {
     this._description = "Fiscal Year Data";
     this.inflationRate = inflationRate;
-    this.filingStatus = filingStatus;
     this.retirementAccountRateOfReturn = retirementAccountRateOfReturn;
     this.rothRateOfReturn = rothRateOfReturn;
     this.savingsRateOfReturn = savingsRateOfReturn;
-    this.taxYear = taxYear;
+    this.taxYear = taxYearBase + yearIndex;
     this.yearIndex = yearIndex;
     this.spend = spend;
     this.useRmd = useRmd;
@@ -118,7 +115,7 @@ class FiscalData {
    *   - useTrad401k: Boolean flag to allow traditional 401k withdrawals
    *   - useRoth: Boolean flag to allow Roth IRA withdrawals
    *
-   * @param {number} taxYear - Base year for tax calculations.
+   * @param {number} taxYearBase - Base year for tax calculations.
    *   Defaults to the global TAX_BASE_YEAR constant. Used to calculate the
    *   actual tax year by adding the yearIndex.
    *
@@ -166,16 +163,15 @@ class FiscalData {
    * @static
    * @since 1.0.0
    */
-  static CreateUsing(inputs, taxYear) {
+  static CreateUsing(inputs, taxYearBase) {
     return new FiscalData(
       inputs.inflation,
-      inputs.filingStatus,
-      inputs.ret401k,
-      inputs.retRoth,
-      inputs.retSavings,
+      inputs.trad401kInterestRate,
+      inputs.tradRothInterestRate,
+      inputs.savingsInterestRate,
       inputs.yearIndex,
       inputs.spend,
-      taxYear,
+      taxYearBase,
       inputs.useRMD,
       inputs.useSavings,
       inputs.useTrad401k,
@@ -184,6 +180,6 @@ class FiscalData {
   }
 
   static Empty() {
-    return new FiscalData(0, "", 0, 0, 0, 0, 0, 0);
+    return new FiscalData(0, 0, 0, 0, 0, 0, 0);
   }
 }

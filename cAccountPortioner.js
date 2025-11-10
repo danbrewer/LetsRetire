@@ -1,8 +1,8 @@
 class AccountPortioner {
-  #accounts;
+  #accountYear;
   #useSavings = false;
-  // #use401k = false;
-  // #useRothIRA = false;
+  #useTrad401k = false;
+  #useTradRoth = false;
   #ask = 0;
 
   /**
@@ -11,18 +11,18 @@ class AccountPortioner {
    * @param {number} spend
    */
   constructor(accountYear, fiscalData, spend) {
-    this.#accounts = accountYear;
+    this.#accountYear = accountYear;
 
     this.#useSavings = fiscalData.useSavings;
-    // this.#use401k = fiscalData.useTrad401k;
-    // this.#useRothIRA = fiscalData.useRoth;
+    this.#useTrad401k = fiscalData.useTrad401k;
+    this.#useTradRoth = fiscalData.useRoth;
 
     this.#ask = spend;
   }
 
   #savingsAvailable() {
     return this.#useSavings
-      ? this.#accounts.getEndingBalance(ACCOUNT_TYPES.SAVINGS)
+      ? this.#accountYear.getEndingBalance(ACCOUNT_TYPES.SAVINGS)
       : 0;
   }
 
@@ -33,8 +33,8 @@ class AccountPortioner {
   }
 
   #trad401kAvailable() {
-    return this.#useSavings
-      ? this.#accounts.getEndingBalance(ACCOUNT_TYPES.TRAD_401K)
+    return this.#useTrad401k
+      ? this.#accountYear.getEndingBalance(ACCOUNT_TYPES.TRAD_401K)
       : 0;
   }
 
@@ -44,15 +44,15 @@ class AccountPortioner {
       : 0;
   }
 
-  #rothIraAvailable() {
-    return this.#useSavings
-      ? this.#accounts.getEndingBalance(ACCOUNT_TYPES.TRAD_ROTH)
+  #tradRothAvailable() {
+    return this.#useTradRoth
+      ? this.#accountYear.getEndingBalance(ACCOUNT_TYPES.TRAD_ROTH)
       : 0;
   }
 
   #rothIraPortion() {
     return this.#totalAvailable() > 0
-      ? this.#rothIraAvailable() / this.#totalAvailable()
+      ? this.#tradRothAvailable() / this.#totalAvailable()
       : 0;
   }
 
@@ -60,7 +60,7 @@ class AccountPortioner {
     return (
       this.#savingsAvailable() +
       this.#trad401kAvailable() +
-      this.#rothIraAvailable()
+      this.#tradRothAvailable()
     );
   }
 

@@ -315,9 +315,14 @@ Object.defineProperty(Object.prototype, "dump", {
         if (typeof desc.get === "function") {
           try {
             const value = this[key];
-            console.log(
-              `${indent}- ${key.padEnd(colWidth)} ${alignValue(value, colWidth)}`
-            );
+            if (value && typeof value === "object") {
+              console.log(`${indent}- ${key}:`);
+              value.dump(null, depth + 1);
+            } else {
+              console.log(
+                `${indent}- ${key.padEnd(colWidth)} ${alignValue(value, colWidth)}`
+              );
+            }
           } catch (e) {
             console.log(
               // @ts-ignore

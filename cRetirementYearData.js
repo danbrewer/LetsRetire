@@ -2,14 +2,16 @@ class RetirementYearData {
   /**
    * @param {Demographics} demographics - Instance of Demographics class
    * @param {FiscalData} fiscalData - Instance of FiscalData class
-   * @param {Object} expenditures - Expenditure data
+   * @param {Revenue} revenue - Revenue data
+   * @param {Expenditures} expenditures - Expenditure data
    * @param {Object} contributions - Contribution data
    * @param {Object} withdrawals - Withdrawal data
-   * @param {Balances} balances - Account balance data
-   * @param {Object} pen - Pension data
+   * @param {Balances} balances - Balances data
+   * @param {Disbursements} disbursements - Disbursement data
+   * @param {Object} pension - Pension data
    * @param {Object} savings - Savings account data
-   * @param {Object} ss - Social Security data
-   * @param {IncomeStreams} incomeStreams - Instance of IncomeStreams class
+   * @param {SocialSecurityIncome} ss - Social Security data
+   * @param {IncomeStreams} fixedIncomeStreams - Instance of IncomeStreams class
    * @param {IncomeBreakdown} incomeBreakdown - Instance of IncomeBreakdown class
    * @param {Taxes} taxes - Tax data
    * @param {Object} totals - Total calculations
@@ -26,14 +28,16 @@ class RetirementYearData {
   constructor(
     demographics,
     fiscalData,
-    expenditures = {},
+    revenue,
+    expenditures,
     contributions = {},
     withdrawals = {},
     balances,
-    pen = {},
+    disbursements,
+    pension = {},
     savings = {},
-    ss = {},
-    incomeStreams,
+    ss,
+    fixedIncomeStreams,
     incomeBreakdown,
     taxes,
     totals = {},
@@ -55,6 +59,9 @@ class RetirementYearData {
     /** @type {FiscalData} */
     this.fiscalData = fiscalData;
 
+    /** @type {Revenue} */
+    this.revenue = revenue;
+
     /** @type {Object} */
     this.expenditures = expenditures;
 
@@ -67,17 +74,20 @@ class RetirementYearData {
     /** @type {Balances} */
     this.balances = balances;
 
+    /** @type {Disbursements} */
+    this.disbursements = disbursements;
+
     /** @type {Object} */
-    this.pen = pen;
+    this.pen = pension;
 
     /** @type {Object} */
     this.savings = savings;
 
-    /** @type {Object} */
+    /** @type {SocialSecurityIncome} */
     this.ss = ss;
 
     /** @type {IncomeStreams} */
-    this.incomeStreams = incomeStreams;
+    this.fixedIncomeStreams = fixedIncomeStreams;
 
     /** @type {IncomeBreakdown} */
     this.incomeBreakdown = incomeBreakdown;
@@ -115,6 +125,8 @@ class RetirementYearData {
     this.retirementAccountBreakdown = RetirementAccountBreakdown.Empty();
     this.rothAccountBreakdown = RetirementAccountBreakdown.Empty();
     this.accountGroup = accountGroup;
+
+    this.shortfallAmount = 0;
   }
 
   // Factory method for backward compatibility
@@ -122,13 +134,15 @@ class RetirementYearData {
     return new RetirementYearData(
       Demographics.Empty(),
       FiscalData.Empty(),
-      {},
+      Revenue.Empty(),
+      Expenditures.Empty(),
       {},
       {},
       Balances.Empty(),
+      Disbursements.Empty(),
       {},
       {},
-      {},
+      SocialSecurityIncome.Empty(),
       IncomeStreams.Empty(),
       IncomeBreakdown.Empty(),
       Taxes.Empty(),
@@ -147,16 +161,40 @@ class RetirementYearData {
 
   // Factory method to create from existing data
   /**
-   * @param {{ demographics: Demographics; fiscalData: FiscalData; expenditures: Object | undefined; contributions: Object | undefined; withdrawals: Object | undefined; balances: Balances; pen: Object | undefined; savings: Object | undefined; ss: Object | undefined; incomeStreams: IncomeStreams; incomeBreakdown: IncomeBreakdown; taxes: Taxes; totals: Object | undefined; myPensionBenefits: Object | undefined; spousePensionBenefits: Object | undefined; mySsBenefits: Object | undefined; spouseSsBenefits: Object | undefined; savingsBreakdown: Object | undefined; withdrawalBreakdown: Object | undefined; ssBreakdown: SsBenefitsCalculator; pensionBreakdown: Object | undefined; }} data
+   * @param {{
+   * demographics: Demographics;
+   * fiscalData: FiscalData;
+   * revenue: Revenue;
+   * expenditures: Expenditures;
+   * contributions: Object | undefined;
+   * withdrawals: Object | undefined;
+   * balances: Balances;
+   * disbursements: Disbursements;
+   * pen: Object | undefined;
+   * savings: Object | undefined;
+   * ss: SocialSecurityIncome;
+   * incomeStreams: IncomeStreams;
+   * incomeBreakdown: IncomeBreakdown;
+   * taxes: Taxes;
+   * totals: Object | undefined;
+   * myPensionBenefits: Object | undefined;
+   * spousePensionBenefits: Object | undefined;
+   * mySsBenefits: Object | undefined;
+   * spouseSsBenefits: Object | undefined;
+   * savingsBreakdown: Object | undefined;
+   * withdrawalBreakdown: Object | undefined;
+   * ssBreakdown: SsBenefitsCalculator; pensionBreakdown: Object | undefined; }} data
    */
   static fromData(data) {
     return new RetirementYearData(
       data.demographics,
       data.fiscalData,
+      data.revenue,
       data.expenditures,
       data.contributions,
       data.withdrawals,
       data.balances,
+      data.disbursements,
       data.pen,
       data.savings,
       data.ss,
@@ -179,21 +217,13 @@ class RetirementYearData {
   // Utility methods for retirement year data analysis
   get totalIncome() {
     if (
-      this.incomeStreams &&
-      typeof this.incomeStreams.totalIncome === "function"
+      this.fixedIncomeStreams &&
+      typeof this.fixedIncomeStreams.totalIncome === "function"
     ) {
-      return this.incomeStreams.totalIncome();
+      return this.fixedIncomeStreams.totalIncome();
     }
     return 0;
   }
-
-  //   getTotalExpenses() {
-  //     // this.acc
-  //     // if (this.expenditures && typeof this.expenditures.total === "number") {
-  //     //   return this.expenditures.total;
-  //     // }
-  //     // return 0;
-  //   }
 
   get netIncome() {
     if (
@@ -235,33 +265,6 @@ class RetirementYearData {
       //   hasDeficit: this.hasDeficit(),
     };
   }
-
-  //   // Method to update specific sections
-  //   /**
-  //      * @param {PropertyKey} sectionName
-  //      * @param {any} data
-  //      */
-  //   updateSection(sectionName, data) {
-  //     if (this.hasOwnProperty(sectionName)) {
-  //       this[sectionName] = data;
-  //     }
-  //   }
-
-  //   // Method to validate data completeness
-  //   isComplete() {
-  //     const requiredSections = [
-  //       "demographics",
-  //       "fiscalData",
-  //       "incomeStreams",
-  //       "incomeBreakdown",
-  //       "expenditures",
-  //       "balances",
-  //     ];
-
-  //     return requiredSections.every(
-  //       (section) => this[section] && Object.keys(this[section]).length > 0
-  //     );
-  //   }
 
   // Method to get breakdown by category
   getBreakdowns() {

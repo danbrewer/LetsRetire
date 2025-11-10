@@ -1,17 +1,16 @@
 /**
  * Calculate one year of accumulation phase (working years)
  * @param {Inputs} inputs - Input configuration object containing salary, contribution rates, etc.
- * @param {number} yearIndex - Index of the current year (0-based)
  * @param {number} salary - Annual salary for this year
  * @param {AccountYear} accountYear - AccountGroup instance containing all accounts
  * @returns {WorkingYearData} Comprehensive working year calculation results
  */
-function calculateWorkingYearData(inputs, yearIndex, salary, accountYear) {
+function calculateWorkingYearData(inputs, salary, accountYear) {
   // Declare and initialize the result object at the top
   const result = WorkingYearData.CreateEmpty();
 
   // debugger;
-  const fiscalData = FiscalData.CreateUsing(inputs, TAX_BASE_YEAR + yearIndex);
+  const fiscalData = FiscalData.CreateUsing(inputs, TAX_BASE_YEAR);
   const demographics = Demographics.CreateUsing(inputs, false, true);
   const employmentInfo = EmploymentInfo.CreateUsing(
     demographics,
@@ -91,7 +90,7 @@ function calculateWorkingYearData(inputs, yearIndex, salary, accountYear) {
 
   taxes.federalTaxesOwed = retirementJS_calculateFederalTax(
     income.getTaxableIncome(),
-    fiscalData.filingStatus,
+    demographics.filingStatus,
     fiscalData.taxYear,
     fiscalData.inflationRate
   );
