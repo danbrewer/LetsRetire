@@ -4,8 +4,9 @@ class AccountsManager {
    * @param {Account} rothIra - Roth IRA account instance
    * @param {Account} savings - Savings account instance
    * @param {Account} income - Income account instance
+   * @param {Account} disbursement - Disbursement account instance
    */
-  constructor(trad401k, rothIra, savings, income) {
+  constructor(trad401k, rothIra, savings, income, disbursement) {
     /** @type {Account} */
     this.trad401k = trad401k;
 
@@ -17,6 +18,9 @@ class AccountsManager {
 
     /** @type {Account} */
     this.income = income;
+
+    /** @type {Account} */
+    this.disbursement = disbursement;
   }
 
   /**
@@ -45,7 +49,8 @@ class AccountsManager {
       trad401k,
       rothIra,
       savings,
-      Account.Empty(ACCOUNT_TYPES.REVENUE)
+      Account.Empty(ACCOUNT_TYPES.REVENUE),
+      Account.Empty(ACCOUNT_TYPES.DISBURSEMENT)
     );
   }
 
@@ -113,6 +118,8 @@ class AccountsManager {
         return this.savings;
       case ACCOUNT_TYPES.REVENUE:
         return this.income;
+      case ACCOUNT_TYPES.DISBURSEMENT:
+        return this.disbursement;
       default:
         throw new Error(`Account not found: ${name}`);
     }
@@ -214,7 +221,8 @@ class AccountsManager {
       Account.Empty(ACCOUNT_TYPES.TRAD_401K),
       Account.Empty(ACCOUNT_TYPES.TRAD_ROTH),
       Account.Empty(ACCOUNT_TYPES.SAVINGS),
-      Account.Empty(ACCOUNT_TYPES.REVENUE)
+      Account.Empty(ACCOUNT_TYPES.REVENUE),
+      Account.Empty(ACCOUNT_TYPES.DISBURSEMENT)
     );
   }
 }

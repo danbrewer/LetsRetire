@@ -65,27 +65,51 @@ function withdrawalFactoryJS_createWithdrawalFactory(
             TRANSACTION_CATEGORY.DISBURSEMENT,
             gross401kWithdrawal
           );
-
           accountYear.deposit(
-            ACCOUNT_TYPES.REVENUE,
-            TRANSACTION_CATEGORY.INCOME_FROM_ALL_401K,
+            ACCOUNT_TYPES.DISBURSEMENT,
+            TRANSACTION_CATEGORY.TRAD_401K,
             gross401kWithdrawal
           );
+
           accountYear.withdrawal(
             ACCOUNT_TYPES.TRAD_401K,
             TRANSACTION_CATEGORY.DISBURSEMENT,
             incomeStreams.rmd
           );
           accountYear.deposit(
-            ACCOUNT_TYPES.SAVINGS,
-            TRANSACTION_CATEGORY.INCOME,
-            incomeResults.incomeBreakdown
-              .reportableIncomeLessReportedEarnedInterest
+            ACCOUNT_TYPES.DISBURSEMENT,
+            TRANSACTION_CATEGORY.RMD,
+            incomeStreams.rmd
           );
-          accountYear.withdrawal(
-            ACCOUNT_TYPES.SAVINGS,
-            TRANSACTION_CATEGORY.TAXES,
-            incomeResults.incomeBreakdown.federalIncomeTax
+
+          accountYear.deposit(
+            ACCOUNT_TYPES.REVENUE,
+            TRANSACTION_CATEGORY.TRAD_401K,
+            incomeResults.incomeBreakdown.trad401kNetIncome
+          );
+
+          accountYear.deposit(
+            ACCOUNT_TYPES.REVENUE,
+            TRANSACTION_CATEGORY.PENSION,
+            incomeResults.incomeBreakdown.pensionNetIncome
+          );
+
+          accountYear.deposit(
+            ACCOUNT_TYPES.REVENUE,
+            TRANSACTION_CATEGORY.SOCIAL_SEC,
+            incomeResults.incomeBreakdown.socialSecurityNetIncome
+          );
+
+          accountYear.deposit(
+            ACCOUNT_TYPES.REVENUE,
+            TRANSACTION_CATEGORY.OTHER_INCOME,
+            incomeResults.incomeBreakdown.otherTaxableNetIncome
+          );
+
+          accountYear.deposit(
+            ACCOUNT_TYPES.REVENUE,
+            TRANSACTION_CATEGORY.RMD,
+            incomeResults.incomeBreakdown.earnedInterestNetIncome
           );
         }
 
@@ -115,8 +139,13 @@ function withdrawalFactoryJS_createWithdrawalFactory(
             withdrawalAmount
           );
           accountYear.deposit(
+            ACCOUNT_TYPES.DISBURSEMENT,
+            TRANSACTION_CATEGORY.SAVINGS,
+            withdrawalAmount
+          );
+          accountYear.deposit(
             ACCOUNT_TYPES.REVENUE,
-            TRANSACTION_CATEGORY.INCOME_FROM_ALL_SAVINGS,
+            TRANSACTION_CATEGORY.SAVINGS,
             withdrawalAmount
           );
         }
@@ -144,7 +173,12 @@ function withdrawalFactoryJS_createWithdrawalFactory(
           );
           accountYear.deposit(
             ACCOUNT_TYPES.REVENUE,
-            TRANSACTION_CATEGORY.INCOME_FROM_ALL_ROTH,
+            TRANSACTION_CATEGORY.TRAD_ROTH,
+            withdrawalAmount
+          );
+          accountYear.deposit(
+            ACCOUNT_TYPES.DISBURSEMENT,
+            TRANSACTION_CATEGORY.TRAD_ROTH,
             withdrawalAmount
           );
         }

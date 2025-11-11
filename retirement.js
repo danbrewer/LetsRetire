@@ -229,7 +229,6 @@ function retirementJS_determineFederalIncomeTax(taxableIncome, brackets) {
  *   }
  * }
  *
- * @see {@link SsBenefits.CalculateUsing} For Social Security taxation methodology
  * @see {@link IncomeBreakdown.CreateFrom} For income breakdown calculation details
  * @see {@link retirementJS_getTaxBrackets} For tax bracket determination
  * @see {@link retirementJS_getStandardDeduction} For standard deduction calculation
@@ -262,27 +261,6 @@ function retirementJS_calculateIncomeWhen401kWithdrawalIs(
     incomeStreams.nonSsIncome
   );
 
-  // const ssBreakdown = {
-  //   inputs: {},
-  //   taxablePortion: 0,
-  //   oneHalfOfSSBenefits: {},
-  //   nonTaxablePortion: {},
-  //   totalBenefits: {},
-  //   myPortion: {},
-  //   spousePortion: {},
-  //   myTaxablePortion: {},
-  //   spouseTaxablePortion: {},
-  //   myNonTaxablePortion: {},
-  //   spouseNonTaxablePortion: {},
-  //   provisionalIncome: {},
-  //   calculationDetails: {},
-  //   ..._calculateSsBenefits(
-  //     incomeStreams.mySs,
-  //     incomeStreams.spouseSs,
-  //     incomeStreams.nonSsIncome()
-  //   ),
-  // };
-
   const incomeBreakdown = IncomeBreakdown.CreateFrom(
     incomeStreams,
     variableIncomeFactor,
@@ -294,81 +272,6 @@ function retirementJS_calculateIncomeWhen401kWithdrawalIs(
     incomeBreakdown.taxableIncome,
     taxBrackets
   );
-
-  // const incomeBreakdown = {
-  //   myPension: incomeStreams.myPension,
-  //   spousePension: incomeStreams.spousePension,
-  //   rmd: incomeStreams.rmd,
-  //   otherTaxableIncomeAdjustments: incomeStreams.otherTaxableIncomeAdjustments,
-  //   retirementAccountWithdrawal: variableIncomeFactor,
-  //   taxableSsIncome: ssBreakdown.taxablePortion,
-  //   reportedEarnedInterest: incomeStreams.reportedEarnedInterest,
-  //   standardDeduction: standardDeduction,
-  //   federalIncomeTax: 0,
-  //   reportableIncome() {
-  //     return (
-  //       this.reportedEarnedInterest +
-  //       this.myPension +
-  //       this.spousePension +
-  //       this.rmd +
-  //       this.otherTaxableIncomeAdjustments +
-  //       this.retirementAccountWithdrawal +
-  //       this.socialSecurityIncome
-  //     );
-  //   },
-  //   adjustedGrossIncome() {
-  //     return (
-  //       this.reportedEarnedInterest +
-  //       this.myPension +
-  //       this.spousePension +
-  //       this.rmd +
-  //       this.otherTaxableIncomeAdjustments +
-  //       this.retirementAccountWithdrawal +
-  //       this.ssBreakdown.taxablePortion
-  //     );
-  //   },
-  //   taxableIncome() {
-  //     return Math.max(0, this.adjustedGrossIncome() - this.standardDeduction);
-  //   },
-  //   netIncome() {
-  //     return this.reportableIncome() - this.federalIncomeTax;
-  //   },
-  //   netIncomeLessReportedEarnedInterest() {
-  //     return this.netIncome() - this.reportedEarnedInterest;
-  //   },
-  //   reportableIncomeLessReportedEarnedInterest() {
-  //     return this.reportableIncome() - this.reportedEarnedInterest;
-  //   },
-  //   effectiveTaxRate() {
-  //     if (this.reportableIncome() === 0) return 0;
-  //     return (this.federalIncomeTax / this.reportableIncome()).round(3);
-  //   },
-  //   incomeAsPercentageOfGross(amount = 0) {
-  //     if (this.reportableIncome() === 0) return 0;
-  //     return amount / this.reportableIncome();
-  //   },
-  //   translateGrossAmountToNet(amount = 0) {
-  //     return (
-  //       this.incomeAsPercentageOfGross(amount) * this.netIncome()
-  //     ).asCurrency();
-  //   },
-  //   translateGrossAmountToPortionOfFederalIncomeTax(amount = 0) {
-  //     return (
-  //       this.incomeAsPercentageOfGross(amount) * this.federalIncomeTax
-  //     ).asCurrency();
-  //   },
-  // };
-
-  // incomeBreakdown.federalIncomeTax = retirementJS_determineFederalIncomeTax(
-  //   incomeBreakdown.taxableIncome(),
-  //   taxBrackets
-  // );
-
-  // Update all the final values in the result object
-  // result.allTaxableIncome = incomeBreakdown.reportableIncome();
-  // result.taxableIncome = incomeBreakdown.taxableIncome();
-  // result.federalTaxesPaid = incomeBreakdown.federalIncomeTax;
-  // result.allNetIncome(){ = incomeBreakdown.netIncome();
 
   return new IncomeRs(ssBreakdown, incomeBreakdown);
 }
@@ -429,8 +332,7 @@ function retirementJS_determine401kWithdrawalsToHitNetTargetOf(
 
     log.info(`Target income is $${targetIncome.asCurrency()}.`);
 
-    const netIncome =
-      income.incomeBreakdown.netIncomeLessReportedEarnedInterest.asCurrency();
+    const netIncome = income.incomeBreakdown.netIncome.asCurrency();
 
     const highLow =
       netIncome > targetIncome.asCurrency()
@@ -457,8 +359,7 @@ function retirementJS_determine401kWithdrawalsToHitNetTargetOf(
   }
 
   // Update all the final values in the result object
-  result.net =
-    income.incomeBreakdown.netIncomeLessReportedEarnedInterest.asCurrency();
+  result.net = income.incomeBreakdown.netIncome.asCurrency();
   result.withdrawalNeeded = hi.asCurrency();
   result.rmd = incomeStreams.rmd;
   result.tax = income.incomeBreakdown.federalIncomeTax.asCurrency();

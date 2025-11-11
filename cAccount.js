@@ -3,6 +3,7 @@ ACCOUNT_TYPES.SAVINGS = "savings";
 ACCOUNT_TYPES.TRAD_401K = "trad401k";
 ACCOUNT_TYPES.TRAD_ROTH = "rothIra";
 ACCOUNT_TYPES.REVENUE = "revenue";
+ACCOUNT_TYPES.DISBURSEMENT = "disbursement";
 
 // Create a class for the account
 class Account {

@@ -117,7 +117,7 @@ class DebugData {
    * @returns {number} Effective tax rate as decimal (e.g., 0.22 for 22%)
    */
   getEffectiveTaxRate() {
-    const totalIncome = this._incomeBreakdown.totalIncome;
+    const totalIncome = this._incomeBreakdown.totalReportedIncome;
     if (totalIncome <= 0) return 0;
     return this._taxes.federalTaxesOwed / totalIncome;
   }
@@ -223,7 +223,7 @@ class DebugData {
       );
     }
 
-    const totalIncome = this._incomeBreakdown.totalIncome;
+    const totalIncome = this._incomeBreakdown.totalReportedIncome;
     if (totalIncome < 0) {
       errors.push("Total income cannot be negative");
     }
@@ -263,7 +263,7 @@ class DebugData {
       spend: this.spend,
 
       // Income analysis
-      totalIncome: this._incomeBreakdown.totalIncome,
+      totalIncome: this._incomeBreakdown.totalReportedIncome,
       incomeBreakdown: {
         raw: this._incomeBreakdown,
         // percentages: incomeBreakdown,

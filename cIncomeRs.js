@@ -90,13 +90,13 @@ class IncomeRs {
    * @returns {number} Total reportable income, or 0 if breakdown unavailable
    */
   get totalReportableIncome() {
-    if (
-      !this.hasIncomeBreakdown ||
-      typeof this.incomeBreakdown.reportableIncome !== "function"
-    ) {
-      return 0;
-    }
-    return this.incomeBreakdown.reportableIncome;
+    // if (
+    //   !this.hasIncomeBreakdown ||
+    //   typeof this.incomeBreakdown.reportableIncome !== "function"
+    // ) {
+    //   return 0;
+    // }
+    return this.incomeBreakdown.totalReportedIncome;
   }
 
   /**

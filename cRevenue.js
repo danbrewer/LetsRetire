@@ -16,55 +16,37 @@ class Revenue {
 
   get savings() {
     return this.#accountYear
-      .getDeposits(
-        ACCOUNT_TYPES.REVENUE,
-        TRANSACTION_CATEGORY.INCOME_FROM_ALL_SAVINGS
-      )
+      .getDeposits(ACCOUNT_TYPES.REVENUE, TRANSACTION_CATEGORY.SAVINGS)
       .asCurrency();
   }
 
   get trad401k() {
     return this.#accountYear
-      .getDeposits(
-        ACCOUNT_TYPES.REVENUE,
-        TRANSACTION_CATEGORY.INCOME_FROM_ALL_401K
-      )
+      .getDeposits(ACCOUNT_TYPES.REVENUE, TRANSACTION_CATEGORY.TRAD_401K)
       .asCurrency();
   }
 
   get roth() {
     return this.#accountYear
-      .getDeposits(
-        ACCOUNT_TYPES.REVENUE,
-        TRANSACTION_CATEGORY.INCOME_FROM_ALL_ROTH
-      )
+      .getDeposits(ACCOUNT_TYPES.REVENUE, TRANSACTION_CATEGORY.TRAD_ROTH)
       .asCurrency();
   }
 
   get other() {
     return this.#accountYear
-      .getDeposits(
-        ACCOUNT_TYPES.REVENUE,
-        TRANSACTION_CATEGORY.INCOME_FROM_ALL_OTHER
-      )
+      .getDeposits(ACCOUNT_TYPES.REVENUE, TRANSACTION_CATEGORY.OTHER_INCOME)
       .asCurrency();
   }
 
   get ss() {
     return this.#accountYear
-      .getDeposits(
-        ACCOUNT_TYPES.REVENUE,
-        TRANSACTION_CATEGORY.INCOME_FROM_ALL_SS
-      )
+      .getDeposits(ACCOUNT_TYPES.REVENUE, TRANSACTION_CATEGORY.SOCIAL_SEC)
       .asCurrency();
   }
 
   get pension() {
     return this.#accountYear
-      .getDeposits(
-        ACCOUNT_TYPES.REVENUE,
-        TRANSACTION_CATEGORY.INCOME_FROM_ALL_PENSION
-      )
+      .getDeposits(ACCOUNT_TYPES.REVENUE, TRANSACTION_CATEGORY.PENSION)
       .asCurrency();
   }
 

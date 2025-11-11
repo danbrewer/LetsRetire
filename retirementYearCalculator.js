@@ -85,39 +85,38 @@ function calculateRetirementYearData(inputs, accountYear, benefitAmounts) {
     accountYear
   );
 
-  const incomeWithNo401kWithdrawal =
-    retirementJS_calculateIncomeWhen401kWithdrawalIs(
-      0,
-      fixedIncomeStreams,
-      demographics,
-      fiscalData
-    );
+  const fixedIncomeOnly = retirementJS_calculateIncomeWhen401kWithdrawalIs(
+    0,
+    fixedIncomeStreams,
+    demographics,
+    fiscalData
+  );
 
   // reduce the spend temporarily to determine the shortfall that needs to be covered by 401k, savings, and roth
 
   const fixedIncomeNet =
-    incomeWithNo401kWithdrawal.incomeBreakdown
-      .netIncomeLessReportedEarnedInterest;
+    fixedIncomeOnly.incomeBreakdown.netIncome -
+    fixedIncomeOnly.incomeBreakdown.actualEarnedInterest;
 
-  accountYear.deposit(
-    ACCOUNT_TYPES.REVENUE,
-    TRANSACTION_CATEGORY.INCOME_FROM_ALL_SS,
-    fixedIncomeStreams.ssIncome
-  );
+  // accountYear.deposit(
+  //   ACCOUNT_TYPES.REVENUE,
+  //   TRANSACTION_CATEGORY.SOCIAL_SEC,
+  //   fixedIncomeStreams.ssIncome
+  // );
 
-  accountYear.deposit(
-    ACCOUNT_TYPES.REVENUE,
-    TRANSACTION_CATEGORY.INCOME_FROM_ALL_PENSION,
-    fixedIncomeStreams.pensionIncome
-  );
+  // accountYear.deposit(
+  //   ACCOUNT_TYPES.REVENUE,
+  //   TRANSACTION_CATEGORY.PENSION,
+  //   fixedIncomeStreams.pensionIncome
+  // );
 
-  accountYear.deposit(
-    ACCOUNT_TYPES.REVENUE,
-    TRANSACTION_CATEGORY.INCOME_FROM_ALL_OTHER,
-    fixedIncomeStreams.otherTaxableIncomeAdjustments +
-      fixedIncomeStreams.taxableIncomeAdjustment +
-      fixedIncomeStreams.taxFreeIncomeAdjustment
-  );
+  // accountYear.deposit(
+  //   ACCOUNT_TYPES.REVENUE,
+  //   TRANSACTION_CATEGORY.OTHER_INCOME,
+  //   fixedIncomeStreams.otherTaxableIncomeAdjustments +
+  //     fixedIncomeStreams.taxableIncomeAdjustment +
+  //     fixedIncomeStreams.taxFreeIncomeAdjustment
+  // );
 
   // reduce the spend by the estimated net income from SS, Pension, etc
   let shortfall = fiscalData.spend - fixedIncomeNet; // whittle down recurring net income by 5%
@@ -182,15 +181,16 @@ function calculateRetirementYearData(inputs, accountYear, benefitAmounts) {
     fixedIncomeStreams.actualEarnedInterest
   );
 
-  const actualSpend = Math.min(
-    accountYear.getAvailableFunds([ACCOUNT_TYPES.SAVINGS]),
-    fiscalData.spend.asCurrency()
-  );
-  accountYear.withdrawal(
-    ACCOUNT_TYPES.SAVINGS,
-    TRANSACTION_CATEGORY.SPEND,
-    actualSpend
-  );
+  // const actualSpend = Math.min(
+  //   accountYear.getAvailableFunds([ACCOUNT_TYPES.REVENUE]),
+  //   fiscalData.spend.asCurrency()
+  // );
+
+  // accountYear.withdrawal(
+  //   ACCOUNT_TYPES.SAVINGS,
+  //   TRANSACTION_CATEGORY.SPEND,
+  //   actualSpend
+  // );
 
   const trad401kInterest = accountYear.calculateInterestForYear(
     ACCOUNT_TYPES.TRAD_401K,
@@ -242,10 +242,9 @@ function calculateRetirementYearData(inputs, accountYear, benefitAmounts) {
 
   const totals = {
     _description: "Totals Breakdown",
-    reportableIncome: incomeResults.incomeBreakdown.reportableIncome,
+    reportableIncome: incomeResults.incomeBreakdown.totalReportedIncome,
     taxableIncome: incomeResults.incomeBreakdown.taxableIncome,
-    netIncome:
-      incomeResults.incomeBreakdown.netIncomeLessReportedEarnedInterest,
+    netIncome: incomeResults.incomeBreakdown.netIncome,
     calculationDetails: [
       withLabel("incomeResults.incomeBreakdown", incomeResults.incomeBreakdown),
     ],
@@ -265,22 +264,24 @@ function calculateRetirementYearData(inputs, accountYear, benefitAmounts) {
   };
 
   const pensionBreakdown = {
-    myIncome: incomeResults.incomeBreakdown.myPension,
-    myFederalTaxes:
-      incomeResults.incomeBreakdown.translateGrossAmountToPortionOfFederalIncomeTax(
-        incomeResults.incomeBreakdown.myPension
+    subjectPension: incomeResults.incomeBreakdown.subjectPension,
+    federalTaxesPaid:
+      incomeResults.incomeBreakdown.grossIncomeAmountAsPercentageOfFederalIncomeTax(
+        incomeResults.incomeBreakdown.subjectPension
       ),
-    myNetIncome: incomeResults.incomeBreakdown.translateGrossAmountToNet(
-      incomeResults.incomeBreakdown.myPension
-    ),
-    spouseIncome: incomeResults.incomeBreakdown.spousePension,
-    spouseFederalTaxes:
-      incomeResults.incomeBreakdown.translateGrossAmountToPortionOfFederalIncomeTax(
-        incomeResults.incomeBreakdown.spousePension
+    subjectNetIncome:
+      incomeResults.incomeBreakdown.grossIncomeAmountAsPercentageOfNetIncome(
+        incomeResults.incomeBreakdown.subjectPension
       ),
-    spouseNetIncome: incomeResults.incomeBreakdown.translateGrossAmountToNet(
-      incomeResults.incomeBreakdown.spousePension
-    ),
+    partnerIncome: incomeResults.incomeBreakdown.partnerPension,
+    partnerFederalTaxesPaid:
+      incomeResults.incomeBreakdown.grossIncomeAmountAsPercentageOfFederalIncomeTax(
+        incomeResults.incomeBreakdown.partnerPension
+      ),
+    partnerNetIncome:
+      incomeResults.incomeBreakdown.grossIncomeAmountAsPercentageOfNetIncome(
+        incomeResults.incomeBreakdown.partnerPension
+      ),
     _description: "Pension Benefits Breakdown",
     calculationDetails: withLabel(
       "incomeResults.incomeBreakdown",
@@ -370,8 +371,7 @@ function calculateRetirementYearData(inputs, accountYear, benefitAmounts) {
   // @ts-ignore
   const temp = {
     income: {
-      netIncome:
-        incomeResults.incomeBreakdown.netIncomeLessReportedEarnedInterest.asCurrency(),
+      netIncome: incomeResults.incomeBreakdown.netIncome.asCurrency(),
       interestIncome: savings.earnedInterest,
       spend: fiscalData.spend.asCurrency(),
       shortfall: Math.max(

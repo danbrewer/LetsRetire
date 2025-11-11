@@ -49,7 +49,8 @@ function calc() {
       inputs.savingsStartingBalance,
       inputs.savingsInterestRate
     ),
-    new Account(ACCOUNT_TYPES.REVENUE, 0, 0)
+    new Account(ACCOUNT_TYPES.REVENUE, 0, 0),
+    new Account(ACCOUNT_TYPES.DISBURSEMENT, 0, 0)
   );
 
   // Reset calculations array

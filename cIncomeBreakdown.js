@@ -4,10 +4,11 @@ class IncomeBreakdown {
    * @param {number} spousePension
    * @param {number} rmd
    * @param {number} otherTaxableIncomeAdjustments
-   * @param {number} retirementAccountWithdrawal
+   * @param {number} trad401kWithdrawal
    * @param {number} taxableSsIncome
    * @param {number} socialSecurityIncome
    * @param {number} reportedEarnedInterest
+   * @param {number} actualEarnedInterest
    * @param {number} standardDeduction
    *
    */
@@ -16,89 +17,88 @@ class IncomeBreakdown {
     spousePension,
     rmd,
     otherTaxableIncomeAdjustments,
-    retirementAccountWithdrawal,
+    trad401kWithdrawal,
     taxableSsIncome,
     socialSecurityIncome,
     reportedEarnedInterest,
+    actualEarnedInterest,
     standardDeduction
   ) {
-    this.myPension = myPension;
-    this.spousePension = spousePension;
+    this.subjectPension = myPension;
+    this.partnerPension = spousePension;
     this.rmd = rmd;
     this.otherTaxableIncomeAdjustments = otherTaxableIncomeAdjustments;
-    this.retirementAccountWithdrawal = retirementAccountWithdrawal;
+    this.trad401kWithdrawal = trad401kWithdrawal;
     this.taxableSsIncome = taxableSsIncome;
     this.socialSecurityIncome = socialSecurityIncome;
     this.reportedEarnedInterest = reportedEarnedInterest;
     this.standardDeduction = standardDeduction;
-    // this.federalIncomeTax = federalIncomeTax;
-    // this.#taxBrackets = taxBrackets;
-    // this.actualEarnedInterest = 0;
-
+    this.actualEarnedInterest = actualEarnedInterest;
     this.federalIncomeTax = 0;
   }
 
   // Factory method for backward compatibility and dependency injection
   /**
-   * @param {IncomeStreams} incomeStreams
-   * @param {number} variableIncomeFactor
-   * @param {SsBenefitsCalculator} ssBreakdown
+   * @param {IncomeStreams} fixedIncomeStreams
+   * @param {number} variableIncomeStream
+   * @param {SsBenefitsCalculator} ssBenefits
    * @param {number} standardDeduction
    **/
   //   @param {{ rate: number; upTo: number; }[]} taxBrackets
 
   static CreateFrom(
-    incomeStreams,
-    variableIncomeFactor,
-    ssBreakdown,
+    fixedIncomeStreams,
+    variableIncomeStream,
+    ssBenefits,
     standardDeduction
   ) {
     return new IncomeBreakdown(
-      incomeStreams.myPension,
-      incomeStreams.spousePension,
-      incomeStreams.rmd,
-      incomeStreams.otherTaxableIncomeAdjustments,
-      variableIncomeFactor,
-      ssBreakdown.taxablePortion,
-      incomeStreams.ssIncome, // Total SS income (both taxable and non-taxable)
-      incomeStreams.reportedEarnedInterest,
+      fixedIncomeStreams.myPension,
+      fixedIncomeStreams.spousePension,
+      fixedIncomeStreams.rmd,
+      fixedIncomeStreams.otherTaxableIncomeAdjustments,
+      variableIncomeStream,
+      ssBenefits.taxablePortion,
+      fixedIncomeStreams.ssIncome, // Total SS income (both taxable and non-taxable)
+      fixedIncomeStreams.reportedEarnedInterest,
+      0,
       standardDeduction
     );
   }
 
-  get reportableIncome() {
+  get totalReportedIncome() {
     return (
       this.reportedEarnedInterest +
-      this.myPension +
-      this.spousePension +
+      this.subjectPension +
+      this.partnerPension +
       this.rmd +
       this.otherTaxableIncomeAdjustments +
-      this.retirementAccountWithdrawal +
+      this.trad401kWithdrawal +
       this.socialSecurityIncome
-    );
+    ).asCurrency();
+  }
+
+  get totalActualIncome() {
+    return (
+      this.actualEarnedInterest +
+      this.subjectPension +
+      this.partnerPension +
+      this.rmd +
+      this.otherTaxableIncomeAdjustments +
+      this.trad401kWithdrawal +
+      this.socialSecurityIncome
+    ).asCurrency();
   }
 
   get adjustedGrossIncome() {
     return (
       this.reportedEarnedInterest +
-      this.myPension +
-      this.spousePension +
+      this.subjectPension +
+      this.partnerPension +
       this.rmd +
       this.otherTaxableIncomeAdjustments +
-      this.retirementAccountWithdrawal +
+      this.trad401kWithdrawal +
       this.taxableSsIncome
-    );
-  }
-
-  get totalIncome() {
-    return (
-      this.reportedEarnedInterest +
-      this.myPension +
-      this.spousePension +
-      this.rmd +
-      this.otherTaxableIncomeAdjustments +
-      this.retirementAccountWithdrawal +
-      this.socialSecurityIncome
     );
   }
 
@@ -107,46 +107,79 @@ class IncomeBreakdown {
   }
 
   get netIncome() {
-    return this.reportableIncome - this.federalIncomeTax;
-  }
-
-  get netIncomeLessReportedEarnedInterest() {
-    return this.netIncome - this.reportedEarnedInterest;
-  }
-
-  get reportableIncomeLessReportedEarnedInterest() {
-    return this.reportableIncome - this.reportedEarnedInterest;
+    return (
+      this.totalReportedIncome -
+      this.federalIncomeTax -
+      this.reportedEarnedInterest +
+      this.actualEarnedInterest
+    ).asCurrency();
   }
 
   get effectiveTaxRate() {
-    if (this.reportableIncome === 0) return 0;
-    return (this.federalIncomeTax / this.reportableIncome).round(3);
+    if (this.totalReportedIncome === 0) return 0;
+    return (this.federalIncomeTax / this.totalReportedIncome).round(3);
   }
 
-  incomeAsPercentageOfGross(amount = 0) {
-    if (this.reportableIncome === 0) return 0;
-    return amount / this.reportableIncome;
+  grossIncomeAmountAsPercentageOfTotalReportedIncome(amount = 0) {
+    if (this.totalReportedIncome === 0) return 0;
+    return amount / this.totalReportedIncome;
   }
 
-  translateGrossAmountToNet(amount = 0) {
+  grossIncomeAmountAsPercentageOfNetIncome(amount = 0) {
     return (
-      this.incomeAsPercentageOfGross(amount) * this.netIncome
+      this.grossIncomeAmountAsPercentageOfTotalReportedIncome(amount) *
+      this.netIncome
     ).asCurrency();
   }
 
-  translateGrossAmountToPortionOfFederalIncomeTax(amount = 0) {
+  grossIncomeAmountAsPercentageOfFederalIncomeTax(amount = 0) {
     return (
-      this.incomeAsPercentageOfGross(amount) * this.federalIncomeTax
+      this.grossIncomeAmountAsPercentageOfTotalReportedIncome(amount) *
+      this.federalIncomeTax
     ).asCurrency();
+  }
+
+  get trad401kNetIncome() {
+    return this.grossIncomeAmountAsPercentageOfNetIncome(
+      this.trad401kWithdrawal
+    );
+  }
+
+  get rmdNetIncome() {
+    return this.grossIncomeAmountAsPercentageOfNetIncome(this.rmd);
+  }
+
+  get pensionNetIncome() {
+    return this.grossIncomeAmountAsPercentageOfNetIncome(
+      this.subjectPension + this.partnerPension
+    );
+  }
+
+  get socialSecurityNetIncome() {
+    return this.grossIncomeAmountAsPercentageOfNetIncome(
+      this.socialSecurityIncome
+    );
+  }
+
+  get otherTaxableNetIncome() {
+    return this.grossIncomeAmountAsPercentageOfNetIncome(
+      this.otherTaxableIncomeAdjustments
+    );
+  }
+
+  get earnedInterestNetIncome() {
+    return this.grossIncomeAmountAsPercentageOfNetIncome(
+      this.reportedEarnedInterest
+    );
   }
 
   // Private utility methods for income breakdown analysis
   #getTotalPensionIncome() {
-    return this.myPension + this.spousePension;
+    return this.subjectPension + this.partnerPension;
   }
 
   #getTotalRetirementIncome() {
-    return this.rmd + this.retirementAccountWithdrawal;
+    return this.rmd + this.trad401kWithdrawal;
   }
 
   getIncomeSourceBreakdown() {
@@ -160,31 +193,16 @@ class IncomeBreakdown {
     };
   }
 
-  /**
-   * @param {any} newTaxAmount
-   */
-  updateFederalIncomeTax(newTaxAmount) {
-    this.federalIncomeTax = newTaxAmount;
-  }
-
   get hasPositiveTaxableIncome() {
     return this.taxableIncome > 0;
   }
 
   get afterTaxIncomeRatio() {
-    const reportable = this.reportableIncome;
-    return reportable > 0 ? this.netIncome / reportable : 0;
+    const total = this.totalReportedIncome;
+    return total > 0 ? this.netIncome / total : 0;
   }
 
   static Empty() {
-    return new IncomeBreakdown(0, 0, 0, 0, 0, 0, 0, 0, 0);
+    return new IncomeBreakdown(0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
   }
 }
-
-// Create instance using the factory method for backward compatibility
-// const incomeBreakdown = IncomeBreakdown.CreateFrom(
-//   incomeStreams,
-//   variableIncomeFactor,
-//   ssBreakdown,
-//   standardDeduction
-// );
