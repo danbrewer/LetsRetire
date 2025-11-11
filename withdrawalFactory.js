@@ -65,21 +65,37 @@ function withdrawalFactoryJS_createWithdrawalFactory(
             TRANSACTION_CATEGORY.DISBURSEMENT,
             gross401kWithdrawal
           );
-          accountYear.deposit(
-            ACCOUNT_TYPES.DISBURSEMENT,
-            TRANSACTION_CATEGORY.TRAD_401K,
-            gross401kWithdrawal
-          );
-
           accountYear.withdrawal(
             ACCOUNT_TYPES.TRAD_401K,
             TRANSACTION_CATEGORY.DISBURSEMENT,
             incomeStreams.rmd
           );
+
+          accountYear.deposit(
+            ACCOUNT_TYPES.DISBURSEMENT,
+            TRANSACTION_CATEGORY.TRAD_401K,
+            gross401kWithdrawal
+          );
           accountYear.deposit(
             ACCOUNT_TYPES.DISBURSEMENT,
             TRANSACTION_CATEGORY.RMD,
             incomeStreams.rmd
+          );
+          accountYear.deposit(
+            ACCOUNT_TYPES.DISBURSEMENT,
+            TRANSACTION_CATEGORY.PENSION,
+            incomeResults.incomeBreakdown.partnerPension +
+              incomeResults.incomeBreakdown.subjectPension
+          );
+          accountYear.deposit(
+            ACCOUNT_TYPES.DISBURSEMENT,
+            TRANSACTION_CATEGORY.SOCIAL_SEC,
+            incomeResults.incomeBreakdown.socialSecurityIncome
+          );
+          accountYear.deposit(
+            ACCOUNT_TYPES.DISBURSEMENT,
+            TRANSACTION_CATEGORY.SOCIAL_SEC,
+            incomeResults.incomeBreakdown.otherTaxableNetIncome
           );
 
           accountYear.deposit(
@@ -87,29 +103,20 @@ function withdrawalFactoryJS_createWithdrawalFactory(
             TRANSACTION_CATEGORY.TRAD_401K,
             incomeResults.incomeBreakdown.trad401kNetIncome
           );
-
           accountYear.deposit(
             ACCOUNT_TYPES.REVENUE,
             TRANSACTION_CATEGORY.PENSION,
             incomeResults.incomeBreakdown.pensionNetIncome
           );
-
           accountYear.deposit(
             ACCOUNT_TYPES.REVENUE,
             TRANSACTION_CATEGORY.SOCIAL_SEC,
             incomeResults.incomeBreakdown.socialSecurityNetIncome
           );
-
           accountYear.deposit(
             ACCOUNT_TYPES.REVENUE,
             TRANSACTION_CATEGORY.OTHER_INCOME,
             incomeResults.incomeBreakdown.otherTaxableNetIncome
-          );
-
-          accountYear.deposit(
-            ACCOUNT_TYPES.REVENUE,
-            TRANSACTION_CATEGORY.RMD,
-            incomeResults.incomeBreakdown.earnedInterestNetIncome
           );
         }
 

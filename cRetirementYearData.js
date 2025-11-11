@@ -2,12 +2,12 @@ class RetirementYearData {
   /**
    * @param {Demographics} demographics - Instance of Demographics class
    * @param {FiscalData} fiscalData - Instance of FiscalData class
-   * @param {Revenue} revenue - Revenue data
+   * @param {Income} revenue - Revenue data
+   * @param {Income} grossIncome - Gross income data
    * @param {Expenditures} expenditures - Expenditure data
    * @param {Object} contributions - Contribution data
    * @param {Object} withdrawals - Withdrawal data
    * @param {Balances} balances - Balances data
-   * @param {Disbursements} disbursements - Disbursement data
    * @param {Object} pension - Pension data
    * @param {Object} savings - Savings account data
    * @param {SocialSecurityIncome} ss - Social Security data
@@ -29,11 +29,11 @@ class RetirementYearData {
     demographics,
     fiscalData,
     revenue,
+    grossIncome,
     expenditures,
     contributions = {},
     withdrawals = {},
     balances,
-    disbursements,
     pension = {},
     savings = {},
     ss,
@@ -59,8 +59,11 @@ class RetirementYearData {
     /** @type {FiscalData} */
     this.fiscalData = fiscalData;
 
-    /** @type {Revenue} */
+    /** @type {Income} */
     this.revenue = revenue;
+
+    /** @type {Income} */
+    this.grossIncome = grossIncome;
 
     /** @type {Object} */
     this.expenditures = expenditures;
@@ -73,9 +76,6 @@ class RetirementYearData {
 
     /** @type {Balances} */
     this.balances = balances;
-
-    /** @type {Disbursements} */
-    this.disbursements = disbursements;
 
     /** @type {Object} */
     this.pen = pension;
@@ -134,12 +134,12 @@ class RetirementYearData {
     return new RetirementYearData(
       Demographics.Empty(),
       FiscalData.Empty(),
-      Revenue.Empty(),
+      Income.Empty(),
+      Income.Empty(),
       Expenditures.Empty(),
       {},
       {},
       Balances.Empty(),
-      Disbursements.Empty(),
       {},
       {},
       SocialSecurityIncome.Empty(),
@@ -164,7 +164,8 @@ class RetirementYearData {
    * @param {{
    * demographics: Demographics;
    * fiscalData: FiscalData;
-   * revenue: Revenue;
+   * revenue: Income;
+   * grossIncome: Income;
    * expenditures: Expenditures;
    * contributions: Object | undefined;
    * withdrawals: Object | undefined;
@@ -190,11 +191,11 @@ class RetirementYearData {
       data.demographics,
       data.fiscalData,
       data.revenue,
+      data.grossIncome,
       data.expenditures,
       data.contributions,
       data.withdrawals,
       data.balances,
-      data.disbursements,
       data.pen,
       data.savings,
       data.ss,

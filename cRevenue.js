@@ -3,67 +3,71 @@
  * Handles income tracking, revenue streams, and financial reporting for revenue accounts
  */
 
-class Revenue {
+class Income {
   /** @type {AccountYear} */
   #accountYear;
+  #accountType;
 
   /**
    * @param {AccountYear} accountYear - AccountYear instance for accessing account data
+   * @param {string} accountType - Type of account (e.g., REVENUE)
    */
-  constructor(accountYear) {
+  constructor(accountYear, accountType) {
     this.#accountYear = accountYear;
+    this.#accountType = accountType;
   }
 
   get savings() {
     return this.#accountYear
-      .getDeposits(ACCOUNT_TYPES.REVENUE, TRANSACTION_CATEGORY.SAVINGS)
+      .getDeposits(this.#accountType, TRANSACTION_CATEGORY.SAVINGS)
       .asCurrency();
   }
 
   get trad401k() {
     return this.#accountYear
-      .getDeposits(ACCOUNT_TYPES.REVENUE, TRANSACTION_CATEGORY.TRAD_401K)
+      .getDeposits(this.#accountType, TRANSACTION_CATEGORY.TRAD_401K)
       .asCurrency();
   }
 
   get roth() {
     return this.#accountYear
-      .getDeposits(ACCOUNT_TYPES.REVENUE, TRANSACTION_CATEGORY.TRAD_ROTH)
+      .getDeposits(this.#accountType, TRANSACTION_CATEGORY.TRAD_ROTH)
       .asCurrency();
   }
 
   get other() {
     return this.#accountYear
-      .getDeposits(ACCOUNT_TYPES.REVENUE, TRANSACTION_CATEGORY.OTHER_INCOME)
+      .getDeposits(this.#accountType, TRANSACTION_CATEGORY.OTHER_INCOME)
       .asCurrency();
   }
 
   get ss() {
     return this.#accountYear
-      .getDeposits(ACCOUNT_TYPES.REVENUE, TRANSACTION_CATEGORY.SOCIAL_SEC)
+      .getDeposits(this.#accountType, TRANSACTION_CATEGORY.SOCIAL_SEC)
       .asCurrency();
   }
 
   get pension() {
     return this.#accountYear
-      .getDeposits(ACCOUNT_TYPES.REVENUE, TRANSACTION_CATEGORY.PENSION)
+      .getDeposits(this.#accountType, TRANSACTION_CATEGORY.PENSION)
       .asCurrency();
   }
 
-  get totalRevenue() {
-    return this.#accountYear.getDeposits(ACCOUNT_TYPES.REVENUE).asCurrency();
+  get total() {
+    return this.#accountYear.getDeposits(this.#accountType).asCurrency();
   }
 
   /**
-   * Create an empty Revenue instance
+   * Create an empty Income instance
    * @param {AccountYear} accountYear - AccountYear instance
-   * @returns {Revenue}
+   * @param {string} accountType - Type of account (e.g., REVENUE)
+   * @returns {Income}
    */
-  static CreateFrom(accountYear) {
-    return new Revenue(accountYear);
+  static CreateFrom(accountYear, accountType) {
+    return new Income(accountYear, accountType);
   }
 
   static Empty() {
-    return new Revenue(AccountYear.Empty());
+    return new Income(AccountYear.Empty(), "");
   }
 }

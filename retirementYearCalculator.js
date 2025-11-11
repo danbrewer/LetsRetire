@@ -94,9 +94,7 @@ function calculateRetirementYearData(inputs, accountYear, benefitAmounts) {
 
   // reduce the spend temporarily to determine the shortfall that needs to be covered by 401k, savings, and roth
 
-  const fixedIncomeNet =
-    fixedIncomeOnly.incomeBreakdown.netIncome -
-    fixedIncomeOnly.incomeBreakdown.actualEarnedInterest;
+  const fixedIncomeNet = fixedIncomeOnly.incomeBreakdown.netIncome;
 
   // accountYear.deposit(
   //   ACCOUNT_TYPES.REVENUE,
@@ -333,8 +331,12 @@ function calculateRetirementYearData(inputs, accountYear, benefitAmounts) {
   // result.standardDeduction = incomeResults.incomeBreakdown.standardDeduction;
   result.totals = totals;
   result.balances = Balances.CreateUsing(accountYear);
-  result.disbursements = Disbursements.CreateUsing(accountYear);
-  result.revenue = Revenue.CreateFrom(accountYear);
+  // result.disbursements = Disbursements.CreateUsing(accountYear);
+  result.revenue = Income.CreateFrom(accountYear, ACCOUNT_TYPES.REVENUE);
+  result.grossIncome = Income.CreateFrom(
+    accountYear,
+    ACCOUNT_TYPES.DISBURSEMENT
+  );
   result.fiscalData = fiscalData;
   result.demographics = demographics;
   result.mySsBenefits = mySsBenefits;

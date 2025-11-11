@@ -78,9 +78,8 @@ class IncomeBreakdown {
     ).asCurrency();
   }
 
-  get totalActualIncome() {
+  get totalIncomeStreamGross() {
     return (
-      this.actualEarnedInterest +
       this.subjectPension +
       this.partnerPension +
       this.rmd +
@@ -88,6 +87,20 @@ class IncomeBreakdown {
       this.trad401kWithdrawal +
       this.socialSecurityIncome
     ).asCurrency();
+  }
+
+  get totalActualIncome() {
+    return (
+      // this.actualEarnedInterest +
+      (
+        this.subjectPension +
+        this.partnerPension +
+        this.rmd +
+        this.otherTaxableIncomeAdjustments +
+        this.trad401kWithdrawal +
+        this.socialSecurityIncome
+      ).asCurrency()
+    );
   }
 
   get adjustedGrossIncome() {
@@ -110,8 +123,7 @@ class IncomeBreakdown {
     return (
       this.totalReportedIncome -
       this.federalIncomeTax -
-      this.reportedEarnedInterest +
-      this.actualEarnedInterest
+      this.reportedEarnedInterest
     ).asCurrency();
   }
 
@@ -120,21 +132,21 @@ class IncomeBreakdown {
     return (this.federalIncomeTax / this.totalReportedIncome).round(3);
   }
 
-  grossIncomeAmountAsPercentageOfTotalReportedIncome(amount = 0) {
-    if (this.totalReportedIncome === 0) return 0;
-    return amount / this.totalReportedIncome;
+  grossIncomeAmountAsPercentageOfTotalIncomeStreamGross(amount = 0) {
+    if (this.totalIncomeStreamGross === 0) return 0;
+    return amount / this.totalIncomeStreamGross;
   }
 
   grossIncomeAmountAsPercentageOfNetIncome(amount = 0) {
     return (
-      this.grossIncomeAmountAsPercentageOfTotalReportedIncome(amount) *
+      this.grossIncomeAmountAsPercentageOfTotalIncomeStreamGross(amount) *
       this.netIncome
     ).asCurrency();
   }
 
   grossIncomeAmountAsPercentageOfFederalIncomeTax(amount = 0) {
     return (
-      this.grossIncomeAmountAsPercentageOfTotalReportedIncome(amount) *
+      this.grossIncomeAmountAsPercentageOfTotalIncomeStreamGross(amount) *
       this.federalIncomeTax
     ).asCurrency();
   }
