@@ -69,8 +69,9 @@ function calc() {
       TAX_BASE_YEAR + y
     );
 
-    const yearData = calculateWorkingYearData(
-      inputs,
+    const workingYearIncomeCalculator = new WorkingYearIncomeCalculator(inputs);
+
+    const yearData = workingYearIncomeCalculator.calculateWorkingYearData(
       currentSalary,
       accountYear
     );
@@ -90,7 +91,7 @@ function calc() {
   }
 
   // Setup retirement years; calculate initial benefit amounts
-  const initialBenefits = common_calculateInitialBenefitAmounts(inputs);
+  const initialBenefits = Common.calculateInitialBenefitAmounts(inputs);
   let ssYearlyIndexed = initialBenefits.ssAnnual;
   let penYearlyIndexed = initialBenefits.penAnnual;
   let spouseSsYearlyIndexed = initialBenefits.spouseSsAnnual;
@@ -116,8 +117,8 @@ function calc() {
       TAX_BASE_YEAR + yearIndex
     );
 
-    const yearData = calculateRetirementYearData(
-      inputs,
+    const calculator = new RetirementYearCalculator(inputs);
+    const yearData = calculator.calculateRetirementYearData(
       accountYear,
       benefitAmounts
     );

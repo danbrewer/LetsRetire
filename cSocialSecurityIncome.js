@@ -21,7 +21,6 @@ class SocialSecurityIncome {
    * @param {number} [partnerNonTaxableAmount=0] - Spouse's non-taxable SS amount
    * @param {number} [combinedProvisionalIncome=0] - Combined provisional income for tax calculations
    * @param {any} [calculationDetails=null] - Detailed calculation breakdown
-   * @param {string} [description="Social Security Income"] - Descriptive label
    */
   constructor(
     subjectPortion = "0%",
@@ -31,10 +30,8 @@ class SocialSecurityIncome {
     partnerTaxableAmount = 0,
     partnerNonTaxableAmount = 0,
     combinedProvisionalIncome = 0,
-    calculationDetails = null,
-    description = "Social Security Income"
+    calculationDetails = null
   ) {
-    this._description = description;
     this.subjectPortion = subjectPortion;
     this.subjectTaxableAmount = subjectTaxableAmount;
     this.subjectNonTaxableAmount = subjectNonTaxableAmount;
@@ -43,15 +40,6 @@ class SocialSecurityIncome {
     this.partnerNonTaxableAmount = partnerNonTaxableAmount;
     this.combinedProvisionalIncome = combinedProvisionalIncome;
     this.calculationDetails = calculationDetails;
-  }
-
-  /**
-   * Gets the descriptive label for this Social Security income data.
-   *
-   * @returns {string} Description of the Social Security income data
-   */
-  get description() {
-    return this._description;
   }
 
   /**
@@ -287,46 +275,6 @@ class SocialSecurityIncome {
   }
 
   /**
-   * Updates Social Security income values for corrections or adjustments.
-   *
-   * @param {Object} updates - Object containing SS income updates:
-   * @param {string} [updates.mySsGross] - New primary gross percentage
-   * @param {number} [updates.myTaxableAmount] - New primary taxable amount
-   * @param {number} [updates.myNonTaxableAmount] - New primary non-taxable amount
-   * @param {string} [updates.spouseSsGross] - New spouse gross percentage
-   * @param {number} [updates.spouseTaxableAmount] - New spouse taxable amount
-   * @param {number} [updates.spouseNonTaxableAmount] - New spouse non-taxable amount
-   * @param {number} [updates.combinedProvisionalIncome] - New provisional income
-   * @param {any} [updates.calculationDetails] - New calculation details
-   */
-  updateSsIncome(updates) {
-    if (updates.mySsGross !== undefined) {
-      this.subjectPortion = updates.mySsGross;
-    }
-    if (updates.myTaxableAmount !== undefined) {
-      this.subjectTaxableAmount = updates.myTaxableAmount;
-    }
-    if (updates.myNonTaxableAmount !== undefined) {
-      this.subjectNonTaxableAmount = updates.myNonTaxableAmount;
-    }
-    if (updates.spouseSsGross !== undefined) {
-      this.partnerPortion = updates.spouseSsGross;
-    }
-    if (updates.spouseTaxableAmount !== undefined) {
-      this.partnerTaxableAmount = updates.spouseTaxableAmount;
-    }
-    if (updates.spouseNonTaxableAmount !== undefined) {
-      this.partnerNonTaxableAmount = updates.spouseNonTaxableAmount;
-    }
-    if (updates.combinedProvisionalIncome !== undefined) {
-      this.combinedProvisionalIncome = updates.combinedProvisionalIncome;
-    }
-    if (updates.calculationDetails !== undefined) {
-      this.calculationDetails = updates.calculationDetails;
-    }
-  }
-
-  /**
    * Factory method to create a SocialSecurityIncome from income calculation results.
    *
    * This method provides a convenient way to construct SocialSecurityIncome objects
@@ -374,7 +322,6 @@ class SocialSecurityIncome {
    * @param {number} [spouseTotalBenefit=0] - Spouse's total SS benefit
    * @param {number} [spouseTaxablePortion=0] - Spouse's taxable portion
    * @param {number} [provisionalIncome=0] - Combined provisional income
-   * @param {string} [description="Social Security Income"] - Optional description
    *
    * @returns {SocialSecurityIncome} A new SS income instance with specified values
    *
@@ -396,8 +343,7 @@ class SocialSecurityIncome {
     myTaxablePortion,
     spouseTotalBenefit = 0,
     spouseTaxablePortion = 0,
-    provisionalIncome = 0,
-    description = "Social Security Income"
+    provisionalIncome = 0
   ) {
     const myNonTaxablePortion = myTotalBenefit - myTaxablePortion;
     const spouseNonTaxablePortion = spouseTotalBenefit - spouseTaxablePortion;
@@ -414,15 +360,13 @@ class SocialSecurityIncome {
       spouseTaxablePortion,
       spouseNonTaxablePortion,
       provisionalIncome,
-      null,
-      description
+      null
     );
   }
 
   /**
    * Factory method to create an empty SocialSecurityIncome instance.
    *
-   * @param {string} [description="Social Security Income"] - Optional description
    * @returns {SocialSecurityIncome} A new SS income instance with zero values
    *
    * @example
@@ -436,18 +380,8 @@ class SocialSecurityIncome {
    * @static
    * @since 1.0.0
    */
-  static Empty(description = "Social Security Income") {
-    return new SocialSecurityIncome(
-      "0%",
-      0,
-      0,
-      "0%",
-      0,
-      0,
-      0,
-      null,
-      description
-    );
+  static Empty() {
+    return new SocialSecurityIncome("0%", 0, 0, "0%", 0, 0, 0, null);
   }
 }
 

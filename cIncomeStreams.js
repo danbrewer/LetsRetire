@@ -64,7 +64,7 @@ class IncomeStreams {
     const spouseSs = demographics.isPartnerEligibleForSs
       ? benefitAmounts.spouseSsAnnual
       : 0;
-    const rmd = common_calculateRMD(
+    const rmd = Common.calculateRMD(
       fiscalData.useRmd,
       demographics.age,
       accountYear.getStartingBalance(ACCOUNT_TYPES.TRAD_401K)

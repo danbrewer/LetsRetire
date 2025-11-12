@@ -75,16 +75,11 @@ class WorkingYearIncome {
   getTaxableIncome(standardDeduction = 0) {
     const adjustedGrossIncome = this.adjustedGrossIncome;
 
-    // Use global tax calculation function if available
-    if (typeof retirementJS_calculateTaxableIncome === "function") {
-      return retirementJS_calculateTaxableIncome(
-        adjustedGrossIncome,
-        standardDeduction
-      );
-    }
-
-    // Fallback calculation
-    return Math.max(adjustedGrossIncome - standardDeduction, 0);
+    const retirementCalcuator = RetirementIncomeCalculator.Empty();
+    return retirementCalcuator.calculateTaxableIncome(
+      adjustedGrossIncome,
+      standardDeduction
+    );
   }
 
   /**

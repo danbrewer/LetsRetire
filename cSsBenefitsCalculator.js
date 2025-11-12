@@ -12,19 +12,19 @@ class SsBenefitsCalculator {
     ).asCurrency();
 
     this.provisionalIncome = (
-      this.oneHalfOfSSBenefits + this.nonSsIncome
+      this.oneHalfOfSSBenefits + this.otherTaxableIncome
     ).asCurrency();
   }
 
   /**
    * @param {number} myBenefits
    * @param {number} spouseBenefits
-   * @param {number} nonSsIncome
+   * @param {number} otherTaxableIncome
    */
-  constructor(myBenefits, spouseBenefits, nonSsIncome) {
+  constructor(myBenefits, spouseBenefits, otherTaxableIncome) {
     this.myBenefits = myBenefits;
     this.spouseBenefits = spouseBenefits;
-    this.nonSsIncome = nonSsIncome;
+    this.otherTaxableIncome = otherTaxableIncome;
 
     this.taxablePortion = 0;
     this.totalBenefits = 0;
@@ -59,10 +59,10 @@ class SsBenefitsCalculator {
 
   // Private method to calculate the taxable portion based on IRS rules
   #calculateTaxablePortion() {
-    if (isNaN(this.totalBenefits) || isNaN(this.nonSsIncome)) {
+    if (isNaN(this.totalBenefits) || isNaN(this.otherTaxableIncome)) {
       if (typeof log !== "undefined") {
         log.error(
-          `SsBenefits received NaN values: totalBenefits was ${this.totalBenefits}, nonSsIncome was ${this.nonSsIncome}`
+          `SsBenefits received NaN values: totalBenefits was ${this.totalBenefits}, nonSsIncome was ${this.otherTaxableIncome}`
         );
       }
       throw new Error("Invalid input: NaN values detected");
@@ -72,7 +72,7 @@ class SsBenefitsCalculator {
       /* method */ "irs-rules",
       /* totalBenefits */ this.totalBenefits,
       /* halfSSBenefit */ this.oneHalfOfSSBenefits,
-      /* otherTaxableIncome */ this.nonSsIncome,
+      /* otherTaxableIncome */ this.otherTaxableIncome,
       /* provisionalIncome */ this.provisionalIncome,
       /* tier1Threshold */ 32000,
       /* incomeExceedingTier1 */ 0,
@@ -170,7 +170,7 @@ class SsBenefitsCalculator {
    * @param {number} newNonSsIncome
    */
   updateNonSsIncome(newNonSsIncome) {
-    this.nonSsIncome = newNonSsIncome;
+    this.otherTaxableIncome = newNonSsIncome;
     this.#initialize();
     this.#calculateTaxablePortion();
   }
