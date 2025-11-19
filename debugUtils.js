@@ -1,4 +1,4 @@
-const DUMP_CALCULATION_DETAILS = false; // set to false to disable detailed calc dumps
+const DUMP_CALCULATION_DETAILS = true; // set to false to disable detailed calc dumps
 
 // =====================
 // Function helpers

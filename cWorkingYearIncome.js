@@ -10,39 +10,103 @@
  * @since 1.0.0
  */
 class WorkingYearIncome {
+  /** @type {Demographics} */
+  #demographics;
+  /** @type {FiscalData} */
+  #fiscalData;
+  /** @type {AccountYear} */
+  #accountYear;
+  /** @type {Inputs} */
+  #inputs;
+
+  // /**
+  //  * Creates a new WorkingYearIncome instance with income and tax data.
+  //  *
+  //  * @param {number} [wagesTipsAndCompensation=0] - Primary employment income
+  //  * @param {number} [otherTaxableIncomeAdjustments=0] - Additional taxable income adjustments
+  //  * @param {number} [taxableInterestIncome=0] - Interest income from taxable accounts
+  //  * @param {number} [rollingOverIntoSavings=0] - Amount rolling over into savings
+  //  * @param {number} [retirementAccountContributions=0] - Pretax retirement contributions
+  //  * @param {number} [rothIraContributions=0] - After-tax Roth IRA contributions
+  //  * @param {number} [federalTaxesOwed=0] - Federal tax liability
+  //  * @param {number} [taxFreeIncomeAdjustment=0] - Tax-free income adjustments
+  //  * @param {string} [description="Income"] - Descriptive label
+  //  */
+
   /**
-   * Creates a new WorkingYearIncome instance with income and tax data.
    *
-   * @param {number} [wagesTipsAndCompensation=0] - Primary employment income
-   * @param {number} [otherTaxableIncomeAdjustments=0] - Additional taxable income adjustments
-   * @param {number} [taxableInterestIncome=0] - Interest income from taxable accounts
-   * @param {number} [rollingOverIntoSavings=0] - Amount rolling over into savings
-   * @param {number} [retirementAccountContributions=0] - Pretax retirement contributions
-   * @param {number} [rothIraContributions=0] - After-tax Roth IRA contributions
-   * @param {number} [federalTaxesOwed=0] - Federal tax liability
-   * @param {number} [taxFreeIncomeAdjustment=0] - Tax-free income adjustments
-   * @param {string} [description="Income"] - Descriptive label
+   * @param {Inputs} inputs - Input configuration object containing salary, contribution rates, etc.
+   * @param {Demographics} demographics - Demographic information including age
+   * @param {FiscalData} fiscalData - Fiscal data including tax settings
+   * @param {AccountYear} accountYear - Account group with savings and retirement accounts
+   * @param {string} [description="Income"] - Optional description
    */
+
   constructor(
-    wagesTipsAndCompensation = 0,
-    otherTaxableIncomeAdjustments = 0,
-    taxableInterestIncome = 0,
-    rollingOverIntoSavings = 0,
-    retirementAccountContributions = 0,
-    rothIraContributions = 0,
-    federalTaxesOwed = 0,
-    taxFreeIncomeAdjustment = 0,
+    inputs,
+    demographics,
+    fiscalData,
+    accountYear,
+    // wagesTipsAndCompensation = 0,
+    // otherTaxableIncomeAdjustments = 0,
+    // taxableInterestIncome = 0,
+    // rollingOverIntoSavings = 0,
+    // retirementAccountContributions = 0,
+    // rothIraContributions = 0,
+    // federalTaxesOwed = 0,
+    // taxFreeIncomeAdjustment = 0,
     description = "Income"
   ) {
+    this.#accountYear = accountYear;
+    this.#demographics = demographics;
+    this.#fiscalData = fiscalData;
+    this.#inputs = inputs;
+
     this._description = description;
-    this.wagesTipsAndCompensation = wagesTipsAndCompensation;
-    this.otherTaxableIncomeAdjustments = otherTaxableIncomeAdjustments;
-    this.taxableInterestIncome = taxableInterestIncome;
-    this.rollingOverIntoSavings = rollingOverIntoSavings;
-    this.retirementAccountContributions = retirementAccountContributions;
-    this.rothIraContributions = rothIraContributions;
-    this.federalTaxesOwed = federalTaxesOwed;
-    this.taxFreeIncomeAdjustment = taxFreeIncomeAdjustment;
+  }
+
+  get wagesTipsAndCompensation() {
+    return this.#inputs.salary;
+  }
+
+  get taxableInterestIncome() {
+    const interestAmount = this.#accountYear.getDeposits(
+      ACCOUNT_TYPES.SAVINGS,
+      TRANSACTION_CATEGORY.INTEREST
+    );
+    return interestAmount.asCurrency();
+  }
+
+  // get rollingOverIntoSavings() {}
+
+  get retirementAccountContributions() {
+    return this.#accountYear.getDeposits(
+      ACCOUNT_TYPES.TRAD_401K,
+      TRANSACTION_CATEGORY.CONTRIBUTION
+    );
+  }
+  get rothIraContributions() {
+    return this.#accountYear.getDeposits(
+      ACCOUNT_TYPES.TRAD_ROTH,
+      TRANSACTION_CATEGORY.CONTRIBUTION
+    );
+  }
+
+  get federalTaxesOwed() {
+    const federalIncomeTaxOwed = TaxCalculator.determineFederalIncomeTax(
+      this.#inputs.salary,
+      this.#fiscalData,
+      this.#demographics
+    );
+    return federalIncomeTaxOwed.asCurrency();
+  }
+
+  get taxFreeIncomeAdjustment() {
+    return this.#inputs.taxFreeIncomeAdjustment;
+  }
+
+  get taxableIncomeAdjustment() {
+    return this.#inputs.taxableIncomeAdjustment;
   }
 
   //   /**
@@ -90,7 +154,7 @@ class WorkingYearIncome {
   get allIncomeSources() {
     return (
       this.wagesTipsAndCompensation +
-      this.otherTaxableIncomeAdjustments +
+      this.taxableIncomeAdjustment +
       this.taxFreeIncomeAdjustment +
       this.taxableInterestIncome
     );
@@ -104,7 +168,7 @@ class WorkingYearIncome {
   get grossIncome() {
     return (
       this.wagesTipsAndCompensation +
-      this.otherTaxableIncomeAdjustments +
+      this.taxableIncomeAdjustment +
       this.taxableInterestIncome
     );
   }
@@ -193,8 +257,8 @@ class WorkingYearIncome {
 
     return {
       wages: grossIncome > 0 ? this.wagesTipsAndCompensation / grossIncome : 0,
-      otherTaxable:
-        grossIncome > 0 ? this.otherTaxableIncomeAdjustments / grossIncome : 0,
+      taxableIncomeAdjustment:
+        grossIncome > 0 ? this.taxableIncomeAdjustment / grossIncome : 0,
       interest: grossIncome > 0 ? this.taxableInterestIncome / grossIncome : 0,
       taxFree: allIncome > 0 ? this.taxFreeIncomeAdjustment / allIncome : 0,
     };
@@ -259,7 +323,7 @@ class WorkingYearIncome {
     return {
       // Raw income sources
       wagesTipsAndCompensation: this.wagesTipsAndCompensation,
-      otherTaxableIncomeAdjustments: this.otherTaxableIncomeAdjustments,
+      taxableIncomeAdjustment: this.taxableIncomeAdjustment,
       taxableInterestIncome: this.taxableInterestIncome,
       taxFreeIncomeAdjustment: this.taxFreeIncomeAdjustment,
 
@@ -288,59 +352,14 @@ class WorkingYearIncome {
   }
 
   /**
-   * Updates income values for corrections or adjustments.
-   *
-   * @param {Object} updates - Object containing income updates:
-   * @param {number} [updates.wagesTipsAndCompensation] - New wages amount
-   * @param {number} [updates.otherTaxableIncomeAdjustments] - New other taxable income
-   * @param {number} [updates.taxableInterestIncome] - New interest income
-   * @param {number} [updates.rollingOverIntoSavings] - New rollover amount
-   * @param {number} [updates.retirementAccountContributions] - New retirement contributions
-   * @param {number} [updates.rothIraContributions] - New Roth contributions
-   * @param {number} [updates.federalTaxesOwed] - New federal taxes
-   * @param {number} [updates.taxFreeIncomeAdjustment] - New tax-free adjustments
-   * @param {number} [updates.spendableIncome] - New spendable income
-   */
-  updateIncome(updates) {
-    if (updates.wagesTipsAndCompensation !== undefined) {
-      this.wagesTipsAndCompensation = updates.wagesTipsAndCompensation;
-    }
-    if (updates.otherTaxableIncomeAdjustments !== undefined) {
-      this.otherTaxableIncomeAdjustments =
-        updates.otherTaxableIncomeAdjustments;
-    }
-    if (updates.taxableInterestIncome !== undefined) {
-      this.taxableInterestIncome = updates.taxableInterestIncome;
-    }
-    if (updates.rollingOverIntoSavings !== undefined) {
-      this.rollingOverIntoSavings = updates.rollingOverIntoSavings;
-    }
-    if (updates.retirementAccountContributions !== undefined) {
-      this.retirementAccountContributions =
-        updates.retirementAccountContributions;
-    }
-    if (updates.rothIraContributions !== undefined) {
-      this.rothIraContributions = updates.rothIraContributions;
-    }
-    if (updates.federalTaxesOwed !== undefined) {
-      this.federalTaxesOwed = updates.federalTaxesOwed;
-    }
-    if (updates.taxFreeIncomeAdjustment !== undefined) {
-      this.taxFreeIncomeAdjustment = updates.taxFreeIncomeAdjustment;
-    }
-    // if (updates.spendableIncome !== undefined) {
-    //   this.spendableIncome = updates.spendableIncome;
-    // }
-  }
-
-  /**
    * Factory method to create a WorkingYearIncome from account data and demographics.
    *
    * This method provides a convenient way to construct WorkingYearIncome objects
    * by extracting data from account groups, fiscal data, and demographic information.
    *
-   * @param {number} salary - Annual salary amount
+   * @param {Inputs} inputs - Annual salary amount
    * @param {Demographics} demographics - Demographic information including age
+   * @param {FiscalData} fiscalData - Fiscal data including tax settings
    * @param {AccountYear} accountYear - Account group with savings and retirement accounts
    * @param {string} [description="Income"] - Optional description
    *
@@ -363,56 +382,59 @@ class WorkingYearIncome {
    * @since 1.0.0
    */
   static CreateUsing(
-    salary,
+    inputs,
     demographics,
+    fiscalData,
     accountYear,
     description = "Income"
   ) {
     // Get taxable income override if function exists
-    let otherTaxableIncomeAdjustments = 0;
-    if (typeof getTaxableIncomeOverride === "function") {
-      otherTaxableIncomeAdjustments =
-        getTaxableIncomeOverride(demographics.age) || 0;
-    }
+    // let otherTaxableIncomeAdjustments = 0;
+    // if (typeof getTaxableIncomeOverride === "function") {
+    //   otherTaxableIncomeAdjustments =
+    //     getTaxableIncomeOverride(demographics.age) || 0;
+    // }
 
-    // Get tax-free income override if function exists
-    let taxFreeIncomeAdjustment = 0;
-    if (typeof getTaxFreeIncomeOverride === "function") {
-      taxFreeIncomeAdjustment = getTaxFreeIncomeOverride(demographics.age) || 0;
-    }
+    // // Get tax-free income override if function exists
+    // let taxFreeIncomeAdjustment = 0;
+    // if (typeof getTaxFreeIncomeOverride === "function") {
+    //   taxFreeIncomeAdjustment = getTaxFreeIncomeOverride(demographics.age) || 0;
+    // }
 
     // Get interest income from savings account
-    let taxableInterestIncome = 0;
+    // let taxableInterestIncome = 0;
 
-    const interestAmount = accountYear.getDeposits(
-      ACCOUNT_TYPES.SAVINGS,
-      TRANSACTION_CATEGORY.INTEREST
-    );
-    taxableInterestIncome =
-      typeof interestAmount.asCurrency === "function"
-        ? interestAmount.asCurrency()
-        : interestAmount;
+    // const interestAmount = accountYear.getDeposits(
+    //   ACCOUNT_TYPES.SAVINGS,
+    //   TRANSACTION_CATEGORY.INTEREST
+    // );
+    // taxableInterestIncome =
+    //   typeof interestAmount.asCurrency === "function"
+    //     ? interestAmount.asCurrency()
+    //     : interestAmount;
 
-    const retirementAccountContributions = accountYear.getDeposits(
-      ACCOUNT_TYPES.TRAD_401K,
-      TRANSACTION_CATEGORY.CONTRIBUTION
-    );
+    // const retirementAccountContributions = accountYear.getDeposits(
+    //   ACCOUNT_TYPES.TRAD_401K,
+    //   TRANSACTION_CATEGORY.CONTRIBUTION
+    // );
 
-    // Get Roth IRA contributions
-    const rothIraContributions = accountYear.getDeposits(
-      ACCOUNT_TYPES.TRAD_ROTH,
-      TRANSACTION_CATEGORY.CONTRIBUTION
-    );
+    // // Get Roth IRA contributions
+    // const rothIraContributions = accountYear.getDeposits(
+    //   ACCOUNT_TYPES.TRAD_ROTH,
+    //   TRANSACTION_CATEGORY.CONTRIBUTION
+    // );
+
+    // const federalTaxesOwed = TaxCalculator.determineFederalIncomeTax(
+    //   this.getTaxableIncome(),
+    //   this.#fiscalData,
+    //   this.#demographics
+    // );
 
     return new WorkingYearIncome(
-      salary,
-      otherTaxableIncomeAdjustments,
-      taxableInterestIncome,
-      0, // rollingOverIntoSavings
-      retirementAccountContributions,
-      rothIraContributions,
-      0, // federalTaxesOwed - to be calculated separately
-      taxFreeIncomeAdjustment,
+      inputs,
+      demographics,
+      fiscalData,
+      accountYear,
       description
     );
   }
@@ -445,28 +467,28 @@ class WorkingYearIncome {
    * @static
    * @since 1.0.0
    */
-  static CreateFrom(
-    wages,
-    otherTaxable,
-    interest,
-    retirementContrib,
-    rothContrib,
-    taxes,
-    taxFree = 0,
-    description = "Income"
-  ) {
-    return new WorkingYearIncome(
-      wages,
-      otherTaxable,
-      interest,
-      0, // rollingOverIntoSavings
-      retirementContrib,
-      rothContrib,
-      taxes,
-      taxFree,
-      description
-    );
-  }
+  // static CreateFrom(
+  //   wages,
+  //   otherTaxable,
+  //   interest,
+  //   retirementContrib,
+  //   rothContrib,
+  //   taxes,
+  //   taxFree = 0,
+  //   description = "Income"
+  // ) {
+  //   return new WorkingYearIncome(
+  //     wages,
+  //     otherTaxable,
+  //     interest,
+  //     0, // rollingOverIntoSavings
+  //     retirementContrib,
+  //     rothContrib,
+  //     taxes,
+  //     taxFree,
+  //     description
+  //   );
+  // }
 
   /**
    * Factory method to create an empty WorkingYearIncome instance.
@@ -485,9 +507,9 @@ class WorkingYearIncome {
    * @static
    * @since 1.0.0
    */
-  static Empty(description = "Income") {
-    return new WorkingYearIncome(0, 0, 0, 0, 0, 0, 0, 0, description);
-  }
+  // static Empty(description = "Income") {
+  //   return new WorkingYearIncome(0, 0, 0, 0, 0, 0, 0, 0, description);
+  // }
 }
 
 // Maintain backward compatibility - this will need salary, demographics, accountGroup, and fiscalData context

@@ -49,5 +49,23 @@ Number.prototype.adjustedForInflation = function (inflationRate, years) {
   return adjustedValue;
 };
 
+/**
+ * @this {number}
+ * @param {number} total
+ * @returns {number}
+ */
+Number.prototype.asPercentageOf = function (total) {
+  if (total === 0) return 0;
+  return ((this / total) * 100).round(2);
+};
+
+/**
+ * @this {number}
+ * @returns {number}
+ */
+Number.prototype.asPercentage = function () {
+  return this.asPercentageOf(100);
+};
+
 const compoundedRate = (/** @type {number} */ r, /** @type {number} */ n) =>
   Math.pow(1 + r, n);

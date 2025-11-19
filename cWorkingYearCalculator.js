@@ -2,122 +2,139 @@
  * WorkingYearIncomeCalculator class - Handles working year income and accumulation calculations
  * Provides comprehensive analysis for the accumulation phase of retirement planning
  */
-class WorkingYearIncomeCalculator {
+class WorkingYearCalculator {
   /** @type {Inputs} */
   #inputs;
+  /** @type {FiscalData} */
+  #fiscalData;
+  /** @type {Demographics} */
+  #demographics;
 
   /**
    * Create working year income calculator with input configuration
    * @param {Inputs} inputs - Input configuration object containing salary, contribution rates, etc.
+   * @param {AccountYear} accountYear - AccountYear instance containing all accounts
    */
-  constructor(inputs) {
+  constructor(inputs, accountYear) {
     this.#inputs = inputs;
+    this.accountYear = accountYear;
+    this.#demographics = Demographics.CreateUsing(inputs, false, true);
+    this.#fiscalData = FiscalData.CreateUsing(this.#inputs, TAX_BASE_YEAR);
   }
 
-  /**
-   * Calculate one year of accumulation phase (working years)
-   * @param {number} salary - Annual salary for this year
-   * @param {AccountYear} accountYear - AccountYear instance containing all accounts
-   * @returns {WorkingYearData} Comprehensive working year calculation results
-   */
-  calculateWorkingYearData(salary, accountYear) {
+  calculateWorkingYearData() {
     // Declare and initialize the result object at the top
     const result = WorkingYearData.CreateEmpty();
 
+    result.accountYear = this.accountYear;
+
     // debugger;
-    const fiscalData = FiscalData.CreateUsing(this.#inputs, TAX_BASE_YEAR);
-    const demographics = Demographics.CreateUsing(this.#inputs, false, true);
     const employmentInfo = EmploymentInfo.CreateUsing(
-      demographics,
-      salary,
+      this.#demographics,
       this.#inputs
     );
 
     // Create income calculator for tax calculations
     const incomeCalculator = new RetirementIncomeCalculator(
-      demographics,
-      fiscalData
+      this.#demographics,
+      this.#fiscalData
     );
 
     // **************
     // Calculations
     // **************
     // debugger;
-    accountYear.deposit(
+    this.accountYear.deposit(
       ACCOUNT_TYPES.TRAD_401K,
       TRANSACTION_CATEGORY.CONTRIBUTION,
       employmentInfo.max401kContribution
     );
-    accountYear.deposit(
+    this.accountYear.deposit(
       ACCOUNT_TYPES.TRAD_401K,
       TRANSACTION_CATEGORY.INTEREST,
-      accountYear.calculateInterestForYear(
+      this.accountYear.calculateInterestForYear(
         ACCOUNT_TYPES.TRAD_401K,
         INTEREST_CALCULATION_EPOCH.AVERAGE_BALANCE
       )
     );
 
-    const savingsInterestEarned = accountYear.calculateInterestForYear(
+    const savingsInterestEarned = this.accountYear.calculateInterestForYear(
       ACCOUNT_TYPES.SAVINGS,
       INTEREST_CALCULATION_EPOCH.IGNORE_DEPOSITS
     );
-    accountYear.deposit(
+    this.accountYear.deposit(
       ACCOUNT_TYPES.SAVINGS,
       TRANSACTION_CATEGORY.INTEREST,
       savingsInterestEarned
     );
 
-    accountYear.deposit(
+    this.accountYear.deposit(
       ACCOUNT_TYPES.TRAD_ROTH,
       TRANSACTION_CATEGORY.CONTRIBUTION,
       employmentInfo.rothMaxContribution
     );
 
-    const rothInterestEarned = accountYear.calculateInterestForYear(
+    const rothInterestEarned = this.accountYear.calculateInterestForYear(
       ACCOUNT_TYPES.TRAD_ROTH,
       INTEREST_CALCULATION_EPOCH.IGNORE_DEPOSITS
     );
-    accountYear.deposit(
+    this.accountYear.deposit(
       ACCOUNT_TYPES.TRAD_ROTH,
       TRANSACTION_CATEGORY.INTEREST,
       rothInterestEarned
     );
 
-    const taxes = new Taxes();
-
     const contributions = Contributions.CreateUsing(
-      accountYear,
+      this.accountYear,
       employmentInfo,
       undefined,
       [
         withLabel("employmentInfo", employmentInfo),
-        withLabel("accountGroup.savings", accountYear),
+        withLabel("accountGroup.savings", this.accountYear),
       ]
     );
 
-    const income = WorkingYearIncome.CreateUsing(
-      salary,
-      demographics,
-      accountYear
+    const workingYearIncome = WorkingYearIncome.CreateUsing(
+      this.#inputs,
+      this.#demographics,
+      this.#fiscalData,
+      this.accountYear
     );
 
-    taxes.taxableIncome = income.adjustedGrossIncome;
-
-    taxes.standardDeduction = incomeCalculator.getStandardDeduction();
-
-    taxes.federalTaxesOwed = incomeCalculator.calculateFederalTax(
-      income.getTaxableIncome()
+    const taxes = Taxes.CreateForWorkingYearIncome(
+      workingYearIncome,
+      this.#fiscalData,
+      this.#demographics
     );
 
-    income.federalTaxesOwed = taxes.federalTaxesOwed;
+    // const standardDeduction = TaxCalculator.getStandardDeduction(
+    //   this.#fiscalData,
+    //   this.#demographics
+    // );
 
+    // const federalIncomeTaxOwed = TaxCalculator.determineFederalIncomeTax(
+    //   workingYearIncome.getTaxableIncome(),
+    //   this.#fiscalData,
+    //   this.#demographics
+    // );
+
+    // const taxes = new Taxes(
+    //   workingYearIncome.grossIncome,
+    //   workingYearIncome.adjustedGrossIncome,
+    //   standardDeduction,
+    //   workingYearIncome.adjustedGrossIncome - standardDeduction,
+    //   federalIncomeTaxOwed,
+    //   0
+    // );
     // Money not spent from income goes into savings
     // fiscalData.determineActualSavingsContribution(income.getNetIncome);
 
     const withdrawals = {
-      retirementAccount: accountYear.getWithdrawals(ACCOUNT_TYPES.TRAD_401K),
-      savings: accountYear.getWithdrawals(ACCOUNT_TYPES.SAVINGS),
-      rothIra: accountYear.getWithdrawals(ACCOUNT_TYPES.TRAD_ROTH),
+      retirementAccount: this.accountYear.getWithdrawals(
+        ACCOUNT_TYPES.TRAD_401K
+      ),
+      savings: this.accountYear.getWithdrawals(ACCOUNT_TYPES.SAVINGS),
+      rothIra: this.accountYear.getWithdrawals(ACCOUNT_TYPES.TRAD_ROTH),
       total() {
         return this.retirementAccount + this.savings + this.rothIra;
       },
@@ -152,10 +169,10 @@ class WorkingYearIncomeCalculator {
       calculationDetails: {},
     };
 
-    totals.totalIncome = income.allIncomeSources;
-    totals.totalNetIncome = income.netIncome;
-    totals.grossTaxableIncome = income.grossIncome;
-    totals.calculationDetails = withLabel("income", income);
+    totals.totalIncome = workingYearIncome.allIncomeSources;
+    totals.totalNetIncome = workingYearIncome.netIncome;
+    totals.grossTaxableIncome = workingYearIncome.grossIncome;
+    totals.calculationDetails = withLabel("income", workingYearIncome);
 
     // Update all the final values in the result object
     // contributions.my401k = employmentInfo.max401kContribution;
@@ -179,31 +196,33 @@ class WorkingYearIncomeCalculator {
     result.taxes = taxes;
     result.totals = totals;
     result.balances = balances;
-    result.income = income;
-    result.demographics = demographics;
+    result.income = workingYearIncome;
+    result.demographics = this.#demographics;
     result.employmentInfo = employmentInfo;
     // result.roth = accountYear.rothIra;
     // result.savings = accountYear.savings;
     // result.retirementAccount = accountYear.trad401k;
-    result.fiscalData = fiscalData;
+    result.fiscalData = this.#fiscalData;
 
     // Add breakdown data
     result.savingsBreakdown = {
-      startingBalance: accountYear.getStartingBalance(ACCOUNT_TYPES.SAVINGS),
-      withdrawals: accountYear.getWithdrawals(ACCOUNT_TYPES.SAVINGS),
-      deposits: accountYear.getDeposits(ACCOUNT_TYPES.SAVINGS),
-      taxFreeIncomeDeposit: income.taxFreeIncomeAdjustment,
-      interestEarned: accountYear.getDeposits(
+      startingBalance: this.accountYear.getStartingBalance(
+        ACCOUNT_TYPES.SAVINGS
+      ),
+      withdrawals: this.accountYear.getWithdrawals(ACCOUNT_TYPES.SAVINGS),
+      deposits: this.accountYear.getDeposits(ACCOUNT_TYPES.SAVINGS),
+      taxFreeIncomeDeposit: workingYearIncome.taxFreeIncomeAdjustment,
+      interestEarned: this.accountYear.getDeposits(
         ACCOUNT_TYPES.SAVINGS,
         TRANSACTION_CATEGORY.INTEREST
       ),
-      endingBalance: accountYear.getEndingBalance(ACCOUNT_TYPES.SAVINGS),
-      growthRate: fiscalData.savingsRateOfReturn,
+      endingBalance: this.accountYear.getEndingBalance(ACCOUNT_TYPES.SAVINGS),
+      growthRate: this.#fiscalData.savingsRateOfReturn,
       calculationDetails: [
-        withLabel("accountYear", accountYear),
+        withLabel("accountYear", this.accountYear),
         withLabel(
           "income.taxFreeIncomeAdjustment",
-          income.taxFreeIncomeAdjustment
+          workingYearIncome.taxFreeIncomeAdjustment
         ),
       ],
     };
@@ -240,17 +259,9 @@ class WorkingYearIncomeCalculator {
 
     result._description = `
 -----------------------------------------------
---- Retirement Year ${fiscalData.yearIndex + 1} (Age ${demographics.age}) (Year ${demographics.retirementYear}) ---
+--- Working Year ${this.#fiscalData.yearIndex + 1} (Age ${this.#demographics.age}) (Year ${this.#demographics.retirementYear}) ---
 -----------------------------------------------`;
 
     return result;
-  }
-
-  /**
-   * Get input configuration
-   * @returns {Inputs} - Input configuration object
-   */
-  getInputs() {
-    return this.#inputs;
   }
 }

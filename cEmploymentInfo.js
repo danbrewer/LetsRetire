@@ -327,7 +327,6 @@ class EmploymentInfo {
    * from the standard inputs structure used throughout the retirement calculator.
    *
    * @param {Demographics} demographics - Fiscal data context for contribution limits
-   * @param {number} salary - Annual salary amount
    * @param {Inputs} inputs - Input configuration containing contribution percentages and match info
    * @param {string} [description="Employment Info"] - Optional description
    *
@@ -343,15 +342,10 @@ class EmploymentInfo {
    * @static
    * @since 1.0.0
    */
-  static CreateUsing(
-    demographics,
-    salary,
-    inputs,
-    description = "Employment Info"
-  ) {
+  static CreateUsing(demographics, inputs, description = "Employment Info") {
     return new EmploymentInfo(
       demographics.age,
-      salary,
+      inputs.salary,
       inputs.pretaxPct || 0,
       inputs.rothPct || 0,
       inputs.matchCap || 0,

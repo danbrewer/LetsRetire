@@ -20,27 +20,6 @@ class RetirementIncomeCalculator {
   }
 
   /**
-   * Calculate federal income tax based on taxable income and tax brackets
-   * @param {number} taxableIncome - Taxable income amount
-   * @param {{ rate: number; upTo: number; }[]} brackets - Tax bracket configuration
-   * @returns {number} - Federal income tax amount
-   */
-  determineFederalIncomeTax(taxableIncome, brackets) {
-    let tax = 0,
-      prev = 0;
-
-    for (const { upTo, rate } of brackets) {
-      const slice = Math.min(taxableIncome, upTo) - prev;
-      if (slice > 0) tax += slice * rate;
-      if (taxableIncome <= upTo) break;
-      prev = upTo;
-    }
-    // log.info(`Total tax calculated is $${tax.asCurrency()}.`);
-
-    return tax.asCurrency();
-  }
-
-  /**
    * Calculate comprehensive income breakdown when a specific 401k withdrawal amount is applied.
    *
    * This function performs a complete income calculation for a retirement year by:
@@ -102,15 +81,19 @@ class RetirementIncomeCalculator {
       incomeStreams,
       variableTaxableIncome,
       ssBreakdown,
-      standardDeduction
-    );
-
-    incomeBreakdown.federalIncomeTax = this.determineFederalIncomeTax(
-      incomeBreakdown.taxableIncome,
-      taxBrackets
+      standardDeduction,
+      this.#demographics,
+      this.#fiscalData
     );
 
     return new IncomeRs(ssBreakdown, incomeBreakdown);
+  }
+
+  /**
+   * @param {IncomeStreams} incomeStreams
+   */
+  calculateFixedIncomeOnly(incomeStreams) {
+    return this.calculateIncomeWhen401kWithdrawalIs(0, incomeStreams);
   }
 
   /**
@@ -133,15 +116,8 @@ class RetirementIncomeCalculator {
     let lo = 0,
       hi = targetIncome * 2;
 
-    /** @type {{ totalIncome: number, taxableIncome: number, tax: number, netIncome: number, ssBreakdown: SsBenefitsCalculator, incomeBreakdown: IncomeBreakdown}} */
-    let income = {
-      totalIncome: 0,
-      taxableIncome: 0,
-      tax: 0,
-      netIncome: 0,
-      ssBreakdown: SsBenefitsCalculator.Empty(),
-      incomeBreakdown: IncomeBreakdown.Empty(),
-    };
+    /** @type {IncomeRs | null}} */
+    let incomeRs = null;
 
     for (let i = 0; i < 80; i++) {
       log.info();
@@ -153,17 +129,20 @@ class RetirementIncomeCalculator {
         `Guestimate 401k withdrawal: $${guestimate401kWithdrawal.asCurrency()}`
       );
 
-      let incomeRs = this.calculateIncomeWhen401kWithdrawalIs(
+      incomeRs = this.calculateIncomeWhen401kWithdrawalIs(
         guestimate401kWithdrawal,
         incomeStreams
       );
 
-      income.incomeBreakdown = incomeRs.incomeBreakdown;
-      income.ssBreakdown = incomeRs.ssBreakdown;
+      //   income.incomeBreakdown = incomeRs.incomeBreakdown;
+      //   income.ssBreakdown = incomeRs.ssBreakdown;
 
       log.info(`Target income is $${targetIncome.asCurrency()}.`);
 
-      const netIncome = income.incomeBreakdown.netIncome.asCurrency();
+      const netIncome =
+        incomeRs?.incomeBreakdown
+          .getNetIncomeMinusReportedEarnedInterest()
+          .asCurrency() ?? 0;
 
       const highLow =
         netIncome > targetIncome.asCurrency()
@@ -190,12 +169,15 @@ class RetirementIncomeCalculator {
     }
 
     // Update all the final values in the result object
-    result.net = income.incomeBreakdown.netIncome.asCurrency();
+    result.net =
+      incomeRs?.incomeBreakdown
+        .getNetIncomeMinusReportedEarnedInterest()
+        .asCurrency() ?? 0;
     result.withdrawalNeeded = hi.asCurrency();
     result.rmd = incomeStreams.rmd;
-    result.tax = income.incomeBreakdown.federalIncomeTax.asCurrency();
+    result.tax = incomeRs?.incomeBreakdown.federalIncomeTax.asCurrency() ?? 0;
     result.calculationDetails = [
-      withLabel("income", income),
+      withLabel("incomeRs", incomeRs),
       withLabel("incomeStreams", incomeStreams),
     ];
 
@@ -285,20 +267,10 @@ class RetirementIncomeCalculator {
   }
 
   /**
-   * Calculate federal tax using the configured demographics and fiscal data
-   * @param {number} taxableIncome - Taxable income amount
-   * @returns {number} - Federal tax amount
-   */
-  calculateFederalTax(taxableIncome) {
-    const taxBrackets = this.getTaxBrackets();
-    return this.determineFederalIncomeTax(taxableIncome, taxBrackets);
-  }
-
-  /**
    * Get demographics information
    * @returns {Demographics} - Demographics instance
    */
-  getDemographics() {
+  get demographics() {
     return this.#demographics;
   }
 
@@ -306,7 +278,7 @@ class RetirementIncomeCalculator {
    * Get fiscal data information
    * @returns {FiscalData} - Fiscal data instance
    */
-  getFiscalData() {
+  get fiscalData() {
     return this.#fiscalData;
   }
 
@@ -320,18 +292,6 @@ class RetirementIncomeCalculator {
       FiscalData.Empty()
     );
   }
-}
-
-// Legacy functions for backward compatibility
-/**
- * @deprecated Use RetirementIncomeCalculator class instead
- * @param {number} taxableIncome
- * @param {{ rate: number; upTo: number; }[]} brackets
- */
-function determineFederalIncomeTax(taxableIncome, brackets) {
-  // Create a temporary calculator instance for the calculation
-  const tempCalculator = RetirementIncomeCalculator.Empty();
-  return tempCalculator.determineFederalIncomeTax(taxableIncome, brackets);
 }
 
 /**
@@ -354,42 +314,42 @@ function calculateIncomeWhen401kWithdrawalIs(
   );
 }
 
-/**
- * @deprecated Use RetirementIncomeCalculator class instead
- * @param {number} targetIncome
- * @param {IncomeStreams} incomeStreams
- * @param {Demographics} demographics
- * @param {FiscalData} fiscalData
- */
-function determine401kWithdrawalsToHitNetTargetOf(
-  targetIncome,
-  incomeStreams,
-  demographics,
-  fiscalData
-) {
-  const calculator = new RetirementIncomeCalculator(demographics, fiscalData);
-  return calculator.determine401kWithdrawalsToHitNetTargetOf(
-    targetIncome,
-    incomeStreams
-  );
-}
+// /**
+//  * @deprecated Use RetirementIncomeCalculator class instead
+//  * @param {number} targetIncome
+//  * @param {IncomeStreams} incomeStreams
+//  * @param {Demographics} demographics
+//  * @param {FiscalData} fiscalData
+//  */
+// function determine401kWithdrawalsToHitNetTargetOf(
+//   targetIncome,
+//   incomeStreams,
+//   demographics,
+//   fiscalData
+// ) {
+//   const calculator = new RetirementIncomeCalculator(demographics, fiscalData);
+//   return calculator.determine401kWithdrawalsToHitNetTargetOf(
+//     targetIncome,
+//     incomeStreams
+//   );
+// }
 
-/**
- * @deprecated Use RetirementIncomeCalculator class instead
- * @param {string} filingStatus
- * @param {number} year
- * @param {number} inflationRate
- */
-function getTaxBrackets(filingStatus, year, inflationRate) {
-  const demographics = Demographics.Empty();
-  demographics.filingStatus = filingStatus;
-  const fiscalData = FiscalData.Empty();
-  fiscalData.taxYear = year;
-  fiscalData.inflationRate = inflationRate;
+// /**
+//  * @deprecated Use RetirementIncomeCalculator class instead
+//  * @param {string} filingStatus
+//  * @param {number} year
+//  * @param {number} inflationRate
+//  */
+// function getTaxBrackets(filingStatus, year, inflationRate) {
+//   const demographics = Demographics.Empty();
+//   demographics.filingStatus = filingStatus;
+//   const fiscalData = FiscalData.Empty();
+//   fiscalData.taxYear = year;
+//   fiscalData.inflationRate = inflationRate;
 
-  const calculator = new RetirementIncomeCalculator(demographics, fiscalData);
-  return calculator.getTaxBrackets();
-}
+//   const calculator = new RetirementIncomeCalculator(demographics, fiscalData);
+//   return calculator.getTaxBrackets();
+// }
 
 /**
  * @deprecated Use RetirementIncomeCalculator class instead
@@ -453,25 +413,25 @@ function calculateTaxableIncome(adjustedGrossIncome, standardDeduction) {
   );
 }
 
-/**
- * @deprecated Use RetirementIncomeCalculator class instead
- * @param {number} taxableIncome
- * @param {string} filingStatus
- * @param {number} year
- * @param {number} inflationRate
- */
-function calculateFederalTax(
-  taxableIncome,
-  filingStatus = constsJS_FILING_STATUS.SINGLE,
-  year = 2025,
-  inflationRate = 0.025
-) {
-  const demographics = Demographics.Empty();
-  demographics.filingStatus = filingStatus;
-  const fiscalData = FiscalData.Empty();
-  fiscalData.taxYear = year;
-  fiscalData.inflationRate = inflationRate;
+// /**
+//  * @deprecated Use RetirementIncomeCalculator class instead
+//  * @param {number} taxableIncome
+//  * @param {string} filingStatus
+//  * @param {number} year
+//  * @param {number} inflationRate
+//  */
+// function calculateFederalTax(
+//   taxableIncome,
+//   filingStatus = constsJS_FILING_STATUS.SINGLE,
+//   year = 2025,
+//   inflationRate = 0.025
+// ) {
+//   const demographics = Demographics.Empty();
+//   demographics.filingStatus = filingStatus;
+//   const fiscalData = FiscalData.Empty();
+//   fiscalData.taxYear = year;
+//   fiscalData.inflationRate = inflationRate;
 
-  const calculator = new RetirementIncomeCalculator(demographics, fiscalData);
-  return calculator.calculateFederalTax(taxableIncome);
-}
+//   const calculator = new RetirementIncomeCalculator(demographics, fiscalData);
+//   return calculator.calculateFederalTax(taxableIncome);
+// }

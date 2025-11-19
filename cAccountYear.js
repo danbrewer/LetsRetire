@@ -1,6 +1,5 @@
 class AccountYear {
   #accountsManager;
-  #taxYear;
 
   /**
    * @param {AccountsManager} accountsManager
@@ -8,7 +7,7 @@ class AccountYear {
    */
   constructor(accountsManager, taxYear) {
     this.#accountsManager = accountsManager;
-    this.#taxYear = taxYear;
+    this.taxYear = taxYear;
   }
 
   // get #trad401k() {
@@ -31,7 +30,7 @@ class AccountYear {
   deposit(accountName, category, amount) {
     const account = this.#accountsManager.getAccountByName(accountName);
     if (account) {
-      account.deposit(amount, category, this.#taxYear);
+      account.deposit(amount, category, this.taxYear);
     } else {
       throw new Error(`Account not found: ${accountName}`);
     }
@@ -43,7 +42,7 @@ class AccountYear {
    */
   getDeposits(accountName, category) {
     const account = this.#getAccountByName(accountName);
-    return account.depositsForYear(this.#taxYear, category);
+    return account.depositsForYear(this.taxYear, category);
   }
 
   /**
@@ -54,7 +53,7 @@ class AccountYear {
   withdrawal(accountName, category, amount) {
     const account = this.#accountsManager.getAccountByName(accountName);
     if (account) {
-      account.withdrawal(amount, category, this.#taxYear);
+      account.withdrawal(amount, category, this.taxYear);
     } else {
       throw new Error(`Account not found: ${accountName}`);
     }
@@ -78,7 +77,7 @@ class AccountYear {
   getWithdrawals(accountType, category = "") {
     const account = this.#accountsManager.getAccountByName(accountType);
     if (account) {
-      return account.withdrawalsForYear(this.#taxYear, category);
+      return account.withdrawalsForYear(this.taxYear, category);
     } else {
       throw new Error(`Account not found: ${accountType}`);
     }
@@ -90,7 +89,7 @@ class AccountYear {
   }
 
   getTotalBalance() {
-    return this.#accountsManager.getTotalBalance(this.#taxYear);
+    return this.#accountsManager.getTotalBalance(this.taxYear);
   }
 
   /**
@@ -99,7 +98,7 @@ class AccountYear {
   getStartingBalance(accountName) {
     const account = this.#accountsManager.getAccountByName(accountName);
     if (account) {
-      return account.startingBalanceForYear(this.#taxYear);
+      return account.startingBalanceForYear(this.taxYear);
     } else {
       throw new Error(`Account not found: ${accountName}`);
     }
@@ -111,7 +110,7 @@ class AccountYear {
   getEndingBalance(accountName) {
     const account = this.#accountsManager.getAccountByName(accountName);
     if (account) {
-      return account.endingBalanceForYear(this.#taxYear).asCurrency();
+      return account.endingBalanceForYear(this.taxYear).asCurrency();
     } else {
       throw new Error(`Account not found: ${accountName}`);
     }
@@ -119,18 +118,16 @@ class AccountYear {
 
   getTotalStartingBalance() {
     return this.#accountsManager
-      .getTotalStartingBalance(this.#taxYear)
+      .getTotalStartingBalance(this.taxYear)
       .asCurrency();
   }
 
   getTotalWithdrawals() {
-    return this.#accountsManager
-      .getTotalWithdrawals(this.#taxYear)
-      .asCurrency();
+    return this.#accountsManager.getTotalWithdrawals(this.taxYear).asCurrency();
   }
 
   getTotalDeposits() {
-    return this.#accountsManager.getTotalDeposits(this.#taxYear).asCurrency();
+    return this.#accountsManager.getTotalDeposits(this.taxYear).asCurrency();
   }
 
   /**
@@ -141,7 +138,7 @@ class AccountYear {
     for (const name of accountNames) {
       const account = this.#accountsManager.getAccountByName(name);
       if (account) {
-        total += Math.max(account.endingBalanceForYear(this.#taxYear), 0);
+        total += Math.max(account.endingBalanceForYear(this.taxYear), 0);
       } else {
         throw new Error(`Account not found: ${name}`);
       }
@@ -154,20 +151,49 @@ class AccountYear {
    */
   getTotalInterestEarned(calculationMethod) {
     return this.#accountsManager.getTotalInterestEarned(
-      this.#taxYear,
+      this.taxYear,
       calculationMethod
     ).asCurrency;
   }
 
   /**
    * @param {any} accountName
-   * @param {any} epoch
+   * @param {INTEREST_CALCULATION_EPOCH} epoch
    */
   calculateInterestForYear(accountName, epoch) {
     return this.#getAccountByName(accountName).calculateInterestForYear(
       epoch,
-      this.#taxYear
+      this.taxYear
     );
+  }
+
+  /**
+   * @param {string} accountName
+   */
+  recordInterestEarnedForYear(accountName) {
+    return this.#getAccountByName(accountName).recordInterestEarnedForYear(
+      this.taxYear
+    );
+  }
+
+  /**
+   * @param {string} accountName
+   * @param {string} category
+   * @param {number} amount
+   * @param {string} frequency
+   */
+  processAsPeriodicTransactions(accountName, category, amount, frequency) {
+    const account = this.#getAccountByName(accountName);
+    if (account) {
+      account.processAsPeriodicTransactions(
+        this.taxYear,
+        amount,
+        category,
+        frequency
+      );
+    } else {
+      throw new Error(`Account not found: ${accountName}`);
+    }
   }
 
   /**
@@ -178,11 +204,11 @@ class AccountYear {
   }
 
   hasPositiveBalance() {
-    return this.#accountsManager.getTotalBalance(this.#taxYear) > 0;
+    return this.#accountsManager.getTotalBalance(this.taxYear) > 0;
   }
 
   getBalanceBreakdown() {
-    return this.#accountsManager.getBalanceBreakdown(this.#taxYear);
+    return this.#accountsManager.getBalanceBreakdown(this.taxYear);
   }
 
   getAccountsSummary() {
@@ -201,10 +227,10 @@ class AccountYear {
     const account = this.#getAccountByName(accountType);
     return {
       name: account.name,
-      startingBalance: account.startingBalanceForYear(this.#taxYear),
-      endingBalance: account.endingBalanceForYear(this.#taxYear),
-      deposits: account.depositsForYear(this.#taxYear),
-      withdrawals: account.withdrawalsForYear(this.#taxYear),
+      startingBalance: account.startingBalanceForYear(this.taxYear),
+      endingBalance: account.endingBalanceForYear(this.taxYear),
+      deposits: account.depositsForYear(this.taxYear),
+      withdrawals: account.withdrawalsForYear(this.taxYear),
       interestRate: account.interestRate,
     };
   }

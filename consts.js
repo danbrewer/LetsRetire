@@ -44,3 +44,11 @@ INTEREST_CALCULATION_EPOCH.IGNORE_DEPOSITS = "ignore_deposits"; // based on star
 INTEREST_CALCULATION_EPOCH.IGNORE_WITHDRAWALS = "ignore_withdrawals"; // based on starting balance + deposits
 INTEREST_CALCULATION_EPOCH.AVERAGE_BALANCE = "average"; // based on average of starting and ending balances
 INTEREST_CALCULATION_EPOCH.ENDING_BALANCE = "end"; // based on ending balance
+INTEREST_CALCULATION_EPOCH.ROLLING_BALANCE = "rolling"; // based on rolling daily balance
+
+class PERIODIC_FREQUENCY {}
+PERIODIC_FREQUENCY.ANNUAL = "annual";
+PERIODIC_FREQUENCY.SEMI_ANNUAL = "semi_annual";
+PERIODIC_FREQUENCY.QUARTERLY = "quarterly";
+PERIODIC_FREQUENCY.MONTHLY = "monthly";
+PERIODIC_FREQUENCY.DAILY = "daily";

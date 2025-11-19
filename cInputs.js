@@ -1,7 +1,7 @@
 class Inputs {
   /**
-   * @param {number} currentAge - Current age of the person
-   * @param {number} currentSpouseAge - Current age of spouse (0 if no spouse)
+   * @param {number} initialAge - Current age of the person
+   * @param {number} initialAgeSpouse - Current age of spouse (0 if no spouse)
    * @param {number} retireAge - Age at retirement
    * @param {number} ssStartAge - Age when Social Security benefits start
    * @param {number} penStartAge - Age when pension benefits start
@@ -40,8 +40,8 @@ class Inputs {
    * @param {string[]} order - Withdrawal order for accounts
    */
   constructor(
-    currentAge = 0,
-    currentSpouseAge = 0,
+    initialAge = 0,
+    initialAgeSpouse = 0,
     retireAge = 0,
     ssStartAge = 0,
     penStartAge = 0,
@@ -85,10 +85,10 @@ class Inputs {
   ) {
     // Personal information
     /** @type {number} */
-    this.currentAge = currentAge;
+    this.initialAge = initialAge;
 
     /** @type {number} */
-    this.currentSpouseAge = currentSpouseAge;
+    this.initialSpouseAge = initialAgeSpouse;
 
     /** @type {number} */
     this.retireAge = retireAge;
@@ -209,18 +209,18 @@ class Inputs {
     this.totalLivingYears = 0;
     /** @type {boolean} */
     this.hasSpouse = false;
-    /** @type {number} */
-    this.spendAtRetire = 0;
+    // /** @type {number} */
+    // this.spendAtRetire = 0;
     /** @type {number} */
     this.additionalSpending = 0;
-    /** @type {number} */
-    this.spend = 0;
+    // /** @type {number} */
+    // this.spend = 0;
     /** @type {number} */
     this.taxableIncomeAdjustment = 0;
     /** @type {number} */
     this.taxFreeIncomeAdjustment = 0;
-    /** @type {number} */
-    this.otherTaxableIncomeAdjustments = 0;
+    // /** @type {number} */
+    // this.otherTaxableIncomeAdjustments = 0;
 
     /** @type {number} */
     this.savingsUseAge = this.retireAge;
@@ -229,21 +229,8 @@ class Inputs {
     /** @type {number} */
     this.rothUseAge = this.retireAge;
 
-    /** @type {boolean} */
-    this.useSavings = false;
-    /** @type {boolean} */
-    this.useTrad401k = false;
-    /** @type {boolean} */
-    this.useRoth = false;
-
-    /** @type {number} */
-    this.retirementYear = 0;
-    /** @type {number} */
-    this.age = 0;
     /** @type {number} */
     this.yearIndex = 0;
-    /** @type {number} */
-    this.spouseAge = 0;
 
     // Calculate derived values
     this.#calculateDerivedValues();
@@ -254,13 +241,13 @@ class Inputs {
    */
   #calculateDerivedValues() {
     /** @type {boolean} */
-    this.hasSpouse = this.currentSpouseAge > 0;
+    this.hasSpouse = this.initialSpouseAge > 0;
 
     /** @type {number} */
-    this.totalWorkingYears = this.retireAge - this.currentAge;
+    this.totalWorkingYears = this.retireAge - this.initialAge;
 
     /** @type {number} */
-    this.totalLivingYears = this.endAge - this.currentAge;
+    this.totalLivingYears = this.endAge - this.initialAge;
 
     /** @type {number} */
     this.spendAtRetire =
@@ -270,13 +257,13 @@ class Inputs {
 
   // Utility methods for input validation and analysis
   isValid() {
-    return this.retireAge <= this.currentAge || this.endAge <= this.retireAge;
+    return this.retireAge <= this.initialAge || this.endAge <= this.retireAge;
   }
 
   hasValidAges() {
     return (
-      this.currentAge > 0 &&
-      this.retireAge > this.currentAge &&
+      this.initialAge > 0 &&
+      this.retireAge > this.initialAge &&
       this.endAge > this.retireAge
     );
   }
@@ -323,7 +310,7 @@ class Inputs {
   getInputSummary() {
     return {
       personal: {
-        currentAge: this.currentAge,
+        currentAge: this.initialAge,
         retireAge: this.retireAge,
         endAge: this.endAge,
         hasSpouse: this.hasSpouse,
@@ -340,5 +327,142 @@ class Inputs {
         totalLivingYears: this.totalLivingYears,
       },
     };
+  }
+  get subjectSs() {
+    if (this.age >= this.ssStartAge) {
+      return (this.ssMonthly * 12).adjustedForInflation(
+        this.ssCola,
+        this.age - this.ssStartAge
+      );
+    }
+    return 0;
+  }
+
+  get subjectPension() {
+    if (this.age >= this.penStartAge) {
+      return (this.penMonthly * 12).adjustedForInflation(
+        this.penCola,
+        this.age - this.penStartAge
+      );
+    }
+    return 0;
+  }
+
+  get spouseSs() {
+    if (this.spouseAge >= this.spouseSsStartAge) {
+      return (this.spouseSsMonthly * 12).adjustedForInflation(
+        this.spouseSsCola,
+        this.spouseAge - this.spouseSsStartAge
+      );
+    }
+    return 0;
+  }
+
+  get spousePension() {
+    if (this.spouseAge >= this.spousePenStartAge) {
+      return (this.spousePenMonthly * 12).adjustedForInflation(
+        this.spousePenCola,
+        this.spouseAge - this.spousePenStartAge
+      );
+    }
+    return 0;
+  }
+
+  get spend() {
+    let result = this.spendingToday
+      .adjustedForInflation(this.inflation, this.yearIndex)
+      .asCurrency();
+    if (this.#isRetired) {
+      result = result.adjustedForInflation(
+        -this.spendingDecline,
+        this.#retirementYearIndex
+      );
+    }
+    return result;
+  }
+
+  get salary() {
+    return this.startingSalary.adjustedForInflation(
+      this.salaryGrowth,
+      this.yearIndex
+    );
+  }
+
+  get spouseAge() {
+    return this.hasSpouse ? this.initialSpouseAge + this.yearIndex : 0;
+  }
+
+  get retirementYear() {
+    return new Date().getFullYear() + this.yearIndex;
+  }
+
+  get age() {
+    return this.initialAge + this.yearIndex;
+  }
+
+  get useSavings() {
+    return this.age >= this.savingsUseAge;
+  }
+
+  get useTrad401k() {
+    return this.age >= this.trad401kUseAge;
+  }
+
+  get useRoth() {
+    return this.age >= this.rothUseAge;
+  }
+
+  get #isRetired() {
+    return this.age >= this.retireAge;
+  }
+
+  get #retirementYearIndex() {
+    return this.age - this.retireAge;
+  }
+
+  /**
+   * @param {Inputs} inputs
+   */
+  static Clone(inputs) {
+    return new Inputs(
+      inputs.initialAge,
+      inputs.initialSpouseAge,
+      inputs.retireAge,
+      inputs.ssStartAge,
+      inputs.penStartAge,
+      inputs.endAge,
+      inputs.inflation,
+      inputs.spendingToday,
+      inputs.spendingDecline,
+      inputs.spouseRetireAge,
+      inputs.spouseSsMonthly,
+      inputs.spouseSsStartAge,
+      inputs.spouseSsCola,
+      inputs.spousePenMonthly,
+      inputs.spousePenStartAge,
+      inputs.spousePenCola,
+      inputs.spouseTaxSS,
+      inputs.spouseTaxPension,
+      inputs.salary,
+      inputs.salaryGrowth,
+      inputs.pretaxPct,
+      inputs.rothPct,
+      inputs.taxablePct,
+      inputs.matchCap,
+      inputs.matchRate,
+      inputs.trad401kStartingBalance,
+      inputs.tradRothStartingBalance,
+      inputs.savingsStartingBalance,
+      inputs.trad401kInterestRate,
+      inputs.tradRothInterestRate,
+      inputs.savingsInterestRate,
+      inputs.ssMonthly,
+      inputs.ssCola,
+      inputs.penMonthly,
+      inputs.penCola,
+      inputs.filingStatus,
+      inputs.useRMD,
+      inputs.order
+    );
   }
 }

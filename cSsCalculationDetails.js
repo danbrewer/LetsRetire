@@ -12,57 +12,24 @@
 class SsCalculationDetails {
   /**
    * Creates a new SsCalculationDetails instance with comprehensive calculation data.
-   *
-   * @param {string} [method="irs-rules"] - Calculation methodology used (typically "irs-rules")
-   * @param {number} [totalBenefits=0] - Total Social Security benefits for both spouses
-   * @param {number} [halfSSBenefit=0] - Half of total Social Security benefits (used in provisional income)
-   * @param {number} [otherTaxableIncome=0] - Non-Social Security taxable income (pension, interest, etc.)
-   * @param {number} [provisionalIncome=0] - Total provisional income (half SS + other taxable income)
-   * @param {number} [tier1Threshold=32000] - IRS Tier 1 threshold for married filing jointly ($32,000)
-   * @param {number} [incomeExceedingTier1=0] - Amount of provisional income exceeding Tier 1 threshold
-   * @param {number} [tier2Threshold=44000] - IRS Tier 2 threshold for married filing jointly ($44,000)
-   * @param {number} [incomeExceedingTier2=0] - Amount of provisional income exceeding Tier 2 threshold
-   * @param {number} [finalTaxableAmount=0] - Final calculated taxable Social Security amount
-   * @param {number} [tier1TaxableAmount=0] - Taxable amount from Tier 1 calculation (50% rate)
-   * @param {number} [tier2TaxableAmount=0] - Taxable amount from Tier 2 calculation (85% rate)
    */
-  constructor(
-    method = "irs-rules",
-    totalBenefits = 0,
-    halfSSBenefit = 0,
-    otherTaxableIncome = 0,
-    provisionalIncome = 0,
-    tier1Threshold = 32000,
-    incomeExceedingTier1 = 0,
-    tier2Threshold = 44000,
-    incomeExceedingTier2 = 0,
-    finalTaxableAmount = 0,
-    tier1TaxableAmount = 0,
-    tier2TaxableAmount = 0
-  ) {
+  constructor() {
     this._description = "Social Security Taxation Calculation Details";
-    this.method = method;
-    this.totalBenefits = totalBenefits;
-    this.halfSSBenefit = halfSSBenefit;
-    this.otherTaxableIncome = otherTaxableIncome;
-    this.provisionalIncome = provisionalIncome;
-    this.tier1Threshold = tier1Threshold;
-    this.incomeExceedingTier1 = incomeExceedingTier1;
-    this.tier2Threshold = tier2Threshold;
-    this.incomeExceedingTier2 = incomeExceedingTier2;
-    this.finalTaxableAmount = finalTaxableAmount;
-    this.tier1TaxableAmount = tier1TaxableAmount;
-    this.tier2TaxableAmount = tier2TaxableAmount;
-  }
+    this.method = "irs-rules";
+    this.totalSsBenefits = 0;
+    this.otherTaxableIncome = 0;
+    this.benefits_50pct = 0;
+    this.benefits_85pct = 0;
+    this.provisionalIncome = 0;
 
-  //   /**
-  //    * Gets the descriptive label for this calculation details object.
-  //    *
-  //    * @returns {string} Description of the calculation details
-  //    */
-  //   get description() {
-  //     return this._description;
-  //   }
+    this.tier1Threshold = 0;
+    this.incomeExceedingTier1 = 0;
+    this.tier2Threshold = 0;
+    this.incomeExceedingTier2 = 0;
+    this.tier1TaxableAmount = 0;
+    this.tier2TaxableAmount = 0;
+    this.finalTaxableAmount = 0;
+  }
 
   /**
    * Determines which taxation tier applies based on provisional income.
@@ -85,8 +52,8 @@ class SsCalculationDetails {
    * @returns {number} Percentage as decimal (0.0 to 0.85)
    */
   get taxablePercentage() {
-    if (this.totalBenefits === 0) return 0;
-    return this.finalTaxableAmount / this.totalBenefits;
+    if (this.totalSsBenefits === 0) return 0;
+    return this.finalTaxableAmount / this.totalSsBenefits;
   }
 
   /**
@@ -95,7 +62,7 @@ class SsCalculationDetails {
    * @returns {number} Non-taxable Social Security amount
    */
   get nonTaxableAmount() {
-    return this.totalBenefits - this.finalTaxableAmount;
+    return this.totalSsBenefits - this.finalTaxableAmount;
   }
 
   /**
@@ -107,20 +74,20 @@ class SsCalculationDetails {
     // Basic validation checks
     if (
       this.finalTaxableAmount < 0 ||
-      this.finalTaxableAmount > this.totalBenefits
+      this.finalTaxableAmount > this.totalSsBenefits
     ) {
       return false;
     }
 
     // Provisional income should equal half SS + other taxable income
-    const expectedProvisional = this.halfSSBenefit + this.otherTaxableIncome;
+    const expectedProvisional = this.benefits_50pct + this.otherTaxableIncome;
     if (Math.abs(this.provisionalIncome - expectedProvisional) > 0.01) {
       return false;
     }
 
     // Half SS benefit should be half of total benefits
-    const expectedHalfSS = this.totalBenefits / 2;
-    if (Math.abs(this.halfSSBenefit - expectedHalfSS) > 0.01) {
+    const expectedHalfSS = this.totalSsBenefits / 2;
+    if (Math.abs(this.benefits_50pct - expectedHalfSS) > 0.01) {
       return false;
     }
 
@@ -149,33 +116,33 @@ class SsCalculationDetails {
     };
   }
 
-  /**
-   * Updates calculation values typically set during the taxation algorithm.
-   *
-   * @param {SsCalculationDetails} updates - Object containing calculation updates:
-   *   - incomeExceedingTier1: Amount exceeding first threshold
-   *   - incomeExceedingTier2: Amount exceeding second threshold
-   *   - tier1TaxableAmount: Taxable amount from tier 1 calculation
-   *   - tier2TaxableAmount: Taxable amount from tier 2 calculation
-   *   - finalTaxableAmount: Final total taxable amount
-   */
-  updateCalculationResults(updates) {
-    if (updates.incomeExceedingTier1 !== undefined) {
-      this.incomeExceedingTier1 = updates.incomeExceedingTier1;
-    }
-    if (updates.incomeExceedingTier2 !== undefined) {
-      this.incomeExceedingTier2 = updates.incomeExceedingTier2;
-    }
-    if (updates.tier1TaxableAmount !== undefined) {
-      this.tier1TaxableAmount = updates.tier1TaxableAmount;
-    }
-    if (updates.tier2TaxableAmount !== undefined) {
-      this.tier2TaxableAmount = updates.tier2TaxableAmount;
-    }
-    if (updates.finalTaxableAmount !== undefined) {
-      this.finalTaxableAmount = updates.finalTaxableAmount;
-    }
-  }
+  // /**
+  //  * Updates calculation values typically set during the taxation algorithm.
+  //  *
+  //  * @param {SsCalculationDetails} updates - Object containing calculation updates:
+  //  *   - incomeExceedingTier1: Amount exceeding first threshold
+  //  *   - incomeExceedingTier2: Amount exceeding second threshold
+  //  *   - tier1TaxableAmount: Taxable amount from tier 1 calculation
+  //  *   - tier2TaxableAmount: Taxable amount from tier 2 calculation
+  //  *   - finalTaxableAmount: Final total taxable amount
+  //  */
+  // updateCalculationResults(updates) {
+  //   if (updates.incomeExceedingTier1 !== undefined) {
+  //     this.incomeExceedingTier1 = updates.incomeExceedingTier1;
+  //   }
+  //   if (updates.incomeExceedingTier2 !== undefined) {
+  //     this.incomeExceedingTier2 = updates.incomeExceedingTier2;
+  //   }
+  //   if (updates.tier1TaxableAmount !== undefined) {
+  //     this.tier1TaxableAmount = updates.tier1TaxableAmount;
+  //   }
+  //   if (updates.tier2TaxableAmount !== undefined) {
+  //     this.tier2TaxableAmount = updates.tier2TaxableAmount;
+  //   }
+  //   if (updates.finalTaxableAmount !== undefined) {
+  //     this.finalTaxableAmount = updates.finalTaxableAmount;
+  //   }
+  // }
 
   /**
    * Factory method to create SsCalculationDetails from Social Security benefit data.
@@ -186,7 +153,8 @@ class SsCalculationDetails {
    * taxation algorithm execution.
    *
    * @param {number} totalBenefits - Total Social Security benefits for calculation
-   * @param {number} halfSSBenefit - Half of total Social Security benefits
+   * @param {number} benefits_50pct - Half of total Social Security benefits
+   * @param {number} benefits_85pct - 85% of total Social Security benefits
    * @param {number} otherTaxableIncome - Non-Social Security taxable income
    * @param {number} provisionalIncome - Total provisional income for threshold comparisons
    * @param {string} [method="irs-rules"] - Calculation methodology
@@ -211,30 +179,32 @@ class SsCalculationDetails {
    * @static
    * @since 1.0.0
    */
-  static CreateUsing(
-    totalBenefits,
-    halfSSBenefit,
-    otherTaxableIncome,
-    provisionalIncome,
-    method = "irs-rules",
-    tier1Threshold = 32000,
-    tier2Threshold = 44000
-  ) {
-    return new SsCalculationDetails(
-      method,
-      totalBenefits,
-      halfSSBenefit,
-      otherTaxableIncome,
-      provisionalIncome,
-      tier1Threshold,
-      0, // incomeExceedingTier1 - calculated later
-      tier2Threshold,
-      0, // incomeExceedingTier2 - calculated later
-      0, // finalTaxableAmount - calculated later
-      0, // tier1TaxableAmount - calculated later
-      0 // tier2TaxableAmount - calculated later
-    );
-  }
+  // static CreateUsing(
+  //   totalBenefits,
+  //   benefits_50pct,
+  //   benefits_85pct,
+  //   otherTaxableIncome,
+  //   provisionalIncome,
+  //   method = "irs-rules",
+  //   tier1Threshold = 32000,
+  //   tier2Threshold = 44000
+  // ) {
+  //   return new SsCalculationDetails(
+  //     method,
+  //     totalBenefits,
+  //     benefits_50pct,
+  //     benefits_85pct,
+  //     otherTaxableIncome,
+  //     provisionalIncome,
+  //     tier1Threshold,
+  //     0, // incomeExceedingTier1 - calculated later
+  //     tier2Threshold,
+  //     0, // incomeExceedingTier2 - calculated later
+  //     0, // finalTaxableAmount - calculated later
+  //     0, // tier1TaxableAmount - calculated later
+  //     0 // tier2TaxableAmount - calculated later
+  //   );
+  // }
 }
 
 // Note: The original object referenced 'this' properties that are not available in this context

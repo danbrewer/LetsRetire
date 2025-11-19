@@ -23,13 +23,13 @@ function calc() {
 
   // Auto-regenerate income adjustment fields only if ages have changed
   if (
-    inputs.currentAge > 0 &&
-    inputs.endAge > inputs.currentAge &&
-    (lastCurrentAge !== inputs.currentAge || lastEndAge !== inputs.endAge)
+    inputs.initialAge > 0 &&
+    inputs.endAge > inputs.initialAge &&
+    (lastCurrentAge !== inputs.initialAge || lastEndAge !== inputs.endAge)
   ) {
     regenerateTaxableIncomeFields();
     regenerateTaxFreeIncomeFields();
-    lastCurrentAge = inputs.currentAge;
+    lastCurrentAge = inputs.initialAge;
   }
 
   // Initialize balances object for tracking
@@ -56,46 +56,27 @@ function calc() {
   // Reset calculations array
   calculations = [];
 
-  let currentSalary = inputs.startingSalary;
-  let totalTaxes = 0;
-  // let maxDrawdown = { year: null, value: Infinity };
-
   // Working years
   for (let y = 0; y < inputs.totalWorkingYears; y++) {
-    generateYearlyIndexedInputValues(inputs, y);
+    const workingYearInputs = initializeInputsForWorkingYear(inputs, y);
 
     const accountYear = AccountYear.FromAccountsManager(
       accountGroup,
       TAX_BASE_YEAR + y
     );
 
-    const workingYearIncomeCalculator = new WorkingYearIncomeCalculator(inputs);
-
-    const yearData = workingYearIncomeCalculator.calculateWorkingYearData(
-      currentSalary,
+    const workingYearIncomeCalculator = new WorkingYearCalculator(
+      workingYearInputs,
       accountYear
     );
 
-    yearData.accountYear = accountYear;
+    const yearData = workingYearIncomeCalculator.calculateWorkingYearData();
 
     calculations.push({
-      year: new Date().getFullYear() + y,
+      year: accountYear.taxYear,
       yearData,
     });
-
-    // Track total taxes paid during working years
-    totalTaxes += yearData.taxes?.federalTaxesOwed || 0;
-
-    // Update salary for next year
-    currentSalary *= 1 + inputs.salaryGrowth;
   }
-
-  // Setup retirement years; calculate initial benefit amounts
-  const initialBenefits = Common.calculateInitialBenefitAmounts(inputs);
-  let ssYearlyIndexed = initialBenefits.ssAnnual;
-  let penYearlyIndexed = initialBenefits.penAnnual;
-  let spouseSsYearlyIndexed = initialBenefits.spouseSsAnnual;
-  let spousePenYearlyIndexed = initialBenefits.spousePenAnnual;
 
   // Retirement years
   for (
@@ -103,13 +84,9 @@ function calc() {
     yearIndex < inputs.totalLivingYears - inputs.totalWorkingYears;
     yearIndex++
   ) {
-    generateYearlyIndexedInputValues(inputs, yearIndex);
-
-    const benefitAmounts = new BenefitAmounts(
-      ssYearlyIndexed,
-      penYearlyIndexed,
-      spouseSsYearlyIndexed,
-      spousePenYearlyIndexed
+    const retirementYearInputs = initializeInputsForRetirementYear(
+      inputs,
+      yearIndex
     );
 
     const accountYear = AccountYear.FromAccountsManager(
@@ -117,53 +94,19 @@ function calc() {
       TAX_BASE_YEAR + yearIndex
     );
 
-    const calculator = new RetirementYearCalculator(inputs);
-    const yearData = calculator.calculateRetirementYearData(
-      accountYear,
-      benefitAmounts
+    const calculator = new RetirementYearCalculator(
+      retirementYearInputs,
+      accountYear
     );
 
-    // debugger;
-    // accountYear.getAccountsSummary().dump();
+    const yearData = calculator.calculateRetirementYearData();
 
     yearData.dump();
     debugger;
     calculations.push({
-      year: new Date().getFullYear() + yearIndex,
+      year: accountYear.taxYear,
       yearData,
     });
-
-    // const totalBal = yearData.balances.total();
-    totalTaxes += yearData.taxes.federalTaxesOwed;
-    // if (totalBal < maxDrawdown.value) {
-    //   maxDrawdown = { year: inputs.y, value: totalBal };
-    // }
-
-    // Step next year: Apply COLAs to benefits
-    if (inputs.age >= inputs.ssStartAge) ssYearlyIndexed *= 1 + inputs.ssCola;
-    if (inputs.age >= inputs.penStartAge && inputs.penMonthly > 0)
-      penYearlyIndexed *= 1 + inputs.penCola;
-
-    if (inputs.hasSpouse) {
-      if (inputs.spouseAge >= inputs.spouseSsStartAge)
-        spouseSsYearlyIndexed *= 1 + inputs.spouseSsCola;
-      if (
-        inputs.spouseAge >= inputs.spousePenStartAge &&
-        inputs.spousePenMonthly > 0
-      )
-        spousePenYearlyIndexed *= 1 + inputs.spousePenCola;
-    }
-
-    const annualIncreaseInSpending = (
-      inputs.spendAtRetire * inputs.inflation
-    ).asCurrency();
-    const annualDecreaseInSpending = (
-      inputs.spendAtRetire *
-      inputs.spendingDecline *
-      -1
-    ).asCurrency();
-
-    inputs.spendAtRetire += annualIncreaseInSpending + annualDecreaseInSpending;
   }
 
   debugger;
@@ -177,29 +120,38 @@ function calc() {
  * @param {Inputs} inputs
  * @param {number} yearIndex
  */
-function generateYearlyIndexedInputValues(inputs, yearIndex) {
-  const age = inputs.currentAge + yearIndex;
+function initializeInputsForWorkingYear(inputs, yearIndex) {
+  const result = Inputs.Clone(inputs);
 
-  inputs.yearIndex = yearIndex;
-  inputs.age = age;
-  inputs.spouseAge = inputs.hasSpouse ? inputs.currentSpouseAge + yearIndex : 0;
-  inputs.retirementYear = new Date().getFullYear() + yearIndex;
+  result.yearIndex = yearIndex;
 
-  inputs.additionalSpending = getSpendingOverride(age).asCurrency();
-  inputs.spend = inputs.spendingToday
-    .adjustedForInflation(inputs.inflation, yearIndex)
-    .asCurrency();
+  result.additionalSpending = getSpendingOverride(result.age).asCurrency();
 
-  inputs.taxableIncomeAdjustment = getTaxableIncomeOverride(age).asCurrency();
-  inputs.taxFreeIncomeAdjustment = getTaxFreeIncomeOverride(age).asCurrency();
-  inputs.otherTaxableIncomeAdjustments =
-    getTaxableIncomeOverride(age).asCurrency();
+  result.taxableIncomeAdjustment = getTaxableIncomeOverride(
+    result.age
+  ).asCurrency();
+  result.taxFreeIncomeAdjustment = getTaxFreeIncomeOverride(
+    result.age
+  ).asCurrency();
 
-  inputs.savingsUseAge = inputs.retireAge;
-  inputs.trad401kUseAge = inputs.retireAge;
-  inputs.rothUseAge = inputs.retireAge;
+  return result;
+}
 
-  inputs.useSavings = true; // age > inputs.savingsUseAge;
-  inputs.useTrad401k = true; // age > inputs.trad401kUseAge;
-  inputs.useRoth = true; //age > inputs.rothUseAge;
+/**
+ * @param {Inputs} inputs
+ * @param {number} yearIndex
+ */
+function initializeInputsForRetirementYear(inputs, yearIndex) {
+  const result = Inputs.Clone(inputs);
+
+  result.yearIndex = yearIndex;
+
+  result.additionalSpending = getSpendingOverride(result.age).asCurrency();
+  result.taxableIncomeAdjustment = getTaxableIncomeOverride(
+    result.age
+  ).asCurrency();
+  result.taxFreeIncomeAdjustment = getTaxFreeIncomeOverride(
+    result.age
+  ).asCurrency();
+  return result;
 }

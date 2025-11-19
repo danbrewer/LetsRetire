@@ -121,7 +121,7 @@ class FundingContribution {
   }
 
   get proportionAsPercentage() {
-    return (this.#proportion * 100).round(2);
+    return this.#proportion.asPercentage();
   }
 }
 

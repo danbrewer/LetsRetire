@@ -1227,7 +1227,7 @@ function generatePDFReport() {
         ? inputs.endAge
         : calculations.reduce(
             (lastGoodAge, r) => (r.total > 0 ? r.age : lastGoodAge),
-            inputs.currentAge
+            inputs.initialAge
           );
     const isFullyFunded = fundedTo >= inputs.endAge;
 
@@ -1286,7 +1286,7 @@ function generatePDFReport() {
     doc.setTextColor(0, 0, 0);
 
     // Key metrics in a nice layout
-    yPos = addKeyValuePair("Current Age:", `${inputs.currentAge} years`, yPos);
+    yPos = addKeyValuePair("Current Age:", `${inputs.initialAge} years`, yPos);
     yPos = addKeyValuePair(
       "Planned Retirement Age:",
       `${inputs.retireAge} years`,
@@ -1294,12 +1294,12 @@ function generatePDFReport() {
     );
     yPos = addKeyValuePair(
       "Plan Duration:",
-      `${inputs.endAge - inputs.currentAge} years total`,
+      `${inputs.endAge - inputs.initialAge} years total`,
       yPos
     );
     yPos = addKeyValuePair(
       "Years to Retirement:",
-      `${inputs.retireAge - inputs.currentAge} years`,
+      `${inputs.retireAge - inputs.initialAge} years`,
       yPos
     );
     yPos += 5;
@@ -1536,7 +1536,7 @@ function generatePDFReport() {
       `${(inputs.spendingDecline * 100).toFixed(1)}%`,
       yPos
     );
-    yPos = addKeyValuePair("Current Salary:", fmt(inputs.startingSalary), yPos);
+    yPos = addKeyValuePair("Current Salary:", fmt(inputs.salary), yPos);
     yPos = addKeyValuePair(
       "Salary Growth Rate:",
       `${(inputs.salaryGrowth * 100).toFixed(1)}%`,

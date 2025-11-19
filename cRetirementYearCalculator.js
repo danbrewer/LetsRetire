@@ -5,14 +5,22 @@
 class RetirementYearCalculator {
   /** @type {Inputs} */
   #inputs;
+  /** @type {AccountYear} */
+  #accountYear;
 
   /**
    * Create retirement year calculator with input configuration
    * @param {Inputs} inputs - Retirement calculation inputs containing demographics,
+   * @param {AccountYear} accountYear - Collection of retirement accounts for fiscal year
+   *   - savings: Savings account instance
+   *   - trad401k: Traditional 401k account instance
+   *   - rothIra: Roth IRA account instance
+   *   Each account must support withdrawal, deposit, and balance calculation methods
    *   financial parameters, and configuration settings
    */
-  constructor(inputs) {
+  constructor(inputs, accountYear) {
     this.#inputs = inputs;
+    this.#accountYear = accountYear;
   }
 
   /**
@@ -26,14 +34,6 @@ class RetirementYearCalculator {
    * 4. Computing tax implications with proper SS taxation rules
    * 5. Updating account balances with interest and transactions
    * 6. Generating comprehensive breakdown reports
-   *
-   * @param {AccountYear} accountYear - Collection of retirement accounts for fiscal year
-   *   - savings: Savings account instance
-   *   - trad401k: Traditional 401k account instance
-   *   - rothIra: Roth IRA account instance
-   *   Each account must support withdrawal, deposit, and balance calculation methods
-   * @param {BenefitAmounts} benefitAmounts - Social Security and pension benefit amounts
-   *   for both primary and spouse, used for income stream calculations
    *
    * @returns {RetirementYearData} Comprehensive retirement year calculation results containing:
    *   - demographics: Age and retirement year information
@@ -66,12 +66,11 @@ class RetirementYearCalculator {
    * @since 1.0.0
    * @author Retirement Calculator System
    */
-  calculateRetirementYearData(accountYear, benefitAmounts) {
+  calculateRetirementYearData() {
     // kill the logger for now
     LOG_LEVEL = 0;
 
     // Declare and initialize the result object at the top
-    const result = RetirementYearData.Empty();
 
     const demographics = Demographics.CreateUsing(this.#inputs, true, false);
 
@@ -79,27 +78,18 @@ class RetirementYearCalculator {
 
     const fixedIncomeStreams = IncomeStreams.CreateUsing(
       demographics,
-      benefitAmounts,
-      accountYear,
+      this.#accountYear,
       fiscalData,
       this.#inputs
     );
 
     // Build complete taxable income picture for withdrawal functions
 
-    // debugger;
-    // const withdrawalFactory = withdrawalFactoryJS_createWithdrawalFactory(
-    //   fixedIncomeStreams,
-    //   fiscalData,
-    //   demographics,
-    //   accountYear
-    // );
-
     const withdrawalFactory = WithdrawalFactory.CreateUsing(
       fixedIncomeStreams,
       fiscalData,
       demographics,
-      accountYear
+      this.#accountYear
     );
 
     withdrawalFactory.processWithdrawals();
@@ -109,6 +99,7 @@ class RetirementYearCalculator {
     // For Social Security breakdown, we still need some manual calculation since we need separate spouse results
     // But we can use the taxable amounts from retirement.js
 
+    // @ts-ignore
     const mySsBenefits = {
       _description: "Social Security Benefits Breakdown",
       income: fixedIncomeStreams.mySs,
@@ -123,22 +114,16 @@ class RetirementYearCalculator {
 
     // Non-taxable income includes SS/pension non-taxable portions + savings withdrawals (already after-tax) + Roth withdrawals
 
-    const ssIncome = SocialSecurityIncome.CreateUsing(
-      incomeResults.ssBreakdown
-    );
-
-    const taxes = Taxes.CreateUsing(
-      0,
-      incomeResults.incomeBreakdown.standardDeduction,
-      incomeResults.incomeBreakdown.federalIncomeTax,
-      0
-    );
+    // const ssIncome = SocialSecurityIncome.CreateUsing(
+    //   incomeResults.ssBreakdown
+    // );
 
     const totals = {
       _description: "Totals Breakdown",
-      reportableIncome: incomeResults.incomeBreakdown.totalReportedIncome,
+      reportableIncome: incomeResults.incomeBreakdown.allTaxableRevenue,
       taxableIncome: incomeResults.incomeBreakdown.taxableIncome,
-      netIncome: incomeResults.incomeBreakdown.netIncome,
+      netIncome:
+        incomeResults.incomeBreakdown.getNetIncomeMinusReportedEarnedInterest,
       calculationDetails: [
         withLabel(
           "incomeResults.incomeBreakdown",
@@ -149,15 +134,17 @@ class RetirementYearCalculator {
 
     const savings = {
       _description: "Savings",
-      startingBalance: accountYear.getStartingBalance(ACCOUNT_TYPES.SAVINGS),
-      withdrawals: accountYear.getWithdrawals(ACCOUNT_TYPES.SAVINGS),
-      earnedInterest: accountYear.getDeposits(
+      startingBalance: this.#accountYear.getStartingBalance(
+        ACCOUNT_TYPES.SAVINGS
+      ),
+      withdrawals: this.#accountYear.getWithdrawals(ACCOUNT_TYPES.SAVINGS),
+      earnedInterest: this.#accountYear.getDeposits(
         ACCOUNT_TYPES.SAVINGS,
         TRANSACTION_CATEGORY.INTEREST
       ),
-      deposits: accountYear.getDeposits(ACCOUNT_TYPES.SAVINGS),
-      endingBalance: accountYear.getEndingBalance(ACCOUNT_TYPES.SAVINGS),
-      calculationDetails: [withLabel("accounts.savings", accountYear)],
+      deposits: this.#accountYear.getDeposits(ACCOUNT_TYPES.SAVINGS),
+      endingBalance: this.#accountYear.getEndingBalance(ACCOUNT_TYPES.SAVINGS),
+      calculationDetails: [withLabel("accounts.savings", this.#accountYear)],
     };
 
     const pensionBreakdown = {
@@ -219,38 +206,67 @@ class RetirementYearCalculator {
       income: fixedIncomeStreams.spousePension,
     };
 
-    // Update all the final values in the result object
-    // result.expenditures = expenditureTracker.totalBudgeted();
+    const result = new RetirementYearData();
+    // demographics,
+    // fiscalData,
+    // // incomeResults.incomeBreakdown,
+    // Income.CreateFrom(accountYear, ACCOUNT_TYPES.REVENUE),
+    // Income.CreateFrom(accountYear, ACCOUNT_TYPES.DISBURSEMENT),
+    // // expenditureTracker.getExpenditures(),
+    // // fiscalData.spend,
+    // // withdrawalFactory. getContributions(),
+    // // withdrawalFactory.getWithdrawals(),
+    // Balances.CreateUsing(accountYear),
+    // SocialSecurityIncome.CreateUsing(incomeResults.ssBreakdown),
+    // // myPensionBenefits,
+    // // spousePensionBenefits,
+    // // mySsBenefits,
+    // // spouseSsBenefits,
+    // // fixedIncomeStreams,
+    // // incomeResults.incomeBreakdown,
+    // taxes,
+    // // totals,
+    // // myPensionBenefits,
+    // // spousePensionBenefits,
+    // // mySsBenefits,
+    // // spouseSsBenefits,
+    // // savingsBreakdown,
+    // // // withdrawalFactory. getWithdrawalBreakdown(),
+    // // incomeResults.ssBreakdown,
+    // // pensionBreakdown,
+    // accountYear
+    incomeResults.incomeBreakdown.dump("incomeBreakdown");
+    debugger;
 
-    // result.withdrawals = withdrawals;
-    result.ss = ssIncome;
-
-    // result.pen = pensionIncome;
-    result.taxes = taxes;
-    // result.standardDeduction = incomeResults.incomeBreakdown.standardDeduction;
-    result.totals = totals;
-    result.balances = Balances.CreateUsing(accountYear);
-    // result.disbursements = Disbursements.CreateUsing(accountYear);
-    result.revenue = Income.CreateFrom(accountYear, ACCOUNT_TYPES.REVENUE);
-    result.grossIncome = Income.CreateFrom(
-      accountYear,
+    // result.demographics = demographics;
+    // result.fiscalData = fiscalData;
+    result.revenue = Income.CreateFrom(
+      this.#accountYear,
+      ACCOUNT_TYPES.REVENUE
+    );
+    result.disbursements = Income.CreateFrom(
+      this.#accountYear,
       ACCOUNT_TYPES.DISBURSEMENT
     );
-    result.fiscalData = fiscalData;
-    result.demographics = demographics;
-    result.mySsBenefits = mySsBenefits;
-    result.spouseSsBenefits = spouseSsBenefits;
-    result.myPensionBenefits = myPensionBenefits;
-    result.spousePensionBenefits = spousePensionBenefits;
-    result.fixedIncomeStreams = fixedIncomeStreams;
-    result.savings = savings;
-
-    // Add breakdown data
-    result.incomeBreakdown = incomeResults.incomeBreakdown;
-    // result.withdrawalBreakdown = withdrawals;
-    result.ssBreakdown = incomeResults.ssBreakdown;
-    result.pensionBreakdown = pensionBreakdown;
-    result.savingsBreakdown = savingsBreakdown;
+    result.balances = Balances.CreateUsing(this.#accountYear);
+    result.socialSecurityIncome = SocialSecurityIncome.CreateUsing(
+      incomeResults.ssBreakdown
+    );
+    result.taxes = Taxes.CreateForRetirementYearIncome(
+      incomeResults.incomeBreakdown
+    );
+    result.savings = Balance.CreateUsing(
+      this.#accountYear,
+      ACCOUNT_TYPES.SAVINGS
+    );
+    result.trad401k = Balance.CreateUsing(
+      this.#accountYear,
+      ACCOUNT_TYPES.TRAD_401K
+    );
+    result.tradRoth = Balance.CreateUsing(
+      this.#accountYear,
+      ACCOUNT_TYPES.TRAD_ROTH
+    );
 
     // debugger;
     const description = `
@@ -260,72 +276,64 @@ class RetirementYearCalculator {
 
     console.log(description);
     // @ts-ignore
-    const debugData = DebugData.CreateUsing(
-      demographics,
-      fiscalData,
-      incomeResults.incomeBreakdown,
-      accountYear,
-      taxes
-    );
+    // const debugData = DebugData.CreateUsing(
+    //   demographics,
+    //   fiscalData,
+    //   incomeResults.incomeBreakdown,
+    //   accountYear,
+    //   taxes
+    // );
 
     result._description = description;
     // @ts-ignore
     const temp = {
       income: {
-        netIncome: incomeResults.incomeBreakdown.netIncome.asCurrency(),
+        netIncome: incomeResults.incomeBreakdown
+          .getNetIncomeMinusReportedEarnedInterest()
+          .asCurrency(),
         interestIncome: savings.earnedInterest,
         spend: fiscalData.spend.asCurrency(),
         shortfall: Math.max(
           fiscalData.spend -
             savings.earnedInterest -
-            accountYear.getDeposits(ACCOUNT_TYPES.SAVINGS),
+            this.#accountYear.getDeposits(ACCOUNT_TYPES.SAVINGS),
           0
         ).asCurrency(),
         overage: Math.max(
-          accountYear.getDeposits(ACCOUNT_TYPES.SAVINGS) -
+          this.#accountYear.getDeposits(ACCOUNT_TYPES.SAVINGS) -
             savings.earnedInterest -
             fiscalData.spend,
           0
         ).asCurrency(),
       },
       savings: {
-        startingBalance: accountYear
+        startingBalance: this.#accountYear
           .getStartingBalance(ACCOUNT_TYPES.SAVINGS)
           .asCurrency(),
-        withdrawals: accountYear
+        withdrawals: this.#accountYear
           .getWithdrawals(ACCOUNT_TYPES.SAVINGS)
           .asCurrency(),
-        deposits: accountYear.getDeposits(ACCOUNT_TYPES.SAVINGS).asCurrency(),
-        endingBalance: accountYear
+        deposits: this.#accountYear
+          .getDeposits(ACCOUNT_TYPES.SAVINGS)
+          .asCurrency(),
+        endingBalance: this.#accountYear
           .getEndingBalance(ACCOUNT_TYPES.SAVINGS)
           .asCurrency(),
-        //   .startingBalanceForYear(fiscalData.taxYear)
-        //   .asCurrency(),
-        // withdrawals: accountYear.savings
-        //   .withdrawalsForYear(fiscalData.taxYear)
-        //   .asCurrency(),
-        // deposits: accountYear.savings
-        //   .depositsForYear(fiscalData.taxYear)
-        //   .asCurrency(),
-        // endingBalance: accountYear.savings
-        //   .endingBalanceForYear(fiscalData.taxYear)
-        //   .asCurrency(),
-        // interestEarned: accounts.savings
-        //   .depositsForYear(fiscalData.taxYear, TRANSACTION_CATEGORY.INTEREST)
-        //   .asCurrency(),
       },
       trad401k: {
-        startingBalance: accountYear
+        startingBalance: this.#accountYear
           .getStartingBalance(ACCOUNT_TYPES.TRAD_401K)
           .asCurrency(),
-        withdrawals: accountYear
+        withdrawals: this.#accountYear
           .getWithdrawals(ACCOUNT_TYPES.TRAD_401K)
           .asCurrency(),
-        deposits: accountYear.getDeposits(ACCOUNT_TYPES.TRAD_401K).asCurrency(),
-        endingBalance: accountYear
+        deposits: this.#accountYear
+          .getDeposits(ACCOUNT_TYPES.TRAD_401K)
+          .asCurrency(),
+        endingBalance: this.#accountYear
           .getEndingBalance(ACCOUNT_TYPES.TRAD_401K)
           .asCurrency(),
-        interestEarned: accountYear
+        interestEarned: this.#accountYear
           .getDeposits(ACCOUNT_TYPES.TRAD_401K, TRANSACTION_CATEGORY.INTEREST)
           .asCurrency(),
       },
@@ -339,8 +347,8 @@ class RetirementYearCalculator {
     // accounts.trad401k.dump("401k");
     // debugger;
 
-    // result.dump("result");
-
+    result.dump("result");
+    debugger;
     // result.income.dump();
     // result.balances.dump();
     return result;
@@ -353,28 +361,4 @@ class RetirementYearCalculator {
   getInputs() {
     return this.#inputs;
   }
-
-  /**
-   * Create an empty RetirementYearCalculator instance
-   * @returns {RetirementYearCalculator} - Empty calculator instance
-   */
-  static Empty() {
-    // Create minimal inputs object for empty calculator
-    return new RetirementYearCalculator(new Inputs());
-  }
 }
-
-// // Legacy function for backward compatibility
-// /**
-//  * Calculate comprehensive retirement year data including income, withdrawals, taxes, and account balances
-//  * @deprecated Use RetirementYearCalculator class instead
-//  * @param {Inputs} inputs - Retirement calculation inputs containing demographics,
-//  *   financial parameters, and configuration settings
-//  * @param {AccountYear} accountYear - Collection of retirement accounts for fiscal year
-//  * @param {BenefitAmounts} benefitAmounts - Social Security and pension benefit amounts
-//  * @returns {RetirementYearData} Comprehensive retirement year calculation results
-//  */
-// function calculateRetirementYearData(inputs, accountYear, benefitAmounts) {
-//   const calculator = new RetirementYearCalculator(inputs);
-//   return calculator.calculateRetirementYearData(accountYear, benefitAmounts);
-// }

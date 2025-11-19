@@ -93,6 +93,22 @@ class Account {
   /**
    * @param {number} amount
    * @param {string} category
+   * @param {Date} date
+   */
+  #deposit(amount, category, date, party = "") {
+    if (amount < 0) {
+      throw new Error("Deposit amount must be positive.");
+    }
+    this.#transactions.push(
+      new Transaction(amount, TRANSACTION_TYPE.DEPOSIT, category, date, party)
+    );
+
+    return amount.asCurrency();
+  }
+
+  /**
+   * @param {number} amount
+   * @param {string} category
    * @param {number} yyyy
    * @param {string} [party]
    */
@@ -100,30 +116,29 @@ class Account {
     if (amount < 0) {
       throw new Error("Deposit amount must be positive.");
     }
-    this.#transactions.push(
-      new Transaction(
-        amount,
-        TRANSACTION_TYPE.DEPOSIT,
-        category,
-        new Date(yyyy, 0, 1), // Set to January 1st of the given year
-        party
-      )
+    this.#deposit(
+      amount,
+      category,
+      new Date(yyyy, 0, 1), // Set to January 1st of the given year
+      party
     );
 
     return amount.asCurrency();
   }
 
   /**
-   * @param {number} amount - Amount to withdraw
-   * @param {string} category - Category of the withdrawal
-   * @param {number} yyyy - Year of the withdrawal
-   * @param {string} [party] - Optional party associated with the withdrawal
+   * @param {number} amount
+   * @param {string} category
+   * @param {Date} date
    */
-  withdrawal(amount, category, yyyy, party = "") {
+  #withdrawal(amount, category, date, party = "") {
     if (amount < 0) {
       throw new Error("Withdrawal amount must be positive.");
     }
-    const withdrawalAmount = Math.min(amount, this.#endingBalanceForYear(yyyy));
+    const withdrawalAmount = Math.min(
+      amount,
+      this.#endingBalanceForYear(date.getFullYear())
+    );
     if (withdrawalAmount < amount) {
       console.warn(
         `Requested withdrawal of ${amount} exceeds available balance. Withdrawing only ${withdrawalAmount}.`
@@ -134,7 +149,7 @@ class Account {
         withdrawalAmount,
         TRANSACTION_TYPE.WITHDRAWAL,
         category,
-        new Date(yyyy, 0, 1), // Set to January 1st of the given year
+        date,
         party
       )
     );
@@ -142,9 +157,47 @@ class Account {
     return withdrawalAmount.asCurrency();
   }
 
+  /**
+   * @param {number} amount - Amount to withdraw
+   * @param {string} category - Category of the withdrawal
+   * @param {number} yyyy - Year of the withdrawal
+   * @param {string} [party] - Optional party associated with the withdrawal
+   */
+  withdrawal(amount, category, yyyy, party = "") {
+    this.#withdrawal(
+      amount,
+      category,
+      new Date(yyyy, 0, 1), // Set to January 1st of the given year
+      party
+    );
+
+    return amount.asCurrency();
+  }
+  //   if (amount < 0) {
+  //     throw new Error("Withdrawal amount must be positive.");
+  //   }
+  //   const withdrawalAmount = Math.min(amount, this.#endingBalanceForYear(yyyy));
+  //   if (withdrawalAmount < amount) {
+  //     console.warn(
+  //       `Requested withdrawal of ${amount} exceeds available balance. Withdrawing only ${withdrawalAmount}.`
+  //     );
+  //   }
+  //   this.#transactions.push(
+  //     new Transaction(
+  //       withdrawalAmount,
+  //       TRANSACTION_TYPE.WITHDRAWAL,
+  //       category,
+  //       new Date(yyyy, 0, 1), // Set to January 1st of the given year
+  //       party
+  //     )
+  //   );
+
+  //   return withdrawalAmount.asCurrency();
+  // }
+
   // Method to calculate interest earned over a year
   /**
-   * @param {string} intensity
+   * @param {INTEREST_CALCULATION_EPOCH} intensity
    * @param {number} yyyy
    */
   calculateInterestForYear(intensity, yyyy) {
@@ -180,7 +233,56 @@ class Account {
           this.#endingBalanceForYear(yyyy) * this.interestRate
         ).asCurrency();
         break;
+      case INTEREST_CALCULATION_EPOCH.ROLLING_BALANCE:
+        interestEarned = this.#calculateRollingInterestForYear(yyyy);
+        break;
+      default:
+        throw new Error(`Unknown INTEREST_CALCULATION_EPOCH: ${intensity}`);
     }
+    return interestEarned.asCurrency();
+  }
+
+  /**
+   * @param {number} yyyy
+   */
+  recordInterestEarnedForYear(yyyy) {
+    return this.#calculateRollingInterestForYear(yyyy, true);
+  }
+
+  /**
+   * @param {number} yyyy
+   */
+  #calculateRollingInterestForYear(yyyy, recordInterestEarned = false) {
+    let interestEarned = 0;
+    let balance = this.#startingBalanceForYear(yyyy);
+
+    for (let month = 0; month < 12; month++) {
+      // Process transactions for the month
+      for (const tx of this.#transactions) {
+        if (tx.date.getFullYear() === yyyy && tx.date.getMonth() === month) {
+          if (tx.transactionType === TRANSACTION_TYPE.DEPOSIT) {
+            balance += tx.amount;
+          } else if (tx.transactionType === TRANSACTION_TYPE.WITHDRAWAL) {
+            balance -= tx.amount;
+          }
+        }
+      }
+
+      // Calculate interest for the month
+      const monthlyInterest = (balance * (this.interestRate / 12)).asCurrency();
+      if (recordInterestEarned) {
+        this.#deposit(
+          monthlyInterest,
+          TRANSACTION_CATEGORY.INTEREST,
+          new Date(yyyy, month, 1)
+        );
+      }
+      interestEarned += monthlyInterest;
+
+      // Update balance with interest
+      balance += monthlyInterest;
+    }
+
     return interestEarned.asCurrency();
   }
 
@@ -246,5 +348,119 @@ class Account {
    */
   static Empty(accountName) {
     return new Account(accountName, 0, 0);
+  }
+
+  /**
+   * @param {number} yyyy
+   */
+  averageBalanceForYear(yyyy) {
+    return (
+      (this.#startingBalanceForYear(yyyy) + this.#endingBalanceForYear(yyyy)) /
+      2
+    ).asCurrency();
+  }
+
+  /**
+   * @param {number} yyyy
+   * @param {number} amount
+   * @param {string} category
+   * @param {string} frequency
+   */
+  processAsPeriodicTransactions(yyyy, amount, category, frequency) {
+    switch (frequency) {
+      case PERIODIC_FREQUENCY.ANNUAL:
+        return this.#withdrawal(amount, category, new Date(yyyy, 0, 1));
+      case PERIODIC_FREQUENCY.SEMI_ANNUAL:
+        return this.#processSemiAnnualTransaction(yyyy, amount, category);
+      case PERIODIC_FREQUENCY.QUARTERLY:
+        return this.#processQuarterlyTransaction(yyyy, amount, category);
+      case PERIODIC_FREQUENCY.MONTHLY:
+        return this.#processMonthlyTransaction(yyyy, amount, category);
+      case PERIODIC_FREQUENCY.DAILY:
+        return this.#processDailyTransaction(yyyy, amount, category);
+      // Add more frequencies as needed
+      default:
+        throw new Error(`Unknown periodic frequency: ${frequency}`);
+    }
+  }
+
+  /**
+   * @param {number} yyyy
+   * @param {number} amount
+   * @param {string} category
+   */
+  #processDailyTransaction(yyyy, amount, category) {
+    const daysInYear = new Date(yyyy, 1, 29).getMonth() === 1 ? 366 : 365;
+    const dailyAmount = (amount / daysInYear).asCurrency();
+
+    for (let day = 0; day < daysInYear - 1; day++) {
+      this.#withdrawal(dailyAmount, category, new Date(yyyy, 0, day + 1));
+    }
+
+    // Adjust final day to account for rounding
+    const totalWithdrawn = dailyAmount * (daysInYear - 1);
+    const finalDayAmount = (amount - totalWithdrawn).asCurrency();
+    this.#withdrawal(finalDayAmount, category, new Date(yyyy, 11, 31));
+
+    return amount.asCurrency();
+  }
+
+  /**
+   * @param {number} yyyy
+   * @param {number} amount
+   * @param {string} category
+   */
+  #processMonthlyTransaction(yyyy, amount, category) {
+    const monthlyAmount = (amount / 12).asCurrency();
+
+    for (let month = 0; month < 11; month++) {
+      this.#withdrawal(monthlyAmount, category, new Date(yyyy, month, 1));
+    }
+
+    // Adjust final month to account for rounding
+    const totalWithdrawn = monthlyAmount * 11;
+    const finalMonthAmount = (amount - totalWithdrawn).asCurrency();
+    this.#withdrawal(finalMonthAmount, category, new Date(yyyy, 11, 1));
+
+    return amount.asCurrency();
+  }
+
+  /**
+   * @param {number} yyyy
+   * @param {number} amount
+   * @param {string} category
+   */
+  #processQuarterlyTransaction(yyyy, amount, category) {
+    const quarterlyAmount = (amount / 4).asCurrency();
+
+    for (let quarter = 0; quarter < 3; quarter++) {
+      const month = quarter * 3;
+      this.#withdrawal(quarterlyAmount, category, new Date(yyyy, month, 1));
+    }
+
+    // Adjust final quarter to account for rounding
+    const totalWithdrawn = quarterlyAmount * 3;
+    const finalQuarterAmount = (amount - totalWithdrawn).asCurrency();
+    this.#withdrawal(finalQuarterAmount, category, new Date(yyyy, 9, 1));
+
+    return amount.asCurrency();
+  }
+
+  /**
+   * @param {number} yyyy
+   * @param {number} amount
+   * @param {string} category
+   */
+  #processSemiAnnualTransaction(yyyy, amount, category) {
+    const semiAnnualAmount = (amount / 2).asCurrency();
+
+    this.#withdrawal(semiAnnualAmount, category, new Date(yyyy, 5, 1));
+    this.#withdrawal(
+      amount - semiAnnualAmount,
+      category,
+      new Date(yyyy, 11, 1)
+    );
+
+    return amount.asCurrency();
   }
 }

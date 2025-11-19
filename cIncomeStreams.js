@@ -1,94 +1,117 @@
 class IncomeStreams {
+  /** @type {AccountYear} */
+  #accountYear;
+
+  /** @type {FiscalData} */
+  #fiscalData;
+
+  /** @type {Inputs} */
+  #inputs;
+
+  /** @type {Demographics} */
+  #demographics;
+
   /**
-   * @param {number} myPension
-   * @param {any} reportedEarnedInterest
-   * @param {number} spousePension
-   * @param {number} mySs
-   * @param {number} spouseSs
-   * @param {number} rmd
-   * @param {any} taxableIncomeAdjustment
-   * @param {any} taxFreeIncomeAdjustment
-   * @param {any} otherTaxableIncomeAdjustments
+   * @param {Demographics} demographics - Instance of Demographics class
+   * @param {AccountYear} accountYear - Accounts object containing savings and 401k accounts
+   * @param {FiscalData} fiscalData - Instance of FiscalData class
+   * @param {Inputs} inputs - Input data object containing tax adjustments
    */
+
   constructor(
-    myPension,
-    reportedEarnedInterest,
-    spousePension,
-    mySs,
-    spouseSs,
-    rmd,
-    taxableIncomeAdjustment,
-    taxFreeIncomeAdjustment,
-    otherTaxableIncomeAdjustments
+    demographics,
+    accountYear,
+    fiscalData,
+    inputs
+    // myPension,
+    // spousePension,
+    // mySs,
+    // spouseSs,
+    // rmd,
+    // taxableIncomeAdjustment,
+    // taxFreeIncomeAdjustment,
+    // // otherTaxableIncomeAdjustments,
+    // accountYear
   ) {
+    this.#demographics = demographics;
+    this.#accountYear = accountYear;
+    this.#fiscalData = fiscalData;
+    this.#inputs = inputs;
+
     this._description = "IncomeStreams";
-    this.myPension = myPension;
-    this.reportedEarnedInterest = reportedEarnedInterest;
-    this.spousePension = spousePension;
-    this.mySs = mySs;
-    this.spouseSs = spouseSs;
-    this.rmd = rmd;
-    this.taxableIncomeAdjustment = taxableIncomeAdjustment;
-    this.taxFreeIncomeAdjustment = taxFreeIncomeAdjustment;
-    this.otherTaxableIncomeAdjustments = otherTaxableIncomeAdjustments;
-    this.actualEarnedInterest = 0;
+  }
+
+  get salary() {
+    return this.#inputs.salary.asCurrency();
+  }
+
+  get myPension() {
+    return this.#inputs.subjectPension.asCurrency();
+  }
+
+  get spousePension() {
+    return this.#inputs.spousePension.asCurrency();
+  }
+
+  get mySs() {
+    return this.#inputs.subjectSs.asCurrency();
+  }
+
+  get spouseSs() {
+    return this.#inputs.spouseSs.asCurrency();
+  }
+
+  get rmd() {
+    return Common.calculateRMD(
+      this.#fiscalData.useRmd,
+      this.#demographics.age,
+      this.#accountYear.getStartingBalance(ACCOUNT_TYPES.TRAD_401K)
+    );
+  }
+
+  get taxableIncomeAdjustment() {
+    return this.#inputs.taxableIncomeAdjustment.asCurrency();
+  }
+
+  get taxFreeIncomeAdjustment() {
+    return this.#inputs.taxFreeIncomeAdjustment.asCurrency();
   }
 
   // Factory method for backward compatibility and dependency injection
   /**
    * @param {Demographics} demographics - Instance of Demographics class
-   * @param {BenefitAmounts} benefitAmounts - Benefit amounts object containing pension and SS amounts
    * @param {AccountYear} accountYear - Accounts object containing savings and 401k accounts
    * @param {FiscalData} fiscalData - Instance of FiscalData class
    * @param {Inputs} inputs - Input data object containing tax adjustments
    * @returns {IncomeStreams} New IncomeStreams instance
    */
-  static CreateUsing(
-    demographics,
-    benefitAmounts,
-    accountYear,
-    fiscalData,
-    inputs
-  ) {
-    const myPension = demographics.isSubjectEligibleForPension
-      ? benefitAmounts.penAnnual
-      : 0;
-    const reportedEarnedInterest = accountYear.calculateInterestForYear(
-      ACCOUNT_TYPES.SAVINGS,
-      INTEREST_CALCULATION_EPOCH.STARTING_BALANCE
-    );
-    const spousePension = 0;
-    const mySs = demographics.isSubjectEligibleForSs
-      ? benefitAmounts.ssAnnual
-      : 0;
-    const spouseSs = demographics.isPartnerEligibleForSs
-      ? benefitAmounts.spouseSsAnnual
-      : 0;
+  static CreateUsing(demographics, accountYear, fiscalData, inputs) {
     const rmd = Common.calculateRMD(
       fiscalData.useRmd,
       demographics.age,
       accountYear.getStartingBalance(ACCOUNT_TYPES.TRAD_401K)
     );
 
-    return new IncomeStreams(
-      myPension,
-      reportedEarnedInterest,
-      spousePension,
-      mySs,
-      spouseSs,
-      rmd,
-      inputs.taxableIncomeAdjustment,
-      inputs.taxFreeIncomeAdjustment,
-      inputs.otherTaxableIncomeAdjustments
+    return new IncomeStreams(demographics, accountYear, fiscalData, inputs);
+  }
+
+  get interestEarnedOnSavings() {
+    return (
+      this.#accountYear
+        ?.calculateInterestForYear(
+          ACCOUNT_TYPES.SAVINGS,
+          INTEREST_CALCULATION_EPOCH.ROLLING_BALANCE
+        )
+        .asCurrency() ?? 0
     );
   }
 
-  get totalIncome() {
+  get grossTaxableIncome() {
     return (
       this.myPension +
       this.spousePension +
-      this.reportedEarnedInterest +
-      this.otherTaxableIncomeAdjustments +
+      this.interestEarnedOnSavings +
+      this.taxableIncomeAdjustment +
       this.rmd +
       this.mySs +
       this.spouseSs +
@@ -100,8 +123,8 @@ class IncomeStreams {
     return (
       this.myPension +
       this.spousePension +
-      this.reportedEarnedInterest +
-      this.otherTaxableIncomeAdjustments +
+      this.interestEarnedOnSavings +
+      this.taxableIncomeAdjustment +
       this.rmd +
       this.mySs +
       this.spouseSs
@@ -120,8 +143,8 @@ class IncomeStreams {
     return (
       this.myPension +
       this.spousePension +
-      this.reportedEarnedInterest +
-      this.otherTaxableIncomeAdjustments +
+      this.interestEarnedOnSavings +
+      this.taxableIncomeAdjustment +
       this.rmd
     );
   }
@@ -144,23 +167,9 @@ class IncomeStreams {
       pension: this.pensionIncome,
       socialSecurity: this.ssIncome,
       rmd: this.rmd,
-      earnedInterest: this.reportedEarnedInterest,
-      taxableAdjustments:
-        this.taxableIncomeAdjustment + this.otherTaxableIncomeAdjustments,
+      earnedInterest: this.interestEarnedOnSavings,
+      taxableAdjustments: this.taxableIncomeAdjustment,
       taxFreeAdjustments: this.taxFreeIncomeAdjustment,
     };
   }
-
-  static Empty() {
-    return new IncomeStreams(0, 0, 0, 0, 0, 0, 0, 0, 0);
-  }
 }
-
-// Create instance using the factory method for backward compatibility
-// const incomeStreams = IncomeStreams.fromCalculatedValues(
-//   demographics,
-//   benefitAmounts,
-//   accounts,
-//   fiscalData,
-//   inputs
-// );

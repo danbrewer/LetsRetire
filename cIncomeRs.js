@@ -81,7 +81,7 @@ class IncomeRs {
    * @returns {number} Total taxable SS benefits, or 0 if breakdown unavailable
    */
   get totalTaxableSsBenefits() {
-    return this.ssBreakdown.taxablePortion;
+    return this.ssBreakdown.actualTaxablePortion;
   }
 
   /**
@@ -96,7 +96,7 @@ class IncomeRs {
     // ) {
     //   return 0;
     // }
-    return this.incomeBreakdown.totalReportedIncome;
+    return this.incomeBreakdown.allTaxableRevenue;
   }
 
   /**
@@ -117,13 +117,7 @@ class IncomeRs {
    * @returns {number} Net income after taxes, or 0 if breakdown unavailable
    */
   get netIncome() {
-    if (
-      !this.hasIncomeBreakdown ||
-      typeof this.incomeBreakdown.netIncome !== "function"
-    ) {
-      return 0;
-    }
-    return this.incomeBreakdown.netIncome;
+    return this.incomeBreakdown.getNetIncomeMinusReportedEarnedInterest();
   }
 
   /**
@@ -172,10 +166,6 @@ class IncomeRs {
    */
   static CreateUsing(ssBreakdown, incomeBreakdown) {
     return new IncomeRs(ssBreakdown, incomeBreakdown);
-  }
-
-  static Empty() {
-    return new IncomeRs(SsBenefitsCalculator.Empty(), IncomeBreakdown.Empty());
   }
 }
 

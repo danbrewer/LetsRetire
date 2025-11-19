@@ -14,7 +14,7 @@
     /* 🧠 Helpful extras */
     "noImplicitAny": true,      // Warn when something has implicit "any" type
     "strictNullChecks": true,   // Catch undefined/null usage
-    "noUnusedLocals": true,     // Warn about unused variables
+    "noUnusedLocals": false,     // Warn about unused variables
     "noUnusedParameters": true, // Warn about unused function parameters
     "noImplicitReturns": true,  // Warn if not all code paths return a value
     "skipLibCheck": true        // Speed up by skipping type-checking of node_modules
