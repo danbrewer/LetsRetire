@@ -18,21 +18,7 @@ class IncomeStreams {
    * @param {Inputs} inputs - Input data object containing tax adjustments
    */
 
-  constructor(
-    demographics,
-    accountYear,
-    fiscalData,
-    inputs
-    // myPension,
-    // spousePension,
-    // mySs,
-    // spouseSs,
-    // rmd,
-    // taxableIncomeAdjustment,
-    // taxFreeIncomeAdjustment,
-    // // otherTaxableIncomeAdjustments,
-    // accountYear
-  ) {
+  constructor(demographics, accountYear, fiscalData, inputs) {
     this.#demographics = demographics;
     this.#accountYear = accountYear;
     this.#fiscalData = fiscalData;
@@ -41,8 +27,8 @@ class IncomeStreams {
     this._description = "IncomeStreams";
   }
 
-  get salary() {
-    return this.#inputs.salary.asCurrency();
+  get wagesAndCompensation() {
+    return this.#inputs.wagesandOtherTaxableCompensation.asCurrency();
   }
 
   get myPension() {
@@ -69,7 +55,7 @@ class IncomeStreams {
     );
   }
 
-  get taxableIncomeAdjustment() {
+  get miscTaxableIncome() {
     return this.#inputs.taxableIncomeAdjustment.asCurrency();
   }
 
@@ -96,22 +82,27 @@ class IncomeStreams {
   }
 
   get interestEarnedOnSavings() {
-    return (
-      this.#accountYear
-        ?.calculateInterestForYear(
-          ACCOUNT_TYPES.SAVINGS,
-          INTEREST_CALCULATION_EPOCH.ROLLING_BALANCE
-        )
-        .asCurrency() ?? 0
-    );
+    // return (
+    //   this.#accountYear
+    //     ?.calculateInterestForYear(
+    //       ACCOUNT_TYPES.SAVINGS,
+    //       INTEREST_CALCULATION_EPOCH.ROLLING_BALANCE
+    //     )
+    //     .asCurrency() ?? 0
+    // );
+    return this.#accountYear?.getDeposits(
+      ACCOUNT_TYPES.SAVINGS,
+      TRANSACTION_CATEGORY.INTEREST
+    ).asCurrency() ?? 0;
   }
 
   get grossTaxableIncome() {
     return (
+      this.wagesAndCompensation +
       this.myPension +
       this.spousePension +
       this.interestEarnedOnSavings +
-      this.taxableIncomeAdjustment +
+      this.miscTaxableIncome +
       this.rmd +
       this.mySs +
       this.spouseSs +
@@ -121,10 +112,11 @@ class IncomeStreams {
 
   get taxableIncome() {
     return (
+      this.wagesAndCompensation +
       this.myPension +
       this.spousePension +
       this.interestEarnedOnSavings +
-      this.taxableIncomeAdjustment +
+      this.miscTaxableIncome +
       this.rmd +
       this.mySs +
       this.spouseSs
@@ -144,7 +136,7 @@ class IncomeStreams {
       this.myPension +
       this.spousePension +
       this.interestEarnedOnSavings +
-      this.taxableIncomeAdjustment +
+      this.miscTaxableIncome +
       this.rmd
     );
   }
@@ -164,11 +156,12 @@ class IncomeStreams {
 
   get incomeBreakdown() {
     return {
+      wagesAndCompensation: this.wagesAndCompensation,
       pension: this.pensionIncome,
       socialSecurity: this.ssIncome,
       rmd: this.rmd,
       earnedInterest: this.interestEarnedOnSavings,
-      taxableAdjustments: this.taxableIncomeAdjustment,
+      taxableAdjustments: this.miscTaxableIncome,
       taxFreeAdjustments: this.taxFreeIncomeAdjustment,
     };
   }

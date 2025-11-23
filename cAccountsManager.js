@@ -45,12 +45,41 @@ class AccountsManager {
       inputs.savingsInterestRate
     );
 
+    const revenue = new Account(ACCOUNT_TYPES.REVENUE, 0, 0);
+    const disbursement = new Account(ACCOUNT_TYPES.DISBURSEMENT, 0, 0);
     return new AccountsManager(
       trad401k,
       rothIra,
       savings,
-      Account.Empty(ACCOUNT_TYPES.REVENUE),
-      Account.Empty(ACCOUNT_TYPES.DISBURSEMENT)
+      revenue,
+      disbursement
+    );
+  }
+
+  /**
+   * @param {number | null} yyyy
+   */
+  toJSON(yyyy = null) {
+    return {
+      trad401k: this.trad401k.toJSON(yyyy),
+      rothIra: this.rothIra.toJSON(yyyy),
+      savings: this.savings.toJSON(yyyy),
+      income: this.income.toJSON(yyyy),
+      disbursement: this.disbursement.toJSON(yyyy),
+    };
+  }
+
+  /**
+   * @param {string} json
+   */
+  static fromJSON(json) {
+    const obj = typeof json === "string" ? JSON.parse(json) : json;
+    return new AccountsManager(
+      Account.fromJSON(obj.trad401k),
+      Account.fromJSON(obj.rothIra),
+      Account.fromJSON(obj.savings),
+      Account.fromJSON(obj.income),
+      Account.fromJSON(obj.disbursement)
     );
   }
 
@@ -153,24 +182,24 @@ class AccountsManager {
         name: this.trad401k.name,
         startingBalance: this.trad401k.startingBalanceForYear(year),
         withdrawals: this.trad401k.withdrawalsForYear(year),
-        interestRate: this.trad401k.interestRate,
         deposits: this.trad401k.depositsForYear(year),
         endingBalance: this.trad401k.endingBalanceForYear(year),
+        interestRate: this.trad401k.interestRate,
       },
       rothIra: {
         name: this.rothIra.name,
         startingBalance: this.rothIra.startingBalanceForYear(year),
-        endingBalance: this.rothIra.endingBalanceForYear(year),
         withdrawals: this.rothIra.withdrawalsForYear(year),
         deposits: this.rothIra.depositsForYear(year),
+        endingBalance: this.rothIra.endingBalanceForYear(year),
         interestRate: this.rothIra.interestRate,
       },
       savings: {
         name: this.savings.name,
         startingBalance: this.savings.startingBalanceForYear(year),
-        endingBalance: this.savings.endingBalanceForYear(year),
         withdrawals: this.savings.withdrawalsForYear(year),
         deposits: this.savings.depositsForYear(year),
+        endingBalance: this.savings.endingBalanceForYear(year),
         interestRate: this.savings.interestRate,
       },
       totals: {
@@ -216,15 +245,15 @@ class AccountsManager {
       .filter((account) => account !== null);
   }
 
-  static Empty() {
-    return new AccountsManager(
-      Account.Empty(ACCOUNT_TYPES.TRAD_401K),
-      Account.Empty(ACCOUNT_TYPES.TRAD_ROTH),
-      Account.Empty(ACCOUNT_TYPES.SAVINGS),
-      Account.Empty(ACCOUNT_TYPES.REVENUE),
-      Account.Empty(ACCOUNT_TYPES.DISBURSEMENT)
-    );
-  }
+  // static Empty() {
+  //   return new AccountsManager(
+  //     Account.Empty(ACCOUNT_TYPES.TRAD_401K),
+  //     Account.Empty(ACCOUNT_TYPES.TRAD_ROTH),
+  //     Account.Empty(ACCOUNT_TYPES.SAVINGS),
+  //     Account.Empty(ACCOUNT_TYPES.REVENUE),
+  //     Account.Empty(ACCOUNT_TYPES.DISBURSEMENT)
+  //   );
+  // }
 }
 
 // Create instance using the factory method for backward compatibility

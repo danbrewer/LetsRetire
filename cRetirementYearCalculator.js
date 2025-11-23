@@ -120,10 +120,9 @@ class RetirementYearCalculator {
 
     const totals = {
       _description: "Totals Breakdown",
-      reportableIncome: incomeResults.incomeBreakdown.allTaxableRevenue,
+      reportableIncome: incomeResults.incomeBreakdown.grossIncome,
       taxableIncome: incomeResults.incomeBreakdown.taxableIncome,
-      netIncome:
-        incomeResults.incomeBreakdown.getNetIncomeMinusReportedEarnedInterest,
+      netIncome: incomeResults.incomeBreakdown.netIncome, // getNetIncomeMinusReportedEarnedInterest,
       calculationDetails: [
         withLabel(
           "incomeResults.incomeBreakdown",
@@ -148,23 +147,23 @@ class RetirementYearCalculator {
     };
 
     const pensionBreakdown = {
-      subjectPension: incomeResults.incomeBreakdown.subjectPension,
+      subjectPension: incomeResults.incomeBreakdown.pension,
       federalTaxesPaid:
         incomeResults.incomeBreakdown.grossIncomeAmountAsPercentageOfFederalIncomeTax(
-          incomeResults.incomeBreakdown.subjectPension
+          this.#inputs.subjectPension
         ),
       subjectNetIncome:
         incomeResults.incomeBreakdown.grossIncomeAmountAsPercentageOfNetIncome(
-          incomeResults.incomeBreakdown.subjectPension
+          this.#inputs.subjectPension
         ),
-      partnerIncome: incomeResults.incomeBreakdown.partnerPension,
+      partnerIncome: this.#inputs.spousePension, // incomeResults.incomeBreakdown.partnerPension,
       partnerFederalTaxesPaid:
         incomeResults.incomeBreakdown.grossIncomeAmountAsPercentageOfFederalIncomeTax(
-          incomeResults.incomeBreakdown.partnerPension
+          this.#inputs.spousePension
         ),
       partnerNetIncome:
         incomeResults.incomeBreakdown.grossIncomeAmountAsPercentageOfNetIncome(
-          incomeResults.incomeBreakdown.partnerPension
+          this.#inputs.spousePension
         ),
       _description: "Pension Benefits Breakdown",
       calculationDetails: withLabel(
@@ -288,8 +287,7 @@ class RetirementYearCalculator {
     // @ts-ignore
     const temp = {
       income: {
-        netIncome: incomeResults.incomeBreakdown
-          .getNetIncomeMinusReportedEarnedInterest()
+        netIncome: incomeResults.incomeBreakdown.netIncome //getNetIncomeMinusReportedEarnedInterest()
           .asCurrency(),
         interestIncome: savings.earnedInterest,
         spend: fiscalData.spend.asCurrency(),
@@ -341,11 +339,11 @@ class RetirementYearCalculator {
 
     // debugData.dump("Debug Data");
     // temp.dump("Balances");
-    // debugger;
     // debugData.dump("debugData");
     // accounts.savings.dump("Savings");
     // accounts.trad401k.dump("401k");
-    // debugger;
+
+    // fiscalData.dump("fiscalData");
 
     result.dump("result");
     debugger;

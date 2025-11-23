@@ -66,7 +66,7 @@ class WorkingYearIncome {
   }
 
   get wagesTipsAndCompensation() {
-    return this.#inputs.salary;
+    return this.#inputs.wagesandOtherTaxableCompensation;
   }
 
   get taxableInterestIncome() {
@@ -94,7 +94,7 @@ class WorkingYearIncome {
 
   get federalTaxesOwed() {
     const federalIncomeTaxOwed = TaxCalculator.determineFederalIncomeTax(
-      this.#inputs.salary,
+      this.#inputs.wagesandOtherTaxableCompensation,
       this.#fiscalData,
       this.#demographics
     );

@@ -140,7 +140,7 @@ class WorkingYearCalculator {
       },
     };
 
-    const balances = Balances.Empty();
+    // const balances = Balances.Empty();
 
     const pen = {
       _description: "Pension Benefits",
@@ -195,7 +195,7 @@ class WorkingYearCalculator {
     result.withdrawals = withdrawals;
     result.taxes = taxes;
     result.totals = totals;
-    result.balances = balances;
+    // result.balances = balances;
     result.income = workingYearIncome;
     result.demographics = this.#demographics;
     result.employmentInfo = employmentInfo;

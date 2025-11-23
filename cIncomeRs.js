@@ -10,6 +10,11 @@
  * @since 1.0.0
  */
 class IncomeRs {
+  /** @type {SsBenefitsCalculator} */
+  #ssBreakdown;
+  /** @type {IncomeBreakdown} */
+  #incomeBreakdown;
+
   /**
    * Creates a new IncomeRs instance with Social Security and income breakdown data.
    *
@@ -36,8 +41,8 @@ class IncomeRs {
     }
 
     this._description = "Income Calculation Results";
-    this.ssBreakdown = ssBreakdown;
-    this.incomeBreakdown = incomeBreakdown;
+    this.#ssBreakdown = ssBreakdown;
+    this.#incomeBreakdown = incomeBreakdown;
   }
 
   //   /**
@@ -49,75 +54,48 @@ class IncomeRs {
   //     return this._description;
   //   }
 
-  /**
-   * Checks if Social Security breakdown data is available and valid.
-   *
-   * @returns {boolean} True if SS breakdown contains calculation methods
-   */
-  get hasSsBreakdown() {
-    return (
-      this.ssBreakdown != undefined &&
-      typeof this.ssBreakdown === "object" &&
-      Object.keys(this.ssBreakdown).length > 0
-    );
+  // /**
+  //  * Gets the total taxable Social Security benefits if breakdown is available.
+  //  *
+  //  * @returns {number} Total taxable SS benefits, or 0 if breakdown unavailable
+  //  */
+  // get totalTaxableSsBenefits() {
+  //   return this.#ssBreakdown.calculationDetails.taxableAmount;
+  // }
+
+  // /**
+  //  * Gets the total reportable income if breakdown is available.
+  //  *
+  //  * @returns {number} Total reportable income, or 0 if breakdown unavailable
+  //  */
+  // get totalReportableIncome() {
+  //   return this.#incomeBreakdown.grossIncome;
+  // }
+
+  // /**
+  //  * Gets the total taxable income if breakdown is available.
+  //  *
+  //  * @returns {number} Total taxable income, or 0 if breakdown unavailable
+  //  */
+  // get totalTaxableIncome() {
+  //   return this.#incomeBreakdown.taxableIncome;
+  // }
+
+  // /**
+  //  * Gets the net income after taxes if breakdown is available.
+  //  *
+  //  * @returns {number} Net income after taxes, or 0 if breakdown unavailable
+  //  */
+  // get netIncome() {
+  //   return this.#incomeBreakdown.netIncome; // getNetIncomeMinusReportedEarnedInterest();
+  // }
+
+  get incomeBreakdown() {
+    return this.#incomeBreakdown;
   }
 
-  /**
-   * Checks if income breakdown data is available and valid.
-   *
-   * @returns {boolean} True if income breakdown contains calculation methods
-   */
-  get hasIncomeBreakdown() {
-    return (
-      this.incomeBreakdown != undefined &&
-      typeof this.incomeBreakdown === "object" &&
-      Object.keys(this.incomeBreakdown).length > 0
-    );
-  }
-
-  /**
-   * Gets the total taxable Social Security benefits if breakdown is available.
-   *
-   * @returns {number} Total taxable SS benefits, or 0 if breakdown unavailable
-   */
-  get totalTaxableSsBenefits() {
-    return this.ssBreakdown.actualTaxablePortion;
-  }
-
-  /**
-   * Gets the total reportable income if breakdown is available.
-   *
-   * @returns {number} Total reportable income, or 0 if breakdown unavailable
-   */
-  get totalReportableIncome() {
-    // if (
-    //   !this.hasIncomeBreakdown ||
-    //   typeof this.incomeBreakdown.reportableIncome !== "function"
-    // ) {
-    //   return 0;
-    // }
-    return this.incomeBreakdown.allTaxableRevenue;
-  }
-
-  /**
-   * Gets the total taxable income if breakdown is available.
-   *
-   * @returns {number} Total taxable income, or 0 if breakdown unavailable
-   */
-  get totalTaxableIncome() {
-    if (!this.hasIncomeBreakdown) {
-      return 0;
-    }
-    return this.incomeBreakdown.taxableIncome;
-  }
-
-  /**
-   * Gets the net income after taxes if breakdown is available.
-   *
-   * @returns {number} Net income after taxes, or 0 if breakdown unavailable
-   */
-  get netIncome() {
-    return this.incomeBreakdown.getNetIncomeMinusReportedEarnedInterest();
+  get ssBreakdown() {
+    return this.#ssBreakdown;
   }
 
   /**
@@ -130,15 +108,14 @@ class IncomeRs {
    *   - netIncome: Income after federal taxes
    *   - hasValidData: Whether both breakdowns contain valid data
    */
-  getSummary() {
-    return {
-      totalTaxableSs: this.totalTaxableSsBenefits,
-      totalReportableIncome: this.totalReportableIncome,
-      totalTaxableIncome: this.totalTaxableIncome,
-      netIncome: this.netIncome,
-      hasValidData: this.hasSsBreakdown && this.hasIncomeBreakdown,
-    };
-  }
+  // getSummary() {
+  //   return {
+  //     totalTaxableSs: this.totalTaxableSsBenefits,
+  //     totalReportableIncome: this.totalReportableIncome,
+  //     totalTaxableIncome: this.totalTaxableIncome,
+  //     netIncome: this.netIncome,
+  //   };
+  // }
 
   /**
    * Factory method to create an IncomeRs instance from existing breakdown objects.

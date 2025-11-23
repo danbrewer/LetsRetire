@@ -207,7 +207,7 @@ class Balances {
     return new Balances(accountYear, calculationDetails, description);
   }
 
-  static Empty() {
-    return new Balances(AccountYear.Empty());
-  }
+  // static Empty() {
+  //   return new Balances(AccountYear.Empty());
+  // }
 }

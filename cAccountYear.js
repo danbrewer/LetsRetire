@@ -22,6 +22,13 @@ class AccountYear {
   //   return this.#accountsManager.savings;
   // }
 
+  toJSON() {
+    return {
+      accountsManager: this.#accountsManager.toJSON(this.taxYear),
+      taxYear: this.taxYear,
+    };
+  }
+
   /**
    * @param {string} accountName
    * @param {string} category
@@ -252,9 +259,9 @@ class AccountYear {
     return this.#accountsManager.getAccountsInOrder(withdrawalOrder);
   }
 
-  static Empty() {
-    return new AccountYear(AccountsManager.Empty(), 0);
-  }
+  // static Empty() {
+  //   return new AccountYear(AccountsManager.Empty(), 0);
+  // }
 
   /**
    * @param {AccountsManager} accountsManager

@@ -4,7 +4,7 @@
  */
 class WithdrawalFactory {
   /** @type {IncomeStreams} */
-  fixedIncomeStreams;
+  #fixedIncomeStreams;
 
   /** @type {FiscalData} */
   #fiscalData;
@@ -38,7 +38,7 @@ class WithdrawalFactory {
     }
     // **************
 
-    this.fixedIncomeStreams = fixedIncomeStreams;
+    this.#fixedIncomeStreams = fixedIncomeStreams;
     this.#fiscalData = fiscalData;
     this.#demographics = demographics;
     this.#accountYear = accountYear;
@@ -52,21 +52,28 @@ class WithdrawalFactory {
   processWithdrawals() {
     const fixedIncomeOnly =
       this.#retirementIncomeCalculator.calculateFixedIncomeOnly(
-        this.fixedIncomeStreams
+        this.#fixedIncomeStreams
       );
 
     // reduce the spend temporarily to determine the shortfall that needs to be covered by 401k, savings, and roth
     const estimatedFixedIncomeNet =
-      fixedIncomeOnly.incomeBreakdown.getNetIncomeMinusReportedEarnedInterest();
+      fixedIncomeOnly.incomeBreakdown.totalIncome -
+      fixedIncomeOnly.incomeBreakdown.federalIncomeTax -
+      fixedIncomeOnly.incomeBreakdown.interestEarnedOnSavings;
+    //    -
+    //   fixedIncomeOnly.incomeBreakdown.interestEarnedOnSavings;
+    //    netIncome -
+    //   fixedIncomeOnly.incomeBreakdown.earnedInterestNetIncome;
 
     // reduce the spend by the estimated net income from SS, Pension, etc
-    let shortfall = this.#fiscalData.spend - estimatedFixedIncomeNet; // whittle down recurring net income by 5%
+    let amountToPortion = this.#fiscalData.spend - estimatedFixedIncomeNet; // whittle down recurring net income by 5%
+    let shortfall = this.#fiscalData.spend;
 
     // Split up the shortfall according to account portioner logic
     const accountPortioner = new AccountPortioner(
       this.#accountYear,
       this.#fiscalData,
-      shortfall
+      amountToPortion
     );
 
     // Take withdrawals in order of Savings, Roth, 401k
@@ -78,6 +85,7 @@ class WithdrawalFactory {
       );
       shortfall -= withdrawal;
     }
+    this.#accountYear.recordInterestEarnedForYear(ACCOUNT_TYPES.SAVINGS);
 
     if (shortfall > 0) {
       const withdrawal = this.#withdrawFromTargetedAccount(
@@ -87,21 +95,18 @@ class WithdrawalFactory {
       );
       shortfall -= withdrawal;
     }
+    this.#accountYear.recordInterestEarnedForYear(ACCOUNT_TYPES.TRAD_ROTH);
 
     if (shortfall < 0) shortfall = 0;
-
     // Finally determine the 401k withdrawal needed to cover any remaining shortfall, or if no shortfall, to cover the fixed income net to zero out the income taxes
     const withdrawal = this.#withdrawFromTargetedAccount(
-      shortfall + estimatedFixedIncomeNet,
+      shortfall,
       ACCOUNT_TYPES.TRAD_401K,
       false
     );
     shortfall -= withdrawal;
 
-    // Now record interest earned month-to-month
-    this.#accountYear.recordInterestEarnedForYear(ACCOUNT_TYPES.SAVINGS);
     this.#accountYear.recordInterestEarnedForYear(ACCOUNT_TYPES.TRAD_401K);
-    this.#accountYear.recordInterestEarnedForYear(ACCOUNT_TYPES.TRAD_ROTH);
 
     // if anything hasn't already been accounted for (like income taxes due when 401k is empty), try taking it from Savings
     if (shortfall > 0) {
@@ -111,6 +116,8 @@ class WithdrawalFactory {
         false
       );
     }
+
+    // If still shortfall, we're busted
   }
 
   /**
@@ -140,27 +147,27 @@ class WithdrawalFactory {
 
   /**
    * Handle Traditional 401k withdrawal with tax calculations
-   * @param {number} amount - Target net amount
+   * @param {number} netTargetAmount - Target net amount
    * @param {boolean} trialRun - Whether this is a trial run
    * @returns {number} - Net amount received
    */
-  #handleTrad401kWithdrawal(amount, trialRun) {
+  #handleTrad401kWithdrawal(netTargetAmount, trialRun) {
     let gross401kWithdrawal = 0;
 
     if (this.#fiscalData.useTrad401k) {
       const withdrawals =
         this.#retirementIncomeCalculator.determine401kWithdrawalsToHitNetTargetOf(
-          amount,
-          this.fixedIncomeStreams
+          netTargetAmount,
+          this.#fixedIncomeStreams
         );
 
       gross401kWithdrawal = Math.min(
         Math.max(
           this.#accountYear.getAvailableFunds([ACCOUNT_TYPES.TRAD_401K]) -
-            this.fixedIncomeStreams.rmd,
+            this.#fixedIncomeStreams.rmd,
           0
         ),
-        withdrawals.withdrawalNeeded
+        withdrawals.trad401kWithdrawalNeeded
       );
     }
 
@@ -168,18 +175,14 @@ class WithdrawalFactory {
     this.#incomeResults =
       this.#retirementIncomeCalculator.calculateIncomeWhen401kWithdrawalIs(
         gross401kWithdrawal,
-        this.fixedIncomeStreams
+        this.#fixedIncomeStreams
       );
 
     if (!trialRun) {
       this.#processTrad401kTransactions(gross401kWithdrawal);
     }
 
-    return Math.max(
-      gross401kWithdrawal -
-        this.#incomeResults.incomeBreakdown.federalIncomeTax,
-      0
-    );
+    return Math.max(this.#incomeResults.incomeBreakdown.netIncome, 0);
   }
 
   /**
@@ -197,7 +200,7 @@ class WithdrawalFactory {
     this.#accountYear.withdrawal(
       ACCOUNT_TYPES.TRAD_401K,
       TRANSACTION_CATEGORY.DISBURSEMENT,
-      this.fixedIncomeStreams.rmd
+      this.#fixedIncomeStreams.rmd
     );
 
     this.#accountYear.deposit(
@@ -208,23 +211,29 @@ class WithdrawalFactory {
     this.#accountYear.deposit(
       ACCOUNT_TYPES.DISBURSEMENT,
       TRANSACTION_CATEGORY.RMD,
-      this.fixedIncomeStreams.rmd
+      this.#fixedIncomeStreams.rmd
     );
     this.#accountYear.deposit(
       ACCOUNT_TYPES.DISBURSEMENT,
       TRANSACTION_CATEGORY.PENSION,
-      (this.#incomeResults?.incomeBreakdown.partnerPension ?? 0) +
-        (this.#incomeResults?.incomeBreakdown.subjectPension ?? 0)
+      (this.#incomeResults?.incomeBreakdown.pension ?? 0) +
+        (this.#incomeResults?.incomeBreakdown.pension ?? 0)
     );
     this.#accountYear.deposit(
       ACCOUNT_TYPES.DISBURSEMENT,
       TRANSACTION_CATEGORY.SOCIAL_SEC,
-      this.#incomeResults?.incomeBreakdown.socialSecurityIncome ?? 0
+      this.#incomeResults?.incomeBreakdown.socialSecurity ?? 0
     );
     this.#accountYear.deposit(
       ACCOUNT_TYPES.DISBURSEMENT,
       TRANSACTION_CATEGORY.SOCIAL_SEC,
-      this.#incomeResults?.incomeBreakdown.taxableIncomeAdjustment ?? 0
+      this.#incomeResults?.incomeBreakdown.miscTaxableIncome ?? 0
+    );
+
+    this.#accountYear.deposit(
+      ACCOUNT_TYPES.DISBURSEMENT,
+      TRANSACTION_CATEGORY.INTEREST,
+      this.#incomeResults?.incomeBreakdown.interestEarnedOnSavings ?? 0
     );
 
     this.#accountYear.deposit(
@@ -246,6 +255,12 @@ class WithdrawalFactory {
       ACCOUNT_TYPES.REVENUE,
       TRANSACTION_CATEGORY.OTHER_INCOME,
       this.#incomeResults?.incomeBreakdown.otherTaxableNetIncome ?? 0
+    );
+
+    this.#accountYear.deposit(
+      ACCOUNT_TYPES.REVENUE,
+      TRANSACTION_CATEGORY.INTEREST,
+      this.#incomeResults?.incomeBreakdown.earnedInterestNetIncome ?? 0
     );
   }
 

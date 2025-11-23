@@ -10,36 +10,50 @@
  * @since 1.0.0
  */
 class SocialSecurityIncome {
+  /** @type {SsBenefitsCalculator} */
+  #ssBenefitsCalculator;
+
+  /** @type {SsCalculationDetails} */
+  #calculationDetails;
+
+  // /**
+  //  * Creates a new SocialSecurityIncome instance with Social Security benefit data.
+  //  *
+  //  * @param {string} [subjectPortion="0%"] - Primary beneficiary's gross SS as percentage
+  //  * @param {number} [subjectTaxableAmount=0] - Primary beneficiary's taxable SS amount
+  //  * @param {number} [subjectNonTaxableAmount=0] - Primary beneficiary's non-taxable SS amount
+  //  * @param {string} [partnerPortion="0%"] - Spouse's gross SS as percentage
+  //  * @param {number} [partnerTaxableAmount=0] - Spouse's taxable SS amount
+  //  * @param {number} [partnerNonTaxableAmount=0] - Spouse's non-taxable SS amount
+  //  * @param {number} combinedProvisionalIncome=0] - Combined provisional income for tax calculations
+  //  * @param {SsCalculationDetails} calculationDetails - Detailed calculation breakdown
+  //  */
   /**
-   * Creates a new SocialSecurityIncome instance with Social Security benefit data.
    *
-   * @param {string} [subjectPortion="0%"] - Primary beneficiary's gross SS as percentage
-   * @param {number} [subjectTaxableAmount=0] - Primary beneficiary's taxable SS amount
-   * @param {number} [subjectNonTaxableAmount=0] - Primary beneficiary's non-taxable SS amount
-   * @param {string} [partnerPortion="0%"] - Spouse's gross SS as percentage
-   * @param {number} [partnerTaxableAmount=0] - Spouse's taxable SS amount
-   * @param {number} [partnerNonTaxableAmount=0] - Spouse's non-taxable SS amount
-   * @param {number} [combinedProvisionalIncome=0] - Combined provisional income for tax calculations
-   * @param {any} [calculationDetails=null] - Detailed calculation breakdown
+   * @param {SsBenefitsCalculator} ssBenefitsCalculator
    */
   constructor(
-    subjectPortion = "0%",
-    subjectTaxableAmount = 0,
-    subjectNonTaxableAmount = 0,
-    partnerPortion = "0%",
-    partnerTaxableAmount = 0,
-    partnerNonTaxableAmount = 0,
-    combinedProvisionalIncome = 0,
-    calculationDetails = null
+    ssBenefitsCalculator
+    // subjectPortion = "0%",
+    // subjectTaxableAmount = 0,
+    // subjectNonTaxableAmount = 0,
+    // partnerPortion = "0%",
+    // partnerTaxableAmount = 0,
+    // partnerNonTaxableAmount = 0,
+    // combinedProvisionalIncome = 0,
+    // calculationDetails = null
   ) {
-    this.subjectPortion = subjectPortion;
-    this.subjectTaxableAmount = subjectTaxableAmount;
-    this.subjectNonTaxableAmount = subjectNonTaxableAmount;
-    this.partnerPortion = partnerPortion;
-    this.partnerTaxableAmount = partnerTaxableAmount;
-    this.partnerNonTaxableAmount = partnerNonTaxableAmount;
-    this.combinedProvisionalIncome = combinedProvisionalIncome;
-    this.calculationDetails = calculationDetails;
+    this.#ssBenefitsCalculator = ssBenefitsCalculator;
+    this.#calculationDetails = ssBenefitsCalculator.calculationDetails;
+
+    // this.subjectPortion = subjectPortion;
+    // this.subjectTaxableAmount = subjectTaxableAmount;
+    // this.subjectNonTaxableAmount = subjectNonTaxableAmount;
+    // this.partnerPortion = partnerPortion;
+    // this.partnerTaxableAmount = partnerTaxableAmount;
+    // this.partnerNonTaxableAmount = partnerNonTaxableAmount;
+    // this.combinedProvisionalIncome = combinedProvisionalIncome;
+    // this.calculationDetails = calculationDetails;
   }
 
   /**
@@ -57,7 +71,7 @@ class SocialSecurityIncome {
    * @returns {number} Total primary beneficiary Social Security income
    */
   get subjectTotalSsIncome() {
-    return this.subjectTaxableAmount + this.subjectNonTaxableAmount;
+    return this.#calculationDetails.subjectBenefits;
   }
 
   /**
@@ -66,7 +80,7 @@ class SocialSecurityIncome {
    * @returns {number} Total spouse Social Security income
    */
   get partnerTotalSsIncome() {
-    return this.partnerTaxableAmount + this.partnerNonTaxableAmount;
+    return this.#calculationDetails.partnerBenefits;
   }
 
   /**
@@ -75,7 +89,7 @@ class SocialSecurityIncome {
    * @returns {number} Combined Social Security income
    */
   get totalSsIncome() {
-    return this.subjectTotalSsIncome + this.partnerTotalSsIncome;
+    return this.#calculationDetails.totalSsBenefits;
   }
 
   /**
@@ -84,7 +98,7 @@ class SocialSecurityIncome {
    * @returns {number} Total taxable Social Security income
    */
   get totalTaxableSsIncome() {
-    return this.subjectTaxableAmount + this.partnerTaxableAmount;
+    return this.#calculationDetails.taxableAmount;
   }
 
   /**
@@ -93,7 +107,7 @@ class SocialSecurityIncome {
    * @returns {number} Total non-taxable Social Security income
    */
   get totalNonTaxableSsIncome() {
-    return this.subjectNonTaxableAmount + this.partnerNonTaxableAmount;
+    return this.#calculationDetails.nonTaxableAmount;
   }
 
   /**
@@ -113,9 +127,7 @@ class SocialSecurityIncome {
    * @returns {number} Primary beneficiary's gross percentage as decimal
    */
   get subjectGrossPercentage() {
-    const percentageStr = this.subjectPortion.replace("%", "");
-    const percentage = parseFloat(percentageStr);
-    return isNaN(percentage) ? 0 : percentage / 100;
+    return this.#ssBenefitsCalculator.myPortion;
   }
 
   /**
@@ -124,9 +136,7 @@ class SocialSecurityIncome {
    * @returns {number} Spouse's gross percentage as decimal
    */
   get partnerGrossPercentage() {
-    const percentageStr = this.partnerPortion.replace("%", "");
-    const percentage = parseFloat(percentageStr);
-    return isNaN(percentage) ? 0 : percentage / 100;
+    return this.#ssBenefitsCalculator.spousePortion;
   }
 
   /**
@@ -135,9 +145,7 @@ class SocialSecurityIncome {
    * @returns {number} Primary beneficiary's taxable percentage as decimal
    */
   get subjectTaxablePercentage() {
-    const totalIncome = this.subjectTotalSsIncome;
-    if (totalIncome <= 0) return 0;
-    return this.subjectTaxableAmount / totalIncome;
+    return this.#ssBenefitsCalculator.myTaxablePortion;
   }
 
   /**
@@ -146,9 +154,7 @@ class SocialSecurityIncome {
    * @returns {number} Spouse's taxable percentage as decimal
    */
   get partnerTaxablePercentage() {
-    const totalIncome = this.partnerTotalSsIncome;
-    if (totalIncome <= 0) return 0;
-    return this.partnerTaxableAmount / totalIncome;
+    return this.#ssBenefitsCalculator.spouseTaxablePortion;
   }
 
   /**
@@ -171,11 +177,11 @@ class SocialSecurityIncome {
         totalSsIncome > 0 ? this.partnerTotalSsIncome / totalSsIncome : 0,
       primaryTaxableShare:
         totalTaxableIncome > 0
-          ? this.subjectTaxableAmount / totalTaxableIncome
+          ? this.#ssBenefitsCalculator.myTaxablePortion / totalTaxableIncome
           : 0,
       spouseTaxableShare:
         totalTaxableIncome > 0
-          ? this.partnerTaxableAmount / totalTaxableIncome
+          ? this.#ssBenefitsCalculator.spouseTaxablePortion / totalTaxableIncome
           : 0,
     };
   }
@@ -189,15 +195,11 @@ class SocialSecurityIncome {
    *   - excessOverThreshold: Amount over threshold (if any)
    */
   getProvisionalIncomeAnalysis() {
-    // Standard SS taxation thresholds (2025 values)
-    const marriedThreshold1 = 32000;
-    const marriedThreshold2 = 44000;
-
     // Assume married filing jointly for now (would need marital status input for precision)
-    const threshold1 = marriedThreshold1;
-    const threshold2 = marriedThreshold2;
+    const threshold1 = this.#calculationDetails.tier1Threshold;
+    const threshold2 = this.#calculationDetails.tier2Threshold;
 
-    const provisionalIncome = this.combinedProvisionalIncome;
+    const provisionalIncome = this.#calculationDetails.provisionalIncome;
 
     let taxabilityLevel = "none";
     let excessOverThreshold = 0;
@@ -232,19 +234,19 @@ class SocialSecurityIncome {
     const warnings = [];
 
     // Check for negative amounts
-    if (this.subjectTaxableAmount < 0) {
+    if (this.#ssBenefitsCalculator.myTaxablePortion < 0) {
       errors.push("Primary beneficiary taxable amount cannot be negative");
     }
-    if (this.subjectNonTaxableAmount < 0) {
+    if (this.#ssBenefitsCalculator.myNonTaxablePortion < 0) {
       errors.push("Primary beneficiary non-taxable amount cannot be negative");
     }
-    if (this.partnerTaxableAmount < 0) {
+    if (this.#ssBenefitsCalculator.spouseTaxablePortion < 0) {
       errors.push("Spouse taxable amount cannot be negative");
     }
-    if (this.partnerNonTaxableAmount < 0) {
+    if (this.#ssBenefitsCalculator.spouseNonTaxablePortion < 0) {
       errors.push("Spouse non-taxable amount cannot be negative");
     }
-    if (this.combinedProvisionalIncome < 0) {
+    if (this.#calculationDetails.provisionalIncome < 0) {
       errors.push("Combined provisional income cannot be negative");
     }
 
@@ -294,7 +296,7 @@ class SocialSecurityIncome {
    */
   static CreateUsing(ssBenefitsCalculator) {
     // Build calculation details with label if withLabel function is available
-    let calculationDetails = ssBenefitsCalculator;
+    let calculationDetails = ssBenefitsCalculator.calculationDetails;
     if (typeof withLabel === "function") {
       calculationDetails = withLabel(
         "ssBenefitsCalculator",
@@ -302,88 +304,6 @@ class SocialSecurityIncome {
       );
     }
 
-    return new SocialSecurityIncome(
-      `${(ssBenefitsCalculator.myPortion || 0) * 100}%`,
-      ssBenefitsCalculator.myTaxablePortion || 0,
-      ssBenefitsCalculator.myNonTaxablePortion || 0,
-      `${(ssBenefitsCalculator.spousePortion || 0) * 100}%`,
-      ssBenefitsCalculator.spouseTaxablePortion || 0,
-      ssBenefitsCalculator.spouseNonTaxablePortion || 0,
-      ssBenefitsCalculator.provisionalIncome || 0,
-      calculationDetails
-    );
-  }
-
-  /**
-   * Factory method to create a SocialSecurityIncome from individual values.
-   *
-   * @param {number} myTotalBenefit - Primary beneficiary's total SS benefit
-   * @param {number} myTaxablePortion - Primary beneficiary's taxable portion
-   * @param {number} [spouseTotalBenefit=0] - Spouse's total SS benefit
-   * @param {number} [spouseTaxablePortion=0] - Spouse's taxable portion
-   * @param {number} [provisionalIncome=0] - Combined provisional income
-   *
-   * @returns {SocialSecurityIncome} A new SS income instance with specified values
-   *
-   * @example
-   * // Create SS income from known values
-   * const ssIncome = SocialSecurityIncome.CreateFrom(
-   *   30000, // my total benefit
-   *   15000, // my taxable portion
-   *   25000, // spouse total benefit
-   *   10000, // spouse taxable portion
-   *   45000  // provisional income
-   * );
-   *
-   * @static
-   * @since 1.0.0
-   */
-  static CreateFrom(
-    myTotalBenefit,
-    myTaxablePortion,
-    spouseTotalBenefit = 0,
-    spouseTaxablePortion = 0,
-    provisionalIncome = 0
-  ) {
-    const myNonTaxablePortion = myTotalBenefit - myTaxablePortion;
-    const spouseNonTaxablePortion = spouseTotalBenefit - spouseTaxablePortion;
-
-    // Calculate gross percentages (assuming full benefit for now)
-    const myGrossPercentage = "100%"; // Would need PIA calculation for actual percentage
-    const spouseGrossPercentage = spouseTotalBenefit > 0 ? "100%" : "0%";
-
-    return new SocialSecurityIncome(
-      myGrossPercentage,
-      myTaxablePortion,
-      myNonTaxablePortion,
-      spouseGrossPercentage,
-      spouseTaxablePortion,
-      spouseNonTaxablePortion,
-      provisionalIncome,
-      null
-    );
-  }
-
-  /**
-   * Factory method to create an empty SocialSecurityIncome instance.
-   *
-   * @returns {SocialSecurityIncome} A new SS income instance with zero values
-   *
-   * @example
-   * // Create empty SS income for later population
-   * const ssIncome = SocialSecurityIncome.Empty();
-   * ssIncome.updateSsIncome({
-   *   myTaxableAmount: 15000,
-   *   myNonTaxableAmount: 15000
-   * });
-   *
-   * @static
-   * @since 1.0.0
-   */
-  static Empty() {
-    return new SocialSecurityIncome("0%", 0, 0, "0%", 0, 0, 0, null);
+    return new SocialSecurityIncome(ssBenefitsCalculator);
   }
 }
-
-// Maintain backward compatibility - this will need incomeResults context
-// const ssIncome = SocialSecurityIncome.CreateUsing(incomeResults);

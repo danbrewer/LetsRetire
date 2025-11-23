@@ -3,6 +3,7 @@ ACCOUNT_TYPES.SAVINGS = "savings";
 ACCOUNT_TYPES.TRAD_401K = "trad401k";
 ACCOUNT_TYPES.TRAD_ROTH = "rothIra";
 ACCOUNT_TYPES.REVENUE = "revenue";
+ACCOUNT_TYPES.INTEREST_ON_SAVINGS = "interestOnSavings";
 ACCOUNT_TYPES.DISBURSEMENT = "disbursement";
 
 // Create a class for the account
@@ -14,7 +15,7 @@ class Account {
   #name = "";
 
   /** @type {number} */
-  #initialBalance = 0;
+  #openingBalance = 0;
 
   /** @type {number} Annual interest rate as a decimal (e.g., 0.05 for 5%) */
   #interestRate = 0;
@@ -61,10 +62,10 @@ class Account {
 
   /**
    * @param {string} name - Name of the account
-   * @param {number} initialBalance - Initial balance of the account
+   * @param {number} openingBalance - Initial balance of the account
    * @param {number} interestRate - Annual interest rate as a decimal (e.g., 0.05 for 5%)
    */
-  constructor(name, initialBalance, interestRate) {
+  constructor(name, openingBalance, interestRate) {
     // Validate that name matches one of the ACCOUNT_TYPES values
     const validAccountTypes = Object.values(ACCOUNT_TYPES);
     if (!validAccountTypes.includes(name)) {
@@ -74,8 +75,29 @@ class Account {
     }
 
     this.#name = name;
-    this.#initialBalance = initialBalance;
+    this.#openingBalance = openingBalance;
     this.#interestRate = interestRate; // Annual interest rate as a decimal (e.g., 0.05 for 5%)
+  }
+
+  /**
+   * @param {number} yyyy
+   */
+  getTransactionForYear(yyyy) {
+    return this.#transactions.filter((tx) => tx.date.getFullYear() === yyyy);
+  }
+
+  /**
+   * @param {number | null} yyyy
+   */
+  toJSON(yyyy = null) {
+    return {
+      name: this.#name,
+      openingBalance: this.#openingBalance,
+      interestRate: this.#interestRate,
+      transactions: yyyy
+        ? this.getTransactionForYear(yyyy)
+        : this.#transactions,
+    };
   }
 
   get name() {
@@ -83,7 +105,7 @@ class Account {
   }
 
   get initialBalance() {
-    return this.#initialBalance.asCurrency();
+    return this.#openingBalance.asCurrency();
   }
 
   get interestRate() {
@@ -343,12 +365,12 @@ class Account {
     return this.#endingBalanceForYear(yyyy).asCurrency();
   }
 
-  /**
-   * @param {string} accountName
-   */
-  static Empty(accountName) {
-    return new Account(accountName, 0, 0);
-  }
+  // /**
+  //  * @param {string} accountName
+  //  */
+  // static Empty(accountName) {
+  //   return new Account(accountName, 0, 0);
+  // }
 
   /**
    * @param {number} yyyy
@@ -462,5 +484,14 @@ class Account {
     );
 
     return amount.asCurrency();
+  }
+
+  /**
+   * @param {string} json
+   */
+  static fromJSON(json) {
+    const obj = typeof json === "string" ? JSON.parse(json) : json;
+    const account = new Account(obj.name, obj.initialBalance, obj.interestRate);
+    return account;
   }
 }

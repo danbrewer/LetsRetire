@@ -1,4 +1,10 @@
 class Inputs {
+  /** @type {number} */
+  #taxableIncomeAdjustment = 0;
+
+  /** @type {number} */
+  #taxFreeIncomeAdjustment = 0;
+
   /**
    * @param {number} initialAge - Current age of the person
    * @param {number} initialAgeSpouse - Current age of spouse (0 if no spouse)
@@ -215,10 +221,6 @@ class Inputs {
     this.additionalSpending = 0;
     // /** @type {number} */
     // this.spend = 0;
-    /** @type {number} */
-    this.taxableIncomeAdjustment = 0;
-    /** @type {number} */
-    this.taxFreeIncomeAdjustment = 0;
     // /** @type {number} */
     // this.otherTaxableIncomeAdjustments = 0;
 
@@ -328,6 +330,15 @@ class Inputs {
       },
     };
   }
+
+  get totalSsIncome() {
+    return (this.subjectSs + this.spouseSs).asCurrency() ?? 0;
+  }
+
+  get totalPensionIncome() {
+    return (this.subjectPension + this.spousePension).asCurrency() ?? 0;
+  }
+
   get subjectSs() {
     if (this.age >= this.ssStartAge) {
       return (this.ssMonthly * 12).adjustedForInflation(
@@ -381,11 +392,15 @@ class Inputs {
     return result;
   }
 
-  get salary() {
-    return this.startingSalary.adjustedForInflation(
-      this.salaryGrowth,
-      this.yearIndex
-    );
+  get wagesandOtherTaxableCompensation() {
+    let result = this.#taxableIncomeAdjustment.asCurrency();
+    if (!this.#isRetired) {
+      result += this.startingSalary.adjustedForInflation(
+        this.salaryGrowth,
+        this.yearIndex
+      );
+    }
+    return result;
   }
 
   get spouseAge() {
@@ -421,6 +436,28 @@ class Inputs {
   }
 
   /**
+   * @param {number} value
+   */
+  setTaxableIncomeAdjustment(value) {
+    this.#taxableIncomeAdjustment = value;
+  }
+
+  get taxableIncomeAdjustment() {
+    return this.#taxableIncomeAdjustment;
+  }
+
+  /**
+   * @param {number} value
+   */
+  set taxFreeIncomeAdjustment(value) {
+    this.#taxFreeIncomeAdjustment = value;
+  }
+
+  get taxFreeIncomeAdjustment() {
+    return this.#taxFreeIncomeAdjustment;
+  }
+
+  /**
    * @param {Inputs} inputs
    */
   static Clone(inputs) {
@@ -443,7 +480,7 @@ class Inputs {
       inputs.spousePenCola,
       inputs.spouseTaxSS,
       inputs.spouseTaxPension,
-      inputs.salary,
+      inputs.wagesandOtherTaxableCompensation,
       inputs.salaryGrowth,
       inputs.pretaxPct,
       inputs.rothPct,

@@ -117,7 +117,7 @@ class DebugData {
    * @returns {number} Effective tax rate as decimal (e.g., 0.22 for 22%)
    */
   getEffectiveTaxRate() {
-    const totalIncome = this._incomeBreakdown.allTaxableRevenue;
+    const totalIncome = this._incomeBreakdown.grossIncome;
     if (totalIncome <= 0) return 0;
     return this._taxes.federalTaxesOwed / totalIncome;
   }
@@ -130,7 +130,7 @@ class DebugData {
   getSpendableIncomeRatio() {
     if (this.spend <= 0) return 0;
     return (
-      this._incomeBreakdown.getNetIncomeMinusReportedEarnedInterest() /
+      this._incomeBreakdown.netIncome / //getNetIncomeMinusReportedEarnedInterest() /
       this.spend
     );
   }
@@ -226,16 +226,13 @@ class DebugData {
       );
     }
 
-    const totalIncome = this._incomeBreakdown.allTaxableRevenue;
+    const totalIncome = this._incomeBreakdown.grossIncome;
     if (totalIncome < 0) {
       errors.push("Total income cannot be negative");
     }
 
     // Check if spending exceeds net income by a significant margin
-    if (
-      this.spend >
-      this._incomeBreakdown.getNetIncomeMinusReportedEarnedInterest() * 1.5
-    ) {
+    if (this.spend > this._incomeBreakdown.netIncome * 1.5) {
       warnings.push("Spending significantly exceeds net income");
     }
 
@@ -269,7 +266,7 @@ class DebugData {
       spend: this.spend,
 
       // Income analysis
-      totalIncome: this._incomeBreakdown.allTaxableRevenue,
+      totalIncome: this._incomeBreakdown.grossIncome,
       incomeBreakdown: {
         raw: this._incomeBreakdown,
         // percentages: incomeBreakdown,
@@ -277,7 +274,7 @@ class DebugData {
 
       // Tax analysis
       federalTaxes: this._taxes.federalTaxesOwed,
-      netIncome: this._incomeBreakdown.getNetIncomeMinusReportedEarnedInterest,
+      netIncome: this._incomeBreakdown.netIncome,
       effectiveTaxRate: (this.getEffectiveTaxRate() * 100).toFixed(2) + "%",
 
       // Cash flow analysis
@@ -440,7 +437,7 @@ class DebugData {
       fiscalData,
       incomeBreakdown,
       taxes,
-      incomeBreakdown.getNetIncomeMinusReportedEarnedInterest(),
+      incomeBreakdown.netIncome, //getNetIncomeMinusReportedEarnedInterest(),
       deposits,
       withdrawals,
       accountYear,

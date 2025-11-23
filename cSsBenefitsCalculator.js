@@ -1,85 +1,78 @@
 class SsBenefitsCalculator {
-  #calculationDetails = new SsCalculationDetails();
-  #initialize() {
-    this.totalSsBenefits = (this.myBenefits + this.spouseBenefits).asCurrency();
-
-    this.benefits_50pct = (0.5 * this.totalSsBenefits).asCurrency();
-    this.benefits_85pct = (0.85 * this.totalSsBenefits).asCurrency();
-
-    this.maxTaxableSs = this.benefits_85pct;
-
-    this.myPortion = (
-      this.hasBenefits ? this.myBenefits / this.totalSsBenefits : 0
-    ).asCurrency();
-    this.spousePortion = (
-      this.hasBenefits ? this.spouseBenefits / this.totalSsBenefits : 0
-    ).asCurrency();
-
-    this.provisionalIncome = (
-      this.benefits_50pct + this.otherTaxableIncome
-    ).asCurrency();
-  }
+  /** @type {SsCalculationDetails} */
+  #calculationDetails;
 
   /**
-   * @param {number} myBenefits
-   * @param {number} spouseBenefits
-   * @param {number} otherTaxableIncome
+   * @param {SsCalculationDetails} calculationDetails
    */
-  constructor(myBenefits, spouseBenefits, otherTaxableIncome) {
-    this.myBenefits = myBenefits;
-    this.spouseBenefits = spouseBenefits;
+  constructor(calculationDetails) {
+    this.#calculationDetails = calculationDetails;
+  }
 
-    this.myPortion = 0;
-    this.spousePortion = 0;
-    this.totalSsBenefits = 0;
+  get benefits_50pct() {
+    return this.#calculationDetails.benefits_50pct;
+  }
 
-    this.benefits_50pct = 0;
-    this.benefits_85pct = 0;
+  get benefits_85pct() {
+    return this.#calculationDetails.benefits_85pct;
+  }
 
-    this.otherTaxableIncome = otherTaxableIncome;
-    this.provisionalIncome = 0;
+  get hasBenefits() {
+    return this.#calculationDetails.totalSsBenefits > 0;
+  }
 
-    this.maxTaxableSs = 0;
-    this.actualTaxablePortion = 0;
-    this.actualNonTaxablePortion = 0;
+  get myPortion() {
+    return this.#calculationDetails.subjectBenefits.asPercentageOf(
+      this.totalSsBenefits
+    );
+  }
 
-    this.tier1Threshold = 32000;
-    this.tier2Threshold = 44000;
+  get spousePortion() {
+    return this.#calculationDetails.partnerBenefits.asPercentageOf(
+      this.totalSsBenefits
+    );
+  }
 
-    this.#initialize();
+  get totalSsBenefits() {
+    return this.#calculationDetails.totalSsBenefits;
   }
 
   get myTaxablePortion() {
-    return (this.myPortion * this.maxTaxableSs).asCurrency();
+    return (
+      this.myPortion * this.#calculationDetails.maxTaxableSs
+    ).asCurrency();
   }
 
   get spouseTaxablePortion() {
-    return (this.spousePortion * this.maxTaxableSs).asCurrency();
+    return (
+      this.spousePortion * this.#calculationDetails.maxTaxableSs
+    ).asCurrency();
   }
 
   get myNonTaxablePortion() {
-    return (this.myPortion * this.actualNonTaxablePortion).asCurrency();
+    return (
+      this.myPortion * this.#calculationDetails.nonTaxableAmount
+    ).asCurrency();
   }
 
   get spouseNonTaxablePortion() {
-    return (this.spousePortion * this.actualNonTaxablePortion).asCurrency();
-  }
-
-  // Utility methods for analyzing benefits
-  get hasBenefits() {
-    return this.totalSsBenefits > 0;
+    return (
+      this.spousePortion * this.#calculationDetails.nonTaxableAmount
+    ).asCurrency();
   }
 
   get taxationSummary() {
     return {
       totalBenefits: this.totalSsBenefits,
-      taxablePortion: this.actualTaxablePortion,
-      nonTaxablePortion: this.actualNonTaxablePortion,
+      taxable: this.#calculationDetails.taxableAmount,
+      nonTaxable: this.#calculationDetails.nonTaxableAmount,
       taxablePercentage:
         this.totalSsBenefits > 0
-          ? this.actualTaxablePortion.asPercentageOf(this.totalSsBenefits)
+          ? this.#calculationDetails.taxableAmount.asPercentageOf(
+              this.totalSsBenefits
+            )
           : 0,
-      provisionalIncome: this.provisionalIncome,
+      provisionalIncome: this.#calculationDetails.provisionalIncome,
     };
   }
 
@@ -93,16 +86,22 @@ class SsBenefitsCalculator {
     let excessOverTier2 = 0;
 
     // Case 1: No social security is taxable
-    if (this.provisionalIncome <= this.tier1Threshold) {
-      this.actualTaxablePortion = 0;
-      this.actualNonTaxablePortion =
-        this.totalSsBenefits - this.actualNonTaxablePortion;
+    if (
+      this.#calculationDetails.provisionalIncome <=
+      this.#calculationDetails.tier1Threshold
+    ) {
+      this.#calculationDetails.taxableAmount = 0;
       return;
     }
 
     // Case 2: Provisional income exceeds Tier 1 but not Tier 2
-    if (this.provisionalIncome <= this.tier2Threshold) {
-      const incomeExceedingTier1 = this.provisionalIncome - this.tier1Threshold;
+    if (
+      this.#calculationDetails.provisionalIncome <=
+      this.#calculationDetails.tier2Threshold
+    ) {
+      const incomeExceedingTier1 =
+        this.#calculationDetails.provisionalIncome -
+        this.#calculationDetails.tier1Threshold;
 
       let excessOfTier1TaxableAmt = (0.5 * incomeExceedingTier1).asCurrency();
 
@@ -112,14 +111,13 @@ class SsBenefitsCalculator {
         excessOfTier1TaxableAmt
       );
 
-      this.actualTaxablePortion = taxableSSAmount;
-      this.actualNonTaxablePortion =
-        this.totalSsBenefits - this.actualTaxablePortion;
-      return;
+      this.#calculationDetails.taxableAmount = taxableSSAmount;
     }
 
     // Case 3: Provisional income exceeds Tier 2
-    excessOverTier1 = this.tier2Threshold - this.tier1Threshold;
+    excessOverTier1 =
+      this.#calculationDetails.tier2Threshold -
+      this.#calculationDetails.tier1Threshold;
 
     let taxableTier1Amount = (0.5 * excessOverTier1).asCurrency();
 
@@ -128,7 +126,9 @@ class SsBenefitsCalculator {
       taxableTier1Amount
     ).asCurrency();
 
-    excessOverTier2 = this.provisionalIncome - this.tier2Threshold;
+    excessOverTier2 =
+      this.#calculationDetails.provisionalIncome -
+      this.#calculationDetails.tier2Threshold;
 
     let taxableTier2Amount = (0.85 * excessOverTier2).asCurrency();
 
@@ -137,52 +137,50 @@ class SsBenefitsCalculator {
       taxableTier2Amount
     ).asCurrency();
 
-    let taxableSSAmount = Math.min(
+    let taxablePortion = Math.min(
       this.benefits_85pct,
       taxableSsInTier1 + taxableSsInTier2
     );
 
-    this.actualTaxablePortion = taxableSSAmount;
-    this.actualNonTaxablePortion =
-      this.totalSsBenefits - this.actualTaxablePortion;
-
     // Update calculation details
     this.#calculationDetails.method = "irs-rules";
-    this.#calculationDetails.totalSsBenefits = this.totalSsBenefits;
-    this.#calculationDetails.benefits_50pct = this.benefits_50pct;
-    this.#calculationDetails.benefits_85pct = this.benefits_85pct;
-    this.#calculationDetails.otherTaxableIncome = this.otherTaxableIncome;
-    this.#calculationDetails.provisionalIncome = this.provisionalIncome;
-    this.#calculationDetails.tier1Threshold = this.tier1Threshold;
-    this.#calculationDetails.tier2Threshold = this.tier2Threshold;
     this.#calculationDetails.incomeExceedingTier1 = excessOverTier1;
     this.#calculationDetails.incomeExceedingTier2 = excessOverTier2;
     this.#calculationDetails.tier1TaxableAmount = taxableSsInTier1;
     this.#calculationDetails.tier2TaxableAmount = taxableSsInTier2;
-    this.#calculationDetails.finalTaxableAmount = this.actualTaxablePortion;
+    this.#calculationDetails.taxableAmount = taxablePortion;
   }
 
-  // Method to recalculate with new non-SS income
-  /**
-   * @param {number} newNonSsIncome
-   */
-  updateNonSsIncome(newNonSsIncome) {
-    this.otherTaxableIncome = newNonSsIncome;
-    this.#initialize();
-    this.#calculateTaxablePortion();
-  }
+  // // Method to recalculate with new non-SS income
+  // /**
+  //  * @param {number} otherTaxableIncome
+  //  */
+  // updateNonSsIncome(otherTaxableIncome) {
+  //   this.otherTaxableIncome = otherTaxableIncome;
+  //   this.#calculateTaxablePortion();
+  // }
 
   /**
-   * @param {number | undefined} [mySsBenefits]
-   * @param {number | undefined} [spouseSsBenefits]
-   * @param {number | undefined} [nonSsIncome]
+   * @param {Number} subjectBenefits
+   * @param {Number} partnerBenefits
+   * @param {Number} otherTaxableIncome
+   * @param {Boolean} hasSpouse
+   * @returns {SsBenefitsCalculator}
    */
-  static CalculateUsing(mySsBenefits, spouseSsBenefits, nonSsIncome) {
-    const ssBenefits = new SsBenefitsCalculator(
-      mySsBenefits || 0,
-      spouseSsBenefits || 0,
-      nonSsIncome || 0
+  static CalculateUsing(
+    subjectBenefits,
+    partnerBenefits,
+    otherTaxableIncome,
+    hasSpouse
+  ) {
+    const calculationDetails = new SsCalculationDetails(
+      subjectBenefits,
+      partnerBenefits,
+      otherTaxableIncome,
+      hasSpouse
     );
+
+    const ssBenefits = new SsBenefitsCalculator(calculationDetails);
 
     // Perform the calculation automatically
     ssBenefits.#calculateTaxablePortion();

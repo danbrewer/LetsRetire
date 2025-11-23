@@ -40,6 +40,12 @@ class Disbursements {
       .asCurrency();
   }
 
+  get interestEarnedOnSavings() {
+    return this.#accountYear
+      .getWithdrawals(ACCOUNT_TYPES.SAVINGS, TRANSACTION_CATEGORY.INTEREST)
+      .asCurrency();
+  }
+
   /**
    * Get 401k disbursements for a year
    * @returns {number}
@@ -77,7 +83,7 @@ class Disbursements {
    * Create an empty Disbursements instance
    * @returns {Disbursements}
    */
-  static Empty() {
-    return new Disbursements(AccountYear.Empty());
-  }
+  //   static Empty() {
+  //     return new Disbursements(AccountYear.Empty());
+  //   }
 }

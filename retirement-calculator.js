@@ -127,9 +127,9 @@ function initializeInputsForWorkingYear(inputs, yearIndex) {
 
   result.additionalSpending = getSpendingOverride(result.age).asCurrency();
 
-  result.taxableIncomeAdjustment = getTaxableIncomeOverride(
-    result.age
-  ).asCurrency();
+  result.setTaxableIncomeAdjustment(
+    getTaxableIncomeOverride(getTaxableIncomeOverride(result.age).asCurrency())
+  );
   result.taxFreeIncomeAdjustment = getTaxFreeIncomeOverride(
     result.age
   ).asCurrency();
@@ -147,9 +147,9 @@ function initializeInputsForRetirementYear(inputs, yearIndex) {
   result.yearIndex = yearIndex;
 
   result.additionalSpending = getSpendingOverride(result.age).asCurrency();
-  result.taxableIncomeAdjustment = getTaxableIncomeOverride(
-    result.age
-  ).asCurrency();
+  result.setTaxableIncomeAdjustment(
+    getTaxableIncomeOverride(result.age).asCurrency()
+  );
   result.taxFreeIncomeAdjustment = getTaxFreeIncomeOverride(
     result.age
   ).asCurrency();

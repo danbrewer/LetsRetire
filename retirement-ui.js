@@ -1536,7 +1536,11 @@ function generatePDFReport() {
       `${(inputs.spendingDecline * 100).toFixed(1)}%`,
       yPos
     );
-    yPos = addKeyValuePair("Current Salary:", fmt(inputs.salary), yPos);
+    yPos = addKeyValuePair(
+      "Current Salary:",
+      fmt(inputs.wagesandOtherTaxableCompensation),
+      yPos
+    );
     yPos = addKeyValuePair(
       "Salary Growth Rate:",
       `${(inputs.salaryGrowth * 100).toFixed(1)}%`,

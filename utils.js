@@ -56,7 +56,7 @@ Number.prototype.adjustedForInflation = function (inflationRate, years) {
  */
 Number.prototype.asPercentageOf = function (total) {
   if (total === 0) return 0;
-  return ((this / total) * 100).round(2);
+  return (this / total).round(2);
 };
 
 /**

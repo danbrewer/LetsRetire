@@ -52,6 +52,16 @@ class Transaction {
   /** @type {Date} */
   #date;
 
+  toJSON() {
+    return {
+      amount: this.#amount,
+      transactionType: this.#transactionType,
+      category: this.#category,
+      party: this.#party,
+      date: this.#date,
+    };
+  }
+
   get amount() {
     return this.#amount;
   }

@@ -23,6 +23,12 @@ class Income {
       .asCurrency();
   }
 
+  get interestOnSavings(){
+    return this.#accountYear
+      .getDeposits(this.#accountType, TRANSACTION_CATEGORY.INTEREST)
+      .asCurrency();
+  }
+
   get trad401k() {
     return this.#accountYear
       .getDeposits(this.#accountType, TRANSACTION_CATEGORY.TRAD_401K)
@@ -67,7 +73,7 @@ class Income {
     return new Income(accountYear, accountType);
   }
 
-  static Empty() {
-    return new Income(AccountYear.Empty(), "");
-  }
+//   static Empty() {
+//     return new Income(AccountYear.Empty(), "");
+//   }
 }

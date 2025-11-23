@@ -345,7 +345,7 @@ class EmploymentInfo {
   static CreateUsing(demographics, inputs, description = "Employment Info") {
     return new EmploymentInfo(
       demographics.age,
-      inputs.salary,
+      inputs.wagesandOtherTaxableCompensation,
       inputs.pretaxPct || 0,
       inputs.rothPct || 0,
       inputs.matchCap || 0,

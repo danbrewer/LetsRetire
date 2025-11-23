@@ -44,7 +44,8 @@ class RetirementIncomeCalculator {
    *   - rmd: Required Minimum Distribution amounts
    *   - otherTaxableIncomeAdjustments: Additional taxable income sources
    *   - nonSsIncome(): Method returning total non-Social Security income
-   *
+   *   - nonSsIncomeSources: Array of non-Social Security income sources
+   * @param {Array<number> | null} [nonSsIncomeSources] - (Optional) Array of non-Social Security income sources
    * @returns {IncomeRs} Comprehensive income calculation results containing:
    *   - ssBreakdown: Social Security taxation breakdown with taxable/non-taxable portions,
    *     provisional income calculations, and detailed methodology
@@ -67,20 +68,36 @@ class RetirementIncomeCalculator {
    * @since 1.0.0
    * @author Retirement Calculator System
    */
-  calculateIncomeWhen401kWithdrawalIs(variableTaxableIncome, incomeStreams) {
+  calculateIncomeWhen401kWithdrawalIs(
+    variableTaxableIncome,
+    incomeStreams,
+    nonSsIncomeSources
+  ) {
     const standardDeduction = this.getStandardDeduction();
-    const taxBrackets = this.getTaxBrackets();
+
+    if (!nonSsIncomeSources || nonSsIncomeSources.length === 0) {
+      nonSsIncomeSources = [
+        incomeStreams.myPension,
+        incomeStreams.spousePension,
+        incomeStreams.interestEarnedOnSavings,
+        incomeStreams.rmd,
+        incomeStreams.miscTaxableIncome,
+      ];
+    }
+
+    const nonSsIncome = nonSsIncomeSources.reduce((sum, val) => sum + val, 0);
 
     const ssBreakdown = SsBenefitsCalculator.CalculateUsing(
       incomeStreams.mySs,
       incomeStreams.spouseSs,
-      incomeStreams.nonSsIncome + variableTaxableIncome
+      nonSsIncome + variableTaxableIncome,
+      this.#demographics.hasSpouse
     );
 
     const incomeBreakdown = IncomeBreakdown.CreateFrom(
       incomeStreams,
       variableTaxableIncome,
-      ssBreakdown,
+      ssBreakdown.calculationDetails,
       standardDeduction,
       this.#demographics,
       this.#fiscalData
@@ -93,21 +110,31 @@ class RetirementIncomeCalculator {
    * @param {IncomeStreams} incomeStreams
    */
   calculateFixedIncomeOnly(incomeStreams) {
-    return this.calculateIncomeWhen401kWithdrawalIs(0, incomeStreams);
+    const nonSsIncomeSources = [
+      incomeStreams.myPension,
+      incomeStreams.spousePension,
+      incomeStreams.rmd,
+      incomeStreams.miscTaxableIncome,
+    ];
+    return this.calculateIncomeWhen401kWithdrawalIs(
+      0,
+      incomeStreams,
+      nonSsIncomeSources
+    );
   }
 
   /**
    * Determine 401k withdrawal amount needed to hit a specific net target income
    * @param {number} targetIncome - Target net income to achieve
    * @param {IncomeStreams} incomeStreams - Collection of income sources
-   * @returns {{net: number, withdrawalNeeded: number, tax: number, rmd: number, calculationDetails: any}} - Withdrawal calculation results
+   * @returns {{desiredNetTarget: number, trad401kWithdrawalNeeded: number, tax: number, rmd: number, calculationDetails: any[]}} - Withdrawal calculation results
    */
   determine401kWithdrawalsToHitNetTargetOf(targetIncome, incomeStreams) {
     // Declare and initialize the result object at the top
-    /** @type {{net: number, withdrawalNeeded: number, tax: number, rmd: number, calculationDetails: any[]}} */
+    /** @type {{desiredNetTarget: number, trad401kWithdrawalNeeded: number, tax: number, rmd: number, calculationDetails: any[]}} */
     const result = {
-      net: 0,
-      withdrawalNeeded: 0,
+      desiredNetTarget: 0,
+      trad401kWithdrawalNeeded: 0,
       tax: 0,
       rmd: 0,
       calculationDetails: [],
@@ -140,8 +167,7 @@ class RetirementIncomeCalculator {
       log.info(`Target income is $${targetIncome.asCurrency()}.`);
 
       const netIncome =
-        incomeRs?.incomeBreakdown
-          .getNetIncomeMinusReportedEarnedInterest()
+        incomeRs?.incomeBreakdown.netIncome //getNetIncomeMinusReportedEarnedInterest()
           .asCurrency() ?? 0;
 
       const highLow =
@@ -169,11 +195,11 @@ class RetirementIncomeCalculator {
     }
 
     // Update all the final values in the result object
-    result.net =
-      incomeRs?.incomeBreakdown
-        .getNetIncomeMinusReportedEarnedInterest()
+    result.desiredNetTarget =
+      incomeRs?.incomeBreakdown.netIncome //getNetIncomeMinusReportedEarnedInterest()
         .asCurrency() ?? 0;
-    result.withdrawalNeeded = hi.asCurrency();
+    result.trad401kWithdrawalNeeded =
+      incomeRs?.incomeBreakdown.trad401kWithdrawal.asCurrency() ?? 0; // hi.asCurrency();
     result.rmd = incomeStreams.rmd;
     result.tax = incomeRs?.incomeBreakdown.federalIncomeTax.asCurrency() ?? 0;
     result.calculationDetails = [

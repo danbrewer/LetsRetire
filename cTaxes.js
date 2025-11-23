@@ -214,8 +214,8 @@ class Taxes {
    */
   static CreateForRetirementYearIncome(incomeBreakdown) {
     return new Taxes(
+      incomeBreakdown.totalIncome,
       incomeBreakdown.grossIncome,
-      incomeBreakdown.adjustedGrossIncome,
       incomeBreakdown.standardDeduction,
       incomeBreakdown.taxableIncome,
       incomeBreakdown.federalIncomeTax, // federalTaxesOwed - to be calculated later
