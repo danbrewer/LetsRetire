@@ -111,6 +111,11 @@ class RetirementYearData {
 
     /** @type {number} */
     this.shortfallAmount;
+
+    /**
+     * @type {any[]}
+     */
+    this.calculationDetails = [];
   }
 
   // // Factory method for backward compatibility

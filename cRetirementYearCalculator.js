@@ -234,7 +234,8 @@ class RetirementYearCalculator {
     // // incomeResults.ssBreakdown,
     // // pensionBreakdown,
     // accountYear
-    incomeResults.incomeBreakdown.dump("incomeBreakdown");
+
+    // incomeResults.incomeBreakdown.dump("incomeBreakdown");
     debugger;
 
     // result.demographics = demographics;
@@ -266,6 +267,13 @@ class RetirementYearCalculator {
       this.#accountYear,
       ACCOUNT_TYPES.TRAD_ROTH
     );
+    result.calculationDetails = [
+      // withLabel("demographics", demographics),
+      // withLabel("fiscalData", fiscalData),
+      withLabel("incomeResults", incomeResults),
+      // withLabel("withdrawalFactory", withdrawalFactory),
+      // withLabel("accountYear", this.#accountYear),
+    ];
 
     // debugger;
     const description = `
@@ -285,57 +293,57 @@ class RetirementYearCalculator {
 
     result._description = description;
     // @ts-ignore
-    const temp = {
-      income: {
-        netIncome: incomeResults.incomeBreakdown.netIncome //getNetIncomeMinusReportedEarnedInterest()
-          .asCurrency(),
-        interestIncome: savings.earnedInterest,
-        spend: fiscalData.spend.asCurrency(),
-        shortfall: Math.max(
-          fiscalData.spend -
-            savings.earnedInterest -
-            this.#accountYear.getDeposits(ACCOUNT_TYPES.SAVINGS),
-          0
-        ).asCurrency(),
-        overage: Math.max(
-          this.#accountYear.getDeposits(ACCOUNT_TYPES.SAVINGS) -
-            savings.earnedInterest -
-            fiscalData.spend,
-          0
-        ).asCurrency(),
-      },
-      savings: {
-        startingBalance: this.#accountYear
-          .getStartingBalance(ACCOUNT_TYPES.SAVINGS)
-          .asCurrency(),
-        withdrawals: this.#accountYear
-          .getWithdrawals(ACCOUNT_TYPES.SAVINGS)
-          .asCurrency(),
-        deposits: this.#accountYear
-          .getDeposits(ACCOUNT_TYPES.SAVINGS)
-          .asCurrency(),
-        endingBalance: this.#accountYear
-          .getEndingBalance(ACCOUNT_TYPES.SAVINGS)
-          .asCurrency(),
-      },
-      trad401k: {
-        startingBalance: this.#accountYear
-          .getStartingBalance(ACCOUNT_TYPES.TRAD_401K)
-          .asCurrency(),
-        withdrawals: this.#accountYear
-          .getWithdrawals(ACCOUNT_TYPES.TRAD_401K)
-          .asCurrency(),
-        deposits: this.#accountYear
-          .getDeposits(ACCOUNT_TYPES.TRAD_401K)
-          .asCurrency(),
-        endingBalance: this.#accountYear
-          .getEndingBalance(ACCOUNT_TYPES.TRAD_401K)
-          .asCurrency(),
-        interestEarned: this.#accountYear
-          .getDeposits(ACCOUNT_TYPES.TRAD_401K, TRANSACTION_CATEGORY.INTEREST)
-          .asCurrency(),
-      },
-    };
+    // const temp = {
+    //   income: {
+    //     netIncome: incomeResults.incomeBreakdown.netIncome //getNetIncomeMinusReportedEarnedInterest()
+    //       .asCurrency(),
+    //     interestIncome: savings.earnedInterest,
+    //     spend: fiscalData.spend.asCurrency(),
+    //     shortfall: Math.max(
+    //       fiscalData.spend -
+    //         savings.earnedInterest -
+    //         this.#accountYear.getDeposits(ACCOUNT_TYPES.SAVINGS),
+    //       0
+    //     ).asCurrency(),
+    //     overage: Math.max(
+    //       this.#accountYear.getDeposits(ACCOUNT_TYPES.SAVINGS) -
+    //         savings.earnedInterest -
+    //         fiscalData.spend,
+    //       0
+    //     ).asCurrency(),
+    //   },
+    //   savings: {
+    //     startingBalance: this.#accountYear
+    //       .getStartingBalance(ACCOUNT_TYPES.SAVINGS)
+    //       .asCurrency(),
+    //     withdrawals: this.#accountYear
+    //       .getWithdrawals(ACCOUNT_TYPES.SAVINGS)
+    //       .asCurrency(),
+    //     deposits: this.#accountYear
+    //       .getDeposits(ACCOUNT_TYPES.SAVINGS)
+    //       .asCurrency(),
+    //     endingBalance: this.#accountYear
+    //       .getEndingBalance(ACCOUNT_TYPES.SAVINGS)
+    //       .asCurrency(),
+    //   },
+    //   trad401k: {
+    //     startingBalance: this.#accountYear
+    //       .getStartingBalance(ACCOUNT_TYPES.TRAD_401K)
+    //       .asCurrency(),
+    //     withdrawals: this.#accountYear
+    //       .getWithdrawals(ACCOUNT_TYPES.TRAD_401K)
+    //       .asCurrency(),
+    //     deposits: this.#accountYear
+    //       .getDeposits(ACCOUNT_TYPES.TRAD_401K)
+    //       .asCurrency(),
+    //     endingBalance: this.#accountYear
+    //       .getEndingBalance(ACCOUNT_TYPES.TRAD_401K)
+    //       .asCurrency(),
+    //     interestEarned: this.#accountYear
+    //       .getDeposits(ACCOUNT_TYPES.TRAD_401K, TRANSACTION_CATEGORY.INTEREST)
+    //       .asCurrency(),
+    //   },
+    // };
 
     // debugData.dump("Debug Data");
     // temp.dump("Balances");

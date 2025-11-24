@@ -17,7 +17,8 @@ const TRANSACTION_CATEGORY = Object.freeze({
   SAVINGS: "income_from_savings",
   TRAD_401K: "income_from_401k",
   TRAD_ROTH: "income_from_roth",
-  OTHER_INCOME: "income_from_other",
+  OTHER_TAXABLE_INCOME: "other_taxable_income",
+  OTHER_NON_TAXABLE: "other_non_taxable_income",
   SOCIAL_SEC: "income_from_ss",
   PENSION: "income_from_pensions",
 });

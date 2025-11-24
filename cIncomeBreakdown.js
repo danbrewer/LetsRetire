@@ -199,6 +199,10 @@ class IncomeBreakdown {
     );
   }
 
+  get otherNonTaxableNetIncome() {
+    return this.#fixedIncomeStreams.taxFreeIncomeAdjustment.asCurrency();
+  }
+
   get earnedInterestNetIncome() {
     return this.grossIncomeAmountAsPercentageOfNetIncome(
       this.#fixedIncomeStreams.interestEarnedOnSavings

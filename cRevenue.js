@@ -23,39 +23,39 @@ class Income {
       .asCurrency();
   }
 
-  get interestOnSavings(){
-    return this.#accountYear
-      .getDeposits(this.#accountType, TRANSACTION_CATEGORY.INTEREST)
-      .asCurrency();
-  }
-
-  get trad401k() {
-    return this.#accountYear
-      .getDeposits(this.#accountType, TRANSACTION_CATEGORY.TRAD_401K)
-      .asCurrency();
-  }
-
-  get roth() {
-    return this.#accountYear
-      .getDeposits(this.#accountType, TRANSACTION_CATEGORY.TRAD_ROTH)
-      .asCurrency();
-  }
-
-  get other() {
-    return this.#accountYear
-      .getDeposits(this.#accountType, TRANSACTION_CATEGORY.OTHER_INCOME)
-      .asCurrency();
-  }
-
-  get ss() {
+  get netSocialSecurity() {
     return this.#accountYear
       .getDeposits(this.#accountType, TRANSACTION_CATEGORY.SOCIAL_SEC)
       .asCurrency();
   }
 
-  get pension() {
+  get netPension() {
     return this.#accountYear
       .getDeposits(this.#accountType, TRANSACTION_CATEGORY.PENSION)
+      .asCurrency();
+  }
+
+  get netInterestOnSavings() {
+    return this.#accountYear
+      .getDeposits(this.#accountType, TRANSACTION_CATEGORY.INTEREST)
+      .asCurrency();
+  }
+
+  get netTrad401k() {
+    return this.#accountYear
+      .getDeposits(this.#accountType, TRANSACTION_CATEGORY.TRAD_401K)
+      .asCurrency();
+  }
+
+  get netOtherTaxableIncome() {
+    return this.#accountYear
+      .getDeposits(this.#accountType, TRANSACTION_CATEGORY.OTHER_TAXABLE_INCOME)
+      .asCurrency();
+  }
+
+  get tradRoth() {
+    return this.#accountYear
+      .getDeposits(this.#accountType, TRANSACTION_CATEGORY.TRAD_ROTH)
       .asCurrency();
   }
 
@@ -73,7 +73,7 @@ class Income {
     return new Income(accountYear, accountType);
   }
 
-//   static Empty() {
-//     return new Income(AccountYear.Empty(), "");
-//   }
+  //   static Empty() {
+  //     return new Income(AccountYear.Empty(), "");
+  //   }
 }

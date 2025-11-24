@@ -42,7 +42,6 @@ class WithdrawalFactory {
     this.#fiscalData = fiscalData;
     this.#demographics = demographics;
     this.#accountYear = accountYear;
-    // this.#incomeResults = IncomeRs.Empty();
     this.#retirementIncomeCalculator = new RetirementIncomeCalculator(
       demographics,
       fiscalData
@@ -50,6 +49,13 @@ class WithdrawalFactory {
   }
 
   processWithdrawals() {
+    // Dump misc non-taxable income into savings account just to get it accounted for
+    this.#accountYear.deposit(
+      ACCOUNT_TYPES.SAVINGS,
+      TRANSACTION_CATEGORY.OTHER_NON_TAXABLE,
+      this.#incomeResults?.incomeBreakdown.otherNonTaxableNetIncome ?? 0
+    );
+
     const fixedIncomeOnly =
       this.#retirementIncomeCalculator.calculateFixedIncomeOnly(
         this.#fixedIncomeStreams
@@ -58,8 +64,9 @@ class WithdrawalFactory {
     // reduce the spend temporarily to determine the shortfall that needs to be covered by 401k, savings, and roth
     const estimatedFixedIncomeNet =
       fixedIncomeOnly.incomeBreakdown.totalIncome -
-      fixedIncomeOnly.incomeBreakdown.federalIncomeTax -
-      fixedIncomeOnly.incomeBreakdown.interestEarnedOnSavings;
+      fixedIncomeOnly.incomeBreakdown.federalIncomeTax;
+    //   -
+    //   fixedIncomeOnly.incomeBreakdown.interestEarnedOnSavings;
     //    -
     //   fixedIncomeOnly.incomeBreakdown.interestEarnedOnSavings;
     //    netIncome -
@@ -253,7 +260,7 @@ class WithdrawalFactory {
     );
     this.#accountYear.deposit(
       ACCOUNT_TYPES.REVENUE,
-      TRANSACTION_CATEGORY.OTHER_INCOME,
+      TRANSACTION_CATEGORY.OTHER_TAXABLE_INCOME,
       this.#incomeResults?.incomeBreakdown.otherTaxableNetIncome ?? 0
     );
 
