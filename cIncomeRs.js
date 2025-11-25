@@ -10,15 +10,13 @@
  * @since 1.0.0
  */
 class IncomeRs {
-  /** @type {SsBenefitsCalculator} */
-  #ssBreakdown;
   /** @type {IncomeBreakdown} */
   #incomeBreakdown;
 
   /**
    * Creates a new IncomeRs instance with Social Security and income breakdown data.
    *
-   * @param {SsBenefitsCalculator} ssBreakdown - Social Security benefits breakdown
+   * @param {SsBenefitsCalculator | null} ssBreakdown - Social Security benefits breakdown
    *   containing taxable/non-taxable portions, provisional income calculations,
    *   and detailed benefit analysis for primary and spouse (required)
    * @param {IncomeBreakdown} incomeBreakdown - Comprehensive income breakdown
@@ -41,7 +39,6 @@ class IncomeRs {
     }
 
     this._description = "Income Calculation Results";
-    this.#ssBreakdown = ssBreakdown;
     this.#incomeBreakdown = incomeBreakdown;
   }
 
@@ -92,10 +89,6 @@ class IncomeRs {
 
   get incomeBreakdown() {
     return this.#incomeBreakdown;
-  }
-
-  get ssBreakdown() {
-    return this.#ssBreakdown;
   }
 
   /**

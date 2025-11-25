@@ -2086,7 +2086,7 @@ function initializeHelpIcons() {
  *   calculateRetirement(inputs);
  * }
  *
- * @see {@link Inputs} - The Inputs class constructor for parameter details
+ * @see {@link IncomeStreams} - The Inputs class constructor for parameter details
  * @see {@link validateInputs} - Validation function used internally
  *
  * @since 1.0.0
@@ -2106,7 +2106,7 @@ function parseInputParameters() {
     ];
   }
 
-  const inputs = new Inputs(
+  const inputs = new IncomeStreams(
     (currentAge = num("currentAge")),
     (currentSpouseAge = num("spouseAge")),
     (retireAge = num("retireAge")),

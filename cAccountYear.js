@@ -189,10 +189,30 @@ class AccountYear {
    * @param {number} amount
    * @param {string} frequency
    */
-  processAsPeriodicTransactions(accountName, category, amount, frequency) {
+  processAsPeriodicWithdrawals(accountName, category, amount, frequency) {
     const account = this.#getAccountByName(accountName);
     if (account) {
-      account.processAsPeriodicTransactions(
+      account.processAsPeriodicWithdrawals(
+        this.taxYear,
+        amount,
+        category,
+        frequency
+      );
+    } else {
+      throw new Error(`Account not found: ${accountName}`);
+    }
+  }
+
+  /**
+   * @param {string} accountName
+   * @param {string} category
+   * @param {number} amount
+   * @param {string} frequency
+   */
+  processAsPeriodicDeposits(accountName, category, amount, frequency) {
+    const account = this.#getAccountByName(accountName);
+    if (account) {
+      account.processAsPeriodicDeposits(
         this.taxYear,
         amount,
         category,

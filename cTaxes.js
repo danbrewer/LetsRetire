@@ -96,68 +96,35 @@ class Taxes {
     return this.grossIncome - this.totalTaxes;
   }
 
-  /**
-   * Validates that the tax calculations are internally consistent.
-   *
-   * @returns {boolean} True if tax calculations appear valid
-   */
-  isCalculationValid() {
-    // Basic validation checks
-    if (
-      this.grossIncome < 0 ||
-      this.federalTaxesOwed < 0 ||
-      this.standardDeduction < 0
-    ) {
-      return false;
-    }
-
-    // Taxable income should not exceed gross income
-    if (this.taxableIncome > this.grossIncome) {
-      return false;
-    }
-
-    // Federal taxes should not exceed gross income (extreme case check)
-    if (this.federalTaxesOwed > this.grossIncome) {
-      return false;
-    }
-
-    // Effective tax rate should be reasonable (less than 100%)
-    if (this.effectiveTaxRate > 1) {
-      return false;
-    }
-
-    return true;
-  }
-
-  /**
-   * Creates a summary object with key tax metrics.
-   *
-   * @returns {Object} Summary containing:
-   *   - grossIncome: Total gross income
-   *   - adjustedGrossIncome: Gross income after adjustments
-   *   - standardDeduction: Standard deduction amount
-   *   - taxableIncome: Income subject to taxation
-   *   - federalTaxes: Federal tax liability
-   *   - otherTaxes: Additional taxes
-   *   - totalTaxes: Combined tax burden
-   *   - netIncome: Income after all taxes
-   *   - effectiveTaxRate: Effective tax rate as percentage
-   *   - isValid: Whether calculations appear consistent
-   */
-  getSummary() {
-    return {
-      grossIncome: this.grossIncome,
-      // adjustedGrossIncome: this.adjustedGrossIncome,
-      standardDeduction: this.standardDeduction,
-      taxableIncome: this.taxableIncome,
-      federalTaxes: this.federalTaxesOwed,
-      otherTaxes: this.otherTaxes,
-      totalTaxes: this.totalTaxes,
-      netIncome: this.netIncome,
-      effectiveTaxRate: (this.effectiveTaxRate * 100).toFixed(2) + "%",
-      isValid: this.isCalculationValid(),
-    };
-  }
+  // /**
+  //  * Creates a summary object with key tax metrics.
+  //  *
+  //  * @returns {Object} Summary containing:
+  //  *   - grossIncome: Total gross income
+  //  *   - adjustedGrossIncome: Gross income after adjustments
+  //  *   - standardDeduction: Standard deduction amount
+  //  *   - taxableIncome: Income subject to taxation
+  //  *   - federalTaxes: Federal tax liability
+  //  *   - otherTaxes: Additional taxes
+  //  *   - totalTaxes: Combined tax burden
+  //  *   - netIncome: Income after all taxes
+  //  *   - effectiveTaxRate: Effective tax rate as percentage
+  //  *   - isValid: Whether calculations appear consistent
+  //  */
+  // getSummary() {
+  //   return {
+  //     grossIncome: this.grossIncome,
+  //     // adjustedGrossIncome: this.adjustedGrossIncome,
+  //     standardDeduction: this.standardDeduction,
+  //     taxableIncome: this.taxableIncome,
+  //     federalTaxes: this.federalTaxesOwed,
+  //     otherTaxes: this.otherTaxes,
+  //     totalTaxes: this.totalTaxes,
+  //     netIncome: this.netIncome,
+  //     effectiveTaxRate: (this.effectiveTaxRate * 100).toFixed(2) + "%",
+  //     isValid: this.isCalculationValid(),
+  //   };
+  // }
 
   /**
    * Factory method to create a Taxes instance from income and deduction data.
@@ -189,36 +156,17 @@ class Taxes {
    * @static
    * @since 1.0.0
    */
-  // static CreateUsing(
-  //   grossIncome,
-  //   standardDeduction,
-  //   federalTaxesOwed = 0,
-  //   otherTaxes = 0,
-  //   description = "Taxes"
-  // ) {
-  //   const taxableIncome = Math.max(0, grossIncome - standardDeduction);
-
-  //   return new Taxes(
-  //     grossIncome,
-  //     standardDeduction,
-  //     taxableIncome,
-  //     federalTaxesOwed,
-  //     otherTaxes,
-  //     0, // taxableIncomeAdjustment
-  //     description
-  //   );
-  // }
 
   /**
    * @param {IncomeBreakdown} incomeBreakdown
    */
-  static CreateForRetirementYearIncome(incomeBreakdown) {
+  static CreateUsing(incomeBreakdown) {
     return new Taxes(
       incomeBreakdown.totalIncome,
       incomeBreakdown.grossIncome,
       incomeBreakdown.standardDeduction,
       incomeBreakdown.taxableIncome,
-      incomeBreakdown.federalIncomeTax, // federalTaxesOwed - to be calculated later
+      incomeBreakdown.federalIncomeTax,
       0, // otherTaxes - to be calculated later
       "Taxes"
     );
@@ -246,6 +194,7 @@ class Taxes {
 
     const federalIncomeTaxOwed = TaxCalculator.determineFederalIncomeTax(
       workingYearIncome.getTaxableIncome(),
+      workingYearIncome.getTaxableIncome(),
       fiscalData,
       demographics
     );
@@ -260,53 +209,4 @@ class Taxes {
       "Taxes"
     );
   }
-
-  //   /**
-  //    * Factory method to create a Taxes instance from comprehensive tax calculation data.
-  //    *
-  //    * @param {Object} taxData - Object containing all tax calculation data
-  //    * @param {string} [description="Taxes"] - Optional description
-  //    *
-  //    * @returns {Taxes} A fully populated Taxes instance
-  //    *
-  //    * @example
-  //    * // Create from complete tax data
-  //    * const taxData = {
-  //    *   grossIncome: 100000,
-  //    *   standardDeduction: 27700,
-  //    *   taxableIncome: 72300,
-  //    *   federalTaxesOwed: 12150,
-  //    *   otherTaxes: 2500,
-  //    *   taxableIncomeAdjustment: 0
-  //    * };
-  //    *
-  //    * const taxes = Taxes.CreateFrom(taxData, "2024 Tax Calculation");
-  //    * console.log(taxes.getSummary());
-  //    *
-  //    * @static
-  //    * @since 1.0.0
-  //    */
-  //   static CreateFrom(taxData, description = "Taxes") {
-  //     const {
-  //       grossIncome = 0,
-  //       standardDeduction = 0,
-  //       taxableIncome = 0,
-  //       federalTaxesOwed = 0,
-  //       otherTaxes = 0,
-  //       taxableIncomeAdjustment = 0,
-  //     } = taxData;
-
-  //     return new Taxes(
-  //       grossIncome,
-  //       standardDeduction,
-  //       taxableIncome,
-  //       federalTaxesOwed,
-  //       otherTaxes,
-  //       taxableIncomeAdjustment,
-  //       description
-  //     );
-  //   }
 }
-
-// Maintain backward compatibility with the original object structure
-// const taxes = Taxes.CreateUsing(0, 0);

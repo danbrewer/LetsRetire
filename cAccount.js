@@ -388,18 +388,38 @@ class Account {
    * @param {string} category
    * @param {string} frequency
    */
-  processAsPeriodicTransactions(yyyy, amount, category, frequency) {
+  processAsPeriodicWithdrawals(yyyy, amount, category, frequency) {
     switch (frequency) {
       case PERIODIC_FREQUENCY.ANNUAL:
         return this.#withdrawal(amount, category, new Date(yyyy, 0, 1));
       case PERIODIC_FREQUENCY.SEMI_ANNUAL:
-        return this.#processSemiAnnualTransaction(yyyy, amount, category);
+        return this.#processAsSemiAnnualTransactions(
+          yyyy,
+          amount,
+          category,
+          TRANSACTION_TYPE.WITHDRAWAL
+        );
       case PERIODIC_FREQUENCY.QUARTERLY:
-        return this.#processQuarterlyTransaction(yyyy, amount, category);
+        return this.#processAsQuarterlyTransactions(
+          yyyy,
+          amount,
+          category,
+          TRANSACTION_TYPE.WITHDRAWAL
+        );
       case PERIODIC_FREQUENCY.MONTHLY:
-        return this.#processMonthlyTransaction(yyyy, amount, category);
+        return this.#processAsMonthlyTransactions(
+          yyyy,
+          amount,
+          category,
+          TRANSACTION_TYPE.WITHDRAWAL
+        );
       case PERIODIC_FREQUENCY.DAILY:
-        return this.#processDailyTransaction(yyyy, amount, category);
+        return this.#processAsDailyTransactions(
+          yyyy,
+          amount,
+          category,
+          TRANSACTION_TYPE.WITHDRAWAL
+        );
       // Add more frequencies as needed
       default:
         throw new Error(`Unknown periodic frequency: ${frequency}`);
@@ -410,19 +430,89 @@ class Account {
    * @param {number} yyyy
    * @param {number} amount
    * @param {string} category
+   * @param {string} frequency
    */
-  #processDailyTransaction(yyyy, amount, category) {
+  processAsPeriodicDeposits(yyyy, amount, category, frequency) {
+    switch (frequency) {
+      case PERIODIC_FREQUENCY.ANNUAL:
+        return this.#deposit(amount, category, new Date(yyyy, 0, 1));
+      case PERIODIC_FREQUENCY.SEMI_ANNUAL:
+        return this.#processAsSemiAnnualTransactions(
+          yyyy,
+          amount,
+          category,
+          TRANSACTION_TYPE.WITHDRAWAL
+        );
+      case PERIODIC_FREQUENCY.QUARTERLY:
+        return this.#processAsQuarterlyTransactions(
+          yyyy,
+          amount,
+          category,
+          TRANSACTION_TYPE.DEPOSIT
+        );
+      case PERIODIC_FREQUENCY.MONTHLY:
+        return this.#processAsMonthlyTransactions(
+          yyyy,
+          amount,
+          category,
+          TRANSACTION_TYPE.DEPOSIT
+        );
+      case PERIODIC_FREQUENCY.DAILY:
+        return this.#processAsDailyTransactions(
+          yyyy,
+          amount,
+          category,
+          TRANSACTION_TYPE.DEPOSIT
+        );
+      // Add more frequencies as needed
+      default:
+        throw new Error(`Unknown periodic frequency: ${frequency}`);
+    }
+  }
+
+  /**
+   * @param {number} yyyy
+   * @param {number} amount
+   * @param {string} category
+   * @param {string} transactionType
+   */
+  #processAsDailyTransactions(yyyy, amount, category, transactionType) {
     const daysInYear = new Date(yyyy, 1, 29).getMonth() === 1 ? 366 : 365;
     const dailyAmount = (amount / daysInYear).asCurrency();
 
-    for (let day = 0; day < daysInYear - 1; day++) {
-      this.#withdrawal(dailyAmount, category, new Date(yyyy, 0, day + 1));
+    switch (transactionType) {
+      case TRANSACTION_TYPE.WITHDRAWAL:
+        for (let day = 0; day < daysInYear - 1; day++) {
+          this.#withdrawal(dailyAmount, category, new Date(yyyy, 0, day + 1));
+        }
+
+        // Adjust final day to account for rounding
+        const totalWithdrawn = dailyAmount * (daysInYear - 1);
+        const finalDayAmount = (amount - totalWithdrawn).asCurrency();
+        this.#withdrawal(finalDayAmount, category, new Date(yyyy, 11, 31));
+        break;
+      case TRANSACTION_TYPE.DEPOSIT:
+        for (let day = 0; day < daysInYear - 1; day++) {
+          this.#deposit(dailyAmount, category, new Date(yyyy, 0, day + 1));
+        }
+
+        // Adjust final day to account for rounding
+        const totalDeposited = dailyAmount * (daysInYear - 1);
+        const finalDepositAmount = (amount - totalDeposited).asCurrency();
+        this.#deposit(finalDepositAmount, category, new Date(yyyy, 11, 31));
+        break;
+      default:
+        throw new Error(`Unknown transaction type: ${transactionType}`);
     }
 
-    // Adjust final day to account for rounding
-    const totalWithdrawn = dailyAmount * (daysInYear - 1);
-    const finalDayAmount = (amount - totalWithdrawn).asCurrency();
-    this.#withdrawal(finalDayAmount, category, new Date(yyyy, 11, 31));
+    // for (let day = 0; day < daysInYear - 1; day++) {
+    //   this.#withdrawal(dailyAmount, category, new Date(yyyy, 0, day + 1));
+    // }
+
+    // // Adjust final day to account for rounding
+    // const totalWithdrawn = dailyAmount * (daysInYear - 1);
+    // const finalDayAmount = (amount - totalWithdrawn).asCurrency();
+    // this.#withdrawal(finalDayAmount, category, new Date(yyyy, 11, 31));
 
     return amount.asCurrency();
   }
@@ -431,18 +521,44 @@ class Account {
    * @param {number} yyyy
    * @param {number} amount
    * @param {string} category
+   * @param {string} transactionType
    */
-  #processMonthlyTransaction(yyyy, amount, category) {
+  #processAsMonthlyTransactions(yyyy, amount, category, transactionType) {
     const monthlyAmount = (amount / 12).asCurrency();
 
-    for (let month = 0; month < 11; month++) {
-      this.#withdrawal(monthlyAmount, category, new Date(yyyy, month, 1));
+    switch (transactionType) {
+      case TRANSACTION_TYPE.WITHDRAWAL:
+        for (let month = 0; month < 11; month++) {
+          this.#withdrawal(monthlyAmount, category, new Date(yyyy, month, 1));
+        }
+
+        // Adjust final month to account for rounding
+        const totalWithdrawn = monthlyAmount * 11;
+        const finalMonthAmount = (amount - totalWithdrawn).asCurrency();
+        this.#withdrawal(finalMonthAmount, category, new Date(yyyy, 11, 1));
+        break;
+      case TRANSACTION_TYPE.DEPOSIT:
+        for (let month = 0; month < 11; month++) {
+          this.#deposit(monthlyAmount, category, new Date(yyyy, month, 1));
+        }
+
+        // Adjust final month to account for rounding
+        const totalDeposited = monthlyAmount * 11;
+        const finalDepositAmount = (amount - totalDeposited).asCurrency();
+        this.#deposit(finalDepositAmount, category, new Date(yyyy, 11, 1));
+        break;
+      default:
+        throw new Error(`Unknown transaction type: ${transactionType}`);
     }
 
-    // Adjust final month to account for rounding
-    const totalWithdrawn = monthlyAmount * 11;
-    const finalMonthAmount = (amount - totalWithdrawn).asCurrency();
-    this.#withdrawal(finalMonthAmount, category, new Date(yyyy, 11, 1));
+    // for (let month = 0; month < 11; month++) {
+    //   this.#withdrawal(monthlyAmount, category, new Date(yyyy, month, 1));
+    // }
+
+    // // Adjust final month to account for rounding
+    // const totalWithdrawn = monthlyAmount * 11;
+    // const finalMonthAmount = (amount - totalWithdrawn).asCurrency();
+    // this.#withdrawal(finalMonthAmount, category, new Date(yyyy, 11, 1));
 
     return amount.asCurrency();
   }
@@ -451,11 +567,42 @@ class Account {
    * @param {number} yyyy
    * @param {number} amount
    * @param {string} category
+   * @param {string} transactionType
    */
-  #processQuarterlyTransaction(yyyy, amount, category) {
+  #processAsQuarterlyTransactions(yyyy, amount, category, transactionType) {
     const quarterlyAmount = (amount / 4).asCurrency();
 
-    for (let quarter = 0; quarter < 3; quarter++) {
+    switch (transactionType) {
+      case TRANSACTION_TYPE.WITHDRAWAL:
+        for (let quarter = 0; quarter < 3; quarter++) {
+          const month = quarter * 3;
+          this.#withdrawal(quarterlyAmount, category, new Date(yyyy, month, 1));
+        }
+
+        // Adjust final quarter to account for rounding
+        const totalWithdrawn = quarterlyAmount * 3;
+        const finalQuarterAmount = (amount - totalWithdrawn).asCurrency();
+        this.#withdrawal(finalQuarterAmount, category, new Date(yyyy, 9, 1));
+        break;
+      case TRANSACTION_TYPE.DEPOSIT:
+        for (let quarter = 0; quarter < 3; quarter++) {
+          const month = quarter * 3;
+          this.#deposit(quarterlyAmount, category, new Date(yyyy, month, 1));
+        }
+
+        // Adjust final quarter to account for rounding
+        const totalDeposited = quarterlyAmount * 3;
+        const finalDepositAmount = (amount - totalDeposited).asCurrency();
+        this.#deposit(finalDepositAmount, category, new Date(yyyy, 9, 1));
+        break;
+      default:
+        throw new Error(`Unknown transaction type: ${transactionType}`);
+    }
+
+    return amount.asCurrency();
+
+    /*
+      for (let quarter = 0; quarter < 3; quarter++) {
       const month = quarter * 3;
       this.#withdrawal(quarterlyAmount, category, new Date(yyyy, month, 1));
     }
@@ -466,22 +613,38 @@ class Account {
     this.#withdrawal(finalQuarterAmount, category, new Date(yyyy, 9, 1));
 
     return amount.asCurrency();
+  }*/
   }
 
   /**
    * @param {number} yyyy
    * @param {number} amount
    * @param {string} category
+   * @param {string} transactionType
    */
-  #processSemiAnnualTransaction(yyyy, amount, category) {
+  #processAsSemiAnnualTransactions(yyyy, amount, category, transactionType) {
     const semiAnnualAmount = (amount / 2).asCurrency();
 
-    this.#withdrawal(semiAnnualAmount, category, new Date(yyyy, 5, 1));
-    this.#withdrawal(
-      amount - semiAnnualAmount,
-      category,
-      new Date(yyyy, 11, 1)
-    );
+    switch (transactionType) {
+      case TRANSACTION_TYPE.WITHDRAWAL:
+        this.#withdrawal(semiAnnualAmount, category, new Date(yyyy, 5, 1));
+        this.#withdrawal(
+          amount - semiAnnualAmount,
+          category,
+          new Date(yyyy, 11, 1)
+        );
+        break;
+      case TRANSACTION_TYPE.DEPOSIT:
+        this.#deposit(semiAnnualAmount, category, new Date(yyyy, 5, 1));
+        this.#deposit(
+          amount - semiAnnualAmount,
+          category,
+          new Date(yyyy, 11, 1)
+        );
+        break;
+      default:
+        throw new Error(`Unknown transaction type: ${transactionType}`);
+    }
 
     return amount.asCurrency();
   }

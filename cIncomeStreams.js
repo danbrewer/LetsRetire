@@ -90,10 +90,11 @@ class IncomeStreams {
     //     )
     //     .asCurrency() ?? 0
     // );
-    return this.#accountYear?.getDeposits(
-      ACCOUNT_TYPES.SAVINGS,
-      TRANSACTION_CATEGORY.INTEREST
-    ).asCurrency() ?? 0;
+    return (
+      this.#accountYear
+        ?.getDeposits(ACCOUNT_TYPES.SAVINGS, TRANSACTION_CATEGORY.INTEREST)
+        .asCurrency() ?? 0
+    );
   }
 
   get grossTaxableIncome() {

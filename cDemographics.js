@@ -137,7 +137,7 @@ class Demographics {
    *
    * @see {@link Demographics#constructor} For detailed parameter descriptions
    * @see {@link Demographics#getEligibilityStatuses} For checking all benefit eligibilities
-   * @see {@link Inputs} For complete input object structure
+   * @see {@link IncomeStreams} For complete input object structure
    *
    * @static
    * @since 1.0.0

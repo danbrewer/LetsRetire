@@ -9,51 +9,57 @@
  * @since 1.0.0
  */
 class EmploymentInfo {
+  /** @type {Demographics} */
+  #demographics;
+
+  /** @type {Inputs} */
+  #inputs;
+
+  /** @type {string} */
+  _description;
+  // /**
+  //  * Creates a new EmploymentInfo instance with employment and contribution data.
+  //  *
+  //  * @param {number} [age = 0] - Employee age for contribution calculations
+  //  * @param {number} [salary=0] - Annual salary amount
+  //  * @param {number} [pretaxContributionPercentage=0] - Pretax 401k contribution percentage (as decimal)
+  //  * @param {number} [rothContributionPercentage=0] - Roth 401k contribution percentage (as decimal)
+  //  * @param {number} [employeeMatchCap=0] - Maximum percentage of salary eligible for employer match
+  //  * @param {number} [matchRate=0] - Employer match rate (e.g., 0.5 for 50% match)
+  //  * @param {string} [description="Employment Info"] - Descriptive label
+  //  */
+
   /**
-   * Creates a new EmploymentInfo instance with employment and contribution data.
    *
-   * @param {number} [age = 0] - Employee age for contribution calculations
-   * @param {number} [salary=0] - Annual salary amount
-   * @param {number} [pretaxContributionPercentage=0] - Pretax 401k contribution percentage (as decimal)
-   * @param {number} [rothContributionPercentage=0] - Roth 401k contribution percentage (as decimal)
-   * @param {number} [employeeMatchCap=0] - Maximum percentage of salary eligible for employer match
-   * @param {number} [matchRate=0] - Employer match rate (e.g., 0.5 for 50% match)
-   * @param {string} [description="Employment Info"] - Descriptive label
+   * @param {Demographics} demographics
+   * @param {Inputs} inputs
+   * @param {string} description
    */
-  constructor(
-    age = 0,
-    salary = 0,
-    pretaxContributionPercentage = 0,
-    rothContributionPercentage = 0,
-    employeeMatchCap = 0,
-    matchRate = 0,
-    description = "Employment Info"
-  ) {
-    this._age = age;
+  constructor(demographics, inputs, description = "Employment Info") {
+    this.#demographics = demographics;
+    this.#inputs = inputs;
+
     this._description = description;
-    this.salary = salary;
-    this.pretaxContributionPercentage = pretaxContributionPercentage;
-    this.rothContributionPercentage = rothContributionPercentage;
-    this.employeeMatchCap = employeeMatchCap;
-    this.matchRate = matchRate;
+  }
+  // this._age = age;
+  // this._description = description;
+  // this.salary = salary;
+  // this.pretaxContributionPercentage = pretaxContributionPercentage;
+  // this.rothContributionPercentage = rothContributionPercentage;
+  // this.employeeMatchCap = employeeMatchCap;
+  // this.matchRate = matchRate;
+
+  /**
+   * Gets the descriptive label for this employment info.
+   *
+   * @returns {string} Description of the employment info
+   */
+  get description() {
+    return this._description;
   }
 
-  //   /**
-  //    * Gets the descriptive label for this employment info.
-  //    *
-  //    * @returns {string} Description of the employment info
-  //    */
-  //   get description() {
-  //     return this._description;
-  //   }
-
-  /**
-   * Sets a new description for this employment info.
-   *
-   * @param {string} newDescription - New descriptive label
-   */
-  set description(newDescription) {
-    this._description = newDescription;
+  get salary() {
+    return this.#inputs.wagesandOtherTaxableCompensation.asCurrency();
   }
 
   /**
@@ -62,7 +68,7 @@ class EmploymentInfo {
    * @returns {number} Desired pretax contribution amount as currency
    */
   get desired401kContribution() {
-    return (this.salary * this.pretaxContributionPercentage).asCurrency();
+    return (this.salary * this.#inputs.pretaxPct).asCurrency();
   }
 
   /**
@@ -71,7 +77,7 @@ class EmploymentInfo {
    * @returns {number} Desired Roth contribution amount as currency
    */
   get desiredRothContribution() {
-    return (this.salary * this.rothContributionPercentage).asCurrency();
+    return (this.salary * this.#inputs.rothPct).asCurrency();
   }
 
   /**
@@ -93,7 +99,8 @@ class EmploymentInfo {
         ? EMPLOYEE_401K_CATCHUP_50
         : 7500;
 
-    let electiveLimit = baseLimit + (this._age >= 50 ? catchupLimit : 0);
+    let electiveLimit =
+      baseLimit + (this.#demographics.age >= 50 ? catchupLimit : 0);
     const totalDesiredContribution =
       this.desired401kContribution + this.desiredRothContribution;
     let scale =
@@ -108,68 +115,68 @@ class EmploymentInfo {
    *
    * @returns {number} Capped pretax contribution amount as currency
    */
-  get max401kContribution() {
+  get trad401kContribution() {
     return (
       this.desired401kContribution * this.getElectiveScale()
     ).asCurrency();
   }
 
-  /**
-   * Calculates the actual Roth 401k contribution after applying IRS limits.
-   *
-   * @returns {number} Capped Roth contribution amount as currency
-   */
-  get rothMaxContribution() {
-    return (
-      this.desiredRothContribution * this.getElectiveScale()
-    ).asCurrency();
-  }
+  // /**
+  //  * Calculates the actual Roth 401k contribution after applying IRS limits.
+  //  *
+  //  * @returns {number} Capped Roth contribution amount as currency
+  //  */
+  // get rothMaxContribution() {
+  //   return (
+  //     this.desiredRothContribution * this.getElectiveScale()
+  //   ).asCurrency();
+  // }
 
-  /**
-   * Calculates the effective employee 401k contribution percentage after caps.
-   *
-   * @returns {number} Actual contribution percentage as decimal
-   */
-  get emp401kContributionPct() {
-    return this.salary > 0 ? this.max401kContribution / this.salary : 0;
-  }
+  // /**
+  //  * Calculates the effective employee 401k contribution percentage after caps.
+  //  *
+  //  * @returns {number} Actual contribution percentage as decimal
+  //  */
+  // get emp401kContributionPct() {
+  //   return this.salary > 0 ? this.trad401kContribution / this.salary : 0;
+  // }
 
-  /**
-   * Calculates the employer 401k matching contribution amount.
-   *
-   * The match is calculated on the lesser of the employee's actual contribution
-   * percentage or the employer's matching cap, multiplied by the match rate.
-   *
-   * @returns {number} Employer match amount as currency
-   */
-  get employer401kMatch() {
-    return (
-      Math.min(this.emp401kContributionPct, this.employeeMatchCap) *
-      this.salary *
-      this.matchRate
-    ).asCurrency();
-  }
+  // /**
+  //  * Calculates the employer 401k matching contribution amount.
+  //  *
+  //  * The match is calculated on the lesser of the employee's actual contribution
+  //  * percentage or the employer's matching cap, multiplied by the match rate.
+  //  *
+  //  * @returns {number} Employer match amount as currency
+  //  */
+  // get employer401kMatch() {
+  //   return (
+  //     Math.min(this.emp401kContributionPct, this.employeeMatchCap) *
+  //     this.salary *
+  //     this.matchRate
+  //   ).asCurrency();
+  // }
 
-  /**
-   * Calculates the total employee contribution (pretax + Roth) after caps.
-   *
-   * @returns {number} Total employee contribution amount
-   */
-  get totalEmployeeContribution() {
-    return this.max401kContribution + this.rothMaxContribution;
-  }
+  // /**
+  //  * Calculates the total employee contribution (pretax + Roth) after caps.
+  //  *
+  //  * @returns {number} Total employee contribution amount
+  //  */
+  // get totalEmployeeContribution() {
+  //   return this.trad401kContribution + this.rothMaxContribution;
+  // }
 
-  /**
-   * Calculates the total contribution percentage (employee + employer).
-   *
-   * @returns {number} Total contribution percentage as decimal
-   */
-  get totalContributionPct() {
-    if (this.salary <= 0) return 0;
-    return (
-      (this.totalEmployeeContribution + this.employer401kMatch) / this.salary
-    );
-  }
+  // /**
+  //  * Calculates the total contribution percentage (employee + employer).
+  //  *
+  //  * @returns {number} Total contribution percentage as decimal
+  //  */
+  // get totalContributionPct() {
+  //   if (this.salary <= 0) return 0;
+  //   return (
+  //     (this.totalEmployeeContribution + this.employer401kMatch) / this.salary
+  //   );
+  // }
 
   /**
    * Gets the contribution split between pretax and Roth.
@@ -180,145 +187,117 @@ class EmploymentInfo {
    *   - pretaxPercentage: Pretax as percentage of total
    *   - rothPercentage: Roth as percentage of total
    */
-  get contributionSplit() {
-    const pretaxAmount = this.max401kContribution;
-    const rothAmount = this.rothMaxContribution;
-    const total = pretaxAmount + rothAmount;
+  // get contributionSplit() {
+  //   const pretaxAmount = this.trad401kContribution;
+  //   const rothAmount = this.rothMaxContribution;
+  //   const total = pretaxAmount + rothAmount;
 
-    return {
-      pretaxAmount: pretaxAmount,
-      rothAmount: rothAmount,
-      pretaxPercentage: total > 0 ? pretaxAmount / total : 0,
-      rothPercentage: total > 0 ? rothAmount / total : 0,
-    };
-  }
+  //   return {
+  //     pretaxAmount: pretaxAmount,
+  //     rothAmount: rothAmount,
+  //     pretaxPercentage: total > 0 ? pretaxAmount / total : 0,
+  //     rothPercentage: total > 0 ? rothAmount / total : 0,
+  //   };
+  // }
 
-  /**
-   * Calculates the amount of unused contribution capacity.
-   *
-   * @returns {number} Unused contribution capacity amount
-   */
-  get unusedContributionCapacity() {
-    const baseLimit =
-      typeof EMPLOYEE_401K_LIMIT_2025 !== "undefined"
-        ? EMPLOYEE_401K_LIMIT_2025
-        : 23000;
-    const catchupLimit =
-      typeof EMPLOYEE_401K_CATCHUP_50 !== "undefined"
-        ? EMPLOYEE_401K_CATCHUP_50
-        : 7500;
+  // /**
+  //  * Calculates the amount of unused contribution capacity.
+  //  *
+  //  * @returns {number} Unused contribution capacity amount
+  //  */
+  // get unusedContributionCapacity() {
+  //   const baseLimit =
+  //     typeof EMPLOYEE_401K_LIMIT_2025 !== "undefined"
+  //       ? EMPLOYEE_401K_LIMIT_2025
+  //       : 23000;
+  //   const catchupLimit =
+  //     typeof EMPLOYEE_401K_CATCHUP_50 !== "undefined"
+  //       ? EMPLOYEE_401K_CATCHUP_50
+  //       : 7500;
 
-    const electiveLimit = baseLimit + (this._age >= 50 ? catchupLimit : 0);
-    const actualContribution = this.totalEmployeeContribution;
-    return Math.max(0, electiveLimit - actualContribution);
-  }
+  //   const electiveLimit = baseLimit + (this._age >= 50 ? catchupLimit : 0);
+  //   const actualContribution = this.totalEmployeeContribution;
+  //   return Math.max(0, electiveLimit - actualContribution);
+  // }
 
-  /**
-   * Validates employment info for logical consistency.
-   *
-   * @returns {Object} Validation result containing:
-   *   - isValid: Whether all values are valid
-   *   - errors: Array of validation error messages
-   */
-  validate() {
-    const errors = [];
+  // /**
+  //  * Validates employment info for logical consistency.
+  //  *
+  //  * @returns {Object} Validation result containing:
+  //  *   - isValid: Whether all values are valid
+  //  *   - errors: Array of validation error messages
+  //  */
+  // validate() {
+  //   const errors = [];
 
-    if (this.salary < 0) {
-      errors.push("Salary cannot be negative");
-    }
-
-    if (
-      this.pretaxContributionPercentage < 0 ||
-      this.pretaxContributionPercentage > 1
-    ) {
-      errors.push("Pretax contribution percentage must be between 0 and 1");
-    }
-
-    if (
-      this.rothContributionPercentage < 0 ||
-      this.rothContributionPercentage > 1
-    ) {
-      errors.push("Roth contribution percentage must be between 0 and 1");
-    }
-
-    if (this.employeeMatchCap < 0 || this.employeeMatchCap > 1) {
-      errors.push("Employee match cap must be between 0 and 1");
-    }
-
-    if (this.matchRate < 0) {
-      errors.push("Match rate cannot be negative");
-    }
-
-    const totalContributionPct =
-      this.pretaxContributionPercentage + this.rothContributionPercentage;
-    if (totalContributionPct > 1) {
-      errors.push("Total contribution percentage cannot exceed 100%");
-    }
-
-    return {
-      isValid: errors.length === 0,
-      errors: errors,
-    };
-  }
-
-  /**
-   * Creates a comprehensive summary of employment and contribution information.
-   *
-   * @returns {Object} Summary containing all employment info and calculated values
-   */
-  getSummary() {
-    const contributionSplit = this.contributionSplit;
-    const validation = this.validate();
-
-    return {
-      salary: this.salary,
-      pretaxContributionPercentage:
-        (this.pretaxContributionPercentage * 100).toFixed(1) + "%",
-      rothContributionPercentage:
-        (this.rothContributionPercentage * 100).toFixed(1) + "%",
-      employeeMatchCap: (this.employeeMatchCap * 100).toFixed(1) + "%",
-      matchRate: (this.matchRate * 100).toFixed(1) + "%",
-      desired401kContribution: this.desired401kContribution,
-      desiredRothContribution: this.desiredRothContribution,
-      cap401kContribution: this.max401kContribution,
-      capRothContribution: this.rothMaxContribution,
-      totalEmployeeContribution: this.totalEmployeeContribution,
-      employer401kMatch: this.employer401kMatch,
-      totalContributionPct: (this.totalContributionPct * 100).toFixed(1) + "%",
-      electiveScale: this.getElectiveScale(),
-      unusedCapacity: this.unusedContributionCapacity,
-      contributionSplit: contributionSplit,
-      validation: validation,
-    };
-  }
-
-  /**
-   * Updates employment information values.
-   *
-   * @param {Object} updates - Object containing employment updates:
-   * @param {number} [updates.salary] - New salary amount
-   * @param {number} [updates.pretaxContributionPercentage] - New pretax percentage
-   * @param {number} [updates.rothContributionPercentage] - New Roth percentage
-   * @param {number} [updates.employeeMatchCap] - New match cap
-   * @param {number} [updates.matchRate] - New match rate
-   */
-  //   updateEmploymentInfo(updates) {
-  //     if (updates.salary !== undefined) {
-  //       this.salary = updates.salary;
-  //     }
-  //     if (updates.pretaxContributionPercentage !== undefined) {
-  //       this.pretaxContributionPercentage = updates.pretaxContributionPercentage;
-  //     }
-  //     if (updates.rothContributionPercentage !== undefined) {
-  //       this.rothContributionPercentage = updates.rothContributionPercentage;
-  //     }
-  //     if (updates.employeeMatchCap !== undefined) {
-  //       this.employeeMatchCap = updates.employeeMatchCap;
-  //     }
-  //     if (updates.matchRate !== undefined) {
-  //       this.matchRate = updates.matchRate;
-  //     }
+  //   if (this.salary < 0) {
+  //     errors.push("Salary cannot be negative");
   //   }
+
+  //   if (
+  //     this.pretaxContributionPercentage < 0 ||
+  //     this.pretaxContributionPercentage > 1
+  //   ) {
+  //     errors.push("Pretax contribution percentage must be between 0 and 1");
+  //   }
+
+  //   if (
+  //     this.rothContributionPercentage < 0 ||
+  //     this.rothContributionPercentage > 1
+  //   ) {
+  //     errors.push("Roth contribution percentage must be between 0 and 1");
+  //   }
+
+  //   if (this.employeeMatchCap < 0 || this.employeeMatchCap > 1) {
+  //     errors.push("Employee match cap must be between 0 and 1");
+  //   }
+
+  //   if (this.matchRate < 0) {
+  //     errors.push("Match rate cannot be negative");
+  //   }
+
+  //   const totalContributionPct =
+  //     this.pretaxContributionPercentage + this.rothContributionPercentage;
+  //   if (totalContributionPct > 1) {
+  //     errors.push("Total contribution percentage cannot exceed 100%");
+  //   }
+
+  //   return {
+  //     isValid: errors.length === 0,
+  //     errors: errors,
+  //   };
+  // }
+
+  // /**
+  //  * Creates a comprehensive summary of employment and contribution information.
+  //  *
+  //  * @returns {Object} Summary containing all employment info and calculated values
+  //  */
+  // getSummary() {
+  //   const contributionSplit = this.contributionSplit;
+  //   const validation = this.validate();
+
+  //   return {
+  //     salary: this.salary,
+  //     pretaxContributionPercentage:
+  //       (this.pretaxContributionPercentage * 100).toFixed(1) + "%",
+  //     rothContributionPercentage:
+  //       (this.rothContributionPercentage * 100).toFixed(1) + "%",
+  //     employeeMatchCap: (this.employeeMatchCap * 100).toFixed(1) + "%",
+  //     matchRate: (this.matchRate * 100).toFixed(1) + "%",
+  //     desired401kContribution: this.desired401kContribution,
+  //     desiredRothContribution: this.desiredRothContribution,
+  //     cap401kContribution: this.trad401kContribution,
+  //     capRothContribution: this.rothMaxContribution,
+  //     totalEmployeeContribution: this.totalEmployeeContribution,
+  //     employer401kMatch: this.employer401kMatch,
+  //     totalContributionPct: (this.totalContributionPct * 100).toFixed(1) + "%",
+  //     electiveScale: this.getElectiveScale(),
+  //     unusedCapacity: this.unusedContributionCapacity,
+  //     contributionSplit: contributionSplit,
+  //     validation: validation,
+  //   };
+  // }
 
   /**
    * Factory method to create an EmploymentInfo from input data and salary.
@@ -343,15 +322,7 @@ class EmploymentInfo {
    * @since 1.0.0
    */
   static CreateUsing(demographics, inputs, description = "Employment Info") {
-    return new EmploymentInfo(
-      demographics.age,
-      inputs.wagesandOtherTaxableCompensation,
-      inputs.pretaxPct || 0,
-      inputs.rothPct || 0,
-      inputs.matchCap || 0,
-      inputs.matchRate || 0,
-      description
-    );
+    return new EmploymentInfo(demographics, inputs, description);
   }
 
   /**
@@ -380,25 +351,25 @@ class EmploymentInfo {
    * @static
    * @since 1.0.0
    */
-  static CreateFrom(
-    age,
-    salary,
-    pretaxPct,
-    rothPct,
-    matchCap,
-    matchRate,
-    description = "Employment Info"
-  ) {
-    return new EmploymentInfo(
-      age,
-      salary,
-      pretaxPct,
-      rothPct,
-      matchCap,
-      matchRate,
-      description
-    );
-  }
+  // static CreateFrom(
+  //   age,
+  //   salary,
+  //   pretaxPct,
+  //   rothPct,
+  //   matchCap,
+  //   matchRate,
+  //   description = "Employment Info"
+  // ) {
+  //   return new EmploymentInfo(
+  //     age,
+  //     salary,
+  //     pretaxPct,
+  //     rothPct,
+  //     matchCap,
+  //     matchRate,
+  //     description
+  //   );
+  // }
 
   /**
    * Factory method to create an empty EmploymentInfo instance.
@@ -417,9 +388,9 @@ class EmploymentInfo {
    * @static
    * @since 1.0.0
    */
-  static Empty(description = "Employment Info") {
-    return new EmploymentInfo(0, 0, 0, 0, 0, 0, description);
-  }
+  // static Empty(description = "Employment Info") {
+  //   return new EmploymentInfo(0, 0, 0, 0, 0, 0, description);
+  // }
 }
 
 // Maintain backward compatibility - this will need salary and inputs context

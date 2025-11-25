@@ -103,11 +103,11 @@ class RetirementYearCalculator {
     const mySsBenefits = {
       _description: "Social Security Benefits Breakdown",
       income: fixedIncomeStreams.mySs,
-      taxablePortion: incomeResults.ssBreakdown.myTaxablePortion,
-      nonTaxablePortion: incomeResults.ssBreakdown.myNonTaxablePortion,
-      portionOfTotalBenefits: incomeResults.ssBreakdown.myPortion,
+      taxablePortion: incomeResults.incomeBreakdown.ssCalculationDetails?.subjectTaxablePortion,
+      nonTaxablePortion: incomeResults.incomeBreakdown.ssCalculationDetails?.subjectNonTaxablePortion,
+      portionOfTotalBenefits: incomeResults.incomeBreakdown.ssCalculationDetails?.subjectPortion,
       calculationDetails: [
-        withLabel("incomeResults.ssBreakdown", incomeResults.ssBreakdown),
+        withLabel("incomeResults.incomeBreakdown.ssCalculationDetails", incomeResults.incomeBreakdown.ssCalculationDetails),
         withLabel("incomeStreams", fixedIncomeStreams),
       ],
     };
@@ -146,51 +146,51 @@ class RetirementYearCalculator {
       calculationDetails: [withLabel("accounts.savings", this.#accountYear)],
     };
 
-    const pensionBreakdown = {
-      subjectPension: incomeResults.incomeBreakdown.pension,
-      federalTaxesPaid:
-        incomeResults.incomeBreakdown.grossIncomeAmountAsPercentageOfFederalIncomeTax(
-          this.#inputs.subjectPension
-        ),
-      subjectNetIncome:
-        incomeResults.incomeBreakdown.grossIncomeAmountAsPercentageOfNetIncome(
-          this.#inputs.subjectPension
-        ),
-      partnerIncome: this.#inputs.spousePension, // incomeResults.incomeBreakdown.partnerPension,
-      partnerFederalTaxesPaid:
-        incomeResults.incomeBreakdown.grossIncomeAmountAsPercentageOfFederalIncomeTax(
-          this.#inputs.spousePension
-        ),
-      partnerNetIncome:
-        incomeResults.incomeBreakdown.grossIncomeAmountAsPercentageOfNetIncome(
-          this.#inputs.spousePension
-        ),
-      _description: "Pension Benefits Breakdown",
-      calculationDetails: withLabel(
-        "incomeResults.incomeBreakdown",
-        incomeResults.incomeBreakdown
-      ),
-    };
+    // const pensionBreakdown = {
+    //   subjectPension: incomeResults.incomeBreakdown.pension,
+    //   federalTaxesPaid:
+    //     incomeResults.incomeBreakdown.grossIncomeAmountAsPercentageOfFederalIncomeTax(
+    //       this.#inputs.subjectPension
+    //     ),
+    //   subjectNetIncome:
+    //     incomeResults.incomeBreakdown.grossIncomeAmountAsPercentageOfNetIncome(
+    //       this.#inputs.subjectPension
+    //     ),
+    //   partnerIncome: this.#inputs.spousePension, // incomeResults.incomeBreakdown.partnerPension,
+    //   partnerFederalTaxesPaid:
+    //     incomeResults.incomeBreakdown.grossIncomeAmountAsPercentageOfFederalIncomeTax(
+    //       this.#inputs.spousePension
+    //     ),
+    //   partnerNetIncome:
+    //     incomeResults.incomeBreakdown.grossIncomeAmountAsPercentageOfNetIncome(
+    //       this.#inputs.spousePension
+    //     ),
+    //   _description: "Pension Benefits Breakdown",
+    //   calculationDetails: withLabel(
+    //     "incomeResults.incomeBreakdown",
+    //     incomeResults.incomeBreakdown
+    //   ),
+    // };
 
-    const savingsBreakdown = {
-      _description: "Savings Breakdown",
-      startingBalance: savings.startingBalance,
-      withdrawals: savings.withdrawals,
-      growthRate: `${this.#inputs.savingsInterestRate * 100}%`,
-      interestEarned: savings.earnedInterest,
-      deposits: savings.deposits,
-      endingBalance: savings.endingBalance,
-      calculationDetails: [withLabel("savings", savings)],
-    };
+    // const savingsBreakdown = {
+    //   _description: "Savings Breakdown",
+    //   startingBalance: savings.startingBalance,
+    //   withdrawals: savings.withdrawals,
+    //   growthRate: `${this.#inputs.savingsInterestRate * 100}%`,
+    //   interestEarned: savings.earnedInterest,
+    //   deposits: savings.deposits,
+    //   endingBalance: savings.endingBalance,
+    //   calculationDetails: [withLabel("savings", savings)],
+    // };
 
     const spouseSsBenefits = {
       _description: "Spouse Social Security Benefits Breakdown",
       income: fixedIncomeStreams.spouseSs,
-      taxablePortion: incomeResults.ssBreakdown.spouseTaxablePortion,
-      nonTaxablePortion: incomeResults.ssBreakdown.spouseNonTaxablePortion,
-      portionOfTotalBenefits: incomeResults.ssBreakdown.spousePortion,
+      taxablePortion: incomeResults.incomeBreakdown.ssCalculationDetails?.partnerTaxablePortion,
+      nonTaxablePortion: incomeResults.incomeBreakdown.ssCalculationDetails?.partnerNonTaxablePortion,
+      portionOfTotalBenefits: incomeResults.incomeBreakdown.ssCalculationDetails?.partnerPortion,
       calculationDetails: [
-        withLabel("incomeResults.ssBreakdown", incomeResults.ssBreakdown),
+        withLabel("incomeResults.incomeBreakdown.ssCalculationDetails", incomeResults.incomeBreakdown.ssCalculationDetails),
         withLabel("incomeStreams", fixedIncomeStreams),
       ],
     };
@@ -205,7 +205,11 @@ class RetirementYearCalculator {
       income: fixedIncomeStreams.spousePension,
     };
 
-    const result = new RetirementYearData();
+    const result = RetirementYearData.CreateUsing(
+      demographics,
+      fiscalData,
+      this.#accountYear
+    );
     // demographics,
     // fiscalData,
     // // incomeResults.incomeBreakdown,
@@ -240,21 +244,19 @@ class RetirementYearCalculator {
 
     // result.demographics = demographics;
     // result.fiscalData = fiscalData;
-    result.revenue = Income.CreateFrom(
+    result.revenue = Income.CreateUsing(
       this.#accountYear,
       ACCOUNT_TYPES.REVENUE
     );
-    result.disbursements = Income.CreateFrom(
+    result.disbursements = Income.CreateUsing(
       this.#accountYear,
       ACCOUNT_TYPES.DISBURSEMENT
     );
     result.balances = Balances.CreateUsing(this.#accountYear);
     result.socialSecurityIncome = SocialSecurityIncome.CreateUsing(
-      incomeResults.ssBreakdown
+      incomeResults.incomeBreakdown.ssCalculationDetails
     );
-    result.taxes = Taxes.CreateForRetirementYearIncome(
-      incomeResults.incomeBreakdown
-    );
+    result.taxes = Taxes.CreateUsing(incomeResults.incomeBreakdown);
     result.savings = Balance.CreateUsing(
       this.#accountYear,
       ACCOUNT_TYPES.SAVINGS
@@ -267,83 +269,13 @@ class RetirementYearCalculator {
       this.#accountYear,
       ACCOUNT_TYPES.TRAD_ROTH
     );
-    result.calculationDetails = [
-      // withLabel("demographics", demographics),
-      // withLabel("fiscalData", fiscalData),
-      withLabel("incomeResults", incomeResults),
-      // withLabel("withdrawalFactory", withdrawalFactory),
-      // withLabel("accountYear", this.#accountYear),
-    ];
-
-    // debugger;
-    const description = `
------------------------------------------------
---- Retirement Year ${fiscalData.yearIndex + 1} (Age ${demographics.age}) (Year ${demographics.retirementYear}) ---
------------------------------------------------`;
-
-    console.log(description);
-    // @ts-ignore
-    // const debugData = DebugData.CreateUsing(
-    //   demographics,
-    //   fiscalData,
-    //   incomeResults.incomeBreakdown,
-    //   accountYear,
-    //   taxes
-    // );
-
-    result._description = description;
-    // @ts-ignore
-    // const temp = {
-    //   income: {
-    //     netIncome: incomeResults.incomeBreakdown.netIncome //getNetIncomeMinusReportedEarnedInterest()
-    //       .asCurrency(),
-    //     interestIncome: savings.earnedInterest,
-    //     spend: fiscalData.spend.asCurrency(),
-    //     shortfall: Math.max(
-    //       fiscalData.spend -
-    //         savings.earnedInterest -
-    //         this.#accountYear.getDeposits(ACCOUNT_TYPES.SAVINGS),
-    //       0
-    //     ).asCurrency(),
-    //     overage: Math.max(
-    //       this.#accountYear.getDeposits(ACCOUNT_TYPES.SAVINGS) -
-    //         savings.earnedInterest -
-    //         fiscalData.spend,
-    //       0
-    //     ).asCurrency(),
-    //   },
-    //   savings: {
-    //     startingBalance: this.#accountYear
-    //       .getStartingBalance(ACCOUNT_TYPES.SAVINGS)
-    //       .asCurrency(),
-    //     withdrawals: this.#accountYear
-    //       .getWithdrawals(ACCOUNT_TYPES.SAVINGS)
-    //       .asCurrency(),
-    //     deposits: this.#accountYear
-    //       .getDeposits(ACCOUNT_TYPES.SAVINGS)
-    //       .asCurrency(),
-    //     endingBalance: this.#accountYear
-    //       .getEndingBalance(ACCOUNT_TYPES.SAVINGS)
-    //       .asCurrency(),
-    //   },
-    //   trad401k: {
-    //     startingBalance: this.#accountYear
-    //       .getStartingBalance(ACCOUNT_TYPES.TRAD_401K)
-    //       .asCurrency(),
-    //     withdrawals: this.#accountYear
-    //       .getWithdrawals(ACCOUNT_TYPES.TRAD_401K)
-    //       .asCurrency(),
-    //     deposits: this.#accountYear
-    //       .getDeposits(ACCOUNT_TYPES.TRAD_401K)
-    //       .asCurrency(),
-    //     endingBalance: this.#accountYear
-    //       .getEndingBalance(ACCOUNT_TYPES.TRAD_401K)
-    //       .asCurrency(),
-    //     interestEarned: this.#accountYear
-    //       .getDeposits(ACCOUNT_TYPES.TRAD_401K, TRANSACTION_CATEGORY.INTEREST)
-    //       .asCurrency(),
-    //   },
-    // };
+    // result.calculationDetails = [
+    //   // withLabel("demographics", demographics),
+    //   // withLabel("fiscalData", fiscalData),
+    //   // withLabel("incomeResults", incomeResults),
+    //   // withLabel("withdrawalFactory", withdrawalFactory),
+    //   // withLabel("accountYear", this.#accountYear),
+    // ];
 
     // debugData.dump("Debug Data");
     // temp.dump("Balances");

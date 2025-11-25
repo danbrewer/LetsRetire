@@ -9,73 +9,6 @@ class SsBenefitsCalculator {
     this.#calculationDetails = calculationDetails;
   }
 
-  get benefits_50pct() {
-    return this.#calculationDetails.benefits_50pct;
-  }
-
-  get benefits_85pct() {
-    return this.#calculationDetails.benefits_85pct;
-  }
-
-  get hasBenefits() {
-    return this.#calculationDetails.totalSsBenefits > 0;
-  }
-
-  get myPortion() {
-    return this.#calculationDetails.subjectBenefits.asPercentageOf(
-      this.totalSsBenefits
-    );
-  }
-
-  get spousePortion() {
-    return this.#calculationDetails.partnerBenefits.asPercentageOf(
-      this.totalSsBenefits
-    );
-  }
-
-  get totalSsBenefits() {
-    return this.#calculationDetails.totalSsBenefits;
-  }
-
-  get myTaxablePortion() {
-    return (
-      this.myPortion * this.#calculationDetails.maxTaxableSs
-    ).asCurrency();
-  }
-
-  get spouseTaxablePortion() {
-    return (
-      this.spousePortion * this.#calculationDetails.maxTaxableSs
-    ).asCurrency();
-  }
-
-  get myNonTaxablePortion() {
-    return (
-      this.myPortion * this.#calculationDetails.nonTaxableAmount
-    ).asCurrency();
-  }
-
-  get spouseNonTaxablePortion() {
-    return (
-      this.spousePortion * this.#calculationDetails.nonTaxableAmount
-    ).asCurrency();
-  }
-
-  get taxationSummary() {
-    return {
-      totalBenefits: this.totalSsBenefits,
-      taxable: this.#calculationDetails.taxableAmount,
-      nonTaxable: this.#calculationDetails.nonTaxableAmount,
-      taxablePercentage:
-        this.totalSsBenefits > 0
-          ? this.#calculationDetails.taxableAmount.asPercentageOf(
-              this.totalSsBenefits
-            )
-          : 0,
-      provisionalIncome: this.#calculationDetails.provisionalIncome,
-    };
-  }
-
   get calculationDetails() {
     return this.#calculationDetails;
   }
@@ -107,7 +40,7 @@ class SsBenefitsCalculator {
 
       // Taxable amount is the lesser of half of SS benefits or excess amount
       const taxableSSAmount = Math.min(
-        this.benefits_50pct,
+        this.#calculationDetails.benefits_50pct,
         excessOfTier1TaxableAmt
       );
 
@@ -122,7 +55,7 @@ class SsBenefitsCalculator {
     let taxableTier1Amount = (0.5 * excessOverTier1).asCurrency();
 
     let taxableSsInTier1 = Math.min(
-      this.benefits_50pct,
+      this.#calculationDetails.benefits_50pct,
       taxableTier1Amount
     ).asCurrency();
 
@@ -133,12 +66,12 @@ class SsBenefitsCalculator {
     let taxableTier2Amount = (0.85 * excessOverTier2).asCurrency();
 
     let taxableSsInTier2 = Math.min(
-      this.benefits_85pct,
+      this.#calculationDetails.benefits_85pct,
       taxableTier2Amount
     ).asCurrency();
 
     let taxablePortion = Math.min(
-      this.benefits_85pct,
+      this.#calculationDetails.benefits_85pct,
       taxableSsInTier1 + taxableSsInTier2
     );
 
@@ -150,15 +83,6 @@ class SsBenefitsCalculator {
     this.#calculationDetails.tier2TaxableAmount = taxableSsInTier2;
     this.#calculationDetails.taxableAmount = taxablePortion;
   }
-
-  // // Method to recalculate with new non-SS income
-  // /**
-  //  * @param {number} otherTaxableIncome
-  //  */
-  // updateNonSsIncome(otherTaxableIncome) {
-  //   this.otherTaxableIncome = otherTaxableIncome;
-  //   this.#calculateTaxablePortion();
-  // }
 
   /**
    * @param {Number} subjectBenefits

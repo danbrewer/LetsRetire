@@ -10,40 +10,41 @@
  * @since 1.0.0
  */
 class Withdrawals {
+  /** @type {AccountYear} */
+  #accountYear;
+
+  /** @type {string} */
+  #description;
+
   /**
    * Creates a new Withdrawals instance with withdrawal data from all account types.
-   *
-   * @param {Account} trad401k - Traditional 401k deposits for the year
-   * @param {Account} savings - Savings account deposits for the year
-   * @param {Account}  roth - Roth IRA deposits for the year
-   * @param {number} taxYear - The tax year for which these deposits apply
-   * @param {any[]} [calculationDetails=[]] - Reference objects for debugging and analysis
-   * @param {string} [description="Withdrawals Breakdown"] - Descriptive label for this withdrawal snapshot
+   * @param {AccountYear} accountYear - AccountYear instance for accessing account data
+   * @param {string} [description="Withdrawals Breakdown"] - Descriptive label for this withdrawal data
    */
   constructor(
-    trad401k,
-    savings,
-    roth,
-    taxYear,
-    calculationDetails = [],
+    accountYear,
     description = "Withdrawals Breakdown"
+    // trad401k,
+    // savings,
+    // roth,
+    // taxYear,
+    // calculationDetails = [],
+    // description = "Withdrawals Breakdown"
   ) {
-    this._description = description;
-    this._trad401k = trad401k;
-    this._savings = savings;
-    this._roth = roth;
-    this._taxYear = taxYear;
-    // this.rmd = rmd;
-    this.calculationDetails = calculationDetails;
+    this.#accountYear = accountYear;
+    this.#description = description;
+  }
+
+  get description() {
+    return this.#description;
   }
 
   get rmd() {
     // RMD is typically part of income streams, but we can calculate it here if needed
     // For now, we return 0 as a placeholder
-    return this._trad401k.withdrawalsForYear(
-      this._taxYear,
-      TRANSACTION_CATEGORY.RMD
-    );
+    return this.#accountYear
+      .getWithdrawals(ACCOUNT_TYPES.TRAD_401K, TRANSACTION_CATEGORY.RMD)
+      .asCurrency();
   }
 
   //   /**
@@ -56,24 +57,20 @@ class Withdrawals {
   //   }
 
   get savings() {
-    return this._savings.withdrawalsForYear(this._taxYear);
+    return this.#accountYear.getWithdrawals(ACCOUNT_TYPES.SAVINGS).asCurrency();
   }
 
   get roth() {
-    return this._roth.withdrawalsForYear(this._taxYear);
+    return this.#accountYear
+      .getWithdrawals(ACCOUNT_TYPES.TRAD_ROTH)
+      .asCurrency();
   }
 
   get trad401k() {
-    return this._trad401k.withdrawalsForYear(this._taxYear) - this.rmd;
-  }
-
-  /**
-   * Sets a new description for this withdrawal breakdown.
-   *
-   * @param {string} newDescription - New descriptive label
-   */
-  set description(newDescription) {
-    this._description = newDescription;
+    return (
+      this.#accountYear.getWithdrawals(ACCOUNT_TYPES.TRAD_401K).asCurrency() -
+      this.rmd
+    );
   }
 
   /**
@@ -104,6 +101,10 @@ class Withdrawals {
     return this.trad401k + this.roth;
   }
 
+  get totalNonTaxableWithdrawals() {
+    return this.savings;
+  }
+
   /**
    * Gets the percentage breakdown of withdrawals by source.
    *
@@ -113,22 +114,22 @@ class Withdrawals {
    *   - rothPercent: Percentage from Roth IRA
    *   - rmdPercent: Percentage from RMD
    */
-  get withdrawalPercentages() {
+  get withdrawalBreakdowns() {
     const total = this.total;
     if (total === 0) {
       return {
-        trad401kPercent: 0,
-        savingsPercent: 0,
-        rothPercent: 0,
-        rmdPercent: 0,
+        trad401kPercent: "0.0%",
+        savingsPercent: "0.0%",
+        rothPercent: "0.0%",
+        rmdPercent: "0.0%",
       };
     }
 
     return {
-      trad401kPercent: ((this.trad401k / total) * 100).toFixed(2),
-      savingsPercent: ((this.savings / total) * 100).toFixed(2),
-      rothPercent: ((this.roth / total) * 100).toFixed(2),
-      rmdPercent: ((this.rmd / total) * 100).toFixed(2),
+      trad401kPercent: `${(this.trad401k.asPercentageOf(total) * 100).toFixed(1)}%`,
+      savingsPercent: `${(this.savings.asPercentageOf(total) * 100).toFixed(1)}%`,
+      rothPercent: `${(this.roth.asPercentageOf(total) * 100).toFixed(1)}%`,
+      rmdPercent: `${(this.rmd.asPercentageOf(total) * 100).toFixed(1)}%`,
     };
   }
 
@@ -178,44 +179,13 @@ class Withdrawals {
   }
 
   /**
-   * Creates a summary object with formatted withdrawal information.
-   *
-   * @returns {Object} Summary containing:
-   *   - trad401k: Traditional 401k withdrawals
-   *   - savings: Savings account withdrawals
-   *   - roth: Roth IRA withdrawals
-   *   - rmd: Required Minimum Distribution amount
-   *   - total: Total withdrawal amount
-   *   - retirementTotal: Combined retirement account withdrawals
-   *   - taxableTotal: Combined taxable withdrawals
-   *   - percentages: Percentage breakdown by source
-   *   - largestWithdrawal: Source with highest withdrawal
-   *   - hasNegativeWithdrawals: Whether any withdrawals are negative
-   *   - hasWithdrawals: Whether any withdrawals occurred
-   */
-  getSummary() {
-    return {
-      trad401k: this._trad401k,
-      savings: this._savings,
-      roth: this._roth,
-      rmd: this.rmd,
-      total: this.total,
-      retirementTotal: this.totalRetirementWithdrawals,
-      taxableTotal: this.totalTaxableWithdrawals,
-      percentages: this.withdrawalPercentages,
-      largestWithdrawal: this.getLargestWithdrawal(),
-      hasNegativeWithdrawals: this.hasNegativeWithdrawals,
-      hasWithdrawals: this.hasWithdrawals,
-    };
-  }
-
-  /**
    * Factory method to create an empty Withdrawals instance with all values set to zero.
    *
    * This method provides a convenient way to initialize a Withdrawals object with
    * no withdrawals, useful for scenarios where withdrawal calculations haven't been
    * performed yet or for baseline comparisons.
    *
+   * @param {AccountYear} accountYear - AccountYear instance
    * @param {string} [description="Withdrawals Breakdown"] - Optional description
    *
    * @returns {Withdrawals} A new Withdrawals instance with all values set to zero
@@ -235,16 +205,16 @@ class Withdrawals {
    *
    * @since 1.0.0
    */
-  static Empty(description = "Withdrawals Breakdown") {
-    return new Withdrawals(
-      new Account("trad401k", 0, 0),
-      new Account("savings", 0, 0),
-      new Account("roth", 0, 0),
-      0,
-      [],
-      description
-    );
-  }
+  // static Empty(description = "Withdrawals Breakdown") {
+  //   return new Withdrawals(
+  //     new Account("trad401k", 0, 0),
+  //     new Account("savings", 0, 0),
+  //     new Account("roth", 0, 0),
+  //     0,
+  //     [],
+  //     description
+  //   );
+  // }
 
   /**
    * Factory method to create a Withdrawals instance from account group and income data.
@@ -253,9 +223,7 @@ class Withdrawals {
    * extracting withdrawal amounts from an AccountGroup and income breakdown for
    * a specific tax year. It handles the withdrawal calculations automatically.
    *
-   * @param {AccountsManager} accounts - AccountGroup instance containing all accounts
-   * @param {IncomeStreams} incomeStreams - Income breakdown containing RMD information
-   * @param {FiscalData} fiscalData - Fiscal data containing the target tax year
+   * @param {AccountYear} accountYear - AccountGroup instance containing all accounts
    * @param {string} [description="Withdrawals Breakdown"] - Optional description
    *
    * @returns {Withdrawals} A new Withdrawals instance with current withdrawal amounts
@@ -273,63 +241,17 @@ class Withdrawals {
    * @static
    * @since 1.0.0
    */
-  static CreateUsing(
-    accounts,
-    incomeStreams,
-    fiscalData,
-    description = "Withdrawals Breakdown"
-  ) {
-    const trad401k = accounts.trad401k;
-    const savings = accounts.savings;
-    const roth = accounts.rothIra;
-
-    const calculationDetails = [];
-    if (typeof withLabel === "function") {
-      calculationDetails.push(
-        withLabel("incomeStreams", incomeStreams),
-        withLabel("accounts", accounts)
-      );
-    } else {
-      calculationDetails.push(incomeStreams, accounts);
-    }
-
+  static CreateUsing(accountYear, description = "Withdrawals Breakdown") {
     return new Withdrawals(
-      trad401k,
-      savings,
-      roth,
-      fiscalData.taxYear,
-      calculationDetails,
+      accountYear,
       description
+      // trad401k,
+      // savings,
+      // roth,
+      // fiscalData.taxYear,
+      // calculationDetails,
+      // description
     );
-  }
-
-  /**
-   * Factory method to create a Withdrawals instance from individual withdrawal amounts.
-   *
-   * @param {Account} trad401k - Traditional 401k withdrawal amount
-   * @param {Account} savings - Savings withdrawal amount
-   * @param {Account} roth - Roth IRA withdrawal amount
-   * @param {number} taxYear - tax year
-   * @param {string} [description="Withdrawals Breakdown"] - Optional description
-   *
-   * @returns {Withdrawals} A new Withdrawals instance with specified amounts
-   *
-   * @example
-   * // Create withdrawals from known amounts
-   * const withdrawals = Withdrawals.CreateFrom(25000, 10000, 5000, 8000);
-   * console.log(withdrawals.total()); // 48000
-   *
-   * @static
-   * @since 1.0.0
-   */
-  static CreateFrom(
-    trad401k,
-    savings,
-    roth,
-    taxYear,
-    description = "Withdrawals Breakdown"
-  ) {
-    return new Withdrawals(trad401k, savings, roth, taxYear, [], description);
   }
 }
 

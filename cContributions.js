@@ -16,19 +16,12 @@ class Contributions {
    * Creates a new Contributions instance with contribution breakdown data.
    *
    * @param {AccountYear} accountYear
-   * @param {EmploymentInfo} subjectEmploymentInfo - Employment information for the primary individual
-   * @param {EmploymentInfo} [partnerEmploymentInfo] - Employment information for the partner (if applicable)
+   * @param {EmploymentInfo} employmentInfo - Employment information for the primary individual
    * @param {any[]} [calculationDetails=[]] - Detailed calculation information
    */
-  constructor(
-    accountYear,
-    subjectEmploymentInfo,
-    partnerEmploymentInfo,
-    calculationDetails = []
-  ) {
+  constructor(accountYear, employmentInfo, calculationDetails = []) {
     this.#accountYear = accountYear;
-    this.subjectEmploymentInfo = subjectEmploymentInfo;
-    this.partnerEmploymentInfo = partnerEmploymentInfo;
+    this.subjectEmploymentInfo = employmentInfo;
     this.calculationDetails = calculationDetails;
   }
 
@@ -429,10 +422,8 @@ class Contributions {
    * by extracting data from employment information, account groups, and
    * contribution calculations.
    *
-   * @param {AccountYear} accountingYear - Employment information with contribution data
-   * @param {EmploymentInfo} subjectEmploymentInfo - Employment information for the primary individual
-   * @param {EmploymentInfo} [partnerEmploymentInfo] - Employment information for the partner (if applicable)
-   * @param {any[]} [calculationDetails=[]] - Detailed calculation information
+   * @param {AccountYear} accountingYear - Accounting year for the contributions
+   * @param {EmploymentInfo} employmentInfo - Employment information
    *
    * @returns {Contributions} A new contributions instance with employment-derived data
    *
@@ -447,12 +438,7 @@ class Contributions {
    * @static
    * @since 1.0.0
    */
-  static CreateUsing(
-    accountingYear,
-    subjectEmploymentInfo,
-    partnerEmploymentInfo,
-    calculationDetails = []
-  ) {
+  static CreateUsing(accountingYear, employmentInfo) {
     // Get primary employee contributions
     // const my401k =
     //   employmentInfo && typeof employmentInfo.cap401kContribution === "function"
@@ -479,48 +465,11 @@ class Contributions {
     //     ? spouseEmploymentInfo.capRothContribution()
     //     : 0;
 
-    return new Contributions(
-      accountingYear,
-      subjectEmploymentInfo,
-      partnerEmploymentInfo,
-      calculationDetails
-    );
-  }
+    const calculationDetails = [withLabel("employmentInfo", employmentInfo)];
 
-  /**
-   * Factory method to create a Contributions from individual values.
-   *
-   * @param {AccountYear} accountingYear - The accounting year for the contributions
-   * @param {EmploymentInfo} subjectEmploymentInfo - Employment information for the primary individual
-   * @param {EmploymentInfo} [partnerEmploymentInfo] - Employment information for the partner (if applicable)
-   * @param {any[]} [calculationDetails=[]] - Calculation details
-   *
-   * @returns {Contributions} A new contributions instance with specified values
-   *
-   * @example
-   * // Create contributions from known values
-   * const contributions = Contributions.CreateFrom(
-   *   8000,  // my 401k
-   *   6000,  // my Roth
-   *   5000,  // spouse 401k
-   *   4000,  // spouse Roth
-   *   2000,  // savings
-   *   4000   // employer match
-   * );
-   *
-   * @static
-   * @since 1.0.0
-   */
-  static CreateFrom(
-    accountingYear,
-    subjectEmploymentInfo,
-    partnerEmploymentInfo,
-    calculationDetails = []
-  ) {
     return new Contributions(
       accountingYear,
-      subjectEmploymentInfo,
-      partnerEmploymentInfo,
+      employmentInfo,
       calculationDetails
     );
   }

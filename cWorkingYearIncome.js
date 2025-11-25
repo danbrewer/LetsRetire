@@ -95,6 +95,7 @@ class WorkingYearIncome {
   get federalTaxesOwed() {
     const federalIncomeTaxOwed = TaxCalculator.determineFederalIncomeTax(
       this.#inputs.wagesandOtherTaxableCompensation,
+      this.#inputs.wagesandOtherTaxableCompensation,
       this.#fiscalData,
       this.#demographics
     );

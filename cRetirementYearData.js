@@ -26,23 +26,33 @@
 //    * @param {AccountYear} accountYear - Instance of AccountGroup class
 //    */
 class RetirementYearData {
-  constructor() {
-    this._description = "Retirement Year Result Data";
+  /** @type {Demographics} */
+  #demographics;
+  /** @type {FiscalData} */
+  #fiscalData;
+  /** @type {AccountYear} */
+  #accountYear;
 
-    /** @type {Demographics} */
-    this.demographics;
+  /**
+   * @param {Demographics} demographics
+   * @param {FiscalData} fiscalData
+   * @param {AccountYear} accountYear
+   */
+  constructor(demographics, fiscalData, accountYear) {
+    this.#demographics = demographics;
+    this.#fiscalData = fiscalData;
+    this.#accountYear = accountYear;
 
-    /** @type {FiscalData} */
-    this.fiscalData;
+    this._description = `
+-----------------------------------------------
+--- Retirement Year ${fiscalData.yearIndex + 1} (Age ${demographics.age}) (Year ${demographics.retirementYear}) ---
+-----------------------------------------------`;
 
     /** @type {Income} */
     this.revenue;
 
     /** @type {Income} */
     this.disbursements;
-
-    // /** @type {Object} */
-    // this.expenditures = expenditures;
 
     // /** @type {Object} */
     // this.contributions = contributions;
@@ -118,35 +128,19 @@ class RetirementYearData {
     this.calculationDetails = [];
   }
 
-  // // Factory method for backward compatibility
-  // static Empty() {
-  //   return new RetirementYearData(
-  //     Demographics.Empty(),
-  //     FiscalData.Empty(),
-  //     Income.Empty(),
-  //     Income.Empty(),
-  //     Expenditures.Empty(),
-  //     {},
-  //     {},
-  //     Balances.Empty(),
-  //     {},
-  //     {},
-  //     SocialSecurityIncome.Empty(),
-  //     IncomeStreams.Empty(),
-  //     IncomeBreakdown.Empty(),
-  //     Taxes.Empty(),
-  //     {},
-  //     {},
-  //     {},
-  //     {},
-  //     {},
-  //     {},
-  //     {},
-  //     SsBenefitsCalculator.Empty(),
-  //     {},
-  //     AccountsManager.Empty()
-  //   );
-  // }
+  /**
+   * @param {Demographics} demographics
+   * @param {FiscalData} fiscalData
+   * @param {AccountYear} accountYear
+   */
+  static CreateUsing(demographics, fiscalData, accountYear) {
+    const result = new RetirementYearData(
+      demographics,
+      fiscalData,
+      accountYear
+    );
+    return result;
+  }
 
   // // Factory method to create from existing data
   // /**

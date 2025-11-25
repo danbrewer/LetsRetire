@@ -1,5 +1,5 @@
 class IncomeBreakdown {
-  /** @type {SsCalculationDetails} */
+  /** @type {SsCalculationDetails | null} */
   #ssCalculationDetails;
   /** @type {number} */
   #standardDeduction = 0;
@@ -15,7 +15,7 @@ class IncomeBreakdown {
   /**
    * @param {IncomeStreams} fixedIncomeStreams
    * @param {number} variableIncomeStream
-   * @param {SsCalculationDetails} ssCalculationDetails
+   * @param {SsCalculationDetails | null} ssCalculationDetails
    * @param {number} standardDeduction
    * @param {Demographics} demographics
    * @param {FiscalData} fiscalData
@@ -46,7 +46,7 @@ class IncomeBreakdown {
   }
 
   get socialSecurity() {
-    return this.#ssCalculationDetails.totalSsBenefits.asCurrency();
+    return this.#ssCalculationDetails?.totalSsBenefits.asCurrency() ?? 0;
   }
 
   get pension() {
@@ -66,7 +66,7 @@ class IncomeBreakdown {
   }
 
   get nonTaxableIncome() {
-    return this.#ssCalculationDetails.nonTaxableAmount.asCurrency();
+    return this.#ssCalculationDetails?.nonTaxableAmount.asCurrency() ?? 0;
   }
 
   get grossIncome() {
@@ -76,7 +76,7 @@ class IncomeBreakdown {
       this.rmd +
       this.miscTaxableIncome +
       this.trad401kWithdrawal +
-      this.#ssCalculationDetails.taxableAmount
+      (this.#ssCalculationDetails?.taxableAmount ?? 0)
     ).asCurrency();
   }
 
@@ -105,7 +105,7 @@ class IncomeBreakdown {
       this.rmd +
       this.miscTaxableIncome +
       this.trad401kWithdrawal +
-      this.#ssCalculationDetails.totalSsBenefits
+      (this.#ssCalculationDetails?.totalSsBenefits ?? 0)
     ).asCurrency();
   }
 
@@ -130,6 +130,7 @@ class IncomeBreakdown {
 
   get federalIncomeTax() {
     return TaxCalculator.determineFederalIncomeTax(
+      this.#totalIncome,
       this.taxableIncome,
       this.#fiscalData,
       this.#demographics
@@ -189,7 +190,7 @@ class IncomeBreakdown {
 
   get socialSecurityNetIncome() {
     return this.grossIncomeAmountAsPercentageOfNetIncome(
-      this.#ssCalculationDetails.totalSsBenefits
+      this.#ssCalculationDetails?.totalSsBenefits ?? 0
     ).asCurrency();
   }
 
@@ -221,8 +222,8 @@ class IncomeBreakdown {
   getIncomeSourceBreakdown() {
     return {
       pension: this.#getTotalPensionIncome(),
-      socialSecurity: this.#ssCalculationDetails.totalSsBenefits, // Total SS income for breakdown
-      socialSecurityTaxable: this.#ssCalculationDetails.taxableAmount, // Just the taxable portion
+      socialSecurity: this.#ssCalculationDetails?.totalSsBenefits ?? 0, // Total SS income for breakdown
+      socialSecurityTaxable: this.#ssCalculationDetails?.taxableAmount ?? 0, // Just the taxable portion
       retirement: this.#getTotalRetirementIncome(),
       earnedInterest: this.#fixedIncomeStreams.interestEarnedOnSavings,
       otherTaxable: this.miscTaxableIncome,
@@ -237,11 +238,15 @@ class IncomeBreakdown {
     return this.totalIncome > 0 ? this.netIncome / this.totalIncome : 0;
   }
 
+  get ssCalculationDetails() {
+    return this.#ssCalculationDetails;
+  }
+
   // Factory method for backward compatibility and dependency injection
   /**
    * @param {IncomeStreams} fixedIncomeStreams
    * @param {number} variableIncomeStream
-   * @param {SsCalculationDetails} ssCalculationDetails
+   * @param {SsCalculationDetails | null} ssCalculationDetails
    * @param {number} standardDeduction
    * @param {Demographics} demographics
    * @param {FiscalData} fiscalData

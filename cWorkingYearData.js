@@ -20,7 +20,7 @@ class WorkingYearData {
    *   inflation rates, and spending amounts
    * @param {Object} [totals={}] - Summary totals for income, contributions, and balances
    * @param {Contributions | undefined} [contributions={}] - Retirement account contribution amounts
-   * @param {Object} [withdrawals={}] - Account withdrawal amounts (typically minimal during working years)
+   * @param {Withdrawals} [withdrawals={}] - Account withdrawal amounts (typically minimal during working years)
    * @param {Balances} [balances={}] - Current account balances across all retirement accounts
    * @param {Object} [pen={}] - Pension-related information and calculations
    * @param {Object} [ss={}] - Social Security information and projections
@@ -42,7 +42,7 @@ class WorkingYearData {
     fiscalData,
     totals = {},
     contributions,
-    withdrawals = {},
+    withdrawals,
     balances,
     pen = {},
     ss = {},
@@ -77,7 +77,7 @@ class WorkingYearData {
     this.savingsBreakdown = savingsBreakdown;
     this.ssBreakdown = ssBreakdown;
     this.spouseSsBreakdown = spouseSsBreakdown;
-    this.employmentInfo = EmploymentInfo.Empty();
+    // this.employmentInfo = EmploymentInfo.Empty();
     this.accountYear = accountYear;
   }
 
@@ -190,32 +190,32 @@ class WorkingYearData {
    *   - hasSpouse: Whether spouse data is present
    *   - taxYear: Current tax year from fiscal data
    */
-  getSummary() {
-    return {
-      age: this.getCurrentAge(),
-      netIncome: this.income?.netIncome,
-      //   totalContributions: this.getTotalContributions(),
-      totalBalance: this.getTotalRetirementBalance(),
-      effectiveTaxRate: this.taxes?.effectiveTaxRate,
-      hasSpouse: this.hasSpouseData(),
-      taxYear:
-        this.fiscalData && this.fiscalData.taxYear
-          ? this.fiscalData.taxYear
-          : null,
-    };
-  }
+  // getSummary() {
+  //   return {
+  //     age: this.getCurrentAge(),
+  //     netIncome: this.income?.netIncome,
+  //     //   totalContributions: this.getTotalContributions(),
+  //     totalBalance: this.getTotalRetirementBalance(),
+  //     effectiveTaxRate: this.taxes?.effectiveTaxRate,
+  //     hasSpouse: this.hasSpouseData(),
+  //     taxYear:
+  //       this.fiscalData && this.fiscalData.taxYear
+  //         ? this.fiscalData.taxYear
+  //         : null,
+  //   };
+  // }
 
-  /**
-   * Updates demographic information for multi-year calculations.
-   *
-   * @param {Demographics} newDemographics - Updated demographic data
-   */
-  updateDemographics(newDemographics) {
-    this.demographics = newDemographics;
-    if (newDemographics && newDemographics.age) {
-      this._description = `Working Year - Age ${newDemographics.age}`;
-    }
-  }
+  // /**
+  //  * Updates demographic information for multi-year calculations.
+  //  *
+  //  * @param {Demographics} newDemographics - Updated demographic data
+  //  */
+  // updateDemographics(newDemographics) {
+  //   this.demographics = newDemographics;
+  //   if (newDemographics && newDemographics.age) {
+  //     this._description = `Working Year - Age ${newDemographics.age}`;
+  //   }
+  // }
 
   /**
    * Factory method to create a WorkingYearData instance with empty structure.

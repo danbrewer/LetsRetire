@@ -65,6 +65,13 @@ function calc() {
       TAX_BASE_YEAR + y
     );
 
+    // const incomeStreams = IncomeStreams.CreateUsing(
+    //   this.#demographics,
+    //   accountYear,
+    //   this.#fiscalData,
+    //   workingYearInputs
+    // );
+
     const workingYearIncomeCalculator = new WorkingYearCalculator(
       workingYearInputs,
       accountYear

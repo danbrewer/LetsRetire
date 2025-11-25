@@ -103,6 +103,34 @@ class SsCalculationDetails {
     return this.totalSsBenefits - this.taxableAmount;
   }
 
+  get subjectPortion() {
+    return this.subjectBenefits.asPercentageOf(this.totalSsBenefits);
+  }
+
+  get subjectTaxablePortion() {
+    return (this.subjectPortion * this.taxableAmount).asCurrency();
+  }
+
+  get subjectNonTaxablePortion() {
+    return (this.subjectPortion * this.nonTaxableAmount).asCurrency();
+  }
+
+  get partnerPortion() {
+    return this.partnerBenefits.asPercentageOf(this.totalSsBenefits);
+  }
+
+  get partnerTaxablePortion() {
+    return (this.partnerPortion * this.taxableAmount).asCurrency();
+  }
+
+  get partnerNonTaxablePortion() {
+    return (this.partnerPortion * this.nonTaxableAmount).asCurrency();
+  }
+
+  get hasBenefits() {
+    return this.totalSsBenefits > 0;
+  }
+
   /**
    * Validates that the calculation follows IRS rules correctly.
    *
@@ -129,25 +157,25 @@ class SsCalculationDetails {
     return true;
   }
 
-  /**
-   * Creates a summary object with key calculation metrics.
-   *
-   * @returns {Object} Summary containing:
-   *   - tier: Which taxation tier applies
-   *   - taxablePercentage: Percentage of benefits that are taxable
-   *   - taxableAmount: Dollar amount of taxable benefits
-   *   - nonTaxableAmount: Dollar amount of non-taxable benefits
-   *   - provisionalIncome: Total provisional income used in calculation
-   *   - isValid: Whether calculation appears to follow IRS rules
-   */
-  getSummary() {
-    return {
-      tier: this.taxationTier,
-      taxablePercentage: this.taxablePercentage,
-      taxableAmount: this.taxableAmount,
-      nonTaxableAmount: this.nonTaxableAmount,
-      provisionalIncome: this.provisionalIncome,
-      isValid: this.isCalculationValid,
-    };
-  }
+  // /**
+  //  * Creates a summary object with key calculation metrics.
+  //  *
+  //  * @returns {Object} Summary containing:
+  //  *   - tier: Which taxation tier applies
+  //  *   - taxablePercentage: Percentage of benefits that are taxable
+  //  *   - taxableAmount: Dollar amount of taxable benefits
+  //  *   - nonTaxableAmount: Dollar amount of non-taxable benefits
+  //  *   - provisionalIncome: Total provisional income used in calculation
+  //  *   - isValid: Whether calculation appears to follow IRS rules
+  //  */
+  // getSummary() {
+  //   return {
+  //     tier: this.taxationTier,
+  //     taxablePercentage: this.taxablePercentage,
+  //     taxableAmount: this.taxableAmount,
+  //     nonTaxableAmount: this.nonTaxableAmount,
+  //     provisionalIncome: this.provisionalIncome,
+  //     isValid: this.isCalculationValid,
+  //   };
+  // }
 }

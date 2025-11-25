@@ -21,6 +21,9 @@ class WithdrawalFactory {
   /** @type {RetirementIncomeCalculator} */
   #retirementIncomeCalculator;
 
+  /** @type {WorkingIncomeCalculator} */
+  #workingIncomeCalculator;
+
   /**
    * Create withdrawal factory for a specific retirement year
    * @param {IncomeStreams} fixedIncomeStreams
@@ -43,6 +46,10 @@ class WithdrawalFactory {
     this.#demographics = demographics;
     this.#accountYear = accountYear;
     this.#retirementIncomeCalculator = new RetirementIncomeCalculator(
+      demographics,
+      fiscalData
+    );
+    this.#workingIncomeCalculator = new WorkingIncomeCalculator(
       demographics,
       fiscalData
     );
@@ -197,7 +204,7 @@ class WithdrawalFactory {
    * @param {number} gross401kWithdrawal - Gross withdrawal amount
    */
   #processTrad401kTransactions(gross401kWithdrawal) {
-    this.#accountYear.processAsPeriodicTransactions(
+    this.#accountYear.processAsPeriodicWithdrawals(
       ACCOUNT_TYPES.TRAD_401K,
       TRANSACTION_CATEGORY.DISBURSEMENT,
       gross401kWithdrawal,
@@ -303,7 +310,7 @@ class WithdrawalFactory {
    */
   #processSavingsTransactions(withdrawalAmount) {
     // Log the monthly spending for savings
-    this.#accountYear.processAsPeriodicTransactions(
+    this.#accountYear.processAsPeriodicWithdrawals(
       ACCOUNT_TYPES.SAVINGS,
       TRANSACTION_CATEGORY.DISBURSEMENT,
       withdrawalAmount,
@@ -353,7 +360,7 @@ class WithdrawalFactory {
    */
   #processRothTransactions(withdrawalAmount) {
     // Reduce the account balance by the net received amount
-    this.#accountYear.processAsPeriodicTransactions(
+    this.#accountYear.processAsPeriodicWithdrawals(
       ACCOUNT_TYPES.TRAD_ROTH,
       TRANSACTION_CATEGORY.DISBURSEMENT,
       withdrawalAmount,

@@ -2,7 +2,7 @@
  * RetirementIncomeCalculator class - Handles retirement income and tax calculations
  * Provides comprehensive income analysis for retirement planning scenarios
  */
-class RetirementIncomeCalculator {
+class WorkingIncomeCalculator {
   /** @type {Demographics} */
   #demographics;
 
@@ -31,10 +31,6 @@ class RetirementIncomeCalculator {
    * The function is commonly used in iterative calculations to determine optimal withdrawal
    * strategies or to model income scenarios with different retirement account distributions.
    *
-   * @param {number} variableTaxableIncome - The 401k/traditional retirement account withdrawal
-   *   amount to include in income calculations. This variable amount affects both reportable
-   *   income and Social Security taxation calculations.
-   *
    * @param {IncomeStreams} incomeStreams - Collection of all income sources containing:
    *   - mySs: Primary person's Social Security benefits
    *   - spouseSs: Spouse's Social Security benefits (if applicable)
@@ -45,7 +41,6 @@ class RetirementIncomeCalculator {
    *   - otherTaxableIncomeAdjustments: Additional taxable income sources
    *   - nonSsIncome(): Method returning total non-Social Security income
    *   - nonSsIncomeSources: Array of non-Social Security income sources
-   * @param {Array<number> | null} [nonSsIncomeSources] - (Optional) Array of non-Social Security income sources
    * @returns {IncomeRs} Comprehensive income calculation results containing:
    *   - ssBreakdown: Social Security taxation breakdown with taxable/non-taxable portions,
    *     provisional income calculations, and detailed methodology
@@ -68,147 +63,40 @@ class RetirementIncomeCalculator {
    * @since 1.0.0
    * @author Retirement Calculator System
    */
-  calculateIncomeWhen401kWithdrawalIs(
-    variableTaxableIncome,
-    incomeStreams,
-    nonSsIncomeSources
-  ) {
-    const standardDeduction = TaxCalculator.getStandardDeduction(this.#fiscalData, this.#demographics);
-
-    if (!nonSsIncomeSources || nonSsIncomeSources.length === 0) {
-      nonSsIncomeSources = [
-        incomeStreams.myPension,
-        incomeStreams.spousePension,
-        incomeStreams.interestEarnedOnSavings,
-        incomeStreams.rmd,
-        incomeStreams.miscTaxableIncome,
-      ];
-    }
-
-    const nonSsIncome = nonSsIncomeSources.reduce((sum, val) => sum + val, 0);
-
-    const ssBreakdown = SsBenefitsCalculator.CalculateUsing(
-      incomeStreams.mySs,
-      incomeStreams.spouseSs,
-      nonSsIncome + variableTaxableIncome,
-      this.#demographics.hasSpouse
+  calculateIncome(incomeStreams) {
+    const standardDeduction = TaxCalculator.getStandardDeduction(
+      this.#fiscalData,
+      this.#demographics
     );
 
     const incomeBreakdown = IncomeBreakdown.CreateFrom(
       incomeStreams,
-      variableTaxableIncome,
-      ssBreakdown.calculationDetails,
+      0,
+      null,
       standardDeduction,
       this.#demographics,
       this.#fiscalData
     );
 
-    return new IncomeRs(ssBreakdown, incomeBreakdown);
+    return new IncomeRs(null, incomeBreakdown);
   }
 
   /**
    * @param {IncomeStreams} incomeStreams
    */
-  calculateFixedIncomeOnly(incomeStreams) {
-    const nonSsIncomeSources = [
-      incomeStreams.myPension,
-      incomeStreams.spousePension,
-      incomeStreams.rmd,
-      incomeStreams.miscTaxableIncome,
-    ];
-    return this.calculateIncomeWhen401kWithdrawalIs(
-      0,
-      incomeStreams,
-      nonSsIncomeSources
-    );
-  }
-
-  /**
-   * Determine 401k withdrawal amount needed to hit a specific net target income
-   * @param {number} targetIncome - Target net income to achieve
-   * @param {IncomeStreams} incomeStreams - Collection of income sources
-   * @returns {{desiredNetTarget: number, trad401kWithdrawalNeeded: number, tax: number, rmd: number, calculationDetails: any[]}} - Withdrawal calculation results
-   */
-  determine401kWithdrawalsToHitNetTargetOf(targetIncome, incomeStreams) {
-    // Declare and initialize the result object at the top
-    /** @type {{desiredNetTarget: number, trad401kWithdrawalNeeded: number, tax: number, rmd: number, calculationDetails: any[]}} */
-    const result = {
-      desiredNetTarget: 0,
-      trad401kWithdrawalNeeded: 0,
-      tax: 0,
-      rmd: 0,
-      calculationDetails: [],
-    };
-
-    let lo = 0,
-      hi = targetIncome * 2;
-
-    /** @type {IncomeRs | null}} */
-    let incomeRs = null;
-
-    for (let i = 0; i < 80; i++) {
-      log.info();
-      log.info(
-        `===== Iteration ${i}: lo=$${lo.asCurrency()}, hi=$${hi.asCurrency()} ======`
-      );
-      const guestimate401kWithdrawal = (lo + hi) / 2;
-      log.info(
-        `Guestimate 401k withdrawal: $${guestimate401kWithdrawal.asCurrency()}`
-      );
-
-      incomeRs = this.calculateIncomeWhen401kWithdrawalIs(
-        guestimate401kWithdrawal,
-        incomeStreams
-      );
-
-      //   income.incomeBreakdown = incomeRs.incomeBreakdown;
-      //   income.ssBreakdown = incomeRs.ssBreakdown;
-
-      log.info(`Target income is $${targetIncome.asCurrency()}.`);
-
-      const netIncome =
-        incomeRs?.incomeBreakdown.netIncome //getNetIncomeMinusReportedEarnedInterest()
-          .asCurrency() ?? 0;
-
-      const highLow =
-        netIncome > targetIncome.asCurrency()
-          ? "TOO HIGH"
-          : netIncome < targetIncome.asCurrency()
-            ? "TOO LOW"
-            : "JUST RIGHT";
-      const highLowTextColor =
-        netIncome > targetIncome.asCurrency()
-          ? "\x1b[31m"
-          : netIncome < targetIncome.asCurrency()
-            ? "\x1b[34m"
-            : "\x1b[32m"; // Red for too high, Blue for too low, Green for just right
-      log.info(
-        `When 401k withdrawal is $${guestimate401kWithdrawal.round(
-          0
-        )} then the net income will be $${netIncome} ${highLowTextColor}(${highLow})\x1b[0m`
-      );
-
-      if (netIncome == targetIncome.asCurrency()) break;
-      if (netIncome < targetIncome) lo = guestimate401kWithdrawal;
-      else hi = guestimate401kWithdrawal;
-      if (hi.asCurrency() - lo.asCurrency() <= 0.01) break;
-    }
-
-    // Update all the final values in the result object
-    result.desiredNetTarget =
-      incomeRs?.incomeBreakdown.netIncome //getNetIncomeMinusReportedEarnedInterest()
-        .asCurrency() ?? 0;
-    result.trad401kWithdrawalNeeded =
-      incomeRs?.incomeBreakdown.trad401kWithdrawal.asCurrency() ?? 0; // hi.asCurrency();
-    result.rmd = incomeStreams.rmd;
-    result.tax = incomeRs?.incomeBreakdown.federalIncomeTax.asCurrency() ?? 0;
-    result.calculationDetails = [
-      withLabel("incomeRs", incomeRs),
-      withLabel("incomeStreams", incomeStreams),
-    ];
-
-    return result;
-  }
+  // calculateFixedIncomeOnly(incomeStreams) {
+  //   const nonSsIncomeSources = [
+  //     incomeStreams.myPension,
+  //     incomeStreams.spousePension,
+  //     incomeStreams.rmd,
+  //     incomeStreams.miscTaxableIncome,
+  //   ];
+  //   return this.calculateIncomeWhen401kWithdrawalIs(
+  //     0,
+  //     incomeStreams,
+  //     nonSsIncomeSources
+  //   );
+  // }
 
   /**
    * Calculate taxable income from adjusted gross income and standard deduction

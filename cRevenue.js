@@ -69,7 +69,7 @@ class Income {
    * @param {string} accountType - Type of account (e.g., REVENUE)
    * @returns {Income}
    */
-  static CreateFrom(accountYear, accountType) {
+  static CreateUsing(accountYear, accountType) {
     return new Income(accountYear, accountType);
   }
 
