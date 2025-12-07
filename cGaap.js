@@ -109,12 +109,9 @@ class GaapPostingBuilder {
    * @param {number} amount
    */
   deposit(account, amount) {
-    if (
-      account.type === GaapAccountType.Asset ||
-      account.type === GaapAccountType.Expense
-    )
-      return this.#debit(account, amount);
-    return this.#credit(account, amount);
+    return account.isDebitNormal
+      ? this.#debit(account, amount)
+      : this.#credit(account, amount);
   }
 
   /**
@@ -122,12 +119,9 @@ class GaapPostingBuilder {
    * @param {number} amount
    */
   withdraw(account, amount) {
-    if (
-      account.type === GaapAccountType.Asset ||
-      account.type === GaapAccountType.Expense
-    )
-      return this.#credit(account, amount);
-    return this.#debit(account, amount);
+    return account.isDebitNormal
+      ? this.#credit(account, amount)
+      : this.#debit(account, amount);
   }
 
   /**
@@ -229,7 +223,9 @@ class GaapAccount {
     this.id = nextGaapId();
     this.name = name;
     this.type = type;
-    this.normalBalance = GAAP_NORMAL_BALANCE_BY_TYPE[GaapAccountType.toName(type)];
+    this.normalBalance =
+      GAAP_NORMAL_BALANCE_BY_TYPE[GaapAccountType.toName(type)];
+    this.isDebitNormal = this.normalBalance === GaapNormalBalance.Debit;
   }
 
   /**
