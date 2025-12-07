@@ -60,3 +60,8 @@ class EnumBase {
     return this.reverse.get(sym);
   }
 }
+
+// Make EnumBase available to Node (CommonJS)
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = { EnumBase };
+}

@@ -1,5 +1,10 @@
 // @ts-check
 
+// Node environment: load EnumBase from module
+if (typeof module !== "undefined" && module.exports) {
+  var { EnumBase } = require("./cEnum.js");
+}
+
 // -------------------------------------------------------------
 // GAAP ACCOUNT TYPE NAMES  (Strongly typed string-literal union)
 // -------------------------------------------------------------
@@ -109,9 +114,9 @@ class GaapPostingBuilder {
    * @param {number} amount
    */
   deposit(account, amount) {
-    return account.isDebitNormal
-      ? this.#debit(account, amount)
-      : this.#credit(account, amount);
+    return account.isDebitNormal ? 
+        this.#debit(account, amount) : 
+        this.#credit(account, amount);
   }
 
   /**
@@ -119,9 +124,9 @@ class GaapPostingBuilder {
    * @param {number} amount
    */
   withdraw(account, amount) {
-    return account.isDebitNormal
-      ? this.#credit(account, amount)
-      : this.#debit(account, amount);
+        return account.isDebitNormal
+          ? this.#credit(account, amount)
+          : this.#debit(account, amount);
   }
 
   /**
@@ -585,4 +590,17 @@ class GaapLedger {
       balance: this._accountBalanceAsOf(acct, asOfDate),
     }));
   }
+}
+
+// Export for Node tests
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = {
+    GaapAccountTypeNames,
+    GaapAccountType,
+    GaapNormalBalance,
+    GAAP_NORMAL_BALANCE_BY_TYPE,
+    GaapAccount,
+    GaapTransactionSide,
+    // ...anything else you need in tests
+  };
 }
