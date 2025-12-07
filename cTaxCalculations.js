@@ -1,4 +1,4 @@
-class TaxCalculator {
+class TaxCalculations {
   /**
    * @param {Demographics} demographics
    */

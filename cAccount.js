@@ -5,6 +5,10 @@ ACCOUNT_TYPES.TRAD_ROTH = "rothIra";
 ACCOUNT_TYPES.REVENUE = "revenue";
 ACCOUNT_TYPES.INTEREST_ON_SAVINGS = "interestOnSavings";
 ACCOUNT_TYPES.DISBURSEMENT = "disbursement";
+ACCOUNT_TYPES.TAXES = "taxes";
+ACCOUNT_TYPES.WITHHOLDINGS = "withholdings";
+
+
 
 // Create a class for the account
 class Account {

@@ -8,7 +8,7 @@ class Disbursements {
 
   /**
    * Add a disbursement/withdrawal
-   * @param {AccountYear} accountYear
+   * @param {AccountingYear} accountYear
    */
   constructor(accountYear) {
     this.#accountYear = accountYear;
@@ -73,7 +73,7 @@ class Disbursements {
   }
 
   /**
-   * @param {AccountYear} accountYear
+   * @param {AccountingYear} accountYear
    */
   static CreateUsing(accountYear) {
     return new Disbursements(accountYear);

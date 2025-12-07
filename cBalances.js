@@ -15,7 +15,7 @@ class Balances {
   /**
    * Creates a new Balances instance with account balance data.
    *
-   * @param {AccountYear} accountYear -Accounting year
+   * @param {AccountingYear} accountYear -Accounting year
    * @param {any} [calculationDetails=null] - Reference to underlying account objects for debugging
    * @param {string} [description="Account Balances"] - Descriptive label for this balance snapshot
    */
@@ -181,7 +181,7 @@ class Balances {
    * extracting ending balances from an AccountGroup for a specific tax year.
    * It handles the account balance calculations and currency formatting automatically.
    *
-   * @param {AccountYear} accountYear - AccountYear instance containing account data
+   * @param {AccountingYear} accountYear - AccountYear instance containing account data
    * @param {string} [description="Account Balances"] - Optional description
    *
    * @returns {Balances} A new Balances instance with current account balances

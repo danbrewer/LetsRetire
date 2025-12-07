@@ -2106,7 +2106,7 @@ function parseInputParameters() {
     ];
   }
 
-  const inputs = new IncomeStreams(
+  const inputs = new Inputs(
     (currentAge = num("currentAge")),
     (currentSpouseAge = num("spouseAge")),
     (retireAge = num("retireAge")),

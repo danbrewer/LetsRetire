@@ -5,8 +5,18 @@ class AccountsManager {
    * @param {Account} savings - Savings account instance
    * @param {Account} income - Income account instance
    * @param {Account} disbursement - Disbursement account instance
+   * @param {Account} taxes - Taxes account instance
+   * @param {Account} withholdings - Withholdings account instance
    */
-  constructor(trad401k, rothIra, savings, income, disbursement) {
+  constructor(
+    trad401k,
+    rothIra,
+    savings,
+    income,
+    disbursement,
+    taxes,
+    withholdings
+  ) {
     /** @type {Account} */
     this.trad401k = trad401k;
 
@@ -21,6 +31,12 @@ class AccountsManager {
 
     /** @type {Account} */
     this.disbursement = disbursement;
+
+    /** @type {Account} */
+    this.taxes = taxes;
+
+    /** @type {Account} */
+    this.withholdings = withholdings;
   }
 
   /**
@@ -47,12 +63,16 @@ class AccountsManager {
 
     const revenue = new Account(ACCOUNT_TYPES.REVENUE, 0, 0);
     const disbursement = new Account(ACCOUNT_TYPES.DISBURSEMENT, 0, 0);
+    const taxes = new Account(ACCOUNT_TYPES.TAXES, 0, 0);
+    const withholdings = new Account(ACCOUNT_TYPES.WITHHOLDINGS, 0, 0);
     return new AccountsManager(
       trad401k,
       rothIra,
       savings,
       revenue,
-      disbursement
+      disbursement,
+      taxes,
+      withholdings
     );
   }
 
@@ -79,7 +99,9 @@ class AccountsManager {
       Account.fromJSON(obj.rothIra),
       Account.fromJSON(obj.savings),
       Account.fromJSON(obj.income),
-      Account.fromJSON(obj.disbursement)
+      Account.fromJSON(obj.disbursement),
+      Account.fromJSON(obj.taxes),
+      Account.fromJSON(obj.withholdings)
     );
   }
 
@@ -173,43 +195,43 @@ class AccountsManager {
     };
   }
 
-  /**
-   * @param {number} year
-   */
-  getAccountSummary(year) {
-    return {
-      trad401k: {
-        name: this.trad401k.name,
-        startingBalance: this.trad401k.startingBalanceForYear(year),
-        withdrawals: this.trad401k.withdrawalsForYear(year),
-        deposits: this.trad401k.depositsForYear(year),
-        endingBalance: this.trad401k.endingBalanceForYear(year),
-        interestRate: this.trad401k.interestRate,
-      },
-      rothIra: {
-        name: this.rothIra.name,
-        startingBalance: this.rothIra.startingBalanceForYear(year),
-        withdrawals: this.rothIra.withdrawalsForYear(year),
-        deposits: this.rothIra.depositsForYear(year),
-        endingBalance: this.rothIra.endingBalanceForYear(year),
-        interestRate: this.rothIra.interestRate,
-      },
-      savings: {
-        name: this.savings.name,
-        startingBalance: this.savings.startingBalanceForYear(year),
-        withdrawals: this.savings.withdrawalsForYear(year),
-        deposits: this.savings.depositsForYear(year),
-        endingBalance: this.savings.endingBalanceForYear(year),
-        interestRate: this.savings.interestRate,
-      },
-      totals: {
-        startingBalance: this.getTotalStartingBalance(year),
-        endingBalance: this.getTotalBalance(year),
-        withdrawals: this.getTotalWithdrawals(year),
-        deposits: this.getTotalDeposits(year),
-      },
-    };
-  }
+  // /**
+  //  * @param {number} year
+  //  */
+  // getAccountSummary(year) {
+  //   return {
+  //     trad401k: {
+  //       name: this.trad401k.name,
+  //       startingBalance: this.trad401k.startingBalanceForYear(year),
+  //       withdrawals: this.trad401k.withdrawalsForYear(year),
+  //       deposits: this.trad401k.depositsForYear(year),
+  //       endingBalance: this.trad401k.endingBalanceForYear(year),
+  //       interestRate: this.trad401k.interestRate,
+  //     },
+  //     rothIra: {
+  //       name: this.rothIra.name,
+  //       startingBalance: this.rothIra.startingBalanceForYear(year),
+  //       withdrawals: this.rothIra.withdrawalsForYear(year),
+  //       deposits: this.rothIra.depositsForYear(year),
+  //       endingBalance: this.rothIra.endingBalanceForYear(year),
+  //       interestRate: this.rothIra.interestRate,
+  //     },
+  //     savings: {
+  //       name: this.savings.name,
+  //       startingBalance: this.savings.startingBalanceForYear(year),
+  //       withdrawals: this.savings.withdrawalsForYear(year),
+  //       deposits: this.savings.depositsForYear(year),
+  //       endingBalance: this.savings.endingBalanceForYear(year),
+  //       interestRate: this.savings.interestRate,
+  //     },
+  //     totals: {
+  //       startingBalance: this.getTotalStartingBalance(year),
+  //       endingBalance: this.getTotalBalance(year),
+  //       withdrawals: this.getTotalWithdrawals(year),
+  //       deposits: this.getTotalDeposits(year),
+  //     },
+  //   };
+  // }
 
   //   // Method to apply interest rate changes to all accounts
   //   updateInterestRates(trad401kRate, rothIraRate, savingsRate) {

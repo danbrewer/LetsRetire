@@ -6,7 +6,7 @@ class AccountPortioner {
   #ask = 0;
 
   /**
-   * @param {AccountYear} accountYear
+   * @param {AccountingYear} accountYear
    * @param {FiscalData} fiscalData
    * @param {number} spend
    */

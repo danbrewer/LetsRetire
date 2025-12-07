@@ -73,8 +73,6 @@ class RetirementIncomeCalculator {
     incomeStreams,
     nonSsIncomeSources
   ) {
-    const standardDeduction = TaxCalculator.getStandardDeduction(this.#fiscalData, this.#demographics);
-
     if (!nonSsIncomeSources || nonSsIncomeSources.length === 0) {
       nonSsIncomeSources = [
         incomeStreams.myPension,
@@ -91,14 +89,13 @@ class RetirementIncomeCalculator {
       incomeStreams.mySs,
       incomeStreams.spouseSs,
       nonSsIncome + variableTaxableIncome,
-      this.#demographics.hasSpouse
+      this.#demographics.hasPartner
     );
 
     const incomeBreakdown = IncomeBreakdown.CreateFrom(
       incomeStreams,
       variableTaxableIncome,
       ssBreakdown.calculationDetails,
-      standardDeduction,
       this.#demographics,
       this.#fiscalData
     );
@@ -235,17 +232,6 @@ class RetirementIncomeCalculator {
   get fiscalData() {
     return this.#fiscalData;
   }
-
-  /**
-   * Create an empty RetirementIncomeCalculator instance
-   * @returns {RetirementIncomeCalculator} - Empty calculator instance
-   */
-  static Empty() {
-    return new RetirementIncomeCalculator(
-      Demographics.Empty(),
-      FiscalData.Empty()
-    );
-  }
 }
 
 /**
@@ -267,63 +253,3 @@ function calculateIncomeWhen401kWithdrawalIs(
     incomeStreams
   );
 }
-
-// /**
-//  * @deprecated Use RetirementIncomeCalculator class instead
-//  * @param {number} targetIncome
-//  * @param {IncomeStreams} incomeStreams
-//  * @param {Demographics} demographics
-//  * @param {FiscalData} fiscalData
-//  */
-// function determine401kWithdrawalsToHitNetTargetOf(
-//   targetIncome,
-//   incomeStreams,
-//   demographics,
-//   fiscalData
-// ) {
-//   const calculator = new RetirementIncomeCalculator(demographics, fiscalData);
-//   return calculator.determine401kWithdrawalsToHitNetTargetOf(
-//     targetIncome,
-//     incomeStreams
-//   );
-// }
-
-// /**
-//  * @deprecated Use RetirementIncomeCalculator class instead
-//  * @param {string} filingStatus
-//  * @param {number} year
-//  * @param {number} inflationRate
-//  */
-// function getTaxBrackets(filingStatus, year, inflationRate) {
-//   const demographics = Demographics.Empty();
-//   demographics.filingStatus = filingStatus;
-//   const fiscalData = FiscalData.Empty();
-//   fiscalData.taxYear = year;
-//   fiscalData.inflationRate = inflationRate;
-
-//   const calculator = new RetirementIncomeCalculator(demographics, fiscalData);
-//   return calculator.getTaxBrackets();
-// }
-
-// /**
-//  * @deprecated Use RetirementIncomeCalculator class instead
-//  * @param {number} taxableIncome
-//  * @param {string} filingStatus
-//  * @param {number} year
-//  * @param {number} inflationRate
-//  */
-// function calculateFederalTax(
-//   taxableIncome,
-//   filingStatus = constsJS_FILING_STATUS.SINGLE,
-//   year = 2025,
-//   inflationRate = 0.025
-// ) {
-//   const demographics = Demographics.Empty();
-//   demographics.filingStatus = filingStatus;
-//   const fiscalData = FiscalData.Empty();
-//   fiscalData.taxYear = year;
-//   fiscalData.inflationRate = inflationRate;
-
-//   const calculator = new RetirementIncomeCalculator(demographics, fiscalData);
-//   return calculator.calculateFederalTax(taxableIncome);
-// }

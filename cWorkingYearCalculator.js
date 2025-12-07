@@ -13,7 +13,7 @@ class WorkingYearCalculator {
   /**
    * Create working year income calculator with input configuration
    * @param {Inputs} inputs - Input configuration object containing salary, contribution rates, etc.
-   * @param {AccountYear} accountYear - AccountYear instance containing all accounts
+   * @param {AccountingYear} accountYear - AccountYear instance containing all accounts
    */
   constructor(inputs, accountYear) {
     this.#inputs = inputs;
@@ -23,42 +23,54 @@ class WorkingYearCalculator {
   }
 
   calculateWorkingYearData() {
-    // Declare and initialize the result object at the top
-    const result = WorkingYearData.CreateEmpty();
-
-    result.accountYear = this.accountYear;
-
     // debugger;
-    const employmentInfo = EmploymentInfo.CreateUsing(
-      this.#demographics,
-      this.#inputs
-    );
-
-    // Create income calculator for tax calculations
-    const incomeCalculator = new RetirementIncomeCalculator(
-      this.#demographics,
-      this.#fiscalData
-    );
-
-    // **************
-    // Calculations
-    // **************
-
-    this.accountYear.processAsPeriodicDeposits(
-      ACCOUNT_TYPES.TRAD_401K,
-      TRANSACTION_CATEGORY.CONTRIBUTION,
-      employmentInfo.trad401kContribution,
-      PERIODIC_FREQUENCY.MONTHLY
-    );
-    this.accountYear.recordInterestEarnedForYear(ACCOUNT_TYPES.TRAD_401K);
-    this.accountYear.recordInterestEarnedForYear(ACCOUNT_TYPES.SAVINGS);
-    this.accountYear.recordInterestEarnedForYear(ACCOUNT_TYPES.TRAD_ROTH);
 
     const workingYearIncome = WorkingYearIncome.CreateUsing(
       this.#inputs,
       this.#demographics,
       this.#fiscalData,
       this.accountYear
+    );
+
+    // **************
+    // Calculations
+    // **************
+
+    workingYearIncome.estimateWithholdings();
+
+    // Dump any 401k contributions into the Traditional 401k account
+    this.accountYear.processAsPeriodicDeposits(
+      ACCOUNT_TYPES.TRAD_401K,
+      TRANSACTION_CATEGORY.CONTRIBUTION,
+      workingYearIncome.nonTaxableIncomeReductions,
+      PERIODIC_FREQUENCY.MONTHLY
+    );
+    this.accountYear.recordInterestEarnedForYear(ACCOUNT_TYPES.TRAD_401K);
+
+    // Any income left after spending goes into savings
+    const surplusIncome = Math.max(
+      workingYearIncome.estimatedNetIncome - this.#inputs.spend,
+      0
+    );
+    // Deposit surplus income into savings account
+    this.accountYear.processAsPeriodicDeposits(
+      ACCOUNT_TYPES.SAVINGS,
+      TRANSACTION_CATEGORY.INCOME,
+      surplusIncome,
+      PERIODIC_FREQUENCY.MONTHLY
+    );
+
+    // Now calculate interest earned on accounts
+    this.accountYear.recordInterestEarnedForYear(ACCOUNT_TYPES.SAVINGS);
+    this.accountYear.recordInterestEarnedForYear(ACCOUNT_TYPES.TRAD_ROTH);
+
+    workingYearIncome.reconcileTaxes();
+
+    // Declare and initialize the result object at the top
+    const result = WorkingYearData.CreateFrom(
+      this.#demographics,
+      this.accountYear,
+      workingYearIncome
     );
 
     // const standardDeduction = TaxCalculator.getStandardDeduction(
@@ -152,85 +164,49 @@ class WorkingYearCalculator {
 
     // Note: Spouse contributions not handled in working year calculations
 
-    result.contributions = Contributions.CreateUsing(
-      this.accountYear,
-      employmentInfo
-    );
+    // result.contributions = Contributions.CreateUsing(
+    //   this.accountYear,
+    //   employmentInfo
+    // );
+
     // result.ss = ss;
     // result.pen = pen;
-    result.withdrawals = Withdrawals.CreateUsing(this.accountYear);
-    result.taxes = Taxes.CreateForWorkingYearIncome(
-      workingYearIncome,
-      this.#fiscalData,
-      this.#demographics
-    );
+    // result.withdrawals = Withdrawals.CreateUsing(this.accountYear);
+    // result.taxes = Taxes.CreateForWorkingYearIncome(
+    //   workingYearIncome,
+    //   this.#fiscalData,
+    //   this.#demographics
+    // );
     // result.totals = totals;
     // result.balances = balances;
-    result.income = workingYearIncome;
-    result.demographics = this.#demographics;
+    // result.income = workingYearIncome;
     // result.employmentInfo = employmentInfo;
     // result.roth = accountYear.rothIra;
     // result.savings = accountYear.savings;
     // result.retirementAccount = accountYear.trad401k;
-    result.fiscalData = this.#fiscalData;
 
-    // Add breakdown data
-    result.savingsBreakdown = {
-      startingBalance: this.accountYear.getStartingBalance(
-        ACCOUNT_TYPES.SAVINGS
-      ),
-      withdrawals: this.accountYear.getWithdrawals(ACCOUNT_TYPES.SAVINGS),
-      deposits: this.accountYear.getDeposits(ACCOUNT_TYPES.SAVINGS),
-      taxFreeIncomeDeposit: workingYearIncome.taxFreeIncomeAdjustment,
-      interestEarned: this.accountYear.getDeposits(
-        ACCOUNT_TYPES.SAVINGS,
-        TRANSACTION_CATEGORY.INTEREST
-      ),
-      endingBalance: this.accountYear.getEndingBalance(ACCOUNT_TYPES.SAVINGS),
-      growthRate: this.#fiscalData.savingsRateOfReturn,
-      calculationDetails: [
-        withLabel("accountYear", this.accountYear),
-        withLabel(
-          "income.taxFreeIncomeAdjustment",
-          workingYearIncome.taxFreeIncomeAdjustment
-        ),
-      ],
-    };
-
-    result.ssBreakdown = {
-      ssGross: 0,
-      ssTaxableAmount: 0,
-      ssNonTaxable: 0,
-      ssTaxes: 0,
-    };
-
-    result.spouseSsBreakdown = {
-      ssGross: 0,
-      ssTaxableAmount: 0,
-      ssNonTaxable: 0,
-      ssTaxes: 0,
-    };
-
-    result.pensionBreakdown = {
-      penGross: 0,
-      penTaxableAmount: 0,
-      penNonTaxable: 0,
-      penTaxes: 0,
-      pensionTaxRate: 0,
-    };
-
-    result.spousePensionBreakdown = {
-      penGross: 0,
-      penTaxableAmount: 0,
-      penNonTaxable: 0,
-      penTaxes: 0,
-      pensionTaxRate: 0,
-    };
-
-    result._description = `
------------------------------------------------
---- Working Year ${this.#fiscalData.yearIndex + 1} (Age ${this.#demographics.age}) (Year ${this.#demographics.retirementYear}) ---
------------------------------------------------`;
+    // // Add breakdown data
+    // result.savingsBreakdown = {
+    //   startingBalance: this.accountYear.getStartingBalance(
+    //     ACCOUNT_TYPES.SAVINGS
+    //   ),
+    //   withdrawals: this.accountYear.getWithdrawals(ACCOUNT_TYPES.SAVINGS),
+    //   deposits: this.accountYear.getDeposits(ACCOUNT_TYPES.SAVINGS),
+    //   taxFreeIncomeDeposit: workingYearIncome.taxFreeIncomeAdjustment,
+    //   interestEarned: this.accountYear.getDeposits(
+    //     ACCOUNT_TYPES.SAVINGS,
+    //     TRANSACTION_CATEGORY.INTEREST
+    //   ),
+    //   endingBalance: this.accountYear.getEndingBalance(ACCOUNT_TYPES.SAVINGS),
+    //   growthRate: this.#fiscalData.savingsRateOfReturn,
+    //   calculationDetails: [
+    //     withLabel("accountYear", this.accountYear),
+    //     withLabel(
+    //       "income.taxFreeIncomeAdjustment",
+    //       workingYearIncome.taxFreeIncomeAdjustment
+    //     ),
+    //   ],
+    // };
 
     return result;
   }

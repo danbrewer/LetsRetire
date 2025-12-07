@@ -1,53 +1,59 @@
 class Demographics {
   /**
-   * @param {number} age
+   * @param {number} currentAge
    * @param {number} ssStartAge
    * @param {number} penStartAge
    * @param {number} retirementYear
    * @param {number} yearIndex
    */
   constructor(
-    age,
+    currentAge,
     ssStartAge,
     penStartAge,
     retirementYear,
     yearIndex,
     isRetired = true,
     isWorking = false,
-    hasSpouse = false,
-    spouseAge = 0,
-    spouseSsStartAge = Number.MAX_VALUE,
-    spousePenStartAge = Number.MAX_VALUE,
+    hasPartner = false,
+    currentPartnerAge = 0,
+    partnerSsStartAge = Number.MAX_VALUE,
+    partnerPenStartAge = Number.MAX_VALUE,
     filingStatus = "single"
   ) {
-    this.age = age;
+    this.currentAge = currentAge;
     this.ssStartAge = ssStartAge;
     this.penStartAge = penStartAge;
     this.retirementYear = retirementYear;
     this.isRetired = isRetired;
     this.isWorking = isWorking;
-    this.hasSpouse = hasSpouse;
-    this.ageOfSpouse = spouseAge;
-    this.ssStartAgeOfSpouse = hasSpouse ? spouseSsStartAge : Number.MAX_VALUE;
-    this.penStartAgeOfSpouse = hasSpouse ? spousePenStartAge : Number.MAX_VALUE;
+    this.hasPartner = hasPartner;
+    this.currentAgeOfPartner = currentPartnerAge;
+    this.ssStartAgeOfPartner = hasPartner ? partnerSsStartAge : Number.MAX_VALUE;
+    this.penStartAgeOfPartner = hasPartner
+      ? partnerPenStartAge
+      : Number.MAX_VALUE;
     this.filingStatus = filingStatus;
-    this._description = `Retirement Year ${yearIndex + 1} (Age ${this.age}) (Year ${this.retirementYear})`;
+    this._description = `Retirement Year ${yearIndex + 1} (Age ${this.currentAge}) (Year ${this.retirementYear})`;
   }
 
   get isSubjectEligibleForSs() {
-    return this.age >= this.ssStartAge;
+    return this.currentAge >= this.ssStartAge;
   }
 
   get isSubjectEligibleForPension() {
-    return this.age >= this.penStartAge;
+    return this.currentAge >= this.penStartAge;
   }
 
   get isPartnerEligibleForSs() {
-    return this.hasSpouse && this.ageOfSpouse >= this.ssStartAgeOfSpouse;
+    return (
+      this.hasPartner && this.currentAgeOfPartner >= this.ssStartAgeOfPartner
+    );
   }
 
   get isPartnerEligibleForPension() {
-    return this.hasSpouse && this.ageOfSpouse >= this.penStartAgeOfSpouse;
+    return (
+      this.hasPartner && this.currentAgeOfPartner >= this.penStartAgeOfPartner
+    );
   }
 
   //   // Getter for description to maintain compatibility
@@ -144,7 +150,7 @@ class Demographics {
    */
   static CreateUsing(inputs, isRetired, isWorking) {
     return new Demographics(
-      inputs.age,
+      inputs.currentAge,
       inputs.ssStartAge,
       inputs.penStartAge,
       inputs.retirementYear,
@@ -158,24 +164,4 @@ class Demographics {
       inputs.filingStatus
     );
   }
-
-  static Empty() {
-    return new Demographics(
-      0,
-      0,
-      0,
-      0,
-      0,
-      false,
-      false,
-      false,
-      0,
-      0,
-      0,
-      "single"
-    );
-  }
 }
-
-// Create instance using the factory method for compatibility
-// const demographics = Demographics.CreateUsing(inputs);

@@ -21,6 +21,8 @@ const TRANSACTION_CATEGORY = Object.freeze({
   OTHER_NON_TAXABLE: "other_non_taxable_income",
   SOCIAL_SEC: "income_from_ss",
   PENSION: "income_from_pensions",
+  TAX_REFUND: "tax_refund",
+  TAX_PAYMENT: "tax_payment",
 });
 
 /**

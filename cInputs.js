@@ -234,6 +234,9 @@ class Inputs {
     /** @type {number} */
     this.yearIndex = 0;
 
+    /** @type {number} */
+    this.nonTaxableBenefits = 500 * 26; // e.g., health/dental/HSA
+
     // Calculate derived values
     this.#calculateDerivedValues();
   }
@@ -340,20 +343,20 @@ class Inputs {
   }
 
   get subjectSs() {
-    if (this.age >= this.ssStartAge) {
+    if (this.currentAge >= this.ssStartAge) {
       return (this.ssMonthly * 12).adjustedForInflation(
         this.ssCola,
-        this.age - this.ssStartAge
+        this.currentAge - this.ssStartAge
       );
     }
     return 0;
   }
 
   get subjectPension() {
-    if (this.age >= this.penStartAge) {
+    if (this.currentAge >= this.penStartAge) {
       return (this.penMonthly * 12).adjustedForInflation(
         this.penCola,
-        this.age - this.penStartAge
+        this.currentAge - this.penStartAge
       );
     }
     return 0;
@@ -411,28 +414,28 @@ class Inputs {
     return new Date().getFullYear() + this.yearIndex;
   }
 
-  get age() {
+  get currentAge() {
     return this.initialAge + this.yearIndex;
   }
 
   get useSavings() {
-    return this.age >= this.savingsUseAge;
+    return this.currentAge >= this.savingsUseAge;
   }
 
   get useTrad401k() {
-    return this.age >= this.trad401kUseAge;
+    return this.currentAge >= this.trad401kUseAge;
   }
 
   get useRoth() {
-    return this.age >= this.rothUseAge;
+    return this.currentAge >= this.rothUseAge;
   }
 
   get #isRetired() {
-    return this.age >= this.retireAge;
+    return this.currentAge >= this.retireAge;
   }
 
   get #retirementYearIndex() {
-    return this.age - this.retireAge;
+    return this.currentAge - this.retireAge;
   }
 
   /**

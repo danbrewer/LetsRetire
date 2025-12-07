@@ -5,13 +5,13 @@
 class RetirementYearCalculator {
   /** @type {Inputs} */
   #inputs;
-  /** @type {AccountYear} */
+  /** @type {AccountingYear} */
   #accountYear;
 
   /**
    * Create retirement year calculator with input configuration
    * @param {Inputs} inputs - Retirement calculation inputs containing demographics,
-   * @param {AccountYear} accountYear - Collection of retirement accounts for fiscal year
+   * @param {AccountingYear} accountYear - Collection of retirement accounts for fiscal year
    *   - savings: Savings account instance
    *   - trad401k: Traditional 401k account instance
    *   - rothIra: Roth IRA account instance
@@ -103,11 +103,19 @@ class RetirementYearCalculator {
     const mySsBenefits = {
       _description: "Social Security Benefits Breakdown",
       income: fixedIncomeStreams.mySs,
-      taxablePortion: incomeResults.incomeBreakdown.ssCalculationDetails?.subjectTaxablePortion,
-      nonTaxablePortion: incomeResults.incomeBreakdown.ssCalculationDetails?.subjectNonTaxablePortion,
-      portionOfTotalBenefits: incomeResults.incomeBreakdown.ssCalculationDetails?.subjectPortion,
+      taxablePortion:
+        incomeResults.incomeBreakdown.ssCalculationDetails
+          ?.subjectTaxablePortion,
+      nonTaxablePortion:
+        incomeResults.incomeBreakdown.ssCalculationDetails
+          ?.subjectNonTaxablePortion,
+      portionOfTotalBenefits:
+        incomeResults.incomeBreakdown.ssCalculationDetails?.subjectPortion,
       calculationDetails: [
-        withLabel("incomeResults.incomeBreakdown.ssCalculationDetails", incomeResults.incomeBreakdown.ssCalculationDetails),
+        withLabel(
+          "incomeResults.incomeBreakdown.ssCalculationDetails",
+          incomeResults.incomeBreakdown.ssCalculationDetails
+        ),
         withLabel("incomeStreams", fixedIncomeStreams),
       ],
     };
@@ -186,11 +194,19 @@ class RetirementYearCalculator {
     const spouseSsBenefits = {
       _description: "Spouse Social Security Benefits Breakdown",
       income: fixedIncomeStreams.spouseSs,
-      taxablePortion: incomeResults.incomeBreakdown.ssCalculationDetails?.partnerTaxablePortion,
-      nonTaxablePortion: incomeResults.incomeBreakdown.ssCalculationDetails?.partnerNonTaxablePortion,
-      portionOfTotalBenefits: incomeResults.incomeBreakdown.ssCalculationDetails?.partnerPortion,
+      taxablePortion:
+        incomeResults.incomeBreakdown.ssCalculationDetails
+          ?.partnerTaxablePortion,
+      nonTaxablePortion:
+        incomeResults.incomeBreakdown.ssCalculationDetails
+          ?.partnerNonTaxablePortion,
+      portionOfTotalBenefits:
+        incomeResults.incomeBreakdown.ssCalculationDetails?.partnerPortion,
       calculationDetails: [
-        withLabel("incomeResults.incomeBreakdown.ssCalculationDetails", incomeResults.incomeBreakdown.ssCalculationDetails),
+        withLabel(
+          "incomeResults.incomeBreakdown.ssCalculationDetails",
+          incomeResults.incomeBreakdown.ssCalculationDetails
+        ),
         withLabel("incomeStreams", fixedIncomeStreams),
       ],
     };

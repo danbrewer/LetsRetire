@@ -1,5 +1,5 @@
 class IncomeStreams {
-  /** @type {AccountYear} */
+  /** @type {AccountingYear} */
   #accountYear;
 
   /** @type {FiscalData} */
@@ -13,7 +13,7 @@ class IncomeStreams {
 
   /**
    * @param {Demographics} demographics - Instance of Demographics class
-   * @param {AccountYear} accountYear - Accounts object containing savings and 401k accounts
+   * @param {AccountingYear} accountYear - Accounts object containing savings and 401k accounts
    * @param {FiscalData} fiscalData - Instance of FiscalData class
    * @param {Inputs} inputs - Input data object containing tax adjustments
    */
@@ -50,7 +50,7 @@ class IncomeStreams {
   get rmd() {
     return Common.calculateRMD(
       this.#fiscalData.useRmd,
-      this.#demographics.age,
+      this.#demographics.currentAge,
       this.#accountYear.getStartingBalance(ACCOUNT_TYPES.TRAD_401K)
     );
   }
@@ -66,7 +66,7 @@ class IncomeStreams {
   // Factory method for backward compatibility and dependency injection
   /**
    * @param {Demographics} demographics - Instance of Demographics class
-   * @param {AccountYear} accountYear - Accounts object containing savings and 401k accounts
+   * @param {AccountingYear} accountYear - Accounts object containing savings and 401k accounts
    * @param {FiscalData} fiscalData - Instance of FiscalData class
    * @param {Inputs} inputs - Input data object containing tax adjustments
    * @returns {IncomeStreams} New IncomeStreams instance
@@ -74,7 +74,7 @@ class IncomeStreams {
   static CreateUsing(demographics, accountYear, fiscalData, inputs) {
     const rmd = Common.calculateRMD(
       fiscalData.useRmd,
-      demographics.age,
+      demographics.currentAge,
       accountYear.getStartingBalance(ACCOUNT_TYPES.TRAD_401K)
     );
 

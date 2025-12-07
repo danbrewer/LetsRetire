@@ -100,7 +100,7 @@ class EmploymentInfo {
         : 7500;
 
     let electiveLimit =
-      baseLimit + (this.#demographics.age >= 50 ? catchupLimit : 0);
+      baseLimit + (this.#demographics.currentAge >= 50 ? catchupLimit : 0);
     const totalDesiredContribution =
       this.desired401kContribution + this.desiredRothContribution;
     let scale =
@@ -119,6 +119,10 @@ class EmploymentInfo {
     return (
       this.desired401kContribution * this.getElectiveScale()
     ).asCurrency();
+  }
+
+  get nonTaxableBenefits() {
+    return this.#inputs.nonTaxableBenefits.asCurrency();
   }
 
   // /**

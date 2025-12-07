@@ -16,7 +16,6 @@ class IncomeBreakdown {
    * @param {IncomeStreams} fixedIncomeStreams
    * @param {number} variableIncomeStream
    * @param {SsCalculationDetails | null} ssCalculationDetails
-   * @param {number} standardDeduction
    * @param {Demographics} demographics
    * @param {FiscalData} fiscalData
    *
@@ -24,14 +23,16 @@ class IncomeBreakdown {
   constructor(
     fixedIncomeStreams,
     variableIncomeStream,
-    standardDeduction,
     ssCalculationDetails,
     demographics,
     fiscalData
   ) {
     this.#fixedIncomeStreams = fixedIncomeStreams;
     this.#variableIncomeStream = variableIncomeStream;
-    this.#standardDeduction = standardDeduction;
+    this.#standardDeduction = TaxCalculations.getStandardDeduction(
+      fiscalData,
+      demographics
+    );
     this.#ssCalculationDetails = ssCalculationDetails;
     this.#demographics = demographics;
     this.#fiscalData = fiscalData;
@@ -129,7 +130,7 @@ class IncomeBreakdown {
   }
 
   get federalIncomeTax() {
-    return TaxCalculator.determineFederalIncomeTax(
+    return TaxCalculations.determineFederalIncomeTax(
       this.#totalIncome,
       this.taxableIncome,
       this.#fiscalData,
@@ -247,7 +248,6 @@ class IncomeBreakdown {
    * @param {IncomeStreams} fixedIncomeStreams
    * @param {number} variableIncomeStream
    * @param {SsCalculationDetails | null} ssCalculationDetails
-   * @param {number} standardDeduction
    * @param {Demographics} demographics
    * @param {FiscalData} fiscalData
    **/
@@ -257,14 +257,12 @@ class IncomeBreakdown {
     fixedIncomeStreams,
     variableIncomeStream,
     ssCalculationDetails,
-    standardDeduction,
     demographics,
     fiscalData
   ) {
     return new IncomeBreakdown(
       fixedIncomeStreams,
       variableIncomeStream,
-      standardDeduction,
       ssCalculationDetails,
       demographics,
       fiscalData

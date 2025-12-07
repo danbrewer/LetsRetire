@@ -20,7 +20,7 @@ class DebugData {
    * @param {number} netIncome - Net income after taxes
    * @param {Deposits} deposits - Deposits object containing deposit data
    * @param {Withdrawals} withdrawals - Withdrawals object containing withdrawal data
-   * @param {AccountYear} [accountYear] - Account group data
+   * @param {AccountingYear} [accountYear] - Account group data
    * @param {string} [description="Debug Data"] - Descriptive label
    */
   constructor(
@@ -212,7 +212,10 @@ class DebugData {
     const errors = [];
     const warnings = [];
 
-    if (this._demographics.age < 0 || this._demographics.age > 150) {
+    if (
+      this._demographics.currentAge < 0 ||
+      this._demographics.currentAge > 150
+    ) {
       errors.push("Age must be between 0 and 150");
     }
 
@@ -262,7 +265,7 @@ class DebugData {
 
     return {
       // Basic demographics and spending
-      age: this._demographics.age,
+      age: this._demographics.currentAge,
       spend: this.spend,
 
       // Income analysis
@@ -307,7 +310,7 @@ class DebugData {
    * @param {IncomeBreakdown} incomeBreakdown - Income streams object with calculation methods
    * @param {Deposits} deposits - Deposits information
    * @param {Withdrawals} withdrawals - Withdrawals information
-   * @param {AccountYear} accountYear - Account group with all account types
+   * @param {AccountingYear} accountYear - Account group with all account types
    * @param {Taxes} taxes - Tax calculation results:
    * @param {string} [description="Debug Data"] - Optional description
    *

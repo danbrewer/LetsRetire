@@ -30,13 +30,13 @@ class RetirementYearData {
   #demographics;
   /** @type {FiscalData} */
   #fiscalData;
-  /** @type {AccountYear} */
+  /** @type {AccountingYear} */
   #accountYear;
 
   /**
    * @param {Demographics} demographics
    * @param {FiscalData} fiscalData
-   * @param {AccountYear} accountYear
+   * @param {AccountingYear} accountYear
    */
   constructor(demographics, fiscalData, accountYear) {
     this.#demographics = demographics;
@@ -45,7 +45,7 @@ class RetirementYearData {
 
     this._description = `
 -----------------------------------------------
---- Retirement Year ${fiscalData.yearIndex + 1} (Age ${demographics.age}) (Year ${demographics.retirementYear}) ---
+--- Retirement Year ${fiscalData.yearIndex + 1} (Age ${demographics.currentAge}) (Year ${demographics.retirementYear}) ---
 -----------------------------------------------`;
 
     /** @type {Income} */
@@ -131,7 +131,7 @@ class RetirementYearData {
   /**
    * @param {Demographics} demographics
    * @param {FiscalData} fiscalData
-   * @param {AccountYear} accountYear
+   * @param {AccountingYear} accountYear
    */
   static CreateUsing(demographics, fiscalData, accountYear) {
     const result = new RetirementYearData(

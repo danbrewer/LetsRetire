@@ -4,12 +4,12 @@
  */
 
 class Income {
-  /** @type {AccountYear} */
+  /** @type {AccountingYear} */
   #accountYear;
   #accountType;
 
   /**
-   * @param {AccountYear} accountYear - AccountYear instance for accessing account data
+   * @param {AccountingYear} accountYear - AccountYear instance for accessing account data
    * @param {string} accountType - Type of account (e.g., REVENUE)
    */
   constructor(accountYear, accountType) {
@@ -65,7 +65,7 @@ class Income {
 
   /**
    * Create an empty Income instance
-   * @param {AccountYear} accountYear - AccountYear instance
+   * @param {AccountingYear} accountYear - AccountYear instance
    * @param {string} accountType - Type of account (e.g., REVENUE)
    * @returns {Income}
    */

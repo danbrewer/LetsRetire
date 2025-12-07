@@ -13,7 +13,7 @@ class Taxes {
   /**
    * Creates a new Taxes instance with comprehensive tax calculation data.
    *
-   * @param {number} grossIncome - Total gross income from all sources before deductions
+   * @param {number} totalTaxableIncome - Total gross income from all sources before deductions
    * @param {number} adjustedGrossIncome - Gross income after adjustments (if any)
    * @param {number} standardDeduction - Standard deduction amount based on filing status and year
    * @param {number}  taxableIncome - Income subject to federal taxation after deductions
@@ -22,7 +22,7 @@ class Taxes {
    * @param {string} [description="Taxes"] - Descriptive label for this tax calculation
    */
   constructor(
-    grossIncome,
+    totalTaxableIncome,
     adjustedGrossIncome,
     standardDeduction,
     taxableIncome,
@@ -31,7 +31,7 @@ class Taxes {
     description = "Taxes"
   ) {
     this._description = description;
-    this.grossIncome = grossIncome;
+    this.totalTaxableIncome = totalTaxableIncome;
     this.adjustedGrossIncome = adjustedGrossIncome; // Placeholder for future adjustments
     this.standardDeduction = standardDeduction;
     this.taxableIncome = taxableIncome;
@@ -63,8 +63,8 @@ class Taxes {
    * @returns {number} Effective tax rate as decimal (e.g., 0.22 for 22%)
    */
   get effectiveTaxRate() {
-    if (this.grossIncome === 0) return 0;
-    return this.federalTaxesOwed / this.grossIncome;
+    if (this.totalTaxableIncome === 0) return 0;
+    return this.federalTaxesOwed / this.totalTaxableIncome;
   }
 
   /**
@@ -93,7 +93,7 @@ class Taxes {
    * @returns {number} Gross income minus total taxes
    */
   get netIncome() {
-    return this.grossIncome - this.totalTaxes;
+    return this.totalTaxableIncome - this.totalTaxes;
   }
 
   // /**
@@ -173,40 +173,77 @@ class Taxes {
   }
 
   /**
-   * @param {WorkingYearIncome} workingYearIncome
+   * @param {Number} totalIncome
+   * @param {Number} adjustedIncome
    * @param {FiscalData} fiscalData
    * @param {Demographics} demographics
    */
-  static CreateForWorkingYearIncome(
-    workingYearIncome,
+  static CreateFromTaxableIncome(
+    totalIncome,
+    adjustedIncome,
     fiscalData,
     demographics
   ) {
-    const standardDeduction = TaxCalculator.getStandardDeduction(
+    const standardDeduction = TaxCalculations.getStandardDeduction(
       fiscalData,
       demographics
     );
 
-    const taxableIncome = Math.max(
-      0,
-      workingYearIncome.adjustedGrossIncome - standardDeduction
-    );
+    const taxableIncome = Math.max(0, adjustedIncome - standardDeduction);
 
-    const federalIncomeTaxOwed = TaxCalculator.determineFederalIncomeTax(
-      workingYearIncome.getTaxableIncome(),
-      workingYearIncome.getTaxableIncome(),
+    const federalIncomeTaxOwed = TaxCalculations.determineFederalIncomeTax(
+      totalIncome,
+      taxableIncome,
       fiscalData,
       demographics
     );
 
     return new Taxes(
-      workingYearIncome.grossIncome,
-      workingYearIncome.adjustedGrossIncome,
+      totalIncome,
+      adjustedIncome,
       standardDeduction,
       taxableIncome,
-      federalIncomeTaxOwed, // federalTaxesOwed - to be calculated later
-      0, // otherTaxes - to be calculated later
+      federalIncomeTaxOwed,
+      0, // otherTaxes - for future development
       "Taxes"
     );
   }
+
+  // /**
+  //  * @param {WorkingYearIncome} workingYearIncome
+  //  * @param {FiscalData} fiscalData
+  //  * @param {Demographics} demographics
+  //  */
+  // static CreateForWorkingYearIncome(
+  //   workingYearIncome,
+  //   fiscalData,
+  //   demographics
+  // ) {
+  //   const standardDeduction = TaxCalculations.getStandardDeduction(
+  //     fiscalData,
+  //     demographics
+  //   );
+
+  //   const taxableIncome = Math.max(
+  //     0,
+  //     workingYearIncome.adjustedGrossIncome - standardDeduction
+  //   );
+
+  //   const federalIncomeTaxOwed = TaxCalculations.determineFederalIncomeTax(
+  //     workingYearIncome.totalTaxableIncome,
+  //     workingYearIncome.adjustedGrossIncome,
+  //     fiscalData,
+  //     demographics
+  //   );
+
+  //   return new Taxes(
+  //     workingYearIncome.totalTaxableIncome,
+  //     workingYearIncome.adjustedGrossIncome,
+  //     standardDeduction,
+  //     taxableIncome,
+  //     federalIncomeTaxOwed, // federalTaxesOwed - to be calculated later
+  //     0, // otherTaxes - to be calculated later
+  //     "Taxes"
+  //   );
+  // }
 }

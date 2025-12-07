@@ -50,7 +50,9 @@ function calc() {
       inputs.savingsInterestRate
     ),
     new Account(ACCOUNT_TYPES.REVENUE, 0, 0),
-    new Account(ACCOUNT_TYPES.DISBURSEMENT, 0, 0)
+    new Account(ACCOUNT_TYPES.DISBURSEMENT, 0, 0),
+    new Account(ACCOUNT_TYPES.TAXES, 0, 0),
+    new Account(ACCOUNT_TYPES.WITHHOLDINGS, 0, 0)
   );
 
   // Reset calculations array
@@ -60,7 +62,7 @@ function calc() {
   for (let y = 0; y < inputs.totalWorkingYears; y++) {
     const workingYearInputs = initializeInputsForWorkingYear(inputs, y);
 
-    const accountYear = AccountYear.FromAccountsManager(
+    const accountYear = AccountingYear.FromAccountsManager(
       accountGroup,
       TAX_BASE_YEAR + y
     );
@@ -77,11 +79,15 @@ function calc() {
       accountYear
     );
 
-    const yearData = workingYearIncomeCalculator.calculateWorkingYearData();
+    const workingYearData =
+      workingYearIncomeCalculator.calculateWorkingYearData();
+
+    workingYearData.dump("working year");
+    debugger;
 
     calculations.push({
       year: accountYear.taxYear,
-      yearData,
+      yearData: workingYearData,
     });
   }
 
@@ -96,7 +102,7 @@ function calc() {
       yearIndex
     );
 
-    const accountYear = AccountYear.FromAccountsManager(
+    const accountYear = AccountingYear.FromAccountsManager(
       accountGroup,
       TAX_BASE_YEAR + yearIndex
     );
@@ -132,13 +138,17 @@ function initializeInputsForWorkingYear(inputs, yearIndex) {
 
   result.yearIndex = yearIndex;
 
-  result.additionalSpending = getSpendingOverride(result.age).asCurrency();
+  result.additionalSpending = getSpendingOverride(
+    result.currentAge
+  ).asCurrency();
 
   result.setTaxableIncomeAdjustment(
-    getTaxableIncomeOverride(getTaxableIncomeOverride(result.age).asCurrency())
+    getTaxableIncomeOverride(
+      getTaxableIncomeOverride(result.currentAge).asCurrency()
+    )
   );
   result.taxFreeIncomeAdjustment = getTaxFreeIncomeOverride(
-    result.age
+    result.currentAge
   ).asCurrency();
 
   return result;
@@ -153,12 +163,14 @@ function initializeInputsForRetirementYear(inputs, yearIndex) {
 
   result.yearIndex = yearIndex;
 
-  result.additionalSpending = getSpendingOverride(result.age).asCurrency();
+  result.additionalSpending = getSpendingOverride(
+    result.currentAge
+  ).asCurrency();
   result.setTaxableIncomeAdjustment(
-    getTaxableIncomeOverride(result.age).asCurrency()
+    getTaxableIncomeOverride(result.currentAge).asCurrency()
   );
   result.taxFreeIncomeAdjustment = getTaxFreeIncomeOverride(
-    result.age
+    result.currentAge
   ).asCurrency();
   return result;
 }

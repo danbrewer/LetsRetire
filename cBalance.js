@@ -16,7 +16,7 @@ class Balance {
   /**
    * Creates a new Balances instance with account balance data.
    *
-   * @param {AccountYear} accountYear -Accounting year
+   * @param {AccountingYear} accountYear -Accounting year
    * @param {string} accountType
    */
   constructor(accountYear, accountType) {
@@ -42,7 +42,7 @@ class Balance {
   }
 
   /**
-   * @param {AccountYear} accountYear
+   * @param {AccountingYear} accountYear
    * @param {string} accountType
    */
   static CreateUsing(accountYear, accountType) {

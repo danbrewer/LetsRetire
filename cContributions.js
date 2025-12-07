@@ -15,7 +15,7 @@ class Contributions {
   /**
    * Creates a new Contributions instance with contribution breakdown data.
    *
-   * @param {AccountYear} accountYear
+   * @param {AccountingYear} accountYear
    * @param {EmploymentInfo} employmentInfo - Employment information for the primary individual
    * @param {any[]} [calculationDetails=[]] - Detailed calculation information
    */
@@ -422,7 +422,7 @@ class Contributions {
    * by extracting data from employment information, account groups, and
    * contribution calculations.
    *
-   * @param {AccountYear} accountingYear - Accounting year for the contributions
+   * @param {AccountingYear} accountingYear - Accounting year for the contributions
    * @param {EmploymentInfo} employmentInfo - Employment information
    *
    * @returns {Contributions} A new contributions instance with employment-derived data

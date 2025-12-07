@@ -10,7 +10,7 @@
  * @since 1.0.0
  */
 class Withdrawals {
-  /** @type {AccountYear} */
+  /** @type {AccountingYear} */
   #accountYear;
 
   /** @type {string} */
@@ -18,7 +18,7 @@ class Withdrawals {
 
   /**
    * Creates a new Withdrawals instance with withdrawal data from all account types.
-   * @param {AccountYear} accountYear - AccountYear instance for accessing account data
+   * @param {AccountingYear} accountYear - AccountYear instance for accessing account data
    * @param {string} [description="Withdrawals Breakdown"] - Descriptive label for this withdrawal data
    */
   constructor(
@@ -185,7 +185,7 @@ class Withdrawals {
    * no withdrawals, useful for scenarios where withdrawal calculations haven't been
    * performed yet or for baseline comparisons.
    *
-   * @param {AccountYear} accountYear - AccountYear instance
+   * @param {AccountingYear} accountYear - AccountYear instance
    * @param {string} [description="Withdrawals Breakdown"] - Optional description
    *
    * @returns {Withdrawals} A new Withdrawals instance with all values set to zero
@@ -223,7 +223,7 @@ class Withdrawals {
    * extracting withdrawal amounts from an AccountGroup and income breakdown for
    * a specific tax year. It handles the withdrawal calculations automatically.
    *
-   * @param {AccountYear} accountYear - AccountGroup instance containing all accounts
+   * @param {AccountingYear} accountYear - AccountGroup instance containing all accounts
    * @param {string} [description="Withdrawals Breakdown"] - Optional description
    *
    * @returns {Withdrawals} A new Withdrawals instance with current withdrawal amounts

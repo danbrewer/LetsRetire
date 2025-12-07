@@ -12,7 +12,7 @@ class WithdrawalFactory {
   /** @type {Demographics} */
   #demographics;
 
-  /** @type {AccountYear} */
+  /** @type {AccountingYear} */
   #accountYear;
 
   /** @type {IncomeRs | null} */
@@ -29,7 +29,7 @@ class WithdrawalFactory {
    * @param {IncomeStreams} fixedIncomeStreams
    * @param {FiscalData} fiscalData
    * @param {Demographics} demographics
-   * @param {AccountYear} accountYear
+   * @param {AccountingYear} accountYear
    */
   constructor(fixedIncomeStreams, fiscalData, demographics, accountYear) {
     // **************
@@ -469,7 +469,7 @@ class WithdrawalFactory {
    * @param {IncomeStreams} incomeStreams
    * @param {FiscalData} fiscalData
    * @param {Demographics} demographics
-   * @param {AccountYear} accountYear
+   * @param {AccountingYear} accountYear
    */
   static CreateUsing(incomeStreams, fiscalData, demographics, accountYear) {
     return new WithdrawalFactory(
