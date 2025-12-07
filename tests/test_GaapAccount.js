@@ -5,6 +5,11 @@ console.log("==========================================");
 console.log("Testing GAAP Account System");
 console.log("==========================================");
 
+// Global counters
+let TESTS_RUN = 0;
+let TESTS_PASSED = 0;
+let TESTS_FAILED = 0;
+
 const { EnumBase } = require("../cEnum.js");
 // Load your GAAP module
 const {
@@ -23,6 +28,21 @@ function assert(condition, message) {
   if (!condition) throw new Error(`Assertion failed: ${message}`);
 }
 
+function assertThrows(
+  fn,
+  message = "Expected function to throw, but it did not."
+) {
+  let threw = false;
+  try {
+    fn();
+  } catch (_) {
+    threw = true;
+  }
+  if (!threw) {
+    throw new Error(`Assertion failed: ${message}`);
+  }
+}
+
 function assertEqual(actual, expected, message) {
   if (actual !== expected) {
     throw new Error(
@@ -31,14 +51,18 @@ function assertEqual(actual, expected, message) {
   }
 }
 
-function runTest(name, fn) {
+function runTest(testName, testFunction) {
+  TESTS_RUN++;
+
   try {
-    console.log(`\n🧪 Running test: ${name}`);
-    fn();
-    console.log(`✅ PASSED: ${name}`);
-  } catch (e) {
-    console.log(`❌ FAILED: ${name}`);
-    console.log(`   Error: ${e.message}`);
+    console.log(`\n🧪 Running test: ${testName}`);
+    testFunction();
+    console.log(`✅ PASSED: ${testName}`);
+    TESTS_PASSED++;
+  } catch (error) {
+    console.log(`❌ FAILED: ${testName}`);
+    console.log(`   Error: ${error.message}`);
+    TESTS_FAILED++;
   }
 }
 
@@ -197,6 +221,54 @@ runTest("GaapAccount.apply() works for Expense accounts", () => {
   );
 });
 
+//
+// EDGE CASE TESTS — GaapAccountType
+//
+
+// Test: GaapAccountType.parse throws for invalid string
+runTest("GaapAccountType.parse should throw on invalid name", () => {
+  assertThrows(() => GaapAccountType.parse("NotARealType"));
+});
+
+// Test: GaapAccountType.tryParse returns null for invalid string
+runTest("GaapAccountType.tryParse returns null for invalid name", () => {
+  const result = GaapAccountType.tryParse("BOGUS");
+  assert(result === null, "tryParse should return null for invalid type");
+});
+
+// Test: toName() throws exception for raw Symbols not belonging to this enum
+runTest("GaapAccountType.toName throws on external symbols", () => {
+  assertThrows(() => GaapAccountType.toName(Symbol("Random.Unrelated")));
+});
+
+// Test: values() returns symbols only
+runTest("GaapAccountType.values returns only symbols", () => {
+  const vals = GaapAccountType.values();
+  assert(vals.length === 5, "Should return 5 enum values");
+  vals.forEach((v) => {
+    assert(typeof v === "symbol", "Each enum value must be a symbol");
+  });
+});
+
+// Test: names() returns correct string-literal list
+runTest("GaapAccountType.names returns correct strings", () => {
+  const names = GaapAccountType.names().sort();
+  const expected = Object.keys(GaapAccountTypeNames).sort();
+  assert(
+    JSON.stringify(names) === JSON.stringify(expected),
+    "GaapAccountType.names() should return correct names"
+  );
+});
+
 console.log("\n==========================================");
-console.log("GAAP Account System Tests Completed");
-console.log("==========================================\n");
+console.log("              TEST SUMMARY");
+console.log("==========================================");
+console.log(`Total tests run:    ${TESTS_RUN}`);
+console.log(`Passed:             ${TESTS_PASSED}`);
+console.log(`Failed:             ${TESTS_FAILED}`);
+
+if (TESTS_FAILED === 0) {
+  console.log("\n🎉 ALL TESTS PASSED — GREAT JOB!\n");
+} else {
+  console.log(`\n🔥 ${TESTS_FAILED} TEST(S) FAILED — REVIEW REQUIRED\n`);
+}
