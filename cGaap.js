@@ -170,41 +170,37 @@ class GaapPostingBuilder {
 // TRANSACTION
 // -------------------------------------------------------------
 
-class GaapTransaction {
-  /**
-   * @param {Date} date
-   * @param {string} description
-   * @param {GaapPosting[]} postings
-   */
-  constructor(date, description, postings) {
-    if (!(date instanceof Date)) throw new Error("Date required");
-    if (!Array.isArray(postings) || postings.length < 2)
-      throw new Error("Transaction must have 2+ postings");
+// class GaapTransaction {
+//   /**
+//    * @param {string} description
+//    * @param {GaapPosting[]} postings
+//    */
+//   constructor(description, postings) {
+//     if (!Array.isArray(postings) || postings.length < 2)
+//       throw new Error("Transaction must have 2+ postings");
 
-    for (const p of postings) {
-      if (p.amount < 0) throw new Error("Amounts must be >= 0");
-    }
+//     for (const p of postings) {
+//       if (p.amount < 0) throw new Error("Amounts must be >= 0");
+//     }
 
-    const debits = postings
-      .filter((p) => p.side === GaapPostingSide.Debit)
-      .reduce((a, b) => a + b.amount, 0);
-    const credits = postings
-      .filter((p) => p.side === GaapPostingSide.Credit)
-      .reduce((a, b) => a + b.amount, 0);
+//     const debits = postings
+//       .filter((p) => p.side === GaapPostingSide.Debit)
+//       .reduce((a, b) => a + b.amount, 0);
+//     const credits = postings
+//       .filter((p) => p.side === GaapPostingSide.Credit)
+//       .reduce((a, b) => a + b.amount, 0);
 
-    if (debits !== credits)
-      throw new Error("Transaction unbalanced: debits !== credits");
+//     if (debits !== credits)
+//       throw new Error("Transaction unbalanced: debits !== credits");
 
-    /** @type {number} */
-    this.id = nextGaapId();
-    /** @type {Date} */
-    this.date = date;
-    /** @type {string} */
-    this.description = description;
-    /** @type {GaapPosting[]} */
-    this.postings = postings;
-  }
-}
+//     /** @type {number} */
+//     this.id = nextGaapId();
+//     /** @type {string} */
+//     this.description = description;
+//     /** @type {GaapPosting[]} */
+//     this.postings = postings;
+//   }
+// }
 
 // -------------------------------------------------------------
 // ACCOUNT
@@ -223,6 +219,8 @@ class GaapAccount {
     this.normalBalance =
       GAAP_NORMAL_BALANCE_BY_TYPE[GaapAccountType.toName(type)];
     this.isDebitNormal = this.normalBalance === GaapPostingSide.Debit;
+    this.isCashAccount =
+      name.toLowerCase().includes("cash") && type === GaapAccountType.Asset;
   }
 
   /**
@@ -282,8 +280,7 @@ class GaapAccount {
    */
   #getBalance(journalEntries) {
     const postings = journalEntries
-      .flatMap((je) => je.transactions)
-      .flatMap((txn) => txn.postings)
+      .flatMap((je) => je.postings)
       .filter((p) => p.accountId === this.id);
 
     const balance = postings.reduce((sum, p) => {
@@ -320,12 +317,48 @@ class GaapJournalEntry {
   /**
    * @param {Date} date
    * @param {string} description
-   * @param {GaapTransaction[]} transactions
+   * @param {GaapPosting[]} postings
    */
-  constructor(date, description, transactions) {
+  constructor(date, description, postings) {
+    if (!(date instanceof Date)) {
+      throw new Error("JournalEntry requires a valid Date");
+    }
+    if (!Array.isArray(postings) || postings.length < 2) {
+      throw new Error(
+        "A JournalEntry requires 2+ postings (debit and credit)."
+      );
+    }
+
     this.date = date;
     this.description = description;
-    this.transactions = transactions;
+
+    // Validate postings
+    for (const p of postings) {
+      if (p.amount <= 0) throw new Error("Posting amounts must be > 0");
+      if (
+        p.side !== GaapPostingSide.Debit &&
+        p.side !== GaapPostingSide.Credit
+      ) {
+        throw new Error("Posting side must be Debit or Credit");
+      }
+    }
+
+    // Validate that total balance = 0
+    const totalDebits = postings
+      .filter((p) => p.side === GaapPostingSide.Debit)
+      .reduce((s, p) => s + p.amount, 0);
+
+    const totalCredits = postings
+      .filter((p) => p.side === GaapPostingSide.Credit)
+      .reduce((s, p) => s + p.amount, 0);
+
+    if (totalDebits !== totalCredits) {
+      throw new Error(
+        `Unbalanced JournalEntry: debits=${totalDebits}, credits=${totalCredits}`
+      );
+    }
+
+    this.postings = postings;
   }
 }
 
@@ -356,11 +389,12 @@ class GaapLedger {
   /**
    * @param {Date} date
    * @param {string} description
-   * @param {GaapTransaction[]} transactions
+   * @param {GaapPosting[]} postings
    */
-  record(date, description, transactions) {
-    const journalEntry = new GaapJournalEntry(date, description, transactions);
+  record(date, description, postings) {
+    const journalEntry = new GaapJournalEntry(date, description, postings);
     this.journalEntries.push(journalEntry);
+    return journalEntry;
   }
 
   // ---------------------------------------------------------
@@ -375,19 +409,15 @@ class GaapLedger {
   _accountBalanceAsOf(account, asOf) {
     let balance = 0;
 
-    const transactions = this.journalEntries
+    return this.journalEntries
       .filter((je) => je.date <= asOf)
-      .flatMap((je) => je.transactions);
-
-    for (const txn of transactions) {
-      for (const p of txn.postings) {
-        if (p.accountId === account.id) {
-          balance += account.apply(p.side, p.amount);
-        }
-      }
-    }
-
-    return balance;
+      .flatMap((je) => je.postings)
+      .filter((p) => p.accountId === account.id)
+      .reduce(
+        (balance, posting) =>
+          (balance += account.apply(posting.side, posting.amount)),
+        0
+      );
   }
 
   /**
@@ -399,23 +429,15 @@ class GaapLedger {
     */
   _accountActivityBetween(accountId, start, end) {
     // Get all transactions in date range
-    const transactions = this.journalEntries
+    return this.journalEntries
       .filter((je) => je.date >= start && je.date <= end)
-      .flatMap((je) => je.transactions);
-
-    // Get all postings for the accountId
-    const postings = transactions.flatMap((t) =>
-      t.postings.filter((p) => p.accountId === accountId)
-    );
-
-    // Sum up all posting amounts for the account
-    const amt = postings.reduce((sum, p) => {
-      const account = this.accounts.find((a) => a.id === p.accountId);
-      if (!account) return sum;
-      return sum + account.apply(p.side, p.amount);
-    }, 0);
-
-    return amt;
+      .flatMap((je) => je.postings)
+      .filter((p) => p.accountId === accountId)
+      .reduce((balance, posting) => {
+        const account = this.accounts.find((a) => a.id === posting.accountId);
+        if (!account) return balance;
+        return balance + account.apply(posting.side, posting.amount);
+      }, 0);
   }
 
   // ---------------------------------------------------------
@@ -480,6 +502,64 @@ class GaapLedger {
     };
   }
 
+  /**
+   * @param {number} totalAmount
+   * @param {number[]} weightedAmounts
+   * @returns {number[]} allocations
+   */
+  allocateProportionally(totalAmount, weightedAmounts) {
+    if (weightedAmounts.length === 0) return [];
+
+    if (weightedAmounts.some((w) => w < 0)) {
+      throw new Error("All weightedAmounts must be non-negative");
+    }
+
+    const weightedTotal = weightedAmounts.reduce(
+      (sum, weightedAmount) => sum + weightedAmount,
+      0
+    );
+
+    // Compute exact fractional allocations
+    const raw = weightedAmounts.map(
+      (weightedAmount) => totalAmount * (weightedAmount / weightedTotal)
+    );
+
+    // Floor toward zero for GAAP-friendly rounding
+    const floored = raw.map((x) => (x < 0 ? Math.ceil(x) : Math.floor(x)));
+
+    const sumFloored = floored.reduce((s, v) => s + v, 0);
+
+    // Remainder we must distribute
+    let remainder = totalAmount - sumFloored;
+
+    if (remainder === 0) {
+      return floored; // perfect match, no fractional parts
+    }
+
+    // Compute fractional remainders
+    const fracParts = raw.map((x, i) => ({
+      index: i,
+      frac: Math.abs(x - floored[i]), // deviation from floored value
+    }));
+
+    // Sort descending by fractional remainder
+    fracParts.sort((a, b) => b.frac - a.frac);
+
+    // Distribute the remainder to the largest fractional portions first
+    const result = [...floored];
+
+    const direction = remainder < 0 ? -1 : 1;
+    remainder = Math.abs(remainder);
+
+    for (let i = 0; i < fracParts.length && remainder > 0; i++) {
+      const idx = fracParts[i].index;
+      result[idx] += direction;
+      remainder--;
+    }
+
+    return result;
+  }
+
   // ---------------------------------------------------------
   // STATEMENT OF CASH FLOWS (PERIOD)
   // ---------------------------------------------------------
@@ -489,28 +569,16 @@ class GaapLedger {
    */
   getCashFlowStatement(startDate, endDate) {
     // First: identify the cash account(s)
-    const cashAccountIds = this.accounts
-      .filter((a) => a.name.toLowerCase().includes("cash"))
-      .map((a) => a.id);
-
-    if (cashAccountIds.length === 0) {
+    if (!this.accounts.some((a) => a.isCashAccount)) {
       throw new Error("No cash account found. Name must include 'Cash'.");
     }
 
-    // Combined cash flow from all cash accounts
-    let netCashChange = 0;
-    for (const cashAcctId of cashAccountIds) {
-      netCashChange += this._accountActivityBetween(
-        cashAcctId,
-        startDate,
-        endDate
-      );
-    }
+    const cashAccounts = this.accounts.filter((a) => a.isCashAccount);
 
-    const isCashAccount = (/** @type {Number} */ accId) =>
-      cashAccountIds.includes(accId);
+    const isCashAccount = (/** @type {number} */ accountId) =>
+      cashAccounts.some((a) => a.id === accountId);
 
-    // Classify inflows/outflows by account type
+    // Totals
     let operating = 0;
     let investing = 0;
     let financing = 0;
@@ -527,34 +595,77 @@ class GaapLedger {
       acc.type === GaapAccountType.Equity ||
       acc.type === GaapAccountType.Liability;
 
-    const entriesAffectingCash = this.journalEntries
+    // Net cash change from actual cash accounts (already correct)
+    let netCashChange = 0;
+    for (const cashAccount of cashAccounts) {
+      netCashChange += this._accountActivityBetween(
+        cashAccount.id,
+        startDate,
+        endDate
+      );
+    }
+
+    const journalEntriesAffectiveCash = this.journalEntries
       .filter((je) => je.date >= startDate && je.date <= endDate)
-      .filter((je) =>
-        je.transactions.some((txn) =>
-          txn.postings.some((p) => isCashAccount(p.accountId))
-        )
+      .filter((je) => je.postings.some((p) => isCashAccount(p.accountId)));
+
+    for (const je of journalEntriesAffectiveCash) {
+      const cashPostings = je.postings.filter((p) =>
+        isCashAccount(p.accountId)
+      );
+      const nonCashPostings = je.postings.filter(
+        (p) => !isCashAccount(p.accountId)
       );
 
-    for (const je of entriesAffectingCash) {
-      //   for (const p of txn.postings.filter((p) => isCashAccount(p.accountId))) {
-      // Find the OTHER side(s) of the posting
-      const otherPostings = je.transactions
-        .flatMap((t) => t.postings)
-        .filter((p) => isCashAccount(p.accountId) == false);
-      for (const otherPosting of otherPostings) {
-        const account = this.accounts.find(
-          (a) => a.id === otherPosting.accountId
-        );
+      // Determine cash movement *sign* from cash postings
+      // (Debit = cash inflow, Credit = outflow)
+      let cashDelta = 0;
+      for (const cashPosting of cashPostings) {
+        cashDelta +=
+          cashPosting.side === GaapPostingSide.Debit
+            ? cashPosting.amount
+            : -cashPosting.amount;
+      }
+
+      if (cashDelta === 0 || nonCashPostings.length === 0) {
+        // No net cash movement; skip
+        continue;
+      }
+
+      // Extract amounts for allocation algorithm
+      const nonCashAmounts = nonCashPostings.map((p) => p.amount);
+
+      // Compute proportional allocations (guaranteed to sum to cashDelta)
+      const allocations = this.allocateProportionally(
+        cashDelta,
+        nonCashAmounts
+      );
+
+      // Classify each allocated portion
+      for (let i = 0; i < nonCashPostings.length; i++) {
+        const posting = nonCashPostings[i];
+        const allocated = allocations[i];
+
+        const account = this.accounts.find((a) => a.id === posting.accountId);
         if (!account) continue;
 
-        // Classify based on account type
-        const delta = account.apply(otherPosting.side, otherPosting.amount);
-
-        if (isOperating(account)) operating += delta;
-        else if (isInvesting(account)) investing += delta;
-        else if (isFinancing(account)) financing += delta;
+        if (isOperating(account)) operating += allocated;
+        else if (isInvesting(account)) investing += allocated;
+        else if (isFinancing(account)) financing += allocated;
       }
-      //   }
+
+      // for (const nonCashPosting of nonCashPostings) {
+      //   const account = this.accounts.find(
+      //     (a) => a.id === nonCashPosting.accountId
+      //   );
+      //   if (!account) continue;
+
+      //   const allocated = (cashDelta < 0 ? -1 : 1) * nonCashPosting.amount;
+
+      //   if (isOperating(account)) operating += allocated;
+      //   else if (isInvesting(account)) investing += allocated;
+      //   else if (isFinancing(account)) financing += allocated;
+      // }
     }
 
     return {
@@ -593,7 +704,6 @@ if (typeof module !== "undefined" && module.exports) {
     GaapAccount,
     GaapPostingSide,
     GaapPostingBuilder,
-    GaapTransaction,
     // ...anything else you need in tests
   };
 }

@@ -9,12 +9,10 @@ const {
   runTest,
   TestTracker,
 } = require("./baseTest.js");
-const { EnumBase } = require("../cEnum.js");
 
 // Load the GAAP module
 const {
   GaapAccountType,
-  GAAP_NORMAL_BALANCE_BY_TYPE,
   GaapAccount,
   GaapPostingSide,
   GaapPostingBuilder,
