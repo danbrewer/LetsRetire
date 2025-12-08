@@ -18,9 +18,15 @@ const GaapAccountTypeNames = /** @type {const} */ ({
 });
 
 /**
- *
  * @typedef {typeof GaapAccountTypeNames[keyof typeof GaapAccountTypeNames]} GaapAccountTypeName
  */
+
+const GaapPostingSide = /** @type {const} */ ({
+  Debit: "Debit",
+  Credit: "Credit",
+});
+
+/** @typedef {"Debit" | "Credit"} GaapPostingSideName */
 
 // -------------------------------------------------------------
 class GaapAccountTypeEnum extends EnumBase {
@@ -66,28 +72,14 @@ Runtime examples of GaapAccountType:
 const GaapAccountType = new GaapAccountTypeEnum();
 
 /**
- * @enum {symbol}
- */
-const GaapNormalBalance = Object.freeze({
-  Debit: Symbol("Debit"),
-  Credit: Symbol("Credit"),
-});
-
-/** @enum {symbol} */
-const GaapTransactionSide = Object.freeze({
-  Debit: Symbol("debit"),
-  Credit: Symbol("credit"),
-});
-
-/**
- * @type {Record<GaapAccountTypeName, GaapNormalBalance>}
+ * @type {Record<GaapAccountTypeName, GaapPostingSideName>}
  */
 const GAAP_NORMAL_BALANCE_BY_TYPE = Object.freeze({
-  Asset: GaapNormalBalance.Debit,
-  Expense: GaapNormalBalance.Debit,
-  Liability: GaapNormalBalance.Credit,
-  Equity: GaapNormalBalance.Credit,
-  Income: GaapNormalBalance.Credit,
+  Asset: GaapPostingSide.Debit,
+  Expense: GaapPostingSide.Debit,
+  Liability: GaapPostingSide.Credit,
+  Equity: GaapPostingSide.Credit,
+  Income: GaapPostingSide.Credit,
 });
 
 // Utility: simple ID generator
@@ -114,9 +106,9 @@ class GaapPostingBuilder {
    * @param {number} amount
    */
   deposit(account, amount) {
-    return account.isDebitNormal ? 
-        this.#debit(account, amount) : 
-        this.#credit(account, amount);
+    return account.isDebitNormal
+      ? this.#debit(account, amount)
+      : this.#credit(account, amount);
   }
 
   /**
@@ -124,9 +116,9 @@ class GaapPostingBuilder {
    * @param {number} amount
    */
   withdraw(account, amount) {
-        return account.isDebitNormal
-          ? this.#credit(account, amount)
-          : this.#debit(account, amount);
+    return account.isDebitNormal
+      ? this.#credit(account, amount)
+      : this.#debit(account, amount);
   }
 
   /**
@@ -136,7 +128,7 @@ class GaapPostingBuilder {
   #debit(account, amount) {
     this.postings.push({
       accountId: account.id,
-      side: GaapTransactionSide.Debit,
+      side: GaapPostingSide.Debit,
       amount,
     });
     return this;
@@ -149,7 +141,7 @@ class GaapPostingBuilder {
   #credit(account, amount) {
     this.postings.push({
       accountId: account.id,
-      side: GaapTransactionSide.Credit,
+      side: GaapPostingSide.Credit,
       amount,
     });
     return this;
@@ -171,7 +163,7 @@ class GaapPostingBuilder {
  * @typedef {Object} GaapPosting
  * @property {number} accountId
  * @property {number} amount
- * @property {GaapTransactionSide} side
+ * @property {GaapPostingSideName} side
  */
 
 // -------------------------------------------------------------
@@ -194,10 +186,10 @@ class GaapTransaction {
     }
 
     const debits = postings
-      .filter((p) => p.side === GaapTransactionSide.Debit)
+      .filter((p) => p.side === GaapPostingSide.Debit)
       .reduce((a, b) => a + b.amount, 0);
     const credits = postings
-      .filter((p) => p.side === GaapTransactionSide.Credit)
+      .filter((p) => p.side === GaapPostingSide.Credit)
       .reduce((a, b) => a + b.amount, 0);
 
     if (debits !== credits)
@@ -230,7 +222,7 @@ class GaapAccount {
     this.type = type;
     this.normalBalance =
       GAAP_NORMAL_BALANCE_BY_TYPE[GaapAccountType.toName(type)];
-    this.isDebitNormal = this.normalBalance === GaapNormalBalance.Debit;
+    this.isDebitNormal = this.normalBalance === GaapPostingSide.Debit;
   }
 
   /**
@@ -271,15 +263,15 @@ class GaapAccount {
   /**
    * Apply one posting.
    *
-   * @param {GaapTransactionSide} side
+   * @param {GaapPostingSideName} side
    * @param {number} amount
    */
   apply(side, amount) {
     const increase =
-      (side === GaapTransactionSide.Debit &&
-        this.normalBalance === GaapNormalBalance.Debit) ||
-      (side === GaapTransactionSide.Credit &&
-        this.normalBalance === GaapNormalBalance.Credit);
+      (side === GaapPostingSide.Debit &&
+        this.normalBalance === GaapPostingSide.Debit) ||
+      (side === GaapPostingSide.Credit &&
+        this.normalBalance === GaapPostingSide.Credit);
 
     return increase ? amount : -amount;
   }
@@ -597,10 +589,11 @@ if (typeof module !== "undefined" && module.exports) {
   module.exports = {
     GaapAccountTypeNames,
     GaapAccountType,
-    GaapNormalBalance,
     GAAP_NORMAL_BALANCE_BY_TYPE,
     GaapAccount,
-    GaapTransactionSide,
+    GaapPostingSide,
+    GaapPostingBuilder,
+    GaapTransaction,
     // ...anything else you need in tests
   };
 }
