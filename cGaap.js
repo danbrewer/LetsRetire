@@ -29,6 +29,24 @@ const GaapPostingSide = /** @type {const} */ ({
 /** @typedef {"Debit" | "Credit"} GaapPostingSideName */
 
 // -------------------------------------------------------------
+
+/**
+ * EnumBase contract:
+ *   - .map: Record<string, symbol>
+ *   - .toName(symbol): string | undefined
+ *   - .parse(name: string): symbol
+ *
+ * EnumBase guarantees that:
+ *   this.map = { [name: string]: symbol }
+ *
+ * Example:
+ *   this.map.Asset === Symbol("GaapAccountType.Asset")
+ *
+ * This class relies on:
+ *   - this.map[name] → symbol
+ *   - .toName(symbol) → name
+ *   - .parse(name) → symbol (from EnumBase or overridden here)
+ */
 class GaapAccountTypeEnum extends EnumBase {
   constructor() {
     super("GaapAccountType", Object.values(GaapAccountTypeNames));
@@ -106,6 +124,7 @@ class GaapPostingBuilder {
    * @param {number} amount
    */
   deposit(account, amount) {
+    if (amount <= 0) throw new Error("Posting amount must be > 0");
     return account.isDebitNormal
       ? this.#debit(account, amount)
       : this.#credit(account, amount);
@@ -116,6 +135,7 @@ class GaapPostingBuilder {
    * @param {number} amount
    */
   withdraw(account, amount) {
+    if (amount <= 0) throw new Error("Posting amount must be > 0");
     return account.isDebitNormal
       ? this.#credit(account, amount)
       : this.#debit(account, amount);
@@ -126,11 +146,7 @@ class GaapPostingBuilder {
    * @param {number} amount
    */
   #debit(account, amount) {
-    this.postings.push({
-      accountId: account.id,
-      side: GaapPostingSide.Debit,
-      amount,
-    });
+    this.postings.push(new GaapPosting(account, amount, GaapPostingSide.Debit));
     return this;
   }
 
@@ -139,11 +155,9 @@ class GaapPostingBuilder {
    * @param {number} amount
    */
   #credit(account, amount) {
-    this.postings.push({
-      accountId: account.id,
-      side: GaapPostingSide.Credit,
-      amount,
-    });
+    this.postings.push(
+      new GaapPosting(account, amount, GaapPostingSide.Credit)
+    );
     return this;
   }
 
@@ -151,7 +165,7 @@ class GaapPostingBuilder {
    * @returns {GaapPosting[]}
    */
   build() {
-    return this.postings;
+    return [...this.postings];
   }
 }
 
@@ -159,12 +173,24 @@ class GaapPostingBuilder {
 // TYPES
 // -------------------------------------------------------------
 
-/**
- * @typedef {Object} GaapPosting
- * @property {number} accountId
- * @property {number} amount
- * @property {GaapPostingSideName} side
- */
+class GaapPosting {
+  /**
+   * @param {GaapAccount} account
+   * @param {number} amount
+   * @param {GaapPostingSideName} side
+   * */
+
+  constructor(account, amount, side) {
+    if (amount <= 0) throw new Error("Posting amount must be > 0");
+
+    this.account = account;
+    this.amount = amount;
+    this.side = side;
+
+    // Postings are immutable
+    Object.freeze(this);
+  }
+}
 
 // -------------------------------------------------------------
 // TRANSACTION
@@ -207,20 +233,69 @@ class GaapPostingBuilder {
 // -------------------------------------------------------------
 
 class GaapAccount {
+  static #constructorToken = Symbol("Secret");
   /**
+   * @param {symbol} token
    * @param {string} name
-   * @param {symbol} type
+   * @param {symbol} accountType
+   * @param {boolean} isCashAccount
    */
-  constructor(name, type) {
+  constructor(token, name, accountType, isCashAccount) {
+    if (token !== GaapAccount.#constructorToken) {
+      throw new Error(
+        "This constructor is private. Use static factory methods."
+      );
+    }
+
+    if (!Object.values(GaapAccountType.map).includes(accountType)) {
+      throw new Error("Invalid account type");
+    }
+
+    if (typeof name !== "string" || name.trim() === "") {
+      throw new Error("Invalid account name");
+    }
+
+    if (typeof isCashAccount !== "boolean") {
+      throw new Error("isCashAccount must be a boolean");
+    }
+
+    if (isCashAccount && accountType !== GaapAccountType.Asset) {
+      throw new Error("Cash accounts MUST be Asset accounts");
+    }
+
     /** @type {number} */
     this.id = nextGaapId();
     this.name = name;
-    this.type = type;
+    this.type = accountType;
     this.normalBalance =
-      GAAP_NORMAL_BALANCE_BY_TYPE[GaapAccountType.toName(type)];
+      GAAP_NORMAL_BALANCE_BY_TYPE[GaapAccountType.toName(accountType)];
     this.isDebitNormal = this.normalBalance === GaapPostingSide.Debit;
-    this.isCashAccount =
-      name.toLowerCase().includes("cash") && type === GaapAccountType.Asset;
+    this.isCashAccount = isCashAccount;
+  }
+
+  /**
+   * @param {string} accountName
+   */
+  static CreateCashAccount(accountName) {
+    return new GaapAccount(
+      GaapAccount.#constructorToken,
+      accountName,
+      GaapAccountType.Asset,
+      true
+    );
+  }
+
+  /**
+   * @param {string} accountName
+   * @param {symbol} accountType
+   */
+  static CreateNonCashAccount(accountName, accountType) {
+    return new GaapAccount(
+      GaapAccount.#constructorToken,
+      accountName,
+      accountType,
+      false
+    );
   }
 
   /**
@@ -281,7 +356,7 @@ class GaapAccount {
   #getBalance(journalEntries) {
     const postings = journalEntries
       .flatMap((je) => je.postings)
-      .filter((p) => p.accountId === this.id);
+      .filter((p) => p.account.id === this.id);
 
     const balance = postings.reduce((sum, p) => {
       return sum + this.apply(p.side, p.amount);
@@ -329,11 +404,25 @@ class GaapJournalEntry {
       );
     }
 
+    this.id = nextGaapId();
+    /** @type {Date} */
     this.date = date;
     this.description = description;
 
+    const sortedPostings = postings.slice().sort((a, b) => {
+      // Explicit ranking: lower value sorts first
+      const rank = (/** @type {GaapPosting} */ p) => (p.side === GaapPostingSide.Debit ? 0 : 1);
+
+      const diff = rank(a) - rank(b);
+      if (diff !== 0) return diff;
+
+      // If we got here (because both postings are Debit 
+      // or both are Credit), sort by account name alphabetically
+      return a.account.name.localeCompare(b.account.name);
+    });
+
     // Validate postings
-    for (const p of postings) {
+    for (const p of sortedPostings) {
       if (p.amount <= 0) throw new Error("Posting amounts must be > 0");
       if (
         p.side !== GaapPostingSide.Debit &&
@@ -344,11 +433,11 @@ class GaapJournalEntry {
     }
 
     // Validate that total balance = 0
-    const totalDebits = postings
+    const totalDebits = sortedPostings
       .filter((p) => p.side === GaapPostingSide.Debit)
       .reduce((s, p) => s + p.amount, 0);
 
-    const totalCredits = postings
+    const totalCredits = sortedPostings
       .filter((p) => p.side === GaapPostingSide.Credit)
       .reduce((s, p) => s + p.amount, 0);
 
@@ -358,7 +447,145 @@ class GaapJournalEntry {
       );
     }
 
-    this.postings = postings;
+    this.postings = Object.freeze(sortedPostings);
+  }
+
+  toString() {
+    const lines = [];
+    lines.push(`Journal Entry #${this.id}`);
+    lines.push(`Date: ${this.date.toISOString().split("T")[0]}`);
+    lines.push(`Description: ${this.description}`);
+    lines.push("");
+
+    // Column widths
+    const accountWidth = Math.max(
+      ...this.postings.map((p) => p.account.name.length),
+      "Account".length
+    );
+
+    const amountWidth = Math.max(
+      ...this.postings.map((p) => String(p.amount).length),
+      "Amount".length
+    );
+
+    const header =
+      `${"Account".padEnd(accountWidth)}  ` +
+      `Dr`.padStart(4) +
+      "  " +
+      `Cr`.padStart(4) +
+      "  " +
+      `${"Amount".padStart(amountWidth)}`;
+
+    lines.push(header);
+    lines.push("-".repeat(header.length));
+
+    for (const p of this.postings) {
+      const isDebit = p.side === "Debit";
+
+      const drCol = isDebit ? "Dr".padStart(4) : "".padStart(4);
+      const crCol = isDebit ? "".padStart(4) : "Cr".padStart(4);
+
+      lines.push(
+        `${p.account.name.padEnd(accountWidth)}  ` +
+          `${drCol}  ` +
+          `${crCol}  ` +
+          `${String(p.amount).padStart(amountWidth)}`
+      );
+    }
+
+    // Totals
+    const totalDr = this.postings
+      .filter((p) => p.side === "Debit")
+      .reduce((s, p) => s + p.amount, 0);
+
+    const totalCr = this.postings
+      .filter((p) => p.side === "Credit")
+      .reduce((s, p) => s + p.amount, 0);
+
+    lines.push("");
+    lines.push(`Total Debits:  ${totalDr}`);
+    lines.push(`Total Credits: ${totalCr}`);
+    lines.push(
+      totalDr === totalCr ? "Status: BALANCED ✔" : "Status: UNBALANCED ✘"
+    );
+
+    return lines.join("\n");
+  }
+}
+
+class GaapJournalEntryBuilder {
+  /**
+   * @param {GaapLedger} ledger
+   * @param {Date} date
+   * @param {string} description
+   */
+  constructor(ledger, date, description) {
+    if (!(date instanceof Date)) {
+      throw new Error("JournalEntryBuilder requires a valid Date");
+    }
+
+    this.ledger = ledger;
+    this.date = date;
+    this.description = description;
+
+    /** @type {GaapPosting[]} */
+    this.postings = [];
+  }
+
+  /**
+   * Add a debit posting.
+   * @param {GaapAccount} account
+   * @param {number} amount
+   */
+  debit(account, amount) {
+    if (amount <= 0) {
+      throw new Error("Debit amount must be > 0");
+    }
+
+    this.postings.push(new GaapPosting(account, amount, GaapPostingSide.Debit));
+    return this;
+  }
+
+  /**
+   * Add a credit posting.
+   * @param {GaapAccount} account
+   * @param {number} amount
+   */
+  credit(account, amount) {
+    if (amount <= 0) {
+      throw new Error("Credit amount must be > 0");
+    }
+
+    this.postings.push(
+      new GaapPosting(account, amount, GaapPostingSide.Credit)
+    );
+    return this;
+  }
+
+  /**
+   * Validates and posts the journal entry to the ledger.
+   */
+  post() {
+    if (this.postings.length < 2) {
+      throw new Error("A Journal Entry must contain at least 2 postings.");
+    }
+
+    const totalDebits = this.postings
+      .filter((p) => p.side === GaapPostingSide.Debit)
+      .reduce((s, p) => s + p.amount, 0);
+
+    const totalCredits = this.postings
+      .filter((p) => p.side === GaapPostingSide.Credit)
+      .reduce((s, p) => s + p.amount, 0);
+
+    if (totalDebits !== totalCredits) {
+      throw new Error(
+        `Unbalanced JournalEntry: debits=${totalDebits} credits=${totalCredits}`
+      );
+    }
+
+    // Create GaapJournalEntry (which will sort postings, etc.)
+    return this.ledger.record(this.date, this.description, this.postings);
   }
 }
 
@@ -377,11 +604,19 @@ class GaapLedger {
 
   /**
    * @param {string} name
-   * @param {GaapAccountTypeName} typeName
    */
-  createAccount(name, typeName) {
-    const typeSymbol = GaapAccountType.parse(typeName);
-    const acct = new GaapAccount(name, typeSymbol);
+  createCashAccount(name) {
+    const acct = GaapAccount.CreateCashAccount(name);
+    this.accounts.push(acct);
+    return acct;
+  }
+
+  /**
+   * @param {string} name
+   * @param {symbol} accountType
+   */
+  createNonCashAccount(name, accountType) {
+    const acct = GaapAccount.CreateNonCashAccount(name, accountType);
     this.accounts.push(acct);
     return acct;
   }
@@ -397,6 +632,14 @@ class GaapLedger {
     return journalEntry;
   }
 
+  /**
+   * @param {Date} date
+   * @param {string} description
+   */
+  entry(date, description) {
+    return new GaapJournalEntryBuilder(this, date, description);
+  }
+
   // ---------------------------------------------------------
   // DATE-AWARE BALANCE HELPERS
   // ---------------------------------------------------------
@@ -407,15 +650,13 @@ class GaapLedger {
    * @param {Date} asOf
    */
   _accountBalanceAsOf(account, asOf) {
-    let balance = 0;
-
     return this.journalEntries
       .filter((je) => je.date <= asOf)
       .flatMap((je) => je.postings)
-      .filter((p) => p.accountId === account.id)
+      .filter((p) => p.account.id === account.id)
       .reduce(
         (balance, posting) =>
-          (balance += account.apply(posting.side, posting.amount)),
+          balance += account.apply(posting.side, posting.amount),
         0
       );
   }
@@ -432,9 +673,9 @@ class GaapLedger {
     return this.journalEntries
       .filter((je) => je.date >= start && je.date <= end)
       .flatMap((je) => je.postings)
-      .filter((p) => p.accountId === accountId)
+      .filter((p) => p.account.id === accountId)
       .reduce((balance, posting) => {
-        const account = this.accounts.find((a) => a.id === posting.accountId);
+        const account = this.accounts.find((a) => a.id === posting.account.id);
         if (!account) return balance;
         return balance + account.apply(posting.side, posting.amount);
       }, 0);
@@ -588,8 +829,7 @@ class GaapLedger {
       acc.type === GaapAccountType.Expense;
 
     const isInvesting = (/** @type {GaapAccount} */ acc) =>
-      acc.type === GaapAccountType.Asset &&
-      !acc.name.toLowerCase().includes("cash");
+      acc.type === GaapAccountType.Asset && !acc.isCashAccount;
 
     const isFinancing = (/** @type {GaapAccount} */ acc) =>
       acc.type === GaapAccountType.Equity ||
@@ -605,16 +845,16 @@ class GaapLedger {
       );
     }
 
-    const journalEntriesAffectiveCash = this.journalEntries
+    const journalEntriesAffectingCash = this.journalEntries
       .filter((je) => je.date >= startDate && je.date <= endDate)
-      .filter((je) => je.postings.some((p) => isCashAccount(p.accountId)));
+      .filter((je) => je.postings.some((p) => isCashAccount(p.account.id)));
 
-    for (const je of journalEntriesAffectiveCash) {
+    for (const je of journalEntriesAffectingCash) {
       const cashPostings = je.postings.filter((p) =>
-        isCashAccount(p.accountId)
+        isCashAccount(p.account.id)
       );
       const nonCashPostings = je.postings.filter(
-        (p) => !isCashAccount(p.accountId)
+        (p) => !isCashAccount(p.account.id)
       );
 
       // Determine cash movement *sign* from cash postings
@@ -646,26 +886,13 @@ class GaapLedger {
         const posting = nonCashPostings[i];
         const allocated = allocations[i];
 
-        const account = this.accounts.find((a) => a.id === posting.accountId);
+        const account = this.accounts.find((a) => a.id === posting.account.id);
         if (!account) continue;
 
         if (isOperating(account)) operating += allocated;
         else if (isInvesting(account)) investing += allocated;
         else if (isFinancing(account)) financing += allocated;
       }
-
-      // for (const nonCashPosting of nonCashPostings) {
-      //   const account = this.accounts.find(
-      //     (a) => a.id === nonCashPosting.accountId
-      //   );
-      //   if (!account) continue;
-
-      //   const allocated = (cashDelta < 0 ? -1 : 1) * nonCashPosting.amount;
-
-      //   if (isOperating(account)) operating += allocated;
-      //   else if (isInvesting(account)) investing += allocated;
-      //   else if (isFinancing(account)) financing += allocated;
-      // }
     }
 
     return {
@@ -695,6 +922,187 @@ class GaapLedger {
   }
 }
 
+// -------------------------------------------------------------
+// GAAP OUTPUT GENERATOR
+// -------------------------------------------------------------
+
+class GaapOutputGenerator {
+  /**
+   * @param {GaapLedger} ledger
+   */
+  constructor(ledger) {
+    this.ledger = ledger;
+  }
+
+  // =========================================================
+  // T-ACCOUNT VISUALIZER
+  // =========================================================
+
+  /**
+   * Pretty-print a single T-account.
+   * @param {GaapAccount} account
+   * @returns {string}
+   */
+  printTAccount(account) {
+    const ledger = this.ledger;
+    const lines = [];
+
+    const nameHeader = `${account.name} (T-Account)`;
+    lines.push(nameHeader);
+    lines.push("-".repeat(nameHeader.length));
+
+    // Collect all postings affecting this account
+    const entries = ledger.journalEntries.flatMap((je) =>
+      je.postings
+        .filter((p) => p.account.id === account.id)
+        .map((p) => ({
+          side: p.side,
+          amount: p.amount,
+          date: je.date,
+          desc: je.description,
+        }))
+    );
+
+    if (entries.length === 0) {
+      lines.push("(no activity)");
+      return lines.join("\n");
+    }
+
+    // Separate debits and credits
+    const debits = [];
+    const credits = [];
+
+    for (const e of entries) {
+      const formatted = `${e.date.toISOString().split("T")[0]} | ${e.desc} | ${e.amount}`;
+      if (e.side === "Debit") debits.push(formatted);
+      else credits.push(formatted);
+    }
+
+    // Column widths
+    const leftWidth = Math.max(10, ...debits.map((s) => s.length));
+    const rightWidth = Math.max(10, ...credits.map((s) => s.length));
+    const totalWidth = leftWidth + 3 + rightWidth;
+
+    // Header
+    lines.push("Debit".padEnd(leftWidth) + " | " + "Credit");
+    lines.push("-".repeat(totalWidth));
+
+    // Rows
+    const maxRows = Math.max(debits.length, credits.length);
+    for (let i = 0; i < maxRows; i++) {
+      const left = debits[i] || "";
+      const right = credits[i] || "";
+      lines.push(left.padEnd(leftWidth) + " | " + right);
+    }
+
+    lines.push("");
+    lines.push(`Ending Balance: ${account.getBalance(ledger)}`);
+
+    return lines.join("\n");
+  }
+
+  // =========================================================
+  // LEDGER STATEMENT
+  // =========================================================
+
+  /**
+   * Pretty-print every journal entry in chronological order.
+   * @returns {string}
+   */
+  printLedgerStatement() {
+    const ledger = this.ledger;
+    const lines = [];
+
+    lines.push("GENERAL LEDGER");
+    lines.push("==============");
+    lines.push("");
+
+    const entries = [...ledger.journalEntries].sort(
+      (a, b) => a.date.getTime() - b.date.getTime()
+    );
+
+    for (const je of entries) {
+      lines.push(`Date: ${je.date.toISOString().split("T")[0]}`);
+      lines.push(`Desc: ${je.description}`);
+      lines.push(`Entry #${je.id}`);
+      lines.push("");
+
+      const acctWidth = Math.max(
+        ...je.postings.map((p) => p.account.name.length),
+        8
+      );
+
+      lines.push(`  ${"Account".padEnd(acctWidth)}  Dr      Cr`);
+      lines.push("  " + "-".repeat(acctWidth + 14));
+
+      for (const p of je.postings) {
+        const dr = p.side === "Debit" ? p.amount.toString() : "";
+        const cr = p.side === "Credit" ? p.amount.toString() : "";
+        lines.push(
+          `  ${p.account.name.padEnd(acctWidth)}  ${dr.padStart(6)}  ${cr.padStart(6)}`
+        );
+      }
+
+      lines.push("");
+    }
+
+    return lines.join("\n");
+  }
+
+  // =========================================================
+  // CHART OF ACCOUNTS
+  // =========================================================
+
+  /**
+   * Pretty-print the chart of accounts sorted by GAAP category.
+   * @returns {string}
+   */
+  printChartOfAccounts() {
+    const ledger = this.ledger;
+    const lines = [];
+
+    lines.push("CHART OF ACCOUNTS");
+    lines.push("=================");
+    lines.push("");
+
+    /** @type {Record<GaapAccountTypeName, GaapAccount[]>} */
+    const groups = {
+      Asset: [],
+      Liability: [],
+      Equity: [],
+      Income: [],
+      Expense: [],
+    };
+
+    for (const acct of ledger.accounts) {
+      const typeName = GaapAccountType.toName(acct.type);
+      groups[typeName].push(acct);
+    }
+
+    for (const [type, accounts] of Object.entries(groups)) {
+      lines.push(type.toUpperCase());
+      lines.push("-".repeat(type.length));
+
+      const sorted = accounts.sort((a, b) => a.name.localeCompare(b.name));
+
+      if (sorted.length === 0) {
+        lines.push("  (none)");
+      } else {
+        for (const acct of sorted) {
+          const cash = acct.isCashAccount ? " (cash)" : "";
+          lines.push(
+            `  ${acct.id.toString().padStart(3)}  ${acct.name}${cash}`
+          );
+        }
+      }
+
+      lines.push("");
+    }
+
+    return lines.join("\n");
+  }
+}
+
 // Export for Node tests
 if (typeof module !== "undefined" && module.exports) {
   module.exports = {
@@ -704,6 +1112,9 @@ if (typeof module !== "undefined" && module.exports) {
     GaapAccount,
     GaapPostingSide,
     GaapPostingBuilder,
+    GaapPosting,
+    GaapJournalEntry,
+    GaapLedger,
     // ...anything else you need in tests
   };
 }

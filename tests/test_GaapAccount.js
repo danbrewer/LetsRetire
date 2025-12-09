@@ -112,7 +112,7 @@ runTest(
 runTest(
   "GaapAccount constructor assigns id, name, type, and normalBalance",
   () => {
-    const acct = new GaapAccount("Cash", GaapAccountType.Asset);
+    const acct = GaapAccount.CreateCashAccount("Cash");
 
     assert(acct.id > 0, "Account should get an id");
     assertEqual(acct.name, "Cash", "Account name mismatch");
@@ -132,7 +132,7 @@ runTest(
 runTest(
   "GaapAccount.apply() works for Asset accounts",
   () => {
-    const cash = new GaapAccount("Cash", GaapAccountType.Asset);
+    const cash = GaapAccount.CreateCashAccount("Cash");
 
     const inc = cash.apply(GaapPostingSide.Debit, 100);
     const dec = cash.apply(GaapPostingSide.Credit, 100);
@@ -149,7 +149,7 @@ runTest(
 runTest(
   "GaapAccount.apply() works for Liability accounts",
   () => {
-    const ap = new GaapAccount("Accounts Payable", GaapAccountType.Liability);
+    const ap = GaapAccount.CreateNonCashAccount("Accounts Payable", GaapAccountType.Liability);
 
     assertEqual(
       ap.apply(GaapPostingSide.Credit, 50),
@@ -171,7 +171,7 @@ runTest(
 runTest(
   "GaapAccount.apply() works for Income accounts",
   () => {
-    const rev = new GaapAccount("Revenue", GaapAccountType.Income);
+    const rev = GaapAccount.CreateNonCashAccount("Revenue", GaapAccountType.Income);
 
     assertEqual(
       rev.apply(GaapPostingSide.Credit, 200),
@@ -193,7 +193,7 @@ runTest(
 runTest(
   "GaapAccount.apply() works for Expense accounts",
   () => {
-    const exp = new GaapAccount("Supplies Expense", GaapAccountType.Expense);
+    const exp = GaapAccount.CreateNonCashAccount("Supplies Expense", GaapAccountType.Expense);
 
     assertEqual(
       exp.apply(GaapPostingSide.Debit, 75),

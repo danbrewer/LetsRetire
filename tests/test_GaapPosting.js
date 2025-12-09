@@ -16,7 +16,9 @@ const {
   GaapAccount,
   GaapPostingSide,
   GaapPostingBuilder,
-  GaapTransaction,
+  GaapPosting,
+    GaapJournalEntry,
+    GaapLedger,
 } = require("../cGaap.js");
 
 const testTracker = new TestTracker();
@@ -27,7 +29,7 @@ const testTracker = new TestTracker();
 runTest(
   "PostingBuilder creates valid debit posting for Asset accounts",
   () => {
-    const acct = new GaapAccount("Cash", GaapAccountType.Asset);
+    const acct = GaapAccount.CreateCashAccount("Cash");
 
     const builder = new GaapPostingBuilder();
     builder.deposit(acct, 100);
@@ -45,7 +47,7 @@ runTest(
       "Posting amount should match deposit amount"
     );
     assertEqual(
-      postings[0].accountId,
+      postings[0].account.id,
       acct.id,
       "Posting should reference correct account"
     );
@@ -59,7 +61,7 @@ runTest(
 runTest(
   "PostingBuilder creates valid credit posting for Liability accounts",
   () => {
-    const acct = new GaapAccount("Loan", GaapAccountType.Liability);
+    const acct =  GaapAccount.CreateNonCashAccount("Loan", GaapAccountType.Liability);
 
     const builder = new GaapPostingBuilder();
     builder.deposit(acct, 250);
@@ -86,7 +88,7 @@ runTest(
 runTest(
   "PostingBuilder withdraw creates credit posting for Asset accounts",
   () => {
-    const cash = new GaapAccount("Cash", GaapAccountType.Asset);
+    const cash = GaapAccount.CreateCashAccount("Cash");
     const builder = new GaapPostingBuilder();
     builder.withdraw(cash, 75);
     const postings = builder.build();
@@ -111,7 +113,7 @@ runTest(
 runTest(
   "PostingBuilder withdraw creates debit posting for Equity accounts",
   () => {
-    const equity = new GaapAccount("Equity", GaapAccountType.Equity);
+    const equity = GaapAccount.CreateNonCashAccount("Equity", GaapAccountType.Equity);
     const builder = new GaapPostingBuilder();
     builder.withdraw(equity, 900);
     const postings = builder.build();
@@ -134,17 +136,17 @@ runTest(
 // TEST 5 — Transaction requires at least two postings
 //------------------------------------------------------------
 runTest(
-  "GaapTransaction rejects insufficient postings",
+  "GaapJournalEntry rejects insufficient postings",
   () => {
     assertThrows(
-      () => new GaapTransaction(new Date(), "bad txn", []),
+      () => new GaapJournalEntry(new Date(), "bad txn", []),
       "Should reject zero postings"
     );
 
     assertThrows(
       () =>
-        new GaapTransaction(new Date(), "bad txn", [
-          { accountId: 1, side: "Debit", amount: 10 },
+        new GaapJournalEntry(new Date(), "bad txn", [
+          { account: GaapAccount.CreateCashAccount("Cash"), side: "Debit", amount: 10 },
         ]),
       "Should reject single posting"
     );
@@ -156,16 +158,16 @@ runTest(
 // TEST 6 — Transaction rejects negative amounts
 //------------------------------------------------------------
 runTest(
-  "GaapTransaction rejects negative posting amounts",
+  "GaapJournalEntry rejects negative posting amounts",
   () => {
-    const acct = new GaapAccount("Cash", GaapAccountType.Asset);
+    const acct = GaapAccount.CreateCashAccount("Cash");
     const postings = [
-      { accountId: acct.id, side: GaapPostingSide.Debit, amount: -100 },
-      { accountId: acct.id, side: GaapPostingSide.Credit, amount: -100 },
+      { account: acct, side: GaapPostingSide.Debit, amount: -100 },
+      { account: acct, side: GaapPostingSide.Credit, amount: -100 },
     ];
 
     assertThrows(
-      () => new GaapTransaction(new Date(), "neg", postings),
+      () => new GaapJournalEntry(new Date(), "neg", postings),
       "Should reject negative posting amounts"
     );
   },
@@ -176,17 +178,17 @@ runTest(
 // TEST 7 — Transaction must balance
 //------------------------------------------------------------
 runTest(
-  "GaapTransaction rejects unbalanced postings",
+  "GaapJournalEntry rejects unbalanced postings",
   () => {
-    const acct = new GaapAccount("Cash", GaapAccountType.Asset);
+    const acct = GaapAccount.CreateCashAccount("Cash");
 
     const postings = [
-      { accountId: acct.id, side: GaapPostingSide.Debit, amount: 100 },
-      { accountId: acct.id, side: GaapPostingSide.Credit, amount: 50 },
+      { account: acct, side: GaapPostingSide.Debit, amount: 100 },
+      { account: acct, side: GaapPostingSide.Credit, amount: 50 },
     ];
 
     assertThrows(
-      () => new GaapTransaction(new Date(), "unbalanced", postings),
+      () => new GaapJournalEntry(new Date(), "unbalanced", postings),
       "Should reject unbalanced postings"
     );
   },
@@ -197,23 +199,23 @@ runTest(
 // TEST 8 — Transaction accepts balanced entries
 //------------------------------------------------------------
 runTest(
-  "GaapTransaction accepts valid balanced postings",
+  "GaapJournalEntry accepts valid balanced postings",
   () => {
-    const acct = new GaapAccount("Cash", GaapAccountType.Asset);
+    const acct = GaapAccount.CreateCashAccount("Cash");
 
     const postings = [
-      { accountId: acct.id, side: GaapPostingSide.Debit, amount: 100 },
-      { accountId: acct.id, side: GaapPostingSide.Credit, amount: 100 },
+      { account: acct, side: GaapPostingSide.Debit, amount: 100 },
+      { account: acct, side: GaapPostingSide.Credit, amount: 100 },
     ];
 
-    const txn = new GaapTransaction(new Date(), "balanced", postings);
+    const journalEntry = new GaapJournalEntry(new Date(), "balanced", postings);
 
     assertEqual(
-      txn.postings.length,
+      journalEntry.postings.length,
       2,
-      "Transaction should contain both postings"
+      "Journal Entry should contain both postings"
     );
-    assert(txn.id > 0, "Transaction should have a valid ID");
+    assert(journalEntry.id > 0, "Journal Entry should have a valid ID");
   },
   testTracker
 );
@@ -224,7 +226,7 @@ runTest(
 runTest(
   "Account.apply works correctly for debit-normal accounts",
   () => {
-    const acct = new GaapAccount("Cash", GaapAccountType.Asset);
+    const acct = GaapAccount.CreateCashAccount("Cash");
 
     assertEqual(
       acct.apply(GaapPostingSide.Debit, 100),
@@ -247,7 +249,7 @@ runTest(
 runTest(
   "Account.apply works correctly for credit-normal accounts",
   () => {
-    const acct = new GaapAccount("Equity", GaapAccountType.Equity);
+    const acct = GaapAccount.CreateNonCashAccount("Equity", GaapAccountType.Equity);
 
     assertEqual(
       acct.apply(GaapPostingSide.Credit, 200),
