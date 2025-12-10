@@ -90,6 +90,14 @@ Runtime examples of GaapAccountType:
 const GaapAccountType = new GaapAccountTypeEnum();
 
 /**
+ * @typedef {typeof GaapAccountType.Asset
+ *         | typeof GaapAccountType.Liability
+ *         | typeof GaapAccountType.Equity
+ *         | typeof GaapAccountType.Income
+ *         | typeof GaapAccountType.Expense} GaapAccountTypeSymbol
+ */
+
+/**
  * @type {Record<GaapAccountTypeName, GaapPostingSideName>}
  */
 const GAAP_NORMAL_BALANCE_BY_TYPE = Object.freeze({
@@ -123,7 +131,7 @@ class GaapPostingBuilder {
    * @param {GaapAccount} account
    * @param {number} amount
    */
-  deposit(account, amount) {
+  increase(account, amount) {
     if (amount <= 0) throw new Error("Posting amount must be > 0");
     return account.isDebitNormal
       ? this.#debit(account, amount)
@@ -134,7 +142,7 @@ class GaapPostingBuilder {
    * @param {GaapAccount} account
    * @param {number} amount
    */
-  withdraw(account, amount) {
+  decrease(account, amount) {
     if (amount <= 0) throw new Error("Posting amount must be > 0");
     return account.isDebitNormal
       ? this.#credit(account, amount)
@@ -237,7 +245,7 @@ class GaapAccount {
   /**
    * @param {symbol} token
    * @param {string} name
-   * @param {symbol} accountType
+   * @param {GaapAccountTypeSymbol} accountType
    * @param {boolean} isCashAccount
    */
   constructor(token, name, accountType, isCashAccount) {
@@ -287,7 +295,7 @@ class GaapAccount {
 
   /**
    * @param {string} accountName
-   * @param {symbol} accountType
+   * @param {GaapAccountTypeSymbol} accountType
    */
   static CreateNonCashAccount(accountName, accountType) {
     return new GaapAccount(
@@ -411,12 +419,13 @@ class GaapJournalEntry {
 
     const sortedPostings = postings.slice().sort((a, b) => {
       // Explicit ranking: lower value sorts first
-      const rank = (/** @type {GaapPosting} */ p) => (p.side === GaapPostingSide.Debit ? 0 : 1);
+      const rank = (/** @type {GaapPosting} */ p) =>
+        p.side === GaapPostingSide.Debit ? 0 : 1;
 
       const diff = rank(a) - rank(b);
       if (diff !== 0) return diff;
 
-      // If we got here (because both postings are Debit 
+      // If we got here (because both postings are Debit
       // or both are Credit), sort by account name alphabetically
       return a.account.name.localeCompare(b.account.name);
     });
@@ -600,6 +609,9 @@ class GaapLedger {
 
     /** @type {GaapJournalEntry[]} */
     this.journalEntries = [];
+
+    // Attach macros automatically
+    this.do = new GaapMacros(this);
   }
 
   /**
@@ -613,7 +625,7 @@ class GaapLedger {
 
   /**
    * @param {string} name
-   * @param {symbol} accountType
+   * @param {GaapAccountTypeSymbol} accountType
    */
   createNonCashAccount(name, accountType) {
     const acct = GaapAccount.CreateNonCashAccount(name, accountType);
@@ -656,7 +668,7 @@ class GaapLedger {
       .filter((p) => p.account.id === account.id)
       .reduce(
         (balance, posting) =>
-          balance += account.apply(posting.side, posting.amount),
+          (balance += account.apply(posting.side, posting.amount)),
         0
       );
   }
@@ -920,6 +932,156 @@ class GaapLedger {
       balance: this._accountBalanceAsOf(acct, asOfDate),
     }));
   }
+}
+
+class GaapMacros {
+  /**
+   * @param {GaapLedger} ledger
+   */
+  constructor(ledger) {
+    this.ledger = ledger;
+  }
+
+  // =========================================================
+  // SALES (Revenue ↑ , Cash/AR ↑)
+  // =========================================================
+  /**
+   * Record a sale:
+   *   Cash (or AR) increases
+   *   Revenue increases
+   * @param {object} p
+   * @param {GaapAccount} p.cashOrReceivable
+   * @param {GaapAccount} p.revenue
+   * @param {number} p.amount
+   * @param {Date} [p.date]
+   * @param {string} [p.desc]
+   */
+  sale({
+    cashOrReceivable,
+    revenue,
+    amount,
+    date = new Date(),
+    desc = "Sale",
+  }) {
+    const b = new GaapPostingBuilder();
+    b.increase(cashOrReceivable, amount); // Debit appropriate asset
+    b.increase(revenue, amount); // Credit revenue
+
+    return this.ledger.record(date, desc, b.build());
+  }
+
+  // =========================================================
+  // EXPENSE PAYMENT (Expense ↑ , Cash ↓)
+  // =========================================================
+  /**
+   * @param {object} p
+   * @param {GaapAccount} p.cash
+   * @param {GaapAccount} p.expense
+   * @param {number} p.amount
+   * @param {Date} [p.date]
+   * @param {string} [p.desc]
+   */
+  expensePayment({
+    cash,
+    expense,
+    amount,
+    date = new Date(),
+    desc = "Expense Payment",
+  }) {
+    const b = new GaapPostingBuilder();
+    b.decrease(cash, amount); // Credit cash
+    b.increase(expense, amount); // Debit expense
+
+    return this.ledger.record(date, desc, b.build());
+  }
+
+  // =========================================================
+  // TRANSFERS (Asset → Asset)
+  // =========================================================
+  /**
+   * Transfer money between asset accounts
+   * @param {object} p
+   * @param {GaapAccount} p.from
+   * @param {GaapAccount} p.to
+   * @param {number} p.amount
+   * @param {Date} [p.date]
+   * @param {string} [p.desc]
+   */
+  transfer({ from, to, amount, date = new Date(), desc = "Transfer" }) {
+    const b = new GaapPostingBuilder();
+    b.decrease(from, amount); // Credit
+    b.increase(to, amount); // Debit
+    return this.ledger.record(date, desc, b.build());
+  }
+
+  // =========================================================
+  // LOAN DISBURSEMENT (Cash ↑ , Liability ↑)
+  // =========================================================
+  /**
+   * Borrow money:
+   * @param {object} p
+   * @param {GaapAccount} p.cash
+   * @param {GaapAccount} p.loanLiability
+   * @param {number} p.amount
+   * @param {Date} [p.date]
+   * @param {string} [p.desc]
+   */
+  loanDisbursement({
+    cash,
+    loanLiability,
+    amount,
+    date = new Date(),
+    desc = "Loan Disbursement",
+  }) {
+    const b = new GaapPostingBuilder();
+    b.increase(cash, amount); // Debit cash
+    b.increase(loanLiability, amount); // Credit liability
+    return this.ledger.record(date, desc, b.build());
+  }
+
+  // =========================================================
+  // LOAN PAYMENT (Cash ↓ , Liability ↓ , Interest Expense ↑)
+  // =========================================================
+  /**
+   * Loan payment split into principal + interest
+   * @param {object} p
+   * @param {GaapAccount} p.cash
+   * @param {GaapAccount} p.loanLiability
+   * @param {GaapAccount} p.interestExpense
+   * @param {number} p.principal
+   * @param {number} p.interest
+   * @param {Date} [p.date]
+   * @param {string} [p.desc]
+   */
+  loanPayment({
+    cash,
+    loanLiability,
+    interestExpense,
+    principal,
+    interest,
+    date = new Date(),
+    desc = "Loan Payment",
+  }) {
+    const b = new GaapPostingBuilder();
+    const total = principal + interest;
+
+    b.decrease(cash, total); // Credit cash
+    b.decrease(loanLiability, principal); // Debit liability (liability decreases)
+    b.increase(interestExpense, interest); // Debit interest expense
+
+    return this.ledger.record(date, desc, b.build());
+  }
+
+  // =========================================================
+  // MORE MACROS CAN GO HERE:
+  // - payroll()
+  // - dividend()
+  // - refund()
+  // - investmentBuy()
+  // - investmentSell()
+  // - depreciation()
+  // - taxPayment()
+  // =========================================================
 }
 
 // -------------------------------------------------------------

@@ -4,8 +4,11 @@
 // Simple Assertion Utilities (same style as your other tests)
 //------------------------------------------------------------
 /**
+ * * Runtime assertion + TypeScript narrowing.
+ *
  * @param {any} condition
- * @param {any} message
+ * @param {string} message
+ * @returns {asserts condition}
  */
 function assert(condition, message) {
   if (!condition) throw new Error(`Assertion failed: ${message}`);
@@ -43,7 +46,12 @@ function assertEqual(actual, expected, message) {
 }
 
 class TestTracker {
-  constructor() {
+  /**
+   * Tracks test results
+   * @param {string} testFixtureName
+   */
+  constructor(testFixtureName) {
+    this.testFixtureName = testFixtureName;
     this.testsRun = 0;
     this.testsPassed = 0;
     this.testsFailed = 0;
@@ -56,6 +64,28 @@ class TestTracker {
   }
   recordFail() {
     this.testsFailed++;
+  }
+
+  generateTestReport() {
+    //------------------------------------------------------------
+    // TEST SUMMARY
+    //------------------------------------------------------------
+    const summaryTitle = `TEST SUMMARY FOR ${this.testFixtureName.toUpperCase()}`;
+    const separator = "=".repeat(summaryTitle.length + 10);
+    console.log(separator);
+    console.log("     " + summaryTitle);
+    console.log(separator);
+    console.log(`Total tests run:    ${this.testsRun}`);
+    console.log(`Passed:             ${this.testsPassed}`);
+    console.log(`Failed:             ${this.testsFailed}`);
+
+    if (this.testsFailed === 0) {
+      console.log("\n🎉 ALL TESTS PASSED — BEAUTIFUL WORK!\n");
+    } else {
+      console.log(
+        `\n🔥 ${this.testsFailed} TEST(S) FAILED — REVIEW REQUIRED\n`
+      );
+    }
   }
 }
 

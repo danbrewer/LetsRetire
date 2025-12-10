@@ -19,7 +19,7 @@ const {
   GaapPostingSide,
 } = require("../cGaap.js");
 
-const testTracker = new TestTracker();
+const testTracker = new TestTracker("GaapAccount Tests");
 
 //------------------------------------------------------------
 // TEST 1 — GaapAccountTypeNames integrity
