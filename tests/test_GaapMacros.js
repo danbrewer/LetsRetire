@@ -8,15 +8,46 @@ const {
   TestTracker,
 } = require("./baseTest.js");
 
-const { GaapLedger, GaapAccountType, GaapPostingSide } = require("../cGaap.js");
+const {
+  GaapJournalEntry,
+  GaapAccount,
+  GaapLedger,
+  GaapAccountType,
+  GaapPostingSide,
+} = require("../cGaap.js");
 
-const testTracker = new TestTracker("GaapMacros Tests");
+const testTracker = new TestTracker("GaapMacros COMPLETE Test Suite");
 
-// -------------------------------------------------------------
-// TEST 1 — Sale Macro
-// -------------------------------------------------------------
+// Utility: simple balance checker
+/**
+ * @param {GaapAccount} account
+ * @param {GaapLedger} ledger
+ * @param {number} expected
+ * @param {string | undefined} [msg]
+ */
+function assertBalance(account, ledger, expected, msg) {
+  assertEqual(account.getBalance(ledger), expected, msg);
+}
+
+// Utility: verify debit + credit totals match in a JE
+/**
+ * @param {GaapJournalEntry} je
+ */
+function assertBalanced(je, message = "Journal entry must balance") {
+  const debits = je.postings
+    .filter((p) => p.side === GaapPostingSide.Debit)
+    .reduce((s, p) => s + p.amount, 0);
+  const credits = je.postings
+    .filter((p) => p.side === GaapPostingSide.Credit)
+    .reduce((s, p) => s + p.amount, 0);
+  assertEqual(debits, credits, message);
+}
+
+// =============================================================
+// SALE
+// =============================================================
 runTest(
-  "GaapMacros.sale records Cash ↑ and Revenue ↑ as balanced entry",
+  "sale: asset increases & revenue increases",
   () => {
     const ledger = new GaapLedger();
     const cash = ledger.createCashAccount("Cash");
@@ -26,169 +57,162 @@ runTest(
     );
 
     ledger.do.sale({
-      amount: 300,
-      cashOrReceivable: cash,
-      revenue: revenue,
-      date: new Date("2024-01-01"),
-      desc: "Sale Test",
+      drAsset: cash,
+      crRevenue: revenue,
+      amount: 250,
     });
 
-    assertEqual(ledger.journalEntries.length, 1, "One journal entry expected");
-
     const je = ledger.journalEntries[0];
-
-    assertEqual(je.postings.length, 2, "Sale should produce 2 postings");
+    assertEqual(je.postings.length, 2, "Sale should create two postings");
 
     const debit = je.postings.find((p) => p.side === GaapPostingSide.Debit);
     const credit = je.postings.find((p) => p.side === GaapPostingSide.Credit);
 
-    assert(debit, "A Debit should exist");
-    assert(credit, "A Credit should exist");
+    assert(debit && credit, "Both debit and credit postings must exist");
 
-    assertEqual(debit.account.id, cash.id, "Debit should be to Cash");
-    assertEqual(credit.account.id, revenue.id, "Credit should be to Revenue");
-    assertEqual(debit.amount, 300, "Debit amount mismatch");
-    assertEqual(credit.amount, 300, "Credit amount mismatch");
+    assertEqual(debit.account.id, cash.id, "Debit should be to Cash account");
+    assertEqual(debit.amount, 250, "Debit amount should be 250");
 
-    assertEqual(cash.getBalance(ledger), 300, "Cash balance incorrect");
-    assertEqual(revenue.getBalance(ledger), 300, "Revenue balance incorrect");
+    assertEqual(
+      credit.account.id,
+      revenue.id,
+      "Credit should be to Revenue account"
+    );
+    assertEqual(credit.amount, 250, "Credit amount should be 250");
+
+    assertBalance(cash, ledger, 250, "Cash should increase");
+    assertBalance(revenue, ledger, 250, "Revenue should increase");
+    assertBalanced(je);
   },
   testTracker
 );
 
-// -------------------------------------------------------------
-// TEST 2 — Expense Payment Macro
-// -------------------------------------------------------------
+// =============================================================
+// EXPENSE PAYMENT
+// =============================================================
 runTest(
-  "GaapMacros.expensePayment reduces Cash and increases Expense",
+  "expensePayment: expense increases & cash decreases",
   () => {
     const ledger = new GaapLedger();
-    const cash = ledger.createCashAccount("Cash");
-    const utilities = ledger.createNonCashAccount(
+    const expense = ledger.createNonCashAccount(
       "Utilities",
       GaapAccountType.Expense
     );
+    const cash = ledger.createCashAccount("Cash");
 
     ledger.do.expensePayment({
-      cash,
-      expense: utilities,
+      drExpense: expense,
+      drCash: cash,
       amount: 120,
-      date: new Date("2024-01-02"),
-      desc: "Utilities Payment",
     });
 
     const je = ledger.journalEntries[0];
+    assertEqual(
+      je.postings.length,
+      2,
+      "Expense payment should create two postings"
+    );
 
     const debit = je.postings.find((p) => p.side === GaapPostingSide.Debit);
     const credit = je.postings.find((p) => p.side === GaapPostingSide.Credit);
 
-    assert(debit, "A Debit should exist");
-    assert(credit, "A Credit should exist");
-
-    assertEqual(debit.account.id, utilities.id, "Expense should be debited");
-    assertEqual(credit.account.id, cash.id, "Cash should be credited");
-    assertEqual(debit.amount, 120, "Debit amount incorrect");
-    assertEqual(credit.amount, 120, "Credit amount incorrect");
+    assert(debit && credit, "Both debit and credit postings must exist");
 
     assertEqual(
-      utilities.getBalance(ledger),
-      120,
-      "Utilities balance incorrect"
+      debit.account.id,
+      expense.id,
+      "Debit should be to Expense account"
     );
-    assertEqual(cash.getBalance(ledger), -120, "Cash balance incorrect");
+    assertEqual(credit.account.id, cash.id, "Credit should be to Cash account");
+
+    assertBalance(expense, ledger, 120, "Expense should increase");
+    assertBalance(cash, ledger, -120, "Cash should decrease");
+    assertBalanced(je);
   },
   testTracker
 );
 
-// -------------------------------------------------------------
-// TEST 3 — Transfer Macro
-// -------------------------------------------------------------
+// =============================================================
+// TRANSFER
+// =============================================================
 runTest(
-  "GaapMacros.transfer moves money between asset accounts",
+  "transfer: asset -> asset correctly moves value",
   () => {
     const ledger = new GaapLedger();
     const checking = ledger.createCashAccount("Checking");
     const savings = ledger.createCashAccount("Savings");
 
     ledger.do.transfer({
-      from: checking,
-      to: savings,
+      drAssetDestination: savings,
+      drAssetSource: checking,
       amount: 500,
-      date: new Date("2024-01-03"),
     });
 
     const je = ledger.journalEntries[0];
+    assertEqual(je.postings.length, 2, "Transfer should create two postings");
 
-    const debit = je.postings.find((p) => p.side === GaapPostingSide.Debit); // to account
-    const credit = je.postings.find((p) => p.side === GaapPostingSide.Credit); // from account
+    const debit = je.postings.find((p) => p.side === GaapPostingSide.Debit);
+    const credit = je.postings.find((p) => p.side === GaapPostingSide.Credit);
 
-    assert(debit, "A Debit should exist");
-    assert(credit, "A Credit should exist");
+    assert(debit && credit, "Both debit and credit postings must exist");
 
     assertEqual(
       debit.account.id,
       savings.id,
-      "Savings should be debited (increase)"
+      "Debit should be to Savings account"
     );
     assertEqual(
       credit.account.id,
       checking.id,
-      "Checking should be credited (decrease)"
+      "Credit should be to Checking account"
     );
-    assertEqual(debit.amount, 500, "Debit amount incorrect");
-    assertEqual(credit.amount, 500, "Credit amount incorrect");
 
-    assertEqual(savings.getBalance(ledger), 500, "Savings balance incorrect");
-    assertEqual(
-      checking.getBalance(ledger),
-      -500,
-      "Checking balance incorrect"
-    );
+    assertBalance(savings, ledger, 500);
+    assertBalance(checking, ledger, -500);
+
+    assertBalanced(je);
   },
   testTracker
 );
 
-// -------------------------------------------------------------
-// TEST 4 — Loan Disbursement Macro
-// -------------------------------------------------------------
+// =============================================================
+// LOAN DISBURSEMENT
+// =============================================================
 runTest(
-  "GaapMacros.loanDisbursement increases Cash and increases a Loan Liability",
+  "loanDisbursement: cash increases, liability increases",
   () => {
     const ledger = new GaapLedger();
     const cash = ledger.createCashAccount("Cash");
     const loan = ledger.createNonCashAccount("Loan", GaapAccountType.Liability);
 
     ledger.do.loanDisbursement({
-      cash,
-      loanLiability: loan,
+      drCash: cash,
+      crLiability: loan,
       amount: 10000,
-      date: new Date("2024-01-04"),
     });
 
     const je = ledger.journalEntries[0];
+    assertBalanced(je);
 
     const debit = je.postings.find((p) => p.side === GaapPostingSide.Debit);
     const credit = je.postings.find((p) => p.side === GaapPostingSide.Credit);
 
-    assert(debit, "A Debit should exist");
-    assert(credit, "A Credit should exist");
+    assert(debit && credit, "Both debit and credit postings must exist");
 
-    assertEqual(debit.account.id, cash.id, "Cash should be debited");
-    assertEqual(credit.account.id, loan.id, "Loan should be credited");
-    assertEqual(debit.amount, 10000, "Debit amount incorrect");
-    assertEqual(credit.amount, 10000, "Credit amount incorrect");
+    assertEqual(debit.account.id, cash.id, "Debit should be to Cash account");
+    assertEqual(credit.account.id, loan.id, "Credit should be to Loan account");
 
-    assertEqual(cash.getBalance(ledger), 10000, "Cash balance incorrect");
-    assertEqual(loan.getBalance(ledger), 10000, "Loan balance incorrect");
+    assertBalance(cash, ledger, 10000);
+    assertBalance(loan, ledger, 10000);
   },
   testTracker
 );
 
-// -------------------------------------------------------------
-// TEST 5 — Loan Payment Macro (Principal + Interest)
-// -------------------------------------------------------------
+// =============================================================
+// LOAN PAYMENT
+// =============================================================
 runTest(
-  "GaapMacros.loanPayment reduces Loan, increases Interest Expense, and reduces Cash",
+  "loanPayment: cash decreases, principal decreases, interest expense increases",
   () => {
     const ledger = new GaapLedger();
     const cash = ledger.createCashAccount("Cash");
@@ -199,52 +223,575 @@ runTest(
     );
 
     ledger.do.loanPayment({
-      cash,
-      loanLiability: loan,
-      interestExpense: interest,
+      drCash: cash,
+      crLoanLiability: loan,
+      drInterestExpense: interest,
       principal: 900,
       interest: 100,
-      date: new Date("2024-01-05"),
     });
 
     const je = ledger.journalEntries[0];
-
-    assertEqual(je.postings.length, 3, "Loan payment should have 3 postings");
-
-    const cashCredit = je.postings.find((p) => p.account.id === cash.id);
-    const loanDebit = je.postings.find((p) => p.account.id === loan.id);
-    const interestDebit = je.postings.find((p) => p.account.id === interest.id);
-
-    assert(cashCredit, "A Cash Credit should exist");
-    assert(loanDebit, "A Loan Debit should exist");
-    assert(interestDebit, "An Interest Debit should exist");
-
     assertEqual(
-      cashCredit.side,
-      GaapPostingSide.Credit,
-      "Cash should be credited"
-    );
-    assertEqual(cashCredit.amount, 1000, "Total cash outflow mismatch");
-
-    assertEqual(
-      loanDebit.side,
-      GaapPostingSide.Debit,
-      "Loan should be debited (reduction)"
-    );
-    assertEqual(loanDebit.amount, 900, "Principal amount mismatch");
-
-    assertEqual(
-      interestDebit.side,
-      GaapPostingSide.Debit,
-      "Interest expense should be debited"
+      je.postings.length,
+      3,
+      "Loan payment should create three postings"
     );
 
-    assertEqual(interestDebit.amount, 100, "Interest amount mismatch");
-    assertEqual(cash.getBalance(ledger), -1000, "Cash balance incorrect");
-    assertEqual(loan.getBalance(ledger), -900, "Loan balance incorrect"); // liability reduced
-    assertEqual(interest.getBalance(ledger), 100, "Interest balance incorrect");
+    const cashCredit = je.postings.find(
+      (p) => p.account.id === cash.id && p.side === GaapPostingSide.Credit
+    );
+    const loanDebit = je.postings.find(
+      (p) => p.account.id === loan.id && p.side === GaapPostingSide.Debit
+    );
+    const intDebit = je.postings.find(
+      (p) => p.account.id === interest.id && p.side === GaapPostingSide.Debit
+    );
+
+    assert(
+      cashCredit && loanDebit && intDebit,
+      "All three postings must exist"
+    );
+
+    assertEqual(cashCredit.amount, 1000, "Cash credit amount should be 1000");
+    assertEqual(loanDebit.amount, 900, "Loan debit amount should be 900");
+    assertEqual(intDebit.amount, 100, "Interest debit amount should be 100");
+    assertBalance(cash, ledger, -1000);
+    assertBalance(loan, ledger, -900);
+    assertBalance(interest, ledger, 100);
+
+    assertBalanced(je);
   },
   testTracker
 );
 
+// =============================================================
+// PAYROLL
+// =============================================================
+runTest(
+  "payroll: income increases, cash increases by net, withholdings increase",
+  () => {
+    const ledger = new GaapLedger();
+    const cash = ledger.createCashAccount("Cash");
+    const federalWithholdings = ledger.createNonCashAccount(
+      "Federal withholdings",
+      GaapAccountType.Expense
+    );
+    const trad401k = ledger.createNonCashAccount(
+      "Retirement Contributions",
+      GaapAccountType.Expense
+    );
+    const income = ledger.createNonCashAccount(
+      "Income",
+      GaapAccountType.Income
+    );
+    ledger.do.payroll({
+      drCash: cash,
+      drFederalWithholdings: federalWithholdings,
+      drTrad401k: trad401k,
+      crIncomeGross: income,
+      grossPay: 2000,
+      taxesAndBenefits: 300,
+      retirementContribution: 100
+    });
+
+    const je = ledger.journalEntries[0];
+    assertBalanced(je);
+
+    const netPay = 2000 - (300 + 100);
+
+    assertBalance(cash, ledger, netPay);
+    assertBalance(income, ledger, 2000);
+    assertBalance(trad401k, ledger, 100);
+    assertBalance(federalWithholdings, ledger, 300);
+  },
+  testTracker
+);
+
+// =============================================================
+// TRADITIONAL 401k CONTRIBUTION
+// =============================================================
+runTest(
+  "retirementContributionTraditional: cash decreases, 401k increases",
+  () => {
+    const ledger = new GaapLedger();
+    const cash = ledger.createCashAccount("Cash");
+    const k = ledger.createNonCashAccount("401k", GaapAccountType.Asset);
+
+    ledger.do.retirementContributionTraditional({
+      dr401k: k,
+      drCash: cash,
+      amount: 400,
+    });
+
+    const je = ledger.journalEntries[0];
+    assertBalanced(je);
+
+    assertBalance(k, ledger, 400);
+    assertBalance(cash, ledger, -400);
+  },
+  testTracker
+);
+
+// =============================================================
+// ROTH CONTRIBUTION
+// =============================================================
+runTest(
+  "retirementContributionRoth: cash decreases, Roth increases",
+  () => {
+    const ledger = new GaapLedger();
+    const cash = ledger.createCashAccount("Cash");
+    const roth = ledger.createNonCashAccount("Roth", GaapAccountType.Asset);
+
+    ledger.do.retirementContributionRoth({
+      drRoth: roth,
+      drCash: cash,
+      amount: 500,
+    });
+
+    const je = ledger.journalEntries[0];
+    assertBalanced(je);
+
+    assertBalance(roth, ledger, 500);
+    assertBalance(cash, ledger, -500);
+  },
+  testTracker
+);
+
+// =============================================================
+// TRAD 401k WITHDRAWAL
+// =============================================================
+runTest(
+  "withdrawFromTraditional401k: 401k decreases, cash increases, income increases",
+  () => {
+    const ledger = new GaapLedger();
+    const cash = ledger.createCashAccount("Cash");
+    const trad401k = ledger.createNonCashAccount("401k", GaapAccountType.Asset);
+    const income = ledger.createNonCashAccount(
+      "Income",
+      GaapAccountType.Income
+    );
+    const equity = ledger.createNonCashAccount(
+      "Equity",
+      GaapAccountType.Equity
+    );
+
+    ledger.do.withdrawFromTraditional401k({
+      drCash: cash,
+      dr401k: trad401k,
+      crIncome: income,
+      crEquity: equity,
+      amount: 1000,
+    });
+
+    const je = ledger.journalEntries[0];
+    assertBalanced(je);
+
+    assertBalance(trad401k, ledger, -1000);
+    assertBalance(cash, ledger, 1000);
+    assertBalance(income, ledger, 1000);
+  },
+  testTracker
+);
+
+// =============================================================
+// RMD WITHDRAWAL WRAPPER
+// =============================================================
+runTest(
+  "rmdWithdrawal: wrapper calls trad401k withdrawal with different description",
+  () => {
+    const ledger = new GaapLedger();
+    const cash = ledger.createCashAccount("Cash");
+    const trad401k = ledger.createNonCashAccount("401k", GaapAccountType.Asset);
+    const income = ledger.createNonCashAccount(
+      "Income",
+      GaapAccountType.Income
+    );
+    const equity = ledger.createNonCashAccount(
+      "Equity",
+      GaapAccountType.Equity
+    );
+
+    ledger.do.rmdWithdrawal({
+      drCash: cash,
+      dr401k: trad401k,
+      crIncome: income,
+      crEquity: equity,
+      amount: 700,
+    });
+
+    const je = ledger.journalEntries[0];
+
+    assertEqual(
+      je.description,
+      "RMD Withdrawal",
+      "Description should be 'RMD Withdrawal'"
+    );
+    assertBalanced(je);
+
+    assertBalance(cash, ledger, 700);
+    assertBalance(trad401k, ledger, -700);
+    assertBalance(income, ledger, 700);
+  },
+  testTracker
+);
+
+// =============================================================
+// ROTH WITHDRAWAL
+// =============================================================
+runTest(
+  "withdrawFromTraditionalRoth: Roth decreases, cash increases",
+  () => {
+    const ledger = new GaapLedger();
+    const cash = ledger.createCashAccount("Cash");
+    const roth = ledger.createNonCashAccount("Roth", GaapAccountType.Asset);
+
+    ledger.do.withdrawFromTraditionalRoth({
+      drCash: cash,
+      drRoth: roth,
+      amount: 300,
+    });
+
+    const je = ledger.journalEntries[0];
+    assertBalanced(je);
+
+    assertBalance(cash, ledger, 300);
+    assertBalance(roth, ledger, -300);
+  },
+  testTracker
+);
+
+// =============================================================
+// PENSION INCOME
+// =============================================================
+runTest(
+  "pensionPayment: pension income increases, cash increases",
+  () => {
+    const ledger = new GaapLedger();
+    const cash = ledger.createCashAccount("Cash");
+    const pension = ledger.createNonCashAccount(
+      "PensionIncome",
+      GaapAccountType.Income
+    );
+
+    ledger.do.pensionPayment({
+      drCash: cash,
+      crPensionIncome: pension,
+      amount: 900,
+    });
+
+    const je = ledger.journalEntries[0];
+    assertBalanced(je);
+
+    assertBalance(cash, ledger, 900);
+    assertBalance(pension, ledger, 900);
+  },
+  testTracker
+);
+
+// =============================================================
+// SOCIAL SECURITY INCOME
+// =============================================================
+runTest(
+  "socialSecurityIncome: ss income increases, cash increases",
+  () => {
+    const ledger = new GaapLedger();
+    const cash = ledger.createCashAccount("Cash");
+    const ss = ledger.createNonCashAccount("SS Income", GaapAccountType.Income);
+
+    ledger.do.socialSecurityIncome({
+      drCash: cash,
+      crSSIncome: ss,
+      amount: 1400,
+    });
+
+    const je = ledger.journalEntries[0];
+    assertBalanced(je);
+
+    assertBalance(cash, ledger, 1400);
+    assertBalance(ss, ledger, 1400);
+  },
+  testTracker
+);
+
+// =============================================================
+// INVESTMENT PURCHASE
+// =============================================================
+runTest(
+  "investmentBuy: cash decreases, investment increases",
+  () => {
+    const ledger = new GaapLedger();
+    const cash = ledger.createCashAccount("Cash");
+    const inv = ledger.createNonCashAccount(
+      "Investments",
+      GaapAccountType.Asset
+    );
+
+    ledger.do.investmentBuy({
+      drInvestment: inv,
+      drCash: cash,
+      amount: 600,
+    });
+
+    const je = ledger.journalEntries[0];
+    assertBalanced(je);
+
+    assertBalance(inv, ledger, 600);
+    assertBalance(cash, ledger, -600);
+  },
+  testTracker
+);
+
+// =============================================================
+// INVESTMENT SALE
+// =============================================================
+runTest(
+  "investmentSell: investment decreases, cash increases",
+  () => {
+    const ledger = new GaapLedger();
+    const cash = ledger.createCashAccount("Cash");
+    const inv = ledger.createNonCashAccount(
+      "Investments",
+      GaapAccountType.Asset
+    );
+
+    ledger.do.investmentSell({
+      drCash: cash,
+      drInvestment: inv,
+      amount: 800,
+    });
+
+    const je = ledger.journalEntries[0];
+    assertBalanced(je);
+
+    assertBalance(cash, ledger, 800);
+    assertBalance(inv, ledger, -800);
+  },
+  testTracker
+);
+
+// =============================================================
+// CAPITAL GAIN — GAIN > 0
+// =============================================================
+runTest("realizeCapitalGain: positive gain", () => {
+  const ledger = new GaapLedger();
+  const cash = ledger.createCashAccount("Cash");
+  const inv = ledger.createNonCashAccount("Inv", GaapAccountType.Asset);
+  const gain = ledger.createNonCashAccount("Gain", GaapAccountType.Income);
+  const loss = ledger.createNonCashAccount("Loss", GaapAccountType.Expense);
+
+  ledger.do.realizeCapitalGain({
+    drCash: cash,
+    drInvestment: inv,
+    crGain: gain,
+    drLoss: loss,
+    proceeds: 900,
+    basis: 700,
+  });
+
+  const je = ledger.journalEntries[0];
+  assertBalanced(je);
+  assertBalance(cash, ledger, 900);
+  assertBalance(inv, ledger, -700);
+  assertBalance(gain, ledger, 200);
+  assertBalance(loss, ledger, 0);
+}, testTracker);
+
+
+// =============================================================
+// CAPITAL GAIN — ZERO GAIN
+// =============================================================
+runTest("realizeCapitalGain: break-even → no gain, no loss", () => {
+  const ledger = new GaapLedger();
+  const cash = ledger.createCashAccount("Cash");
+  const inv = ledger.createNonCashAccount("Inv", GaapAccountType.Asset);
+  const gain = ledger.createNonCashAccount("Gain", GaapAccountType.Income);
+  const loss = ledger.createNonCashAccount("Loss", GaapAccountType.Expense);
+
+  ledger.do.realizeCapitalGain({
+    drCash: cash,
+    drInvestment: inv,
+    crGain: gain,
+    drLoss: loss,
+    proceeds: 800,
+    basis: 800,
+  });
+
+  const je = ledger.journalEntries[0];
+  assertBalanced(je);
+  assertBalance(cash, ledger, 800);
+  assertBalance(inv, ledger, -800);
+  assertBalance(gain, ledger, 0);
+  assertBalance(loss, ledger, 0);
+}, testTracker);
+
+
+// =============================================================
+// CAPITAL GAIN — NEGATIVE GAIN (LOSS)
+// =============================================================
+runTest("realizeCapitalGain: loss → loss posting", () => {
+  const ledger = new GaapLedger();
+  const cash = ledger.createCashAccount("Cash");
+  const inv = ledger.createNonCashAccount("Inv", GaapAccountType.Asset);
+  const gain = ledger.createNonCashAccount("Gain", GaapAccountType.Income);
+  const loss = ledger.createNonCashAccount("Loss", GaapAccountType.Expense);
+
+  ledger.do.realizeCapitalGain({
+    drCash: cash,
+    drInvestment: inv,
+    crGain: gain,
+    drLoss: loss,
+    proceeds: 700,
+    basis: 900, // LOSS of 200
+  });
+
+  const je = ledger.journalEntries[0];
+  assertBalanced(je);
+
+  assertBalance(cash, ledger, 700);
+  assertBalance(inv, ledger, -900);
+  assertBalance(gain, ledger, 0);
+  assertBalance(loss, ledger, 200);
+}, testTracker);
+
+
+// =============================================================
+// INTEREST INCOME
+// =============================================================
+runTest(
+  "interestIncome: interest income increases, cash increases",
+  () => {
+    const ledger = new GaapLedger();
+    const cash = ledger.createCashAccount("Cash");
+    const inv = ledger.createNonCashAccount(
+      "InterestIncome",
+      GaapAccountType.Income
+    );
+
+    ledger.do.interestIncome({
+      drCash: cash,
+      crInterestIncome: inv,
+      amount: 85,
+    });
+
+    const je = ledger.journalEntries[0];
+    assertBalanced(je);
+
+    assertBalance(cash, ledger, 85);
+    assertBalance(inv, ledger, 85);
+  },
+  testTracker
+);
+
+// =============================================================
+// DIVIDEND INCOME
+// =============================================================
+runTest(
+  "dividendIncome: dividend income increases, cash increases",
+  () => {
+    const ledger = new GaapLedger();
+    const cash = ledger.createCashAccount("Cash");
+    const div = ledger.createNonCashAccount(
+      "Div Income",
+      GaapAccountType.Income
+    );
+
+    ledger.do.dividendIncome({
+      drCash: cash,
+      crDividendIncome: div,
+      amount: 42,
+    });
+
+    const je = ledger.journalEntries[0];
+    assertBalanced(je);
+
+    assertBalance(cash, ledger, 42);
+    assertBalance(div, ledger, 42);
+  },
+  testTracker
+);
+
+// =============================================================
+// TAX PAYMENT
+// =============================================================
+runTest(
+  "taxPayment: tax liability decreases, cash decreases",
+  () => {
+    const ledger = new GaapLedger();
+    const cash = ledger.createCashAccount("Cash");
+    const tax = ledger.createNonCashAccount(
+      "Tax Liability",
+      GaapAccountType.Liability
+    );
+
+    ledger.do.taxPayment({
+      drCash: cash,
+      crTaxLiability: tax,
+      amount: 600,
+    });
+
+    const je = ledger.journalEntries[0];
+    assertBalanced(je);
+
+    assertBalance(cash, ledger, -600);
+    assertBalance(tax, ledger, -600);
+  },
+  testTracker
+);
+
+// =============================================================
+// ESTIMATED TAX PAYMENT (EXPENSE)
+// =============================================================
+runTest(
+  "estimatedTaxPayment: tax expense increases, cash decreases",
+  () => {
+    const ledger = new GaapLedger();
+    const cash = ledger.createCashAccount("Cash");
+    const taxExp = ledger.createNonCashAccount(
+      "Tax Expense",
+      GaapAccountType.Expense
+    );
+
+    ledger.do.estimatedTaxPayment({
+      drTaxExpense: taxExp,
+      drCash: cash,
+      amount: 350,
+    });
+
+    const je = ledger.journalEntries[0];
+    assertBalanced(je);
+
+    assertBalance(cash, ledger, -350);
+    assertBalance(taxExp, ledger, 350);
+  },
+  testTracker
+);
+
+// =============================================================
+// ESCROW DEPOSIT
+// =============================================================
+runTest(
+  "escrowDeposit: escrow increases, cash decreases",
+  () => {
+    const ledger = new GaapLedger();
+    const cash = ledger.createCashAccount("Cash");
+    const esc = ledger.createNonCashAccount("Escrow", GaapAccountType.Asset);
+
+    ledger.do.escrowDeposit({
+      drEscrow: esc,
+      drCash: cash,
+      amount: 1000,
+    });
+
+    const je = ledger.journalEntries[0];
+    assertBalanced(je);
+
+    assertBalance(cash, ledger, -1000);
+    assertBalance(esc, ledger, 1000);
+  },
+  testTracker
+);
+
+// -------------------------------------------------------------
+// FINAL TEST REPORT
+// -------------------------------------------------------------
 testTracker.generateTestReport();

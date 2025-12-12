@@ -934,6 +934,249 @@ class GaapLedger {
   }
 }
 
+/* ============================================================
+   FLOW-BASED ARG TYPES (GAAP-CONSISTENT ORDERING)
+   dr* = Asset or Expense (debit-normal)
+   cr* = Liability, Income, Equity (credit-normal)
+
+   ORDERING RULE:
+   1. All dr* accounts first (in logical order)
+   2. All cr* accounts second
+   3. Amount/principal/interest/etc.
+   4. Optional date/desc
+   ============================================================ */
+
+/** -------------------- SALE -------------------- */
+/**
+ * Asset increases (dr), Revenue increases (cr)
+ * @typedef {object} RevenueToAssetArgs
+ * @property {GaapAccount} drAsset
+ * @property {GaapAccount} crRevenue
+ * @property {number} amount
+ * @property {Date} [date]
+ * @property {string} [desc]
+ */
+
+/** -------------------- EXPENSE PAYMENT -------------------- */
+/**
+ * Expense increases (dr), Cash decreases (cr)
+ * @typedef {object} CashToExpenseArgs
+ * @property {GaapAccount} drExpense
+ * @property {GaapAccount} drCash
+ * @property {number} amount
+ * @property {Date} [date]
+ * @property {string} [desc]
+ */
+
+/** -------------------- ASSET TRANSFER -------------------- */
+/**
+ * Debit destination (increase), credit source (decrease)
+ * @typedef {object} AssetToAssetArgs
+ * @property {GaapAccount} drAssetDestination
+ * @property {GaapAccount} drAssetSource   // credited via decrease()
+ * @property {number} amount
+ * @property {Date} [date]
+ * @property {string} [desc]
+ */
+
+/** -------------------- LOAN DISBURSEMENT -------------------- */
+/**
+ * Cash increases (dr), Liability increases (cr)
+ * @typedef {object} LiabilityToCashArgs
+ * @property {GaapAccount} drCash
+ * @property {GaapAccount} crLiability
+ * @property {number} amount
+ * @property {Date} [date]
+ * @property {string} [desc]
+ */
+
+/** -------------------- LOAN PAYMENT -------------------- */
+/**
+ * Cash decreases (cr), Loan decreases (dr), Expense increases (dr)
+ * @typedef {object} CashToLiabilityAndExpenseArgs
+ * @property {GaapAccount} drInterestExpense
+ * @property {GaapAccount} drCash            // credited via decrease()
+ * @property {GaapAccount} crLoanLiability   // credited via decrease()
+ * @property {number} principal
+ * @property {number} interest
+ * @property {Date} [date]
+ * @property {string} [desc]
+ */
+
+/** -------------------- PAYROLL -------------------- */
+/**
+ * Cash increases (dr), Gross income increases (cr), Liabilities increase (cr)
+ * @typedef {object} IncomeToCashAndExpensesArgs
+ * @property {GaapAccount} drCash
+ * @property {GaapAccount} drTrad401k
+ * @property {GaapAccount} drFederalWithholdings
+ * @property {GaapAccount} crIncomeGross
+ * @property {number} grossPay
+ * @property {number} taxesAndBenefits
+ * @property {number} retirementContribution
+ * @property {Date} [date]
+ * @property {string} [desc]
+ */
+
+/** -------------------- 401k CONTRIBUTION -------------------- */
+/**
+ * 401k Asset increases (dr), Cash decreases (cr)
+ * @typedef {object} CashTo401kArgs
+ * @property {GaapAccount} dr401k
+ * @property {GaapAccount} drCash
+ * @property {number} amount
+ * @property {Date} [date]
+ * @property {string} [desc]
+ */
+
+/** -------------------- ROTH CONTRIBUTION -------------------- */
+/**
+ * Roth Asset increases (dr), Cash decreases (cr)
+ * @typedef {object} CashToRothArgs
+ * @property {GaapAccount} drRoth
+ * @property {GaapAccount} drCash
+ * @property {number} amount
+ * @property {Date} [date]
+ * @property {string} [desc]
+ */
+
+/** -------------------- TRADITIONAL WITHDRAWAL -------------------- */
+/**
+ * Cash increases (dr), 401k decreases (cr), Income increases (cr)
+ * @typedef {object} Trad401kToCashAndIncomeArgs
+ * @property {GaapAccount} drCash       // Debit Cash (asset ↑)
+ * @property {GaapAccount} dr401k       // Credit 401k (asset ↓)
+ * @property {GaapAccount} crIncome     // Credit Income (credit-normal ↑)
+ * @property {GaapAccount} crEquity     // Debit Equity (credit-normal ↓)
+ * @property {number} amount
+ * @property {Date} [date]
+ * @property {string} [desc]
+ */
+
+/** -------------------- ROTH WITHDRAWAL -------------------- */
+/**
+ * Cash increases (dr), Roth asset decreases (cr)
+ * @typedef {object} RothToCashArgs
+ * @property {GaapAccount} drCash
+ * @property {GaapAccount} drRoth         // credited via decrease()
+ * @property {number} amount
+ * @property {Date} [date]
+ * @property {string} [desc]
+ */
+
+/** -------------------- PENSION INCOME -------------------- */
+/**
+ * Cash increases (dr), Pension Income increases (cr)
+ * @typedef {object} PensionIncomeToCashArgs
+ * @property {GaapAccount} drCash
+ * @property {GaapAccount} crPensionIncome
+ * @property {number} amount
+ * @property {Date} [date]
+ * @property {string} [desc]
+ */
+
+/** -------------------- SOCIAL SECURITY INCOME -------------------- */
+/**
+ * Cash increases (dr), SS Income increases (cr)
+ * @typedef {object} SSIncomeToCashArgs
+ * @property {GaapAccount} drCash
+ * @property {GaapAccount} crSSIncome
+ * @property {number} amount
+ * @property {Date} [date]
+ * @property {string} [desc]
+ */
+
+/** -------------------- INVESTMENT PURCHASE -------------------- */
+/**
+ * Investment increases (dr), Cash decreases (cr)
+ * @typedef {object} CashToInvestmentArgs
+ * @property {GaapAccount} drInvestment
+ * @property {GaapAccount} drCash
+ * @property {number} amount
+ * @property {Date} [date]
+ * @property {string} [desc]
+ */
+
+/** -------------------- INVESTMENT SALE -------------------- */
+/**
+ * Cash increases (dr), Investment decreases (cr)
+ * @typedef {object} InvestmentToCashArgs
+ * @property {GaapAccount} drCash
+ * @property {GaapAccount} drInvestment   // credited via decrease()
+ * @property {number} amount
+ * @property {Date} [date]
+ * @property {string} [desc]
+ */
+
+/** -------------------- CAPITAL GAIN -------------------- */
+/**
+ * Cash increases (dr), Investment decreases (cr), Gain increases (cr)
+ * @typedef {object} InvestmentToCashAndGainArgs
+ * @property {GaapAccount} drCash
+ * @property {GaapAccount} drInvestment
+ * @property {GaapAccount} crGain
+ * @property {GaapAccount} drLoss
+ * @property {number} proceeds
+ * @property {number} basis
+ * @property {Date} [date]
+ * @property {string} [desc]
+ */
+
+/** -------------------- INTEREST INCOME -------------------- */
+/**
+ * Cash increases (dr), Interest Income increases (cr)
+ * @typedef {object} InterestIncomeToCashArgs
+ * @property {GaapAccount} drCash
+ * @property {GaapAccount} crInterestIncome
+ * @property {number} amount
+ * @property {Date} [date]
+ * @property {string} [desc]
+ */
+
+/** -------------------- DIVIDEND INCOME -------------------- */
+/**
+ * Cash increases (dr), Dividend Income increases (cr)
+ * @typedef {object} DividendIncomeToCashArgs
+ * @property {GaapAccount} drCash
+ * @property {GaapAccount} crDividendIncome
+ * @property {number} amount
+ * @property {Date} [date]
+ * @property {string} [desc]
+ */
+
+/** -------------------- TAX PAYMENT -------------------- */
+/**
+ * Liability decreases (dr), Cash decreases (cr)
+ * @typedef {object} CashToTaxLiabilityArgs
+ * @property {GaapAccount} drCash
+ * @property {GaapAccount} crTaxLiability
+ * @property {number} amount
+ * @property {Date} [date]
+ * @property {string} [desc]
+ */
+
+/** -------------------- ESTIMATED TAX (EXPENSE) -------------------- */
+/**
+ * Tax Expense increases (dr), Cash decreases (cr)
+ * @typedef {object} CashToTaxExpenseArgs
+ * @property {GaapAccount} drTaxExpense
+ * @property {GaapAccount} drCash
+ * @property {number} amount
+ * @property {Date} [date]
+ * @property {string} [desc]
+ */
+
+/** -------------------- ESCROW DEPOSIT -------------------- */
+/**
+ * Escrow Asset increases (dr), Cash decreases (cr)
+ * @typedef {object} CashToEscrowArgs
+ * @property {GaapAccount} drEscrow
+ * @property {GaapAccount} drCash
+ * @property {number} amount
+ * @property {Date} [date]
+ * @property {string} [desc]
+ */
+
 class GaapMacros {
   /**
    * @param {GaapLedger} ledger
@@ -942,146 +1185,510 @@ class GaapMacros {
     this.ledger = ledger;
   }
 
-  // =========================================================
-  // SALES (Revenue ↑ , Cash/AR ↑)
-  // =========================================================
+  // ============================================================
+  // SALE (Asset increases, Revenue increases)
+  // ============================================================
   /**
-   * Record a sale:
-   *   Cash (or AR) increases
-   *   Revenue increases
-   * @param {object} p
-   * @param {GaapAccount} p.cashOrReceivable
-   * @param {GaapAccount} p.revenue
-   * @param {number} p.amount
-   * @param {Date} [p.date]
-   * @param {string} [p.desc]
+   * Financial Meaning:
+   *  - Asset account increases by the sale amount.
+   *  - Revenue is recognized for the same amount.
+   * GAAP Posting Effects:
+   *  - drAsset is debited (asset increases).
+   *  - crRevenue is credited (income increases).
+   * @param {RevenueToAssetArgs} p
    */
-  sale({
-    cashOrReceivable,
-    revenue,
-    amount,
-    date = new Date(),
-    desc = "Sale",
-  }) {
+  sale(p) {
     const b = new GaapPostingBuilder();
-    b.increase(cashOrReceivable, amount); // Debit appropriate asset
-    b.increase(revenue, amount); // Credit revenue
-
-    return this.ledger.record(date, desc, b.build());
+    b.increase(p.drAsset, p.amount);
+    b.increase(p.crRevenue, p.amount);
+    return this.ledger.record(
+      p.date ?? new Date(),
+      p.desc ?? "Sale",
+      b.build()
+    );
   }
 
-  // =========================================================
-  // EXPENSE PAYMENT (Expense ↑ , Cash ↓)
-  // =========================================================
+  // ============================================================
+  // EXPENSE PAYMENT (Cash decreases, Expense increases)
+  // ============================================================
   /**
-   * @param {object} p
-   * @param {GaapAccount} p.cash
-   * @param {GaapAccount} p.expense
-   * @param {number} p.amount
-   * @param {Date} [p.date]
-   * @param {string} [p.desc]
+   * Financial Meaning:
+   *  - Cash is reduced to pay an expense.
+   *  - The expense account increases, reflecting cost incurred.
+   * GAAP Posting Effects:
+   *  - drCash is credited (asset decreases).
+   *  - drExpense is debited (expense increases).
+   * @param {CashToExpenseArgs} p
    */
-  expensePayment({
-    cash,
-    expense,
-    amount,
-    date = new Date(),
-    desc = "Expense Payment",
-  }) {
+  expensePayment(p) {
     const b = new GaapPostingBuilder();
-    b.decrease(cash, amount); // Credit cash
-    b.increase(expense, amount); // Debit expense
-
-    return this.ledger.record(date, desc, b.build());
+    b.decrease(p.drCash, p.amount);
+    b.increase(p.drExpense, p.amount);
+    return this.ledger.record(
+      p.date ?? new Date(),
+      p.desc ?? "Expense Payment",
+      b.build()
+    );
   }
 
-  // =========================================================
-  // TRANSFERS (Asset → Asset)
-  // =========================================================
+  // ============================================================
+  // ASSET TRANSFER (One asset decreases, another increases)
+  // ============================================================
   /**
-   * Transfer money between asset accounts
-   * @param {object} p
-   * @param {GaapAccount} p.from
-   * @param {GaapAccount} p.to
-   * @param {number} p.amount
-   * @param {Date} [p.date]
-   * @param {string} [p.desc]
+   * Financial Meaning:
+   *  - Money or value is moved from one asset account to another.
+   * GAAP Posting Effects:
+   *  - drAssetSource is credited (asset decreases).
+   *  - drAssetDestination is debited (asset increases).
+   * @param {AssetToAssetArgs} p
    */
-  transfer({ from, to, amount, date = new Date(), desc = "Transfer" }) {
+  transfer(p) {
     const b = new GaapPostingBuilder();
-    b.decrease(from, amount); // Credit
-    b.increase(to, amount); // Debit
-    return this.ledger.record(date, desc, b.build());
+    b.decrease(p.drAssetSource, p.amount);
+    b.increase(p.drAssetDestination, p.amount);
+    return this.ledger.record(
+      p.date ?? new Date(),
+      p.desc ?? "Transfer",
+      b.build()
+    );
   }
 
-  // =========================================================
-  // LOAN DISBURSEMENT (Cash ↑ , Liability ↑)
-  // =========================================================
+  // ============================================================
+  // LOAN DISBURSEMENT (Liability increases, Cash increases)
+  // ============================================================
   /**
-   * Borrow money:
-   * @param {object} p
-   * @param {GaapAccount} p.cash
-   * @param {GaapAccount} p.loanLiability
-   * @param {number} p.amount
-   * @param {Date} [p.date]
-   * @param {string} [p.desc]
+   * Financial Meaning:
+   *  - Cash is received from a loan.
+   *  - A liability is created for the borrowed amount.
+   * GAAP Posting Effects:
+   *  - drCash is debited (asset increases).
+   *  - crLiability is credited (liability increases).
+   * @param {LiabilityToCashArgs} p
    */
-  loanDisbursement({
-    cash,
-    loanLiability,
-    amount,
-    date = new Date(),
-    desc = "Loan Disbursement",
-  }) {
+  loanDisbursement(p) {
     const b = new GaapPostingBuilder();
-    b.increase(cash, amount); // Debit cash
-    b.increase(loanLiability, amount); // Credit liability
-    return this.ledger.record(date, desc, b.build());
+    b.increase(p.drCash, p.amount);
+    b.increase(p.crLiability, p.amount);
+    return this.ledger.record(
+      p.date ?? new Date(),
+      p.desc ?? "Loan Disbursement",
+      b.build()
+    );
   }
 
-  // =========================================================
-  // LOAN PAYMENT (Cash ↓ , Liability ↓ , Interest Expense ↑)
-  // =========================================================
+  // ============================================================
+  // LOAN PAYMENT (Cash decreases, Liability decreases, Expense increases)
+  // ============================================================
   /**
-   * Loan payment split into principal + interest
-   * @param {object} p
-   * @param {GaapAccount} p.cash
-   * @param {GaapAccount} p.loanLiability
-   * @param {GaapAccount} p.interestExpense
-   * @param {number} p.principal
-   * @param {number} p.interest
-   * @param {Date} [p.date]
-   * @param {string} [p.desc]
+   * Financial Meaning:
+   *  - Cash decreases for the total payment.
+   *  - Loan principal is reduced.
+   *  - Interest is recognized as an expense.
+   * GAAP Posting Effects:
+   *  - drCash is credited (asset decreases).
+   *  - crLoanLiability is debited (liability decreases).
+   *  - drInterestExpense is debited (expense increases).
+   * @param {CashToLiabilityAndExpenseArgs} p
    */
-  loanPayment({
-    cash,
-    loanLiability,
-    interestExpense,
-    principal,
-    interest,
-    date = new Date(),
-    desc = "Loan Payment",
-  }) {
+  loanPayment(p) {
     const b = new GaapPostingBuilder();
-    const total = principal + interest;
+    const total = p.principal + p.interest;
 
-    b.decrease(cash, total); // Credit cash
-    b.decrease(loanLiability, principal); // Debit liability (liability decreases)
-    b.increase(interestExpense, interest); // Debit interest expense
+    b.decrease(p.drCash, total);
+    b.decrease(p.crLoanLiability, p.principal);
+    b.increase(p.drInterestExpense, p.interest);
 
-    return this.ledger.record(date, desc, b.build());
+    return this.ledger.record(
+      p.date ?? new Date(),
+      p.desc ?? "Loan Payment",
+      b.build()
+    );
   }
 
-  // =========================================================
-  // MORE MACROS CAN GO HERE:
-  // - payroll()
-  // - dividend()
-  // - refund()
-  // - investmentBuy()
-  // - investmentSell()
-  // - depreciation()
-  // - taxPayment()
-  // =========================================================
+  // ============================================================
+  // PAYROLL (Income increases, Cash increases, Liabilities increase)
+  // ============================================================
+  /**
+   * Financial Meaning:
+   *  - Gross pay is recognized as income.
+   *  - Cash increases by net pay.
+   *  - Payroll expense increases by total withholdings.
+   *  - Withholding liabilities increase.
+   * GAAP Posting Effects:
+   *  - drCash is debited for net pay (asset increases).
+   *  - drExpensePayroll is debited for total withholdings (expense increases).
+   *  - crIncome is credited (income increases).
+   *  - Withholding liabilities are credited (liabilities increase).
+   * @param {IncomeToCashAndExpensesArgs} p
+   */
+  payroll(p) {
+    const b = new GaapPostingBuilder();
+
+    const netPay = p.grossPay - p.taxesAndBenefits - p.retirementContribution;
+
+    b.increase(p.drCash, netPay);
+    b.increase(p.drFederalWithholdings, p.taxesAndBenefits);
+    b.increase(p.drTrad401k, p.retirementContribution);
+    b.increase(p.crIncomeGross, p.grossPay);
+
+    return this.ledger.record(
+      p.date ?? new Date(),
+      p.desc ?? "Payroll",
+      b.build()
+    );
+  }
+
+  // ============================================================
+  // TRADITIONAL 401k CONTRIBUTION (Cash decreases, 401k increases)
+  // ============================================================
+  /**
+   * Financial Meaning:
+   *  - Cash decreases for the contribution.
+   *  - Retirement account increases by the same amount.
+   * GAAP Posting Effects:
+   *  - drCash is credited (asset decreases).
+   *  - dr401k is debited (asset increases).
+   * @param {CashTo401kArgs} p
+   */
+  retirementContributionTraditional(p) {
+    const b = new GaapPostingBuilder();
+    b.decrease(p.drCash, p.amount);
+    b.increase(p.dr401k, p.amount);
+    return this.ledger.record(
+      p.date ?? new Date(),
+      p.desc ?? "Traditional 401k Contribution",
+      b.build()
+    );
+  }
+
+  // ============================================================
+  // ROTH CONTRIBUTION (Cash decreases, Roth increases)
+  // ============================================================
+  /**
+   * Financial Meaning:
+   *  - Cash decreases for the Roth contribution.
+   *  - Roth account increases by the same amount.
+   * GAAP Posting Effects:
+   *  - drCash is credited (asset decreases).
+   *  - drRoth is debited (asset increases).
+   * @param {CashToRothArgs} p
+   */
+  retirementContributionRoth(p) {
+    const b = new GaapPostingBuilder();
+    b.decrease(p.drCash, p.amount);
+    b.increase(p.drRoth, p.amount);
+    return this.ledger.record(
+      p.date ?? new Date(),
+      p.desc ?? "Roth Contribution",
+      b.build()
+    );
+  }
+
+  // ============================================================
+  // TRADITIONAL WITHDRAWAL (401k decreases, Cash increases, Income increases)
+  // ============================================================
+  /**
+   * Financial Meaning:
+   *  - Retirement account decreases.
+   *  - Cash increases by the withdrawn amount.
+   *  - Income is recognized for tax purposes.
+   * GAAP Posting Effects:
+   *  - dr401k is credited (asset decreases).
+   *  - drCash is debited (asset increases).
+   *  - crIncome is credited (income increases).
+   * @param {Trad401kToCashAndIncomeArgs} p
+   */
+  withdrawFromTraditional401k(p) {
+    const b = new GaapPostingBuilder()
+      .increase(p.drCash, p.amount) // Debit Cash (asset ↑)
+      .decrease(p.dr401k, p.amount) // Credit 401k (asset ↓)
+      .increase(p.crIncome, p.amount) // Credit Income (credit-normal ↑)
+      .decrease(p.crEquity, p.amount); // Debit Equity (credit-normal ↓)
+    return this.ledger.record(
+      p.date ?? new Date(),
+      p.desc ?? "Traditional Withdrawal",
+      b.build()
+    );
+  }
+
+  /**
+   * @param {Trad401kToCashAndIncomeArgs} p
+   */
+  rmdWithdrawal(p) {
+    return this.withdrawFromTraditional401k({
+      ...p,
+      desc: p.desc ?? "RMD Withdrawal",
+    });
+  }
+
+  // ============================================================
+  // ROTH WITHDRAWAL (Roth decreases, Cash increases)
+  // ============================================================
+  /**
+   * Financial Meaning:
+   *  - Roth account decreases.
+   *  - Cash increases by the withdrawn amount.
+   * GAAP Posting Effects:
+   *  - drRoth is credited (asset decreases).
+   *  - drCash is debited (asset increases).
+   * @param {RothToCashArgs} p
+   */
+  withdrawFromTraditionalRoth(p) {
+    const b = new GaapPostingBuilder();
+    b.decrease(p.drRoth, p.amount);
+    b.increase(p.drCash, p.amount);
+    return this.ledger.record(
+      p.date ?? new Date(),
+      p.desc ?? "Roth Withdrawal",
+      b.build()
+    );
+  }
+
+  // ============================================================
+  // PENSION INCOME (Income increases, Cash increases)
+  // ============================================================
+  /**
+   * Financial Meaning:
+   *  - Cash increases from pension payment.
+   *  - Pension income is recognized.
+   * GAAP Posting Effects:
+   *  - crPensionIncome is credited (income increases).
+   *  - drCash is debited (asset increases).
+   * @param {PensionIncomeToCashArgs} p
+   */
+  pensionPayment(p) {
+    const b = new GaapPostingBuilder();
+    b.increase(p.crPensionIncome, p.amount);
+    b.increase(p.drCash, p.amount);
+    return this.ledger.record(
+      p.date ?? new Date(),
+      p.desc ?? "Pension Income",
+      b.build()
+    );
+  }
+
+  // ============================================================
+  // SOCIAL SECURITY INCOME (Income increases, Cash increases)
+  // ============================================================
+  /**
+   * Financial Meaning:
+   *  - Cash increases from Social Security benefits.
+   *  - Social Security income is recognized.
+   * GAAP Posting Effects:
+   *  - crSSIncome is credited (income increases).
+   *  - drCash is debited (asset increases).
+   * @param {SSIncomeToCashArgs} p
+   */
+  socialSecurityIncome(p) {
+    const b = new GaapPostingBuilder();
+    b.increase(p.crSSIncome, p.amount);
+    b.increase(p.drCash, p.amount);
+    return this.ledger.record(
+      p.date ?? new Date(),
+      p.desc ?? "Social Security Income",
+      b.build()
+    );
+  }
+
+  // ============================================================
+  // INVESTMENT PURCHASE (Cash decreases, Investment increases)
+  // ============================================================
+  /**
+   * Financial Meaning:
+   *  - Cash decreases to purchase an investment.
+   *  - Investment value increases by the purchase amount.
+   * GAAP Posting Effects:
+   *  - drCash is credited (asset decreases).
+   *  - drInvestment is debited (asset increases).
+   * @param {CashToInvestmentArgs} p
+   */
+  investmentBuy(p) {
+    const b = new GaapPostingBuilder();
+    b.decrease(p.drCash, p.amount);
+    b.increase(p.drInvestment, p.amount);
+    return this.ledger.record(
+      p.date ?? new Date(),
+      p.desc ?? "Investment Purchase",
+      b.build()
+    );
+  }
+
+  // ============================================================
+  // INVESTMENT SALE (Investment decreases, Cash increases)
+  // ============================================================
+  /**
+   * Financial Meaning:
+   *  - Investment account decreases by sold amount.
+   *  - Cash increases from proceeds.
+   * GAAP Posting Effects:
+   *  - drInvestment is credited (asset decreases).
+   *  - drCash is debited (asset increases).
+   * @param {InvestmentToCashArgs} p
+   */
+  investmentSell(p) {
+    const b = new GaapPostingBuilder();
+    b.decrease(p.drInvestment, p.amount);
+    b.increase(p.drCash, p.amount);
+    return this.ledger.record(
+      p.date ?? new Date(),
+      p.desc ?? "Investment Sale",
+      b.build()
+    );
+  }
+
+  // ============================================================
+  // CAPITAL GAIN REALIZATION
+  // ============================================================
+  /**
+   * Correct GAAP behavior:
+   *   Dr Cash (proceeds)
+   *   Dr Loss (if basis > proceeds)
+   *   Cr Investment (basis removed)
+   *   Cr Gain (if proceeds > basis)
+   * @param {InvestmentToCashAndGainArgs} p
+   */
+  realizeCapitalGain(p) {
+    const b = new GaapPostingBuilder();
+
+    // 1. Investment decreases by its basis (credit)
+    b.decrease(p.drInvestment, p.basis);
+
+    // 2. Cash increases by proceeds (debit)
+    b.increase(p.drCash, p.proceeds);
+
+    // 3. Gain or Loss recognition
+    const gain = p.proceeds - p.basis;
+
+    if (gain > 0) {
+      // Gain is credited
+      b.increase(p.crGain, gain);
+    } else if (gain < 0) {
+      // Loss is debited (positive number)
+      b.increase(p.drLoss, -gain); // convert negative to positive
+    }
+
+    return this.ledger.record(
+      p.date ?? new Date(),
+      p.desc ?? "Capital Gain Realization",
+      b.build()
+    );
+  }
+
+  // ============================================================
+  // INTEREST INCOME (Income increases, Cash increases)
+  // ============================================================
+  /**
+   * Financial Meaning:
+   *  - Cash increases by interest received.
+   *  - Interest income is recognized.
+   * GAAP Posting Effects:
+   *  - crInterestIncome is credited (income increases).
+   *  - drCash is debited (asset increases).
+   * @param {InterestIncomeToCashArgs} p
+   */
+  interestIncome(p) {
+    const b = new GaapPostingBuilder();
+    b.increase(p.crInterestIncome, p.amount);
+    b.increase(p.drCash, p.amount);
+    return this.ledger.record(
+      p.date ?? new Date(),
+      p.desc ?? "Interest Earned",
+      b.build()
+    );
+  }
+
+  // ============================================================
+  // DIVIDEND INCOME (Income increases, Cash increases)
+  // ============================================================
+  /**
+   * Financial Meaning:
+   *  - Cash increases from dividends.
+   *  - Dividend income is recognized.
+   * GAAP Posting Effects:
+   *  - crDividendIncome is credited (income increases).
+   *  - drCash is debited (asset increases).
+   * @param {DividendIncomeToCashArgs} p
+   */
+  dividendIncome(p) {
+    const b = new GaapPostingBuilder();
+    b.increase(p.crDividendIncome, p.amount);
+    b.increase(p.drCash, p.amount);
+    return this.ledger.record(
+      p.date ?? new Date(),
+      p.desc ?? "Dividend Received",
+      b.build()
+    );
+  }
+
+  // ============================================================
+  // TAX PAYMENT (Cash decreases, Liability decreases)
+  // ============================================================
+  /**
+   * Financial Meaning:
+   *  - Cash decreases to pay taxes.
+   *  - Tax liability is reduced.
+   * GAAP Posting Effects:
+   *  - drCash is credited (asset decreases).
+   *  - crTaxLiability is debited (liability decreases).
+   * @param {CashToTaxLiabilityArgs} p
+   */
+  taxPayment(p) {
+    const b = new GaapPostingBuilder();
+    b.decrease(p.drCash, p.amount);
+    b.decrease(p.crTaxLiability, p.amount);
+    return this.ledger.record(
+      p.date ?? new Date(),
+      p.desc ?? "Tax Payment",
+      b.build()
+    );
+  }
+
+  // ============================================================
+  // ESTIMATED TAX PAYMENT (Cash decreases, Tax Expense increases)
+  // ============================================================
+  /**
+   * Financial Meaning:
+   *  - Cash decreases to pay estimated taxes.
+   *  - Tax expense is recognized.
+   * GAAP Posting Effects:
+   *  - drCash is credited (asset decreases).
+   *  - drTaxExpense is debited (expense increases).
+   *
+   * @param {CashToTaxExpenseArgs} p
+   */
+  estimatedTaxPayment(p) {
+    const b = new GaapPostingBuilder();
+    b.decrease(p.drCash, p.amount);
+    b.increase(p.drTaxExpense, p.amount);
+    return this.ledger.record(
+      p.date ?? new Date(),
+      p.desc ?? "Estimated Tax Payment",
+      b.build()
+    );
+  }
+
+  // ============================================================
+  // ESCROW DEPOSIT (Cash decreases, Escrow asset increases)
+  // ============================================================
+  /**
+   * Financial Meaning:
+   *  - Cash decreases when depositing into escrow.
+   *  - Escrow asset increases by the deposit amount.
+   * GAAP Posting Effects:
+   *  - drCash is credited (asset decreases).
+   *  - drEscrow is debited (asset increases).
+   * @param {CashToEscrowArgs} p
+   */
+  escrowDeposit(p) {
+    const b = new GaapPostingBuilder();
+    b.decrease(p.drCash, p.amount);
+    b.increase(p.drEscrow, p.amount);
+    return this.ledger.record(
+      p.date ?? new Date(),
+      p.desc ?? "Escrow Deposit",
+      b.build()
+    );
+  }
 }
 
 // -------------------------------------------------------------
@@ -1276,6 +1883,7 @@ if (typeof module !== "undefined" && module.exports) {
     GaapPostingBuilder,
     GaapPosting,
     GaapJournalEntry,
+    GaapJournalEntryBuilder,
     GaapLedger,
     // ...anything else you need in tests
   };

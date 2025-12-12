@@ -12,9 +12,6 @@ const {
 
 const {
   GaapAccountType,
-  GaapAccount,
-  GaapPostingSide,
-  GaapPosting,
   GaapPostingBuilder,
   GaapJournalEntry,
   GaapLedger,
