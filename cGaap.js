@@ -348,13 +348,14 @@ class GaapAccount {
    * @param {number} amount
    */
   apply(side, amount) {
-    const increase =
-      (side === GaapPostingSide.Debit &&
-        this.normalBalance === GaapPostingSide.Debit) ||
-      (side === GaapPostingSide.Credit &&
-        this.normalBalance === GaapPostingSide.Credit);
+    // const increase =
+    //   (side === GaapPostingSide.Debit &&
+    //     this.normalBalance === GaapPostingSide.Debit) ||
+    //   (side === GaapPostingSide.Credit &&
+    //     this.normalBalance === GaapPostingSide.Credit);
 
-    return increase ? amount : -amount;
+    // return increase ? amount : -amount;
+    return side === GaapPostingSide.Debit ? amount : -amount;
   }
 
   /**
@@ -366,9 +367,10 @@ class GaapAccount {
       .flatMap((je) => je.postings)
       .filter((p) => p.account.id === this.id);
 
-    const balance = postings.reduce((sum, p) => {
-      return sum + this.apply(p.side, p.amount);
-    }, 0);
+    let balance = postings.reduce(
+      (sum, p) => sum + this.apply(p.side, p.amount),
+      0
+    );
 
     return balance;
   }
@@ -1700,6 +1702,13 @@ class GaapOutputGenerator {
    * @param {GaapLedger} ledger
    */
   constructor(ledger) {
+    if (!ledger) {
+      throw new Error("GaapOutputGenerator requires a GaapLedger instance");
+    }
+    if (!(ledger instanceof GaapLedger)) {
+      throw new Error("GaapOutputGenerator requires a GaapLedger instance");
+    }
+
     this.ledger = ledger;
   }
 
@@ -1776,9 +1785,23 @@ class GaapOutputGenerator {
 
   /**
    * Pretty-print every journal entry in chronological order.
+   * @param {Date|null} startDate
+   * @param {Date|null} endDate
    * @returns {string}
    */
-  printLedgerStatement() {
+  printLedgerStatement(startDate = null, endDate = null) {
+    if (startDate && endDate && startDate > endDate) {
+      throw new Error("startDate cannot be after endDate");
+    }
+
+    if (startDate && isNaN(startDate.getTime())) {
+      throw new Error("startDate is not a valid date");
+    }
+
+    if (endDate && isNaN(endDate.getTime())) {
+      throw new Error("endDate is not a valid date");
+    }
+
     const ledger = this.ledger;
     const lines = [];
 
@@ -1786,9 +1809,13 @@ class GaapOutputGenerator {
     lines.push("==============");
     lines.push("");
 
-    const entries = [...ledger.journalEntries].sort(
-      (a, b) => a.date.getTime() - b.date.getTime()
-    );
+    const entries = [
+      ...ledger.journalEntries.filter((je) => {
+        if (startDate && je.date < startDate) return false;
+        if (endDate && je.date > endDate) return false;
+        return true;
+      }),
+    ].sort((a, b) => a.date.getTime() - b.date.getTime());
 
     for (const je of entries) {
       lines.push(`Date: ${je.date.toISOString().split("T")[0]}`);
@@ -1885,6 +1912,8 @@ if (typeof module !== "undefined" && module.exports) {
     GaapJournalEntry,
     GaapJournalEntryBuilder,
     GaapLedger,
+    GaapMacros,
+    GaapOutputGenerator,
     // ...anything else you need in tests
   };
 }
