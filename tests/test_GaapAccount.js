@@ -9,15 +9,6 @@ const {
   runTest,
   TestTracker,
 } = require("./baseTest.js");
-const { EnumBase } = require("../cEnum.js");
-// Load your GAAP module
-const {
-  GaapAccountTypeNames,
-  GaapAccountType,
-  GAAP_NORMAL_BALANCE_BY_TYPE,
-  GaapAccount,
-  GaapPostingSide,
-} = require("../cGaap.js");
 
 const testTracker = new TestTracker("GaapAccount Tests");
 

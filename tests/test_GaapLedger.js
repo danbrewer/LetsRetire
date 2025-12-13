@@ -10,12 +10,12 @@ const {
   TestTracker,
 } = require("./baseTest.js");
 
-const {
-  GaapAccountType,
-  GaapPostingBuilder,
-  GaapJournalEntry,
-  GaapLedger,
-} = require("../cGaap.js");
+// const {
+//   GaapAccountType,
+//   GaapPostingBuilder,
+//   GaapJournalEntry,
+//   GaapLedger,
+// } = require("../cGaap.js");
 
 const testTracker = new TestTracker("GaapLedger Tests");
 

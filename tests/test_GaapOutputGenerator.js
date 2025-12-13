@@ -7,20 +7,6 @@ const {
   assertThrows,
 } = require("./baseTest.js");
 
-// Load the GAAP classes
-const {
-  // @ts-ignore
-  GaapJournalEntry,
-  // @ts-ignore
-  GaapAccount,
-  GaapLedger,
-  GaapAccountType,
-  // @ts-ignore
-  GaapPostingSide,
-  GaapOutputGenerator,
-} = require("../cGaap.js");
-
-
 console.log("=".repeat(70));
 console.log("🧪 GAAP OUTPUT GENERATOR TESTS");
 console.log("=".repeat(70));
@@ -67,8 +53,14 @@ runTest(
     console.log(output);
 
     assert(typeof output === "string", "printTAccount should return string");
-    assert(output.includes("Cash (T-Account)"), "Output should contain account name with T-Account label");
-    assert(output.includes("(no activity)"), "Empty account should show 'no activity' message");
+    assert(
+      output.includes("Cash (T-Account)"),
+      "Output should contain account name with T-Account label"
+    );
+    assert(
+      output.includes("(no activity)"),
+      "Empty account should show 'no activity' message"
+    );
   },
   testTracker
 );
@@ -87,7 +79,7 @@ runTest(
     );
 
     const testDate = new Date("2023-06-15");
-    
+
     // Create some transactions
     ledger
       .entry(testDate, "Initial investment")
@@ -107,16 +99,33 @@ runTest(
     const generator = new GaapOutputGenerator(ledger);
     const output = generator.printTAccount(cash);
 
+    console.log(output);
+
     // Check for formatted entries with date|description|amount format
-    assert(output.includes("2023-06-15"), "Should show transaction date in ISO format");
-    assert(output.includes("Initial investment"), "Should show transaction description");
-    assert(output.includes("Expense payment"), "Should show second transaction description");
+    assert(
+      output.includes("2023-06-15"),
+      "Should show transaction date in ISO format"
+    );
+    assert(
+      output.includes("Initial investment"),
+      "Should show transaction description"
+    );
+    assert(
+      output.includes("Expense payment"),
+      "Should show second transaction description"
+    );
     assert(output.includes("1000"), "Should show debit amount");
     assert(output.includes("200"), "Should show credit amount");
-    
+
     // Check that amounts appear with the pipe-separated format
-    assert(output.includes("| Initial investment | 1000"), "Should show debit entry in correct format");
-    assert(output.includes("| Expense payment | 200"), "Should show credit entry in correct format");
+    assert(
+      output.includes("| Initial investment | 1000"),
+      "Should show debit entry in correct format"
+    );
+    assert(
+      output.includes("| Expense payment | 200"),
+      "Should show credit entry in correct format"
+    );
   },
   testTracker
 );
@@ -147,22 +156,32 @@ runTest(
     const cashOutput = generator.printTAccount(cash);
 
     console.log(cashOutput);
-    
+
     // Check that ending balance is displayed
-    assert(cashOutput.includes("Ending Balance: 500"), "Cash should show ending balance of 500");
-    
+    assert(
+      cashOutput.includes("Ending Balance: 500"),
+      "Cash should show ending balance of 500"
+    );
+
     // Check that debit appears in left column
-    const lines = cashOutput.split('\n');
-    const debitCreditLine = lines.find(line => line.includes("Debit") && line.includes("Credit"));
+    const lines = cashOutput.split("\n");
+    const debitCreditLine = lines.find(
+      (line) => line.includes("Debit") && line.includes("Credit")
+    );
     assert(debitCreditLine, "Should have Debit | Credit header line");
-    
+
     // Verify the cash receipt appears in the debit side (left column)
-    const receiptLine = lines.find(line => line.includes("Cash receipt") && line.includes("500"));
+    const receiptLine = lines.find(
+      (line) => line.includes("Cash receipt") && line.includes("500")
+    );
     assert(receiptLine, "Should find the cash receipt line");
 
     // Income account (credit normal) - should show negative balance (credit balance)
     const revenueOutput = generator.printTAccount(revenue);
-    assert(revenueOutput.includes("Ending Balance: -500"), "Revenue should show ending balance of -500 (credit normal)");
+    assert(
+      revenueOutput.includes("Ending Balance: -500"),
+      "Revenue should show ending balance of -500 (credit normal)"
+    );
   },
   testTracker
 );
@@ -175,32 +194,61 @@ runTest(
   () => {
     const ledger = new GaapLedger();
     const cash = ledger.createCashAccount("Cash");
-    const equity = ledger.createNonCashAccount("Equity", GaapAccountType.Equity);
-    const expense = ledger.createNonCashAccount("Expense", GaapAccountType.Expense);
-    
+    const equity = ledger.createNonCashAccount(
+      "Equity",
+      GaapAccountType.Equity
+    );
+    const expense = ledger.createNonCashAccount(
+      "Expense",
+      GaapAccountType.Expense
+    );
+
     const testDate = new Date("2023-06-15");
     const generator = new GaapOutputGenerator(ledger);
 
     // Create mixed debits and credits
-    ledger.entry(testDate, "Initial deposit").debit(cash, 1000).credit(equity, 1000).post();
-    ledger.entry(testDate, "Cash withdrawal").credit(cash, 200).debit(expense, 200).post();
-    ledger.entry(testDate, "Another deposit").debit(cash, 300).credit(equity, 300).post();
+    ledger
+      .entry(testDate, "Initial deposit")
+      .debit(cash, 1000)
+      .credit(equity, 1000)
+      .post();
+    ledger
+      .entry(testDate, "Cash withdrawal")
+      .credit(cash, 200)
+      .debit(expense, 200)
+      .post();
+    ledger
+      .entry(testDate, "Another deposit")
+      .debit(cash, 300)
+      .credit(equity, 300)
+      .post();
 
     const output = generator.printTAccount(cash);
-    const lines = output.split('\n');
+
+    console.log(output);
+
+    const lines = output.split("\n");
 
     // Find the column separator line (dashes)
-    const separatorLine = lines.find(line => line.includes('---') || line.match(/^-+$/));
+    const separatorLine = lines.find(
+      (line) => line.includes("---") || line.match(/^-+$/)
+    );
     assert(separatorLine, "Should have separator line with dashes");
 
     // Check that we have the pipe separator in data lines
-    const dataLines = lines.filter(line => 
-      line.includes('|') && 
-      (line.includes('Initial deposit') || line.includes('Cash withdrawal') || line.includes('Another deposit'))
+    const dataLines = lines.filter(
+      (line) =>
+        line.includes("|") &&
+        (line.includes("Initial deposit") ||
+          line.includes("Cash withdrawal") ||
+          line.includes("Another deposit"))
     );
-    
-    assert(dataLines.length >= 2, "Should have at least 2 data lines with pipe separators");
-    
+
+    assert(
+      dataLines.length >= 2,
+      "Should have at least 2 data lines with pipe separators"
+    );
+
     // Verify ending balance is shown
     assert(output.includes("Ending Balance:"), "Should display ending balance");
   },
@@ -234,6 +282,8 @@ runTest(
 
     const generator = new GaapOutputGenerator(ledger);
     const output = generator.printLedgerStatement();
+
+    console.log(output);
 
     assert(
       typeof output === "string",
@@ -288,6 +338,7 @@ runTest(
     const rangeStart = new Date("2023-04-01");
     const rangeEnd = new Date("2023-08-01");
     const output = generator.printLedgerStatement(rangeStart, rangeEnd);
+    console.log(output);
 
     assert(
       output.includes("In range"),
@@ -420,6 +471,8 @@ runTest(
     const generator = new GaapOutputGenerator(ledger);
     const output = generator.printChartOfAccounts();
 
+    console.log(output);
+
     // Assets should come before Liabilities in standard chart of accounts
     const assetPos = output.search(/(ASSETS|Asset)/i);
     const liabilityPos = output.search(/(LIABILITIES|Liability)/i);
@@ -468,8 +521,17 @@ runTest(
     const generator = new GaapOutputGenerator(ledger);
 
     const tAccount = generator.printTAccount(cash);
+
+    console.log("T-Account Output:");
+    console.log(tAccount);
+
     const ledgerStatement = generator.printLedgerStatement();
+    console.log("Ledger Statement Output:");
+    console.log(ledgerStatement);
+
     const chartOfAccounts = generator.printChartOfAccounts();
+    console.log("Chart of Accounts Output:");
+    console.log(chartOfAccounts);
 
     // All outputs should be non-empty strings
     assert(
