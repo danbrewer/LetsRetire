@@ -1,3 +1,8 @@
+import { Demographics } from "./cDemographics";
+import { FiscalData } from "./cFiscalData";
+import { IncomeBreakdown } from "./cIncomeBreakdown";
+import { TaxCalculations } from "./cTaxCalculations";
+
 /**
  * Represents comprehensive tax calculation data including income, deductions, and tax liabilities.
  *
@@ -247,3 +252,5 @@ class Taxes {
   //   );
   // }
 }
+
+export { Taxes };

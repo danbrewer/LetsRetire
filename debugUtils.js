@@ -346,3 +346,5 @@ function alignValue(val, width) {
   }
   return String(val).padEnd(width);
 }
+
+export { log, withLabel };

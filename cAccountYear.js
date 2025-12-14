@@ -1,3 +1,5 @@
+import { Account } from "./cAccount";
+
 class AccountYear {
   /** @type {Account} */
   #account;
@@ -74,3 +76,5 @@ class AccountYear {
     };
   }
 }
+
+export { AccountYear };

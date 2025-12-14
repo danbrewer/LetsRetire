@@ -3,13 +3,7 @@
 // @ts-nocheck
 
 // Include retirement.js as module
-const {
-  log,
-  retirementJS_determine401kWithdrawalsToHitNetTargetOf,
-  retirementJS_getTaxBrackets,
-  retirementJS_getStandardDeduction,
-  constsJS_FILING_STATUS,
-} = require("./retirement.js");
+import { log, retirementJS_determine401kWithdrawalsToHitNetTargetOf, retirementJS_getTaxBrackets, retirementJS_getStandardDeduction, constsJS_FILING_STATUS } from "./retirement.js";
 
 // ---------------- CLI ----------------
 

@@ -6,10 +6,10 @@
 // Tests the SsBenefitsCalculator class and Social Security taxation calculations
 
 // Load required dependencies
-require("./utils.js"); // For asCurrency() and other Number prototype methods
+import "./utils.js"; // For asCurrency() and other Number prototype methods
 
 // Load the SsBenefitsCalculator class
-const { SsBenefitsCalculator } = require("./cSsBenefitsCalculator.js");
+import { SsBenefitsCalculator } from "./cSsBenefitsCalculator.js";
 
 // Test utilities
 function assert(condition, message) {

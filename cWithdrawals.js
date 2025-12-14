@@ -1,3 +1,6 @@
+import { ACCOUNT_TYPES } from "./cAccount";
+import { AccountingYear } from "./cAccountingYear";
+
 /**
  * Represents withdrawal amounts across all retirement and savings accounts.
  *
@@ -257,3 +260,5 @@ class Withdrawals {
 
 // Maintain backward compatibility - this will need account and income data context
 // const withdrawals = Withdrawals.CreateUsing(accounts, incomeResults.incomeBreakdown, fiscalData);
+
+export { Withdrawals };

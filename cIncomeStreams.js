@@ -1,3 +1,10 @@
+import { ACCOUNT_TYPES } from "./cAccount";
+import { AccountingYear } from "./cAccountingYear";
+import { Common } from "./cCommon";
+import { Demographics } from "./cDemographics";
+import { FiscalData } from "./cFiscalData";
+import { Inputs } from "./cInputs";
+
 class IncomeStreams {
   /** @type {AccountingYear} */
   #accountYear;
@@ -167,3 +174,5 @@ class IncomeStreams {
     };
   }
 }
+
+export { IncomeStreams };

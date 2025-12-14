@@ -1,3 +1,8 @@
+import { Demographics } from "./cDemographics";
+import { FiscalData } from "./cFiscalData";
+import { IncomeStreams } from "./cIncomeStreams";
+import { TaxCalculations } from "./cTaxCalculations";
+
 class IncomeBreakdown {
   /** @type {SsCalculationDetails | null} */
   #ssCalculationDetails;
@@ -269,3 +274,5 @@ class IncomeBreakdown {
     );
   }
 }
+
+export { IncomeBreakdown };

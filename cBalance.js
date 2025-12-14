@@ -1,3 +1,5 @@
+import { AccountingYear } from "./cAccountingYear";
+
 /**
  * Represents account balances across all retirement and savings accounts.
  *
@@ -49,3 +51,5 @@ class Balance {
     return new Balance(accountYear, accountType);
   }
 }
+
+export { Balance };

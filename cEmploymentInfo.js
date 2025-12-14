@@ -1,3 +1,7 @@
+import { Demographics } from "./cDemographics";
+import { Inputs } from "./cInputs";
+import { EMPLOYEE_401K_LIMIT_2025, EMPLOYEE_401K_CATCHUP_50 } from "./consts";
+
 /**
  * Represents comprehensive employment information for retirement planning calculations.
  *
@@ -399,3 +403,5 @@ class EmploymentInfo {
 
 // Maintain backward compatibility - this will need salary and inputs context
 // const employmentInfo = EmploymentInfo.CreateUsing(salary, inputs);
+
+export { EmploymentInfo };

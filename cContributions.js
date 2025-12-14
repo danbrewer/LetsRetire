@@ -1,3 +1,8 @@
+import { ACCOUNT_TYPES } from "./cAccount";
+import { AccountingYear } from "./cAccountingYear";
+import { EmploymentInfo } from "./cEmploymentInfo";
+import { withLabel } from "./debugUtils";
+
 /**
  * Represents comprehensive contribution breakdown for retirement planning.
  *
@@ -477,3 +482,5 @@ class Contributions {
 
 // Maintain backward compatibility - this will need employment and account context
 // const contributions = Contributions.CreateUsing(employmentInfo, spouseEmploymentInfo, accountGroup, calculationDetails);
+
+export { Contributions };

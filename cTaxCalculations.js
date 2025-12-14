@@ -1,3 +1,8 @@
+import { Demographics } from "./cDemographics";
+import { FiscalData } from "./cFiscalData";
+import { TAX_BASE_YEAR, constsJS_FILING_STATUS, constsJS_TAX_TABLES_2025, constsJS_STANDARD_DEDUCTION_2025 } from "./consts";
+import { log } from "./debugUtils";
+
 class TaxCalculations {
   /**
    * @param {Demographics} demographics
@@ -157,3 +162,5 @@ class TaxCalculations {
     return true;
   }
 }
+
+export { TaxCalculations };

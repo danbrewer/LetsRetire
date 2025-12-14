@@ -1,3 +1,6 @@
+import { Account } from "./cAccount";
+import { FiscalData } from "./cFiscalData";
+
 /**
  * Represents detailed breakdown of retirement account activity for a specific year.
  *
@@ -325,3 +328,5 @@ class RetirementAccountBreakdown {
 
 // Maintain backward compatibility - this will need account and input data context
 // const retirementAccountBreakdown = RetirementAccountBreakdown.CreateUsing(accounts.trad401k, inputs, fiscalData, "ret401k");
+
+export { RetirementAccountBreakdown };

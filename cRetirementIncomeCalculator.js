@@ -1,3 +1,10 @@
+import { Demographics } from "./cDemographics.js";
+import { FiscalData } from "./cFiscalData.js";
+import { IncomeBreakdown } from "./cIncomeBreakdown.js";
+import { IncomeRs } from "./cIncomeRs.js";
+import { IncomeStreams } from "./cIncomeStreams.js";
+import { SsBenefitsCalculator } from "./cSsBenefitsCalculator.js";
+import { withLabel, log } from "./debugUtils.js";
 /**
  * RetirementIncomeCalculator class - Handles retirement income and tax calculations
  * Provides comprehensive income analysis for retirement planning scenarios
@@ -253,3 +260,8 @@ function calculateIncomeWhen401kWithdrawalIs(
     incomeStreams
   );
 }
+
+export {
+  RetirementIncomeCalculator,
+  calculateIncomeWhen401kWithdrawalIs,
+};

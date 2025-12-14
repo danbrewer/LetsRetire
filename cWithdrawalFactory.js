@@ -1,3 +1,14 @@
+import { ACCOUNT_TYPES } from "./cAccount";
+import { AccountingYear } from "./cAccountingYear";
+import { AccountPortioner } from "./cAccountPortioner";
+import { Demographics } from "./cDemographics";
+import { FiscalData } from "./cFiscalData";
+import { IncomeRs } from "./cIncomeRs";
+import { IncomeStreams } from "./cIncomeStreams";
+import { PERIODIC_FREQUENCY } from "./consts";
+import { RetirementIncomeCalculator } from "./cRetirementIncomeCalculator";
+import { WorkingIncomeCalculator } from "./cWorkingIncomeCalculator";
+
 /**
  * WithdrawalFactory class - Handles withdrawal operations for retirement accounts
  * Manages withdrawals from different account types with tax calculations
@@ -191,6 +202,13 @@ class WithdrawalFactory {
         gross401kWithdrawal,
         this.#fixedIncomeStreams
       );
+
+    if (this.#incomeResults == null) {
+      console.error(
+        "Income results are null after calculating income with 401k withdrawal."
+      );
+      throw new Error("Income results calculation failed.");
+    }
 
     if (!trialRun) {
       this.#processTrad401kTransactions(gross401kWithdrawal);
@@ -509,3 +527,5 @@ class WithdrawalFactory {
 //     getFinalIncomeResults: factory.getFinalIncomeResults.bind(factory),
 //   };
 // }
+
+export { WithdrawalFactory };

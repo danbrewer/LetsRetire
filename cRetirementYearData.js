@@ -24,6 +24,16 @@
 //    * @param {SocialSecurityIncome} socialSecurityIncome - Social Security income data
 //    * @param {Taxes} taxes - Tax data
 //    * @param {AccountYear} accountYear - Instance of AccountGroup class
+
+import { AccountingYear } from "./cAccountingYear";
+import { Balance } from "./cBalance";
+import { Balances } from "./cBalances";
+import { Demographics } from "./cDemographics";
+import { FiscalData } from "./cFiscalData";
+import { RetirementAccountBreakdown } from "./cRetirementAccountBreakdown";
+import { Income } from "./cRevenue";
+import { Taxes } from "./cTaxes";
+
 //    */
 class RetirementYearData {
   /** @type {Demographics} */
@@ -228,3 +238,5 @@ class RetirementYearData {
 
 // Create instance using the factory method for backward compatibility
 // const result = RetirementYearData.Empty();
+
+export { RetirementYearData };

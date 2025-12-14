@@ -1,5 +1,13 @@
 // retirement-calculator.js
 
+import { Account, ACCOUNT_TYPES } from "./cAccount";
+import { AccountingYear } from "./cAccountingYear";
+import { AccountsManager } from "./cAccountsManager";
+import { Inputs } from "./cInputs";
+import { TAX_BASE_YEAR } from "./consts";
+import { RetirementYearCalculator } from "./cRetirementYearCalculator";
+import { WorkingYearCalculator } from "./cWorkingYearCalculator";
+
 function calc() {
   // Track previous ages to only regenerate spending fields when they change
   let lastRetireAge = null;
@@ -174,3 +182,5 @@ function initializeInputsForRetirementYear(inputs, yearIndex) {
   ).asCurrency();
   return result;
 }
+
+export { calc };

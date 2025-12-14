@@ -1,3 +1,5 @@
+import { Account } from "./cAccount";
+
 class TargetedAccount {
   #account;
   #taxYear = 0;

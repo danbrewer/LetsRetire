@@ -1,3 +1,11 @@
+import { AccountingYear } from "./cAccountingYear";
+import { Balances } from "./cBalances";
+import { Contributions } from "./cContributions";
+import { Demographics } from "./cDemographics";
+import { Taxes } from "./cTaxes";
+import { Withdrawals } from "./cWithdrawals";
+import { WorkingYearIncome } from "./cWorkingYearIncome";
+
 /**
  * Represents comprehensive working year calculation data including income, contributions,
  * withdrawals, account balances, and tax information.
@@ -265,3 +273,5 @@ class WorkingYearData {
 
 // Maintain backward compatibility with the original object structure
 // const result = WorkingYearData.CreateEmpty();
+
+export { WorkingYearData };

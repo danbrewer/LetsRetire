@@ -1,3 +1,5 @@
+import { Inputs } from "./cInputs";
+
 class Common {
   // Required Minimum Distribution (RMD) calculation
   // Based on IRS Uniform Lifetime Table for 2024+
@@ -89,3 +91,5 @@ class Common {
     return result;
   }
 }
+
+export { Common };

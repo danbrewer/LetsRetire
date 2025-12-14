@@ -1,3 +1,9 @@
+import { Demographics } from "./cDemographics";
+import { FiscalData } from "./cFiscalData";
+import { IncomeBreakdown } from "./cIncomeBreakdown";
+import { IncomeRs } from "./cIncomeRs";
+import { IncomeStreams } from "./cIncomeStreams";
+
 /**
  * RetirementIncomeCalculator class - Handles retirement income and tax calculations
  * Provides comprehensive income analysis for retirement planning scenarios
@@ -118,3 +124,5 @@ class WorkingIncomeCalculator {
     return this.#fiscalData;
   }
 }
+
+export { WorkingIncomeCalculator };

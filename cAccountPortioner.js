@@ -1,3 +1,7 @@
+import { ACCOUNT_TYPES } from "./cAccount";
+import { AccountingYear } from "./cAccountingYear";
+import { FiscalData } from "./cFiscalData";
+
 class AccountPortioner {
   #accountYear;
   #useSavings = false;
@@ -74,3 +78,5 @@ class AccountPortioner {
     return (this.#rothIraPortion() * this.#ask).asCurrency();
   }
 }
+
+export { AccountPortioner };

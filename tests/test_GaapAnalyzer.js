@@ -148,20 +148,20 @@ runTest(
   "getBalanceSheet returns structured balance sheet with correct totals",
   () => {
     const ledger = new GaapLedger();
-    const cash = ledger.createCashAccount("Cash");
-    const ap = ledger.createNonCashAccount("AP", GaapAccountType.Liability);
-    const eq = ledger.createNonCashAccount("Equity", GaapAccountType.Equity);
+    const drCash = ledger.createCashAccount("Cash");
+    const crAcctPayable = ledger.createNonCashAccount("AP", GaapAccountType.Liability);
+    const crEquity = ledger.createNonCashAccount("Equity", GaapAccountType.Equity);
 
     ledger
       .entry(new Date("2023-01-01"), "Owner investment")
-      .debit(cash, 500)
-      .credit(eq, 500)
+      .debit(drCash, 500)
+      .credit(crEquity, 500)
       .post();
 
     ledger
       .entry(new Date("2023-01-02"), "Borrowing")
-      .debit(cash, 300)
-      .credit(ap, 300)
+      .debit(drCash, 300)
+      .credit(crAcctPayable, 300)
       .post();
 
     const analyzer = new GaapAnalyzer(ledger);

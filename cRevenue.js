@@ -3,6 +3,8 @@
  * Handles income tracking, revenue streams, and financial reporting for revenue accounts
  */
 
+import { AccountingYear } from "./cAccountingYear";
+
 class Income {
   /** @type {AccountingYear} */
   #accountYear;
@@ -77,3 +79,5 @@ class Income {
   //     return new Income(AccountYear.Empty(), "");
   //   }
 }
+
+export { Income };

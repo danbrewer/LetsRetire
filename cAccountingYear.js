@@ -1,3 +1,7 @@
+import { ACCOUNT_TYPES } from "./cAccount";
+import { AccountsManager } from "./cAccountsManager";
+import { INTEREST_CALCULATION_EPOCH } from "./consts";
+
 class AccountingYear {
   #accountsManager;
 
@@ -282,3 +286,5 @@ class AccountingYear {
 
 // Create instance using the factory method for backward compatibility
 // const accounts = AccountGroup.fromInputs(inputs);
+
+export { AccountingYear };

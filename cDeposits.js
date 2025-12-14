@@ -1,3 +1,8 @@
+import { Account } from "./cAccount";
+import { AccountsManager } from "./cAccountsManager";
+import { FiscalData } from "./cFiscalData";
+import { withLabel } from "./debugUtils";
+
 /**
  * Represents deposit amounts across all retirement and savings accounts.
  *
@@ -297,3 +302,5 @@ class Deposits {
 
 // Maintain backward compatibility - this will need account and income data context
 // const deposits = Deposits.CreateUsing(accounts, incomeResults.incomeBreakdown, fiscalData);
+
+export { Deposits };

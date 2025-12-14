@@ -117,3 +117,5 @@ class SsBenefitsCalculator {
 // if (typeof module !== "undefined" && module.exports) {
 //   module.exports = { SsBenefitsCalculator };
 // }
+
+export { SsBenefitsCalculator };

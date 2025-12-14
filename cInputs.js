@@ -1,3 +1,5 @@
+import { ACCOUNT_TYPES } from "./cAccount";
+
 class Inputs {
   /** @type {number} */
   #taxableIncomeAdjustment = 0;
@@ -506,3 +508,5 @@ class Inputs {
     );
   }
 }
+
+export { Inputs };

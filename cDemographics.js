@@ -1,3 +1,5 @@
+import { Inputs } from "./cInputs";
+
 class Demographics {
   /**
    * @param {number} currentAge
@@ -165,3 +167,5 @@ class Demographics {
     );
   }
 }
+
+export { Demographics };

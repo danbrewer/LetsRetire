@@ -1,3 +1,6 @@
+import { Account, ACCOUNT_TYPES } from "./cAccount";
+import { Inputs } from "./cInputs";
+
 class AccountsManager {
   /**
    * @param {Account} trad401k - Traditional 401k account instance
@@ -280,3 +283,5 @@ class AccountsManager {
 
 // Create instance using the factory method for backward compatibility
 // const accounts = AccountGroup.fromInputs(inputs);
+
+export { AccountsManager };

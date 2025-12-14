@@ -1,6 +1,8 @@
 // Test file for Expenditures class
 // This demonstrates how to use the Expenditures class
 
+import { ACCOUNT_TYPES } from "../cAccount";
+
 // Load the Expenditures class (assuming it's available)
 // In a real application, you'd import/require the cExpenditures.js file
 

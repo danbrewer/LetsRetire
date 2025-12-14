@@ -1,3 +1,6 @@
+import { IncomeBreakdown } from "./cIncomeBreakdown";
+import { SsBenefitsCalculator } from "./cSsBenefitsCalculator";
+
 /**
  * Represents income calculation results containing Social Security and general income breakdowns.
  *
@@ -142,3 +145,5 @@ class IncomeRs {
 // Maintain backward compatibility - note: empty objects are no longer supported
 // Use IncomeRs.CreateUsing() with valid breakdown objects instead
 // const result = IncomeRs.CreateUsing(validSsBreakdown, validIncomeBreakdown);
+
+export { IncomeRs };

@@ -1,3 +1,13 @@
+import { Account, ACCOUNT_TYPES } from "./cAccount";
+import { AccountingYear } from "./cAccountingYear";
+import { Demographics } from "./cDemographics";
+import { EmploymentInfo } from "./cEmploymentInfo";
+import { FiscalData } from "./cFiscalData";
+import { Inputs } from "./cInputs";
+import { INTEREST_CALCULATION_EPOCH, PERIODIC_FREQUENCY } from "./consts";
+import { TaxCalculations } from "./cTaxCalculations";
+import { Taxes } from "./cTaxes";
+
 /**
  * Represents comprehensive income information for a working year in retirement planning.
  *
@@ -324,3 +334,5 @@ class WorkingYearIncome {
     );
   }
 }
+
+export { WorkingYearIncome };

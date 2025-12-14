@@ -1,3 +1,5 @@
+import { Inputs } from "./cInputs";
+
 class FiscalData {
   /**
    * @param {number} inflationRate
@@ -183,3 +185,5 @@ class FiscalData {
     return new FiscalData(0, 0, 0, 0, 0, 0, 0);
   }
 }
+
+export { FiscalData };

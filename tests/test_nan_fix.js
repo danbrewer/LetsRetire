@@ -5,10 +5,10 @@
 // Test script to verify NaN fix in retirement calculations
 
 // First load retirement.js to make its functions available
-const retirement = require("./retirement.js");
+import retirement from "./retirement.js";
 
 // Now load retirement-calculator.js which should have access to retirement functions
-require("./retirement-calculator.js");
+import "./retirement-calculator.js";
 
 // Test inputs that would trigger the retirement year calculation
 const testInputs = {

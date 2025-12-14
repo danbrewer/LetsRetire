@@ -1,3 +1,11 @@
+import { AccountingYear } from "./cAccountingYear";
+import { Demographics } from "./cDemographics";
+import { Deposits } from "./cDeposits";
+import { FiscalData } from "./cFiscalData";
+import { IncomeBreakdown } from "./cIncomeBreakdown";
+import { Taxes } from "./cTaxes";
+import { Withdrawals } from "./cWithdrawals";
+
 /**
  * Represents comprehensive debug information for retirement calculation analysis.
  *
@@ -553,3 +561,5 @@ class DebugData {
 
 // Maintain backward compatibility - this will need all the context data
 // const debugData = DebugData.CreateUsing(demographics, fiscalData, result, accounts, taxes, incomeResults);
+
+export { DebugData };

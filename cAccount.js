@@ -1,3 +1,5 @@
+import { INTEREST_CALCULATION_EPOCH, PERIODIC_FREQUENCY } from "./consts";
+
 class ACCOUNT_TYPES {}
 ACCOUNT_TYPES.SAVINGS = "savings";
 ACCOUNT_TYPES.TRAD_401K = "trad401k";
@@ -662,3 +664,5 @@ class Account {
     return account;
   }
 }
+
+export { ACCOUNT_TYPES, Account };

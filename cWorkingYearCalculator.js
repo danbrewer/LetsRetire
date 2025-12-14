@@ -1,3 +1,12 @@
+import { ACCOUNT_TYPES } from "./cAccount";
+import { AccountingYear } from "./cAccountingYear";
+import { Demographics } from "./cDemographics";
+import { FiscalData } from "./cFiscalData";
+import { Inputs } from "./cInputs";
+import { TAX_BASE_YEAR, PERIODIC_FREQUENCY } from "./consts";
+import { WorkingYearData } from "./cWorkingYearData";
+import { WorkingYearIncome } from "./cWorkingYearIncome";
+
 /**
  * WorkingYearIncomeCalculator class - Handles working year income and accumulation calculations
  * Provides comprehensive analysis for the accumulation phase of retirement planning
@@ -211,3 +220,5 @@ class WorkingYearCalculator {
     return result;
   }
 }
+
+export { WorkingYearCalculator };
