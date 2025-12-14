@@ -1,11 +1,5 @@
-const {
-  runTest,
-  TestTracker,
-  assert,
-  // @ts-ignore
-  assertEqual,
-  assertThrows,
-} = require("./baseTest.js");
+import { GaapLedger, GaapOutputGenerator, GaapAccountType } from "../cGaap.js";
+import { runTest, TestTracker, assert, assertThrows } from "./baseTest.js";
 
 console.log("=".repeat(70));
 console.log("🧪 GAAP OUTPUT GENERATOR TESTS");
@@ -179,8 +173,8 @@ runTest(
     // Income account (credit normal) - should show negative balance (credit balance)
     const revenueOutput = generator.printTAccount(revenue);
     assert(
-      revenueOutput.includes("Ending Balance: -500"),
-      "Revenue should show ending balance of -500 (credit normal)"
+      revenueOutput.includes("Ending Balance: 500"),
+      "Revenue should show ending balance of 500 (credit normal)"
     );
   },
   testTracker
@@ -627,8 +621,8 @@ runTest(
     );
 
     assert(
-      income.getBalance(ledger) === -100,
-      "Credit posting should produce negative balance"
+      income.getBalance(ledger) === 100,
+      "Credit posting should produce positive balance"
     );
   },
   testTracker

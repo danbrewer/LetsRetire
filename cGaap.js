@@ -1,9 +1,6 @@
 // @ts-check
 
-// // Node environment: load EnumBase from module
-// if (typeof module !== "undefined" && module.exports) {
-//   var { EnumBase } = require("./cEnum.js");
-// }
+import { EnumBase } from "./cEnum.js";
 
 // -------------------------------------------------------------
 // GAAP ACCOUNT TYPE NAMES  (Strongly typed string-literal union)
@@ -358,7 +355,7 @@ class GaapAccount {
     //     this.normalBalance === GaapPostingSide.Credit);
 
     // return increase ? amount : -amount;
-    return side === GaapPostingSide.Debit ? amount : -amount;
+    return side === this.normalBalance ? amount : -amount;
   }
 
   /**
@@ -1902,25 +1899,19 @@ class GaapOutputGenerator {
   }
 }
 
-// // Export for Node tests
-// if (
-//   typeof module !== "undefined" &&
-//   module.exports &&
-//   typeof window === "undefined"
-// ) {
-//   module.exports = {
-//     GaapAccountTypeNames,
-//     GaapAccountType,
-//     GAAP_NORMAL_BALANCE_BY_TYPE,
-//     GaapAccount,
-//     GaapPostingSide,
-//     GaapPostingBuilder,
-//     GaapPosting,
-//     GaapJournalEntry,
-//     GaapJournalEntryBuilder,
-//     GaapLedger,
-//     GaapMacros,
-//     GaapOutputGenerator,
-//     // ...anything else you need in tests
-//   };
-// }
+// Export for Node tests
+export {
+  GaapAccountTypeNames,
+  GaapAccountType,
+  GAAP_NORMAL_BALANCE_BY_TYPE,
+  GaapAccount,
+  GaapPostingSide,
+  GaapPostingBuilder,
+  GaapPosting,
+  GaapJournalEntry,
+  GaapJournalEntryBuilder,
+  GaapLedger,
+  GaapMacros,
+  GaapOutputGenerator,
+  // ...anything else you need in tests
+};

@@ -1,20 +1,20 @@
 // @ts-check
 
-const {
+import {
   assert,
   assertEqual,
   assertThrows,
   runTest,
   TestTracker,
-} = require("./baseTest.js");
+} from "./baseTest.js";
 
-// const {
-//   GaapJournalEntry,
-//   GaapAccount,
-//   GaapLedger,
-//   GaapAccountType,
-//   GaapPostingSide,
-// } = require("../cGaap.js");
+import {
+  GaapJournalEntry,
+  GaapAccount,
+  GaapLedger,
+  GaapAccountType,
+  GaapPostingSide,
+} from "../cGaap.js";
 
 const testTracker = new TestTracker("GaapMacros COMPLETE Test Suite");
 
@@ -291,7 +291,7 @@ runTest(
       crIncomeGross: income,
       grossPay: 2000,
       taxesAndBenefits: 300,
-      retirementContribution: 100
+      retirementContribution: 100,
     });
 
     const je = ledger.journalEntries[0];
@@ -572,87 +572,96 @@ runTest(
 // =============================================================
 // CAPITAL GAIN — GAIN > 0
 // =============================================================
-runTest("realizeCapitalGain: positive gain", () => {
-  const ledger = new GaapLedger();
-  const cash = ledger.createCashAccount("Cash");
-  const inv = ledger.createNonCashAccount("Inv", GaapAccountType.Asset);
-  const gain = ledger.createNonCashAccount("Gain", GaapAccountType.Income);
-  const loss = ledger.createNonCashAccount("Loss", GaapAccountType.Expense);
+runTest(
+  "realizeCapitalGain: positive gain",
+  () => {
+    const ledger = new GaapLedger();
+    const cash = ledger.createCashAccount("Cash");
+    const inv = ledger.createNonCashAccount("Inv", GaapAccountType.Asset);
+    const gain = ledger.createNonCashAccount("Gain", GaapAccountType.Income);
+    const loss = ledger.createNonCashAccount("Loss", GaapAccountType.Expense);
 
-  ledger.do.realizeCapitalGain({
-    drCash: cash,
-    drInvestment: inv,
-    crGain: gain,
-    drLoss: loss,
-    proceeds: 900,
-    basis: 700,
-  });
+    ledger.do.realizeCapitalGain({
+      drCash: cash,
+      drInvestment: inv,
+      crGain: gain,
+      drLoss: loss,
+      proceeds: 900,
+      basis: 700,
+    });
 
-  const je = ledger.journalEntries[0];
-  assertBalanced(je);
-  assertBalance(cash, ledger, 900);
-  assertBalance(inv, ledger, -700);
-  assertBalance(gain, ledger, 200);
-  assertBalance(loss, ledger, 0);
-}, testTracker);
-
+    const je = ledger.journalEntries[0];
+    assertBalanced(je);
+    assertBalance(cash, ledger, 900);
+    assertBalance(inv, ledger, -700);
+    assertBalance(gain, ledger, 200);
+    assertBalance(loss, ledger, 0);
+  },
+  testTracker
+);
 
 // =============================================================
 // CAPITAL GAIN — ZERO GAIN
 // =============================================================
-runTest("realizeCapitalGain: break-even → no gain, no loss", () => {
-  const ledger = new GaapLedger();
-  const cash = ledger.createCashAccount("Cash");
-  const inv = ledger.createNonCashAccount("Inv", GaapAccountType.Asset);
-  const gain = ledger.createNonCashAccount("Gain", GaapAccountType.Income);
-  const loss = ledger.createNonCashAccount("Loss", GaapAccountType.Expense);
+runTest(
+  "realizeCapitalGain: break-even → no gain, no loss",
+  () => {
+    const ledger = new GaapLedger();
+    const cash = ledger.createCashAccount("Cash");
+    const inv = ledger.createNonCashAccount("Inv", GaapAccountType.Asset);
+    const gain = ledger.createNonCashAccount("Gain", GaapAccountType.Income);
+    const loss = ledger.createNonCashAccount("Loss", GaapAccountType.Expense);
 
-  ledger.do.realizeCapitalGain({
-    drCash: cash,
-    drInvestment: inv,
-    crGain: gain,
-    drLoss: loss,
-    proceeds: 800,
-    basis: 800,
-  });
+    ledger.do.realizeCapitalGain({
+      drCash: cash,
+      drInvestment: inv,
+      crGain: gain,
+      drLoss: loss,
+      proceeds: 800,
+      basis: 800,
+    });
 
-  const je = ledger.journalEntries[0];
-  assertBalanced(je);
-  assertBalance(cash, ledger, 800);
-  assertBalance(inv, ledger, -800);
-  assertBalance(gain, ledger, 0);
-  assertBalance(loss, ledger, 0);
-}, testTracker);
-
+    const je = ledger.journalEntries[0];
+    assertBalanced(je);
+    assertBalance(cash, ledger, 800);
+    assertBalance(inv, ledger, -800);
+    assertBalance(gain, ledger, 0);
+    assertBalance(loss, ledger, 0);
+  },
+  testTracker
+);
 
 // =============================================================
 // CAPITAL GAIN — NEGATIVE GAIN (LOSS)
 // =============================================================
-runTest("realizeCapitalGain: loss → loss posting", () => {
-  const ledger = new GaapLedger();
-  const cash = ledger.createCashAccount("Cash");
-  const inv = ledger.createNonCashAccount("Inv", GaapAccountType.Asset);
-  const gain = ledger.createNonCashAccount("Gain", GaapAccountType.Income);
-  const loss = ledger.createNonCashAccount("Loss", GaapAccountType.Expense);
+runTest(
+  "realizeCapitalGain: loss → loss posting",
+  () => {
+    const ledger = new GaapLedger();
+    const cash = ledger.createCashAccount("Cash");
+    const inv = ledger.createNonCashAccount("Inv", GaapAccountType.Asset);
+    const gain = ledger.createNonCashAccount("Gain", GaapAccountType.Income);
+    const loss = ledger.createNonCashAccount("Loss", GaapAccountType.Expense);
 
-  ledger.do.realizeCapitalGain({
-    drCash: cash,
-    drInvestment: inv,
-    crGain: gain,
-    drLoss: loss,
-    proceeds: 700,
-    basis: 900, // LOSS of 200
-  });
+    ledger.do.realizeCapitalGain({
+      drCash: cash,
+      drInvestment: inv,
+      crGain: gain,
+      drLoss: loss,
+      proceeds: 700,
+      basis: 900, // LOSS of 200
+    });
 
-  const je = ledger.journalEntries[0];
-  assertBalanced(je);
+    const je = ledger.journalEntries[0];
+    assertBalanced(je);
 
-  assertBalance(cash, ledger, 700);
-  assertBalance(inv, ledger, -900);
-  assertBalance(gain, ledger, 0);
-  assertBalance(loss, ledger, 200);
-}, testTracker);
-
+    assertBalance(cash, ledger, 700);
+    assertBalance(inv, ledger, -900);
+    assertBalance(gain, ledger, 0);
+    assertBalance(loss, ledger, 200);
+  },
+  testTracker
+);
 
 // =============================================================
 // INTEREST INCOME

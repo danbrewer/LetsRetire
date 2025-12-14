@@ -114,10 +114,4 @@ function runTest(testName, testFunction, testTracker) {
   }
 }
 
-module.exports = {
-  assert,
-  assertThrows,
-  assertEqual,
-  runTest,
-  TestTracker,
-};
+export { assert, assertThrows, assertEqual, runTest, TestTracker };

@@ -2,13 +2,20 @@ console.log("==========================================");
 console.log("Testing GAAP Account System");
 console.log("==========================================");
 
-const {
+import {
+  GAAP_NORMAL_BALANCE_BY_TYPE,
+  GaapAccount,
+  GaapAccountType,
+  GaapAccountTypeNames,
+  GaapPostingSide,
+} from "../cGaap.js";
+import {
   assert,
   assertEqual,
   assertThrows,
   runTest,
   TestTracker,
-} = require("./baseTest.js");
+} from "./baseTest.js";
 
 const testTracker = new TestTracker("GaapAccount Tests");
 
@@ -140,7 +147,10 @@ runTest(
 runTest(
   "GaapAccount.apply() works for Liability accounts",
   () => {
-    const ap = GaapAccount.CreateNonCashAccount("Accounts Payable", GaapAccountType.Liability);
+    const ap = GaapAccount.CreateNonCashAccount(
+      "Accounts Payable",
+      GaapAccountType.Liability
+    );
 
     assertEqual(
       ap.apply(GaapPostingSide.Credit, 50),
@@ -162,7 +172,10 @@ runTest(
 runTest(
   "GaapAccount.apply() works for Income accounts",
   () => {
-    const rev = GaapAccount.CreateNonCashAccount("Revenue", GaapAccountType.Income);
+    const rev = GaapAccount.CreateNonCashAccount(
+      "Revenue",
+      GaapAccountType.Income
+    );
 
     assertEqual(
       rev.apply(GaapPostingSide.Credit, 200),
@@ -184,7 +197,10 @@ runTest(
 runTest(
   "GaapAccount.apply() works for Expense accounts",
   () => {
-    const exp = GaapAccount.CreateNonCashAccount("Supplies Expense", GaapAccountType.Expense);
+    const exp = GaapAccount.CreateNonCashAccount(
+      "Supplies Expense",
+      GaapAccountType.Expense
+    );
 
     assertEqual(
       exp.apply(GaapPostingSide.Debit, 75),

@@ -2,20 +2,20 @@ console.log("==========================================");
 console.log("Testing GAAP Ledger System");
 console.log("==========================================");
 
-const {
+import {
   assert,
   assertEqual,
   assertThrows,
   runTest,
   TestTracker,
-} = require("./baseTest.js");
+} from "./baseTest.js";
 
-// const {
-//   GaapAccountType,
-//   GaapPostingBuilder,
-//   GaapJournalEntry,
-//   GaapLedger,
-// } = require("../cGaap.js");
+import {
+  GaapAccountType,
+  GaapPostingBuilder,
+  GaapJournalEntry,
+  GaapLedger,
+} from "../cGaap.js";
 
 const testTracker = new TestTracker("GaapLedger Tests");
 

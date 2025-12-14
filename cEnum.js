@@ -61,9 +61,4 @@ class EnumBase {
   }
 }
 
-// // Make EnumBase available to Node (CommonJS) only when actually in Node
-// if (typeof module !== "undefined" && module.exports && typeof window === "undefined") {
-//   module.exports = { EnumBase };
-// }
-
-
+export { EnumBase };

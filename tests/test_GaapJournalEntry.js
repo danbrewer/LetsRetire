@@ -4,22 +4,22 @@ console.log("==========================================");
 console.log("Testing GAAP Journal Entry System");
 console.log("==========================================");
 
-const {
+import {
   assert,
   assertEqual,
   assertThrows,
   runTest,
   TestTracker,
-} = require("./baseTest.js");
+} from "./baseTest.js";
 
-// const {
-//   GaapAccountType,
-//   GaapPosting,
-//   GaapPostingSide,
-//   GaapJournalEntry,
-//   GaapJournalEntryBuilder,
-//   GaapLedger,
-// } = require("../cGaap.js");
+import {
+  GaapAccountType,
+  GaapPosting,
+  GaapPostingSide,
+  GaapJournalEntry,
+  GaapJournalEntryBuilder,
+  GaapLedger,
+} from "../cGaap.js";
 
 const testTracker = new TestTracker("GaapJournalEntry COMPLETE Test Suite");
 
@@ -31,7 +31,8 @@ const testTracker = new TestTracker("GaapJournalEntry COMPLETE Test Suite");
  */
 function findPosting(je, account, side) {
   return je.postings.find(
-    (/** @type {{ account: { id: any; }; side: any; }} */ p) => p.account.id === account.id && p.side === side
+    (/** @type {{ account: { id: any; }; side: any; }} */ p) =>
+      p.account.id === account.id && p.side === side
   );
 }
 
@@ -41,12 +42,22 @@ function findPosting(je, account, side) {
  */
 function assertBalanced(je, msg = "Entry must be balanced") {
   const dr = je.postings
-    .filter((/** @type {{ side: string; }} */ p) => p.side === GaapPostingSide.Debit)
-    .reduce((/** @type {any} */ s, /** @type {{ amount: any; }} */ p) => s + p.amount, 0);
+    .filter(
+      (/** @type {{ side: string; }} */ p) => p.side === GaapPostingSide.Debit
+    )
+    .reduce(
+      (/** @type {any} */ s, /** @type {{ amount: any; }} */ p) => s + p.amount,
+      0
+    );
 
   const cr = je.postings
-    .filter((/** @type {{ side: string; }} */ p) => p.side === GaapPostingSide.Credit)
-    .reduce((/** @type {any} */ s, /** @type {{ amount: any; }} */ p) => s + p.amount, 0);
+    .filter(
+      (/** @type {{ side: string; }} */ p) => p.side === GaapPostingSide.Credit
+    )
+    .reduce(
+      (/** @type {any} */ s, /** @type {{ amount: any; }} */ p) => s + p.amount,
+      0
+    );
 
   assertEqual(dr, cr, msg);
 }
@@ -168,9 +179,21 @@ runTest(
 
     const je = new GaapJournalEntry(new Date(), "Sort Test", postings);
 
-    assertEqual(je.postings[0].account.name, "A_Account", "First posting must be A_Account");
-    assertEqual(je.postings[1].account.name, "B_Account", "Second posting must be B_Account");
-    assertEqual(je.postings[2].account.name, "C_Revenue", "Third posting must be C_Revenue");
+    assertEqual(
+      je.postings[0].account.name,
+      "A_Account",
+      "First posting must be A_Account"
+    );
+    assertEqual(
+      je.postings[1].account.name,
+      "B_Account",
+      "Second posting must be B_Account"
+    );
+    assertEqual(
+      je.postings[2].account.name,
+      "C_Revenue",
+      "Third posting must be C_Revenue"
+    );
   },
   testTracker
 );

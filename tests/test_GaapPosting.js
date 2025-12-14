@@ -2,24 +2,24 @@ console.log("==========================================");
 console.log("Testing GAAP Posting System");
 console.log("==========================================");
 
-const {
+import {
   assert,
   assertEqual,
   assertThrows,
   runTest,
   TestTracker,
-} = require("./baseTest.js");
+} from "./baseTest.js";
 
 // // Load the GAAP module
-// const {
-//   GaapAccountType,
-//   GaapAccount,
-//   GaapPostingSide,
-//   GaapPostingBuilder,
-//   GaapPosting,
-//   GaapJournalEntry,
-//   GaapLedger,
-// } = require("../cGaap.js");
+import {
+  GaapAccountType,
+  GaapAccount,
+  GaapPostingSide,
+  GaapPostingBuilder,
+  GaapPosting,
+  GaapJournalEntry,
+  GaapLedger,
+} from "../cGaap.js";
 
 const testTracker = new TestTracker("GaapPosting Tests");
 
