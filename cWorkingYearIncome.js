@@ -67,10 +67,10 @@ class WorkingYearIncome {
     accountYear,
     description = "Income"
   ) {
-    this.#accountYear = accountYear;
-    this.#demographics = demographics;
-    this.#inputs = inputs;
-    this.#fiscalData = fiscalData;
+    this.#accountYear = /** @type {AccountingYear} */ (Object.freeze(accountYear));
+    this.#demographics = /** @type {Demographics} */ (Object.freeze(demographics));
+    this.#inputs = /** @type {Inputs} */ (Object.freeze(inputs));
+    this.#fiscalData = /** @type {FiscalData} */ (Object.freeze(fiscalData));
 
     this.#employmentInfo = EmploymentInfo.CreateUsing(
       this.#demographics,
@@ -78,6 +78,22 @@ class WorkingYearIncome {
     );
 
     this._description = description;
+  }
+
+  get accountYear() {
+    return this.#accountYear;
+  }
+
+  get demographics() {
+    return this.#demographics;
+  }
+
+  get inputs() {
+    return this.#inputs;
+  }
+
+  get fiscalData() {
+    return this.#fiscalData;
   }
 
   #getEstimatedInterestIncome() {

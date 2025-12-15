@@ -2,9 +2,11 @@ import { AccountingYear } from "./cAccountingYear";
 import { Balances } from "./cBalances";
 import { Contributions } from "./cContributions";
 import { Demographics } from "./cDemographics";
+import { FiscalData } from "./cFiscalData";
 import { Taxes } from "./cTaxes";
 import { Withdrawals } from "./cWithdrawals";
 import { WorkingYearIncome } from "./cWorkingYearIncome";
+import { YearDataBase } from "./cYearDataBase";
 
 /**
  * Represents comprehensive working year calculation data including income, contributions,
@@ -17,15 +19,11 @@ import { WorkingYearIncome } from "./cWorkingYearIncome";
  * @class WorkingYearData
  * @since 1.0.0
  */
-class WorkingYearData {
+class WorkingYearData extends YearDataBase {
   // /** @type {FiscalData} */
   // #fiscalData;
   /** @type {WorkingYearIncome} */
   #income;
-  /** @type {Demographics} */
-  #demographics;
-  /** @type {AccountingYear} */
-  #accountYear;
   /** @type {Taxes | null} */
   #taxes = null;
   /** @type {Balances | null} */
@@ -41,23 +39,14 @@ class WorkingYearData {
    * Creates a new WorkingYearData instance with comprehensive working year financial data.
    *
    * @param {Demographics} demographics - Demographic information including age,
+   * @param {FiscalData} fiscalData - Fiscal data for the working year
    * @param {AccountingYear} accountYear - View of accounts for fiscal year
    * @param {WorkingYearIncome} income - Working year income details
    */
-  constructor(
-    /** @type {Demographics} */
-    demographics,
-    /** @type {AccountingYear} */
-    accountYear,
+  constructor(demographics, fiscalData, accountYear, income) {
+    super(demographics, fiscalData, accountYear);
     /** @type {WorkingYearIncome} */
-    income
-  ) {
-    /** @type {Demographics} */
-    this.#demographics = demographics;
-    /** @type {WorkingYearIncome} */
-    this.#income = income;
-    /** @type {AccountingYear} */
-    this.#accountYear = accountYear;
+    this.#income = /** @type {WorkingYearIncome} */ (Object.freeze(income));
   }
 
   //   /**
@@ -68,16 +57,12 @@ class WorkingYearData {
   get description() {
     return `
 -----------------------------------------------
---- Working Year ${this.#accountYear.taxYear} (Age ${this.#demographics.currentAge}) ---
+--- Working Year ${this.accountYear.taxYear} (Age ${this.demographics.currentAge}) ---
 -----------------------------------------------`;
   }
 
   get income() {
     return this.#income;
-  }
-
-  get accountYear() {
-    return this.#accountYear;
   }
 
   //   /**
@@ -131,11 +116,12 @@ class WorkingYearData {
 
   /**
    * @param {Demographics} demographics
+   * @param {FiscalData} fiscalData
    * @param {AccountingYear} accountYear
    * @param {WorkingYearIncome} income
    */
-  static CreateFrom(demographics, accountYear, income) {
-    return new WorkingYearData(demographics, accountYear, income);
+  static CreateFrom(demographics, fiscalData, accountYear, income) {
+    return new WorkingYearData(demographics, fiscalData, accountYear, income);
   }
 
   /**

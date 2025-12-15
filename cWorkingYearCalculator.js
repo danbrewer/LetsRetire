@@ -78,6 +78,7 @@ class WorkingYearCalculator {
     // Declare and initialize the result object at the top
     const result = WorkingYearData.CreateFrom(
       this.#demographics,
+      this.#fiscalData,
       this.accountYear,
       workingYearIncome
     );

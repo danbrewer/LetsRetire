@@ -7,6 +7,15 @@ import { Inputs } from "./cInputs";
 import { TAX_BASE_YEAR } from "./consts";
 import { RetirementYearCalculator } from "./cRetirementYearCalculator";
 import { WorkingYearCalculator } from "./cWorkingYearCalculator";
+import {
+  getSpendingOverride,
+  getTaxableIncomeOverride,
+  getTaxFreeIncomeOverride,
+  parseInputParameters,
+  regenerateSpendingFields,
+  regenerateTaxableIncomeFields,
+  regenerateTaxFreeIncomeFields,
+} from "./retirement-ui";
 
 function calc() {
   // Track previous ages to only regenerate spending fields when they change

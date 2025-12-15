@@ -1,3 +1,9 @@
+import {
+  getTaxableIncomeOverride,
+  getTaxFreeIncomeOverride,
+  getSpendingOverride,
+} from "../retirement-ui";
+
 // Simple test to verify the UI function defaults are working
 console.log("Testing UI function defaults...");
 

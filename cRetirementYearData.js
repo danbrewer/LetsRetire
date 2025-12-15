@@ -33,15 +33,12 @@ import { FiscalData } from "./cFiscalData";
 import { RetirementAccountBreakdown } from "./cRetirementAccountBreakdown";
 import { Income } from "./cRevenue";
 import { Taxes } from "./cTaxes";
+import { YearDataBase } from "./cYearDataBase";
 
 //    */
-class RetirementYearData {
-  /** @type {Demographics} */
-  #demographics;
+class RetirementYearData extends YearDataBase {
   /** @type {FiscalData} */
   #fiscalData;
-  /** @type {AccountingYear} */
-  #accountYear;
 
   /**
    * @param {Demographics} demographics
@@ -49,14 +46,8 @@ class RetirementYearData {
    * @param {AccountingYear} accountYear
    */
   constructor(demographics, fiscalData, accountYear) {
-    this.#demographics = demographics;
-    this.#fiscalData = fiscalData;
-    this.#accountYear = accountYear;
-
-    this._description = `
------------------------------------------------
---- Retirement Year ${fiscalData.yearIndex + 1} (Age ${demographics.currentAge}) (Year ${demographics.retirementYear}) ---
------------------------------------------------`;
+    super(demographics, fiscalData, accountYear);
+    this.#fiscalData = Object.freeze(fiscalData);
 
     /** @type {Income} */
     this.revenue;
@@ -64,56 +55,11 @@ class RetirementYearData {
     /** @type {Income} */
     this.disbursements;
 
-    // /** @type {Object} */
-    // this.contributions = contributions;
-
-    // /** @type {Object} */
-    // this.withdrawals = withdrawals;
-
     /** @type {Balances} */
     this.balances;
 
     /** @type {SocialSecurityIncome} */
     this.socialSecurityIncome;
-
-    // /** @type {Object} */
-    // this.pen = pension;
-
-    // /** @type {Object} */
-    // this.savings = savings;
-
-    // this.ss = ss;
-
-    // this.fixedIncomeStreams = fixedIncomeStreams;
-
-    // this.incomeBreakdown = incomeBreakdown;
-
-    /** @type {Taxes} */
-    this.taxes;
-
-    // this.totals = totals;
-
-    // this.myPensionBenefits = myPensionBenefits;
-
-    // this.spousePensionBenefits = spousePensionBenefits;
-
-    // this.mySsBenefits = mySsBenefits;
-
-    // this.spouseSsBenefits = spouseSsBenefits;
-
-    // this.savingsBreakdown = savingsBreakdown;
-
-    // this.ssBreakdown = ssBreakdown;
-
-    // this.pensionBreakdown = pensionBreakdown;
-
-    // this.retirementAccountBreakdown = RetirementAccountBreakdown.Empty();
-    // this.rothAccountBreakdown = RetirementAccountBreakdown.Empty();
-    // // this.savingsBreakdown = savingsBreakdown;
-
-    // this.ssBreakdown = ssBreakdown;
-
-    // this.pensionBreakdown = pensionBreakdown;
 
     /** @type {Balance} */
     this.savings;
@@ -129,6 +75,9 @@ class RetirementYearData {
     /** @type {RetirementAccountBreakdown} */
     this.rothAccountBreakdown;
 
+    /** @type{Taxes} */
+    this.taxes;
+
     /** @type {number} */
     this.shortfallAmount;
 
@@ -136,6 +85,17 @@ class RetirementYearData {
      * @type {any[]}
      */
     this.calculationDetails = [];
+  }
+
+  get description() {
+    return `
+-----------------------------------------------
+--- Retirement Year ${this.fiscalData.yearIndex + 1} (Age ${this.demographics.currentAge}) (Year ${this.demographics.retirementYear}) ---
+-----------------------------------------------`;
+  }
+
+  get fiscalData() {
+    return this.#fiscalData;
   }
 
   /**
