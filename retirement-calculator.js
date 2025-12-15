@@ -3,6 +3,7 @@
 import { Account, ACCOUNT_TYPES } from "./cAccount";
 import { AccountingYear } from "./cAccountingYear";
 import { AccountsManager } from "./cAccountsManager";
+import { Calculation, Calculations } from "./cCalculation";
 import { Inputs } from "./cInputs";
 import { TAX_BASE_YEAR } from "./consts";
 import { RetirementYearCalculator } from "./cRetirementYearCalculator";
@@ -17,7 +18,8 @@ import {
   regenerateTaxFreeIncomeFields,
 } from "./retirement-ui";
 
-function calc() {
+/** @param {Calculations} calculations */
+function calc(calculations) {
   // Track previous ages to only regenerate spending fields when they change
   let lastRetireAge = null;
   let lastEndAge = null;
@@ -72,9 +74,6 @@ function calc() {
     new Account(ACCOUNT_TYPES.WITHHOLDINGS, 0, 0)
   );
 
-  // Reset calculations array
-  calculations = [];
-
   // Working years
   for (let y = 0; y < inputs.totalWorkingYears; y++) {
     const workingYearInputs = initializeInputsForWorkingYear(inputs, y);
@@ -102,10 +101,9 @@ function calc() {
     workingYearData.dump("working year");
     debugger;
 
-    calculations.push({
-      year: accountYear.taxYear,
-      yearData: workingYearData,
-    });
+    calculations.addCalculation(
+      new Calculation(accountYear.taxYear, workingYearData)
+    );
   }
 
   // Retirement years
@@ -133,16 +131,13 @@ function calc() {
 
     yearData.dump();
     debugger;
-    calculations.push({
-      year: accountYear.taxYear,
-      yearData,
-    });
+    calculations.addCalculation(new Calculation(accountYear.taxYear, yearData));
   }
 
   debugger;
 
   // Generate final output
-  // generateOutputAndSummary(inputs, rows); //, totalTaxes, maxDrawdown);
+  //  generateOutputAndSummary(inputs, rows); //, totalTaxes, maxDrawdown);
 }
 
 // Helper to generate dynamic input values for a given year index

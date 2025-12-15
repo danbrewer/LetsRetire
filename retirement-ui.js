@@ -1,7 +1,7 @@
 // @ts-check
 
 import { ACCOUNT_TYPES } from "./cAccount";
-import { Calculation } from "./cCalculation";
+import { Calculation, Calculations } from "./cCalculation";
 import { Inputs } from "./cInputs";
 import { constsJS_FILING_STATUS } from "./consts";
 import { calc } from "./retirement-calculator.js";
@@ -544,7 +544,7 @@ document.addEventListener("keydown", (e) => {
   // Calculate button shortcut: Ctrl+Enter (or Cmd+Enter on Mac)
   if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
     e.preventDefault();
-    calc();
+    doCalculations();
   }
 });
 
@@ -1126,43 +1126,39 @@ function setupChartTooltips(c) {
       return nearest;
     }
 
-    c.addEventListener(
-      "mousemove",
-      (/** @param {MouseEvent} e */ e) => {
+    c.addEventListener("mousemove", (/** @param {MouseEvent} e */ e) => {
+      if (!c.chartData) return;
 
-        if (!c.chartData) return;
+      const rect = c.getBoundingClientRect();
+      const mouseX = (e.clientX - rect.left) * c.chartData.dpr;
+      const mouseY = (e.clientY - rect.top) * c.chartData.dpr;
 
-        const rect = c.getBoundingClientRect();
-        const mouseX = (e.clientX - rect.left) * c.chartData.dpr;
-        const mouseY = (e.clientY - rect.top) * c.chartData.dpr;
+      const nearestPoint = findNearestPoint(mouseX, mouseY);
 
-        const nearestPoint = findNearestPoint(mouseX, mouseY);
+      if (nearestPoint) {
+        // Calculate chart center for conditional positioning
+        const { xTo, pad, width } = c.chartData;
+        const pointX = xTo(nearestPoint.x);
+        const chartCenter = (pad.l + (width - pad.r)) / 2;
 
-        if (nearestPoint) {
-          // Calculate chart center for conditional positioning
-          const { xTo, pad, width } = c.chartData;
-          const pointX = xTo(nearestPoint.x);
-          const chartCenter = (pad.l + (width - pad.r)) / 2;
-
-          // Position tooltip to avoid clipping
-          let tooltipX, tooltipY;
-          if (pointX < chartCenter) {
-            // Point is on left side - show tooltip to the right
-            tooltipX = e.clientX - rect.left + 15;
-          } else {
-            // Point is on right side - show tooltip to the left
-            tooltipX = e.clientX - rect.left - 150;
-          }
-          tooltipY = e.clientY - rect.top - 10;
-
-          showTooltip(tooltipX, tooltipY, nearestPoint);
-          c.style.cursor = "pointer";
+        // Position tooltip to avoid clipping
+        let tooltipX, tooltipY;
+        if (pointX < chartCenter) {
+          // Point is on left side - show tooltip to the right
+          tooltipX = e.clientX - rect.left + 15;
         } else {
-          hideTooltip();
-          c.style.cursor = "default";
+          // Point is on right side - show tooltip to the left
+          tooltipX = e.clientX - rect.left - 150;
         }
+        tooltipY = e.clientY - rect.top - 10;
+
+        showTooltip(tooltipX, tooltipY, nearestPoint);
+        c.style.cursor = "pointer";
+      } else {
+        hideTooltip();
+        c.style.cursor = "default";
       }
-    );
+    });
 
     c.addEventListener("mouseleave", () => {
       hideTooltip();
@@ -1308,7 +1304,6 @@ function importJSON() {
   // fileInput.click();
 }
 
-
 function handleJSONFile() {
   throw new Error("JSON import is currently disabled.");
   // const file = event.target.files[0];
@@ -1391,28 +1386,28 @@ function handleJSONFile() {
   //           }
   //         }
   //       });
-      // }
+  // }
 
-    //   // Show import summary
-    //   let summary = `Loaded ${loadedCount} of ${totalCount} settings.`;
-    //   if (fileData.description) {
-    //     summary += `\nDescription: ${fileData.description}`;
-    //   }
-    //   if (fileData.exportDate) {
-    //     summary += `\nExported: ${new Date(
-    //       fileData.exportDate
-    //     ).toLocaleDateString()}`;
-    //   }
+  //   // Show import summary
+  //   let summary = `Loaded ${loadedCount} of ${totalCount} settings.`;
+  //   if (fileData.description) {
+  //     summary += `\nDescription: ${fileData.description}`;
+  //   }
+  //   if (fileData.exportDate) {
+  //     summary += `\nExported: ${new Date(
+  //       fileData.exportDate
+  //     ).toLocaleDateString()}`;
+  //   }
 
-    //   showToast("Import Successful", summary, "success", 7000);
-    //   calc(); // Automatically recalculate
-    // } catch (error) {
-    //   showToast(
-    //     "Import Error",
-    //     "Error reading JSON file: " + error.message,
-    //     "error"
-    //   );
-    // }
+  //   showToast("Import Successful", summary, "success", 7000);
+  //   calc(); // Automatically recalculate
+  // } catch (error) {
+  //   showToast(
+  //     "Import Error",
+  //     "Error reading JSON file: " + error.message,
+  //     "error"
+  //   );
+  // }
   // };
 
   // reader.readAsText(file);
@@ -2349,7 +2344,7 @@ function generatePDFReport() {
 }
 
 // Events
-$("calcBtn").addEventListener("click", calc);
+$("calcBtn").addEventListener("click", doCalculations);
 $("pdfBtn").addEventListener("click", generatePDFReport);
 $("csvBtn").addEventListener("click", exportCSV);
 $("exportJsonBtn").addEventListener("click", exportJSON);
@@ -2390,7 +2385,6 @@ function initializeHelpIcons() {
       /showHelpToast\(event,\s*['"]([^'"]+)['"]\)/
     );
     if (match) {
-
       if (svg.parentNode === null) return;
 
       const fieldId = match[1];
@@ -2680,21 +2674,27 @@ document.addEventListener("DOMContentLoaded", function () {
   // First render
   initializeHelpIcons();
   loadExample();
-  calc();
+  doCalculations();
 });
+
+function doCalculations() {
+  const calculations = new Calculations();
+  calc(calculations);
+}
 
 /**
  * Generate final summary, write table, and update KPIs
- * @param {{ retireAge: number; endAge: number; currentAge: any; trad401k: any; rothIRA: any; savings: any; }} inputs
+ * @param {{retireAge: number;endAge: number;currentAge: any;trad401k: any;rothIRA: any;savings: any;}} inputs
+ * @param {Calculations} calculations
  * @param {any} rows
  */
-function generateOutputAndSummary(inputs, rows) {
+function generateOutputAndSummary(inputs, calculations, rows) {
   // Write table
   const tbody = $("rows");
   tbody.innerHTML = calculations
-    .map(
-      (calculation, index) => {
-        return `
+    .getAllCalculations()
+    .map((calculation, index) => {
+      return `
         <tr>
         <td class="neutral">${calculation.year}</td>
         <td class="neutral">${calculation.age}</td>
@@ -2714,7 +2714,9 @@ function generateOutputAndSummary(inputs, rows) {
         }</td>
         <td class="income">${calculation.subjectPension ? fmt(calculation.subjectPension) : ""}</td>
         <td class="income">${
-          calculation.spouseSocialSecurity ? fmt(calculation.spouseSocialSecurity) : ""
+          calculation.spouseSocialSecurity
+            ? fmt(calculation.spouseSocialSecurity)
+            : ""
         }</td>
         <td class="income">${
           calculation.spousePension ? fmt(calculation.spousePension) : ""
@@ -2727,9 +2729,7 @@ function generateOutputAndSummary(inputs, rows) {
             : ""
         }</td>
         <td class="income">${
-          calculation.tradRothNet
-            ? fmt(calculation.tradRothNet)
-            : ""
+          calculation.tradRothNet ? fmt(calculation.tradRothNet) : ""
         }</td>
         <td class="income">${
           calculation.totalNetIncome
@@ -2761,9 +2761,7 @@ function generateOutputAndSummary(inputs, rows) {
           calculation.spouseGrossPen ? fmt(calculation.spouseGrossPen) : ""
         }</td>
         <td class="income">${
-          calculation.trad401kGross
-            ? fmt(calculation.trad401kGross)
-            : ""
+          calculation.trad401kGross ? fmt(calculation.trad401kGross) : ""
         }</td>
         <td class="income">${
           calculation.totalGrossIncome ? fmt(calculation.totalGrossIncome) : ""
@@ -2841,21 +2839,22 @@ function generateOutputAndSummary(inputs, rows) {
         <td class="neutral">${fmt(calculation.balTran401k)}</td>
         <td class="neutral">${fmt(calculation.balRoth)}</td>
         <td class="neutral">${fmt(calculation.balTotal)}</td>
-        </tr>`
-      }
-    )
+        </tr>`;
+    })
     .join("");
 
   // KPIs
-  const calculation = calculations[calculations.length - 1];
+  const calculation = calculations.getLastCalculation();
   // Find the last age where there's still money, or endAge if money lasts throughout
   const fundedTo =
     calculation.total > 0
       ? inputs.endAge
-      : calculations.reduce(
-          (lastGoodAge, r) => (r.total > 0 ? r.age : lastGoodAge),
-          inputs.currentAge
-        );
+      : calculations
+          .getAllCalculations()
+          .reduce(
+            (lastGoodAge, r) => (r.total > 0 ? r.age : lastGoodAge),
+            inputs.currentAge
+          );
   $("kpiAge").innerHTML = `${fundedTo} <span class="pill ${
     fundedTo >= inputs.endAge ? "ok" : "alert"
   }">${fundedTo >= inputs.endAge ? "Fully funded" : "Shortfall"}</span>`;
@@ -2867,7 +2866,7 @@ function generateOutputAndSummary(inputs, rows) {
 
   // Chart (total balance)
   drawChart(
-    calculations.map((calculation) => ({
+    calculations.getAllCalculations().map((calculation) => ({
       x: calculation.year,
       y: calculation.total,
       age: calculation.age,
@@ -2919,7 +2918,7 @@ function updateTaxFreeIncomeFieldsDisplayMode() {
     }
   }
 
-  calc();
+  doCalculations();
 }
 
 function loadExample() {
@@ -3008,14 +3007,14 @@ function loadExample() {
   //   filingStatus: "married",
   //   useRMD: true,
   // };
-for (const [k, v] of Object.entries(ex)) {
-  const el = $(k);
-  if (el instanceof HTMLInputElement) {
-    el.value = String(v);
-  } else if (el instanceof HTMLSelectElement) {
-    el.value = String(v);
+  for (const [k, v] of Object.entries(ex)) {
+    const el = $(k);
+    if (el instanceof HTMLInputElement) {
+      el.value = String(v);
+    } else if (el instanceof HTMLSelectElement) {
+      el.value = String(v);
+    }
   }
-}
 }
 
 // Annual Spending Details Functions
@@ -3144,7 +3143,7 @@ function handleSpendingFieldChange(age, event) {
   }
 
   // Trigger recalculation
-  calc();
+  doCalculations();
 }
 
 function updateSpendingFieldsDisplayMode() {
@@ -3193,7 +3192,7 @@ function updateSpendingFieldsDisplayMode() {
     }
   }
 
-  calc();
+  doCalculations();
 }
 
 // Taxable Income Adjustments Functions
@@ -3241,7 +3240,9 @@ function getTaxableIncomeOverride(age) {
       const storedCurrentYearValue = field.getAttribute(
         "data-current-year-value"
       );
-      const storedCurrentYearValueNumber = parseFloat(storedCurrentYearValue ?? "0");
+      const storedCurrentYearValueNumber = parseFloat(
+        storedCurrentYearValue ?? "0"
+      );
       if (storedCurrentYearValue && !isNaN(storedCurrentYearValueNumber)) {
         // Use the stored current year value and apply inflation
         const inflatedValue = applyInflationToIncomeValue(
@@ -3288,7 +3289,7 @@ function handleTaxableIncomeFieldChange(age, event) {
   }
 
   // Trigger recalculation
-  calc();
+  doCalculations();
 }
 
 function updateTaxableIncomeFieldsDisplayMode() {
@@ -3303,8 +3304,9 @@ function updateTaxableIncomeFieldsDisplayMode() {
     if (!field) continue;
 
     const currentValue = parseFloat(field.value) || 0;
-    const storedCurrentYearValue =
-      parseFloat(field.getAttribute("data-current-year-value") ?? "0");
+    const storedCurrentYearValue = parseFloat(
+      field.getAttribute("data-current-year-value") ?? "0"
+    );
 
     if (useCurrentYear) {
       // Switch to current year mode
@@ -3334,7 +3336,7 @@ function updateTaxableIncomeFieldsDisplayMode() {
     }
   }
 
-  calc();
+  doCalculations();
 }
 
 // Tax-free Income Adjustments Functions
@@ -3382,7 +3384,9 @@ function getTaxFreeIncomeOverride(age) {
       const storedCurrentYearValue = field.getAttribute(
         "data-current-year-value"
       );
-      const storedCurrentYearValueNumber = parseFloat(storedCurrentYearValue ?? "0");
+      const storedCurrentYearValueNumber = parseFloat(
+        storedCurrentYearValue ?? "0"
+      );
       if (storedCurrentYearValue && !isNaN(storedCurrentYearValueNumber)) {
         // Use the stored current year value and apply inflation
         const inflatedValue = applyInflationToIncomeValue(
@@ -3428,7 +3432,7 @@ function handleTaxFreeIncomeFieldChange(age, event) {
   }
 
   // Trigger recalculation
-  calc();
+  doCalculations();
 }
 
 // Helper function for income inflation (similar to spending inflation)

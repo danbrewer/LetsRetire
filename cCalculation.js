@@ -153,9 +153,29 @@ class Calculation {
   get total(){
     return 0; // TODO: add total to RetirementYearData
   }
-
-
-
 }
 
-export { Calculation };
+class Calculations {
+  /** @type {Calculation[]} */
+  #calculations = [];
+
+  /**
+   * @param {Calculation} calculation
+   */
+  addCalculation(calculation) {
+    this.#calculations.push(calculation);
+  }
+
+  /**
+   * @returns {Calculation[]}
+   */
+  getAllCalculations() {
+    return this.#calculations;
+  }
+
+  getLastCalculation() {
+    return this.#calculations[this.#calculations.length - 1];
+  }
+}
+
+export { Calculation, Calculations };
