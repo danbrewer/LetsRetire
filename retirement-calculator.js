@@ -8,10 +8,10 @@ import { Inputs } from "./cInputs";
 import { TAX_BASE_YEAR } from "./consts";
 import { RetirementYearCalculator } from "./cRetirementYearCalculator";
 import { WorkingYearCalculator } from "./cWorkingYearCalculator";
-import * as UI from "./retirement-ui";
+import * as GUI from "./retirement-ui.js";
 
 /** @param {Calculations} calculations */
-function calc(calculations) {
+function calc(calculations, UI = GUI) {
   // Track previous ages to only regenerate spending fields when they change
   let lastRetireAge = null;
   let lastEndAge = null;
@@ -111,13 +111,17 @@ function calc(calculations) {
  * @param {number} yearIndex
  * @return {Inputs}
  */
-function initializeInputsForWorkingYear(inputs, yearIndex) {
+function initializeInputsForWorkingYear(inputs, yearIndex, UI = GUI) {
   const result = inputs.clone();
 
   result.yearIndex = yearIndex;
   result.additionalSpending = UI.getSpendingOverride(result.currentAge);
-  result.taxableIncomeAdjustment = UI.getTaxableIncomeOverride(result.currentAge);
-  result.taxFreeIncomeAdjustment = UI.getTaxFreeIncomeOverride(result.currentAge);
+  result.taxableIncomeAdjustment = UI.getTaxableIncomeOverride(
+    result.currentAge
+  );
+  result.taxFreeIncomeAdjustment = UI.getTaxFreeIncomeOverride(
+    result.currentAge
+  );
 
   return result;
 }
@@ -127,13 +131,17 @@ function initializeInputsForWorkingYear(inputs, yearIndex) {
  * @param {number} yearIndex
  * @return {Inputs}
  */
-function initializeInputsForRetirementYear(inputs, yearIndex) {
+function initializeInputsForRetirementYear(inputs, yearIndex, UI = GUI) {
   const result = inputs.clone();
 
   result.yearIndex = yearIndex;
   result.additionalSpending = UI.getSpendingOverride(result.currentAge);
-  result.taxableIncomeAdjustment = UI.getTaxableIncomeOverride(result.currentAge);
-  result.taxFreeIncomeAdjustment = UI.getTaxFreeIncomeOverride(result.currentAge);
+  result.taxableIncomeAdjustment = UI.getTaxableIncomeOverride(
+    result.currentAge
+  );
+  result.taxFreeIncomeAdjustment = UI.getTaxFreeIncomeOverride(
+    result.currentAge
+  );
   return result;
 }
 
