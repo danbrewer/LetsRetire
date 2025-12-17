@@ -5,6 +5,7 @@ import { Calculation, Calculations } from "./cCalculation.js";
 import { Inputs } from "./cInputs.js";
 import { constsJS_FILING_STATUS } from "./consts.js";
 import { calc } from "./retirement-calculator.js";
+import * as DefaultUI from "./retirement-ui.js";
 
 /**
  * @typedef {Object} ChartPoint
@@ -2742,7 +2743,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 function doCalculations() {
   const calculations = new Calculations();
-  calc(calculations);
+  calc(calculations, DefaultUI);
 }
 
 /**

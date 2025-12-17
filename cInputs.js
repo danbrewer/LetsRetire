@@ -240,6 +240,18 @@ class Inputs {
     /** @type {number} */
     this.nonTaxableBenefits = 500 * 26; // e.g., health/dental/HSA
 
+    /** @type {number} */
+    this.spendAtRetire = 0;
+
+    /** @type {boolean} */
+    this.hasSpouse = false;
+
+    /** @type {number} */
+    this.totalWorkingYears = 0;
+
+    /** @type {number} */
+    this.totalLivingYears = 0;
+
     // Calculate derived values
     this.#calculateDerivedValues();
   }
@@ -248,16 +260,12 @@ class Inputs {
    * Private method to calculate derived values
    */
   #calculateDerivedValues() {
-    /** @type {boolean} */
     this.hasSpouse = this.initialSpouseAge > 0;
 
-    /** @type {number} */
     this.totalWorkingYears = this.retireAge - this.initialAge;
 
-    /** @type {number} */
     this.totalLivingYears = this.endAge - this.initialAge;
 
-    /** @type {number} */
     this.spendAtRetire =
       this.spendingToday *
       compoundedRate(this.inflation, this.totalWorkingYears);

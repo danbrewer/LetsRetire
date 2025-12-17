@@ -5,7 +5,7 @@ import { Inputs } from "./cInputs.js";
 import { TAX_BASE_YEAR } from "./consts.js";
 import { RetirementYearCalculator } from "./cRetirementYearCalculator.js";
 import { WorkingYearCalculator } from "./cWorkingYearCalculator.js";
-import * as DefaultUI from "./retirement-ui.js";
+
 
 /**
  * @typedef {object} RetirementUIFunctions
@@ -20,9 +20,12 @@ import * as DefaultUI from "./retirement-ui.js";
 
 /**
  * @param {Calculations} calculations
- * @param {RetirementUIFunctions} [UI=DefaultUI]
+ * @param {RetirementUIFunctions} UI
  */
-function calc(calculations, UI = DefaultUI) {
+function calc(calculations, UI) {
+  if (!UI) {
+    throw new Error("UI must be provided explicitly");
+  }
   // Track previous ages to only regenerate spending fields when they change
   let lastRetireAge = null;
   let lastEndAge = null;
@@ -59,7 +62,7 @@ function calc(calculations, UI = DefaultUI) {
 
   // Working years
   for (let yearIndex = 0; yearIndex < inputs.totalWorkingYears; yearIndex++) {
-    const workingYearInputs = initializeInputsForWorkingYear(inputs, yearIndex);
+    const workingYearInputs = initializeInputsForWorkingYear(inputs, yearIndex, UI);
 
     const accountYear = AccountingYear.FromAccountsManager(
       accountsManager,
@@ -90,7 +93,8 @@ function calc(calculations, UI = DefaultUI) {
   ) {
     const retirementYearInputs = initializeInputsForRetirementYear(
       inputs,
-      yearIndex
+      yearIndex,
+      UI
     );
 
     const accountYear = AccountingYear.FromAccountsManager(
@@ -120,9 +124,10 @@ function calc(calculations, UI = DefaultUI) {
 /**
  * @param {Inputs} inputs
  * @param {number} yearIndex
+ * @param {RetirementUIFunctions} UI
  * @return {Inputs}
  */
-function initializeInputsForWorkingYear(inputs, yearIndex, UI = DefaultUI) {
+function initializeInputsForWorkingYear(inputs, yearIndex, UI) {
   const result = inputs.clone();
 
   result.yearIndex = yearIndex;
@@ -140,9 +145,10 @@ function initializeInputsForWorkingYear(inputs, yearIndex, UI = DefaultUI) {
 /**
  * @param {Inputs} inputs
  * @param {number} yearIndex
+ * @param {RetirementUIFunctions} UI
  * @return {Inputs}
  */
-function initializeInputsForRetirementYear(inputs, yearIndex, UI = DefaultUI) {
+function initializeInputsForRetirementYear(inputs, yearIndex, UI) {
   const result = inputs.clone();
 
   result.yearIndex = yearIndex;
