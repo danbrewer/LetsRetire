@@ -2,7 +2,7 @@
 
 declare global {
   interface Object {
-    lkdump(title?: string, depth?: number): void;
+    dump(title?: string, depth?: number): void;
   }
 
   interface Number {

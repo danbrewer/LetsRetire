@@ -6,14 +6,9 @@ import {
   assertThrows,
 } from "./baseTest.js";
 
-import {
-  GaapLedger,
-  GaapAccountType,
-} from "../cGaap.js";
+import { GaapLedger, GaapAccountType } from "../cGaap.js";
 
 import { GaapAnalyzer } from "../cGaapAnalyzer.js";
-
-import {dumpObject} from "../debugUtils.js";
 
 console.log("=".repeat(70));
 console.log("🧪 GAAP ANALYZER TESTS");
@@ -64,7 +59,7 @@ runTest(
     const analyzer = new GaapAnalyzer(ledger);
     const activity = analyzer.getAccountActivity(cash);
 
-    dumpObject(activity, "Journal Entry Activity");
+    activity.dump("Journal Entry Activity");
 
     assertEqual(activity.length, 2, "Should return two postings");
     assert(activity[0].description === "Sale A", "First posting correct");
@@ -153,8 +148,14 @@ runTest(
   () => {
     const ledger = new GaapLedger();
     const drCash = ledger.createCashAccount("Cash");
-    const crAcctPayable = ledger.createNonCashAccount("AP", GaapAccountType.Liability);
-    const crEquity = ledger.createNonCashAccount("Equity", GaapAccountType.Equity);
+    const crAcctPayable = ledger.createNonCashAccount(
+      "AP",
+      GaapAccountType.Liability
+    );
+    const crEquity = ledger.createNonCashAccount(
+      "Equity",
+      GaapAccountType.Equity
+    );
 
     ledger
       .entry(new Date("2023-01-01"), "Owner investment")

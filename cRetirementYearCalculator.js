@@ -11,7 +11,7 @@ import { RetirementYearData } from "./cRetirementYearData";
 import { Income } from "./cRevenue";
 import { Taxes } from "./cTaxes";
 import { WithdrawalFactory } from "./cWithdrawalFactory";
-import { makeDumpable, withLabel } from "./debugUtils";
+import { withLabel } from "./debugUtils";
 
 /**
  * RetirementYearCalculator class - Handles comprehensive retirement year calculations
@@ -315,7 +315,7 @@ class RetirementYearCalculator{
 
     // fiscalData.dump("fiscalData");
 
-    makeDumpable(result).dump("result");
+    result.dump("result");
     debugger;
     // result.income.dump();
     // result.balances.dump();

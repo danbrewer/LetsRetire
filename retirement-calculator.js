@@ -8,7 +8,6 @@ import { Inputs } from "./cInputs";
 import { TAX_BASE_YEAR } from "./consts";
 import { RetirementYearCalculator } from "./cRetirementYearCalculator";
 import { WorkingYearCalculator } from "./cWorkingYearCalculator";
-import { dumpObject } from "./debugUtils";
 import {
   getSpendingOverride,
   getTaxableIncomeOverride,
@@ -99,7 +98,7 @@ function calc(calculations) {
     const workingYearData =
       workingYearIncomeCalculator.calculateWorkingYearData();
 
-    dumpObject(workingYearData, "working year");
+    workingYearData.dump("working year");
     debugger;
 
     calculations.addCalculation(
@@ -130,7 +129,7 @@ function calc(calculations) {
 
     const yearData = calculator.calculateRetirementYearData();
 
-    dumpObject(yearData, "retirement year");
+    yearData.dump("retirement year");
     debugger;
     calculations.addCalculation(new Calculation(accountYear.taxYear, yearData));
   }
