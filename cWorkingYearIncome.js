@@ -1,12 +1,13 @@
-import { Account, ACCOUNT_TYPES } from "./cAccount";
-import { AccountingYear } from "./cAccountingYear";
-import { Demographics } from "./cDemographics";
-import { EmploymentInfo } from "./cEmploymentInfo";
-import { FiscalData } from "./cFiscalData";
-import { Inputs } from "./cInputs";
-import { INTEREST_CALCULATION_EPOCH, PERIODIC_FREQUENCY } from "./consts";
-import { TaxCalculations } from "./cTaxCalculations";
-import { Taxes } from "./cTaxes";
+import { Account, ACCOUNT_TYPES } from "./cAccount.js";
+import { AccountingYear } from "./cAccountingYear.js";
+import { Demographics } from "./cDemographics.js";
+import { EmploymentInfo } from "./cEmploymentInfo.js";
+import { FiscalData } from "./cFiscalData.js";
+import { Inputs } from "./cInputs.js";
+import { INTEREST_CALCULATION_EPOCH, PERIODIC_FREQUENCY } from "./consts.js";
+import { TaxCalculations } from "./cTaxCalculations.js";
+import { Taxes } from "./cTaxes.js";
+import { TRANSACTION_CATEGORY } from "./cTransaction.js";
 
 /**
  * Represents comprehensive income information for a working year in retirement planning.

@@ -1,5 +1,5 @@
-import { Inputs } from "./cInputs";
-import { compoundedRate } from "./utils";
+import { Inputs } from "./cInputs.js";
+import { compoundedRate } from "./utils.js";
 
 class Common {
   // Required Minimum Distribution (RMD) calculation

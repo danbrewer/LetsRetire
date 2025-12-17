@@ -1,5 +1,5 @@
-import { ACCOUNT_TYPES } from "./cAccount";
-import { compoundedRate } from "./utils";
+import { ACCOUNT_TYPES } from "./cAccount.js";
+import { compoundedRate } from "./utils.js";
 
 class Inputs {
   /** @type {number} */

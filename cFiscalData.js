@@ -1,4 +1,4 @@
-import { Inputs } from "./cInputs";
+import { Inputs } from "./cInputs.js";
 
 class FiscalData {
   /**

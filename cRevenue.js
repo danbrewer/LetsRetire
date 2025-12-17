@@ -3,7 +3,8 @@
  * Handles income tracking, revenue streams, and financial reporting for revenue accounts
  */
 
-import { AccountingYear } from "./cAccountingYear";
+import { AccountingYear } from "./cAccountingYear.js";
+import { TRANSACTION_CATEGORY } from "./cTransaction.js";
 
 class Income {
   /** @type {AccountingYear} */

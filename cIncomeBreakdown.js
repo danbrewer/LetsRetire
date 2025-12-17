@@ -1,7 +1,7 @@
-import { Demographics } from "./cDemographics";
-import { FiscalData } from "./cFiscalData";
-import { IncomeStreams } from "./cIncomeStreams";
-import { TaxCalculations } from "./cTaxCalculations";
+import { Demographics } from "./cDemographics.js";
+import { FiscalData } from "./cFiscalData.js";
+import { IncomeStreams } from "./cIncomeStreams.js";
+import { TaxCalculations } from "./cTaxCalculations.js";
 
 class IncomeBreakdown {
   /** @type {SsCalculationDetails | null} */

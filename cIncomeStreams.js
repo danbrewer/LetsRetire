@@ -1,9 +1,10 @@
-import { ACCOUNT_TYPES } from "./cAccount";
-import { AccountingYear } from "./cAccountingYear";
-import { Common } from "./cCommon";
-import { Demographics } from "./cDemographics";
-import { FiscalData } from "./cFiscalData";
-import { Inputs } from "./cInputs";
+import { ACCOUNT_TYPES } from "./cAccount.js";
+import { AccountingYear } from "./cAccountingYear.js";
+import { Common } from "./cCommon.js";
+import { Demographics } from "./cDemographics.js";
+import { FiscalData } from "./cFiscalData.js";
+import { Inputs } from "./cInputs.js";
+import { TRANSACTION_CATEGORY } from "./cTransaction.js";
 
 class IncomeStreams {
   /** @type {AccountingYear} */

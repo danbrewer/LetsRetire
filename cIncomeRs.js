@@ -1,5 +1,5 @@
-import { IncomeBreakdown } from "./cIncomeBreakdown";
-import { SsBenefitsCalculator } from "./cSsBenefitsCalculator";
+import { IncomeBreakdown } from "./cIncomeBreakdown.js";
+import { SsBenefitsCalculator } from "./cSsBenefitsCalculator.js";
 
 /**
  * Represents income calculation results containing Social Security and general income breakdowns.

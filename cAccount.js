@@ -1,4 +1,5 @@
-import { INTEREST_CALCULATION_EPOCH, PERIODIC_FREQUENCY } from "./consts";
+import { INTEREST_CALCULATION_EPOCH, PERIODIC_FREQUENCY } from "./consts.js";
+import { Transaction, TRANSACTION_CATEGORY, TRANSACTION_TYPE } from "./cTransaction.js";
 
 class ACCOUNT_TYPES {}
 ACCOUNT_TYPES.SAVINGS = "savings";

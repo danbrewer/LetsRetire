@@ -1,5 +1,6 @@
-import { Account } from "./cAccount";
-import { FiscalData } from "./cFiscalData";
+import { Account } from "./cAccount.js";
+import { FiscalData } from "./cFiscalData.js";
+import { TRANSACTION_CATEGORY } from "./cTransaction.js";
 
 /**
  * Represents detailed breakdown of retirement account activity for a specific year.

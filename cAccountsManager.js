@@ -1,5 +1,5 @@
-import { Account, ACCOUNT_TYPES } from "./cAccount";
-import { Inputs } from "./cInputs";
+import { Account, ACCOUNT_TYPES } from "./cAccount.js";
+import { Inputs } from "./cInputs.js";
 
 class AccountsManager {
   /**

@@ -3,8 +3,9 @@
  * Provides detailed tracking of withdrawal amounts, types, and sources
  */
 
-import { ACCOUNT_TYPES } from "./cAccount";
-import { AccountingYear } from "./cAccountingYear";
+import { ACCOUNT_TYPES } from "./cAccount.js";
+import { AccountingYear } from "./cAccountingYear.js";
+import { TRANSACTION_CATEGORY } from "./cTransaction.js";
 
 class Disbursements {
   #accountYear;

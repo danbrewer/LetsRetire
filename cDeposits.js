@@ -1,7 +1,7 @@
-import { Account } from "./cAccount";
-import { AccountsManager } from "./cAccountsManager";
-import { FiscalData } from "./cFiscalData";
-import { withLabel } from "./debugUtils";
+import { Account } from "./cAccount.js";
+import { AccountsManager } from "./cAccountsManager.js";
+import { FiscalData } from "./cFiscalData.js";
+import { withLabel } from "./debugUtils.js";
 
 /**
  * Represents deposit amounts across all retirement and savings accounts.

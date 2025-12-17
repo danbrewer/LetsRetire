@@ -1,7 +1,7 @@
-import { Demographics } from "./cDemographics";
-import { FiscalData } from "./cFiscalData";
-import { IncomeBreakdown } from "./cIncomeBreakdown";
-import { TaxCalculations } from "./cTaxCalculations";
+import { Demographics } from "./cDemographics.js";
+import { FiscalData } from "./cFiscalData.js";
+import { IncomeBreakdown } from "./cIncomeBreakdown.js";
+import { TaxCalculations } from "./cTaxCalculations.js";
 
 /**
  * Represents comprehensive tax calculation data including income, deductions, and tax liabilities.

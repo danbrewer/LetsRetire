@@ -1,12 +1,12 @@
-import { AccountingYear } from "./cAccountingYear";
-import { Balances } from "./cBalances";
-import { Contributions } from "./cContributions";
-import { Demographics } from "./cDemographics";
-import { FiscalData } from "./cFiscalData";
-import { Taxes } from "./cTaxes";
-import { Withdrawals } from "./cWithdrawals";
-import { WorkingYearIncome } from "./cWorkingYearIncome";
-import { YearDataBase } from "./cYearDataBase";
+import { AccountingYear } from "./cAccountingYear.js";
+import { Balances } from "./cBalances.js";
+import { Contributions } from "./cContributions.js";
+import { Demographics } from "./cDemographics.js";
+import { FiscalData } from "./cFiscalData.js";
+import { Taxes } from "./cTaxes.js";
+import { Withdrawals } from "./cWithdrawals.js";
+import { WorkingYearIncome } from "./cWorkingYearIncome.js";
+import { YearDataBase } from "./cYearDataBase.js";
 
 /**
  * Represents comprehensive working year calculation data including income, contributions,

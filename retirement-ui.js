@@ -1,9 +1,9 @@
 // @ts-check
 
-import { ACCOUNT_TYPES } from "./cAccount";
-import { Calculation, Calculations } from "./cCalculation";
-import { Inputs } from "./cInputs";
-import { constsJS_FILING_STATUS } from "./consts";
+import { ACCOUNT_TYPES } from "./cAccount.js";
+import { Calculation, Calculations } from "./cCalculation.js";
+import { Inputs } from "./cInputs.js";
+import { constsJS_FILING_STATUS } from "./consts.js";
 import { calc } from "./retirement-calculator.js";
 
 /**
@@ -58,11 +58,14 @@ const win = window;
 
 /**
  * @param {string} id
- * @returns {HTMLInputElement}
+ * @returns {HTMLInputElement | null}
  * @throws {Error} if element is missing or not a text-like input
  */
 function inputText(id) {
   const el = $(id);
+
+  // let the caller handle missing element
+  if (!el) return el;
 
   if (!(el instanceof HTMLInputElement)) {
     throw new Error(`Element '${id}' is not an <input>`);
@@ -84,11 +87,14 @@ function inputText(id) {
 
 /**
  * @param {string} id
- * @returns {HTMLSelectElement}
+ * @returns {HTMLSelectElement | null}
  * @throws {Error} if element is missing or not a <select>
  */
 function select(id) {
   const el = $(id);
+
+  // let the caller handle missing element
+  if (!el) return el;
 
   if (!(el instanceof HTMLSelectElement)) {
     throw new Error(`Element '${id}' is not a <select>`);
@@ -99,10 +105,13 @@ function select(id) {
 
 /**
  * @param {string} id
- * @returns {HTMLInputElement}
+ * @returns {HTMLInputElement | null}
  */
 function checkbox(id) {
   const el = $(id);
+
+  // let the caller handle missing element
+  if (!el) return el;
 
   if (!(el instanceof HTMLInputElement)) {
     throw new Error(`Element '${id}' is not an <input>`);
@@ -117,13 +126,13 @@ function checkbox(id) {
 /**
  * @param {ParentNode} parent
  * @param {string} selector
- * @returns {HTMLDivElement}
+ * @returns {HTMLDivElement | null}
  * @throws {Error} if element is missing or not a <div>
  */
 function div(parent, selector) {
   const el = parent.querySelector(selector);
 
-  if (!(el instanceof HTMLDivElement)) {
+  if (el && !(el instanceof HTMLDivElement)) {
     throw new Error(`Element '${selector}' is not a <div>`);
   }
 
@@ -132,11 +141,15 @@ function div(parent, selector) {
 
 /**
  * @param {string} id
- * @returns {HTMLDivElement}
+ * @returns {HTMLDivElement | null}
  * @throws {Error} if element is missing or not a <div>
  */
 function divById(id) {
   const el = document.getElementById(id);
+
+  if (!el) {
+    return el;
+  }
 
   if (!(el instanceof HTMLDivElement)) {
     throw new Error(`Element with id '${id}' is not a <div>`);
@@ -149,12 +162,12 @@ function divById(id) {
 /**
  * @template {HTMLElement} T
  * @param {string} id
- * @returns {T}
+ * @returns {T | null}
  */
 function $(id) {
   const el = document.getElementById(id);
   if (!el) {
-    throw new Error(`Element with id '${id}' not found`);
+    return null;
   }
   return /** @type {T} */ (el);
 }
@@ -165,6 +178,9 @@ function $(id) {
  */
 function num(id) {
   const el = inputText(id);
+  if (!el) {
+    throw new Error(`Element with id '${id}' not found.`);
+  }
   return Number(el.value || 0);
 }
 
@@ -552,8 +568,9 @@ document.addEventListener("keydown", (e) => {
  * @param {ChartSeries} series
  */
 function drawChart(series) {
-  /** @type {ChartCanvas} */
+  /** @type {ChartCanvas | null} */
   const c = $("chart");
+  if (!c) return;
 
   const ctx = c.getContext("2d");
   if (!ctx) return;
@@ -744,29 +761,37 @@ function drawChartContent(
 
   // Setup mouse event handlers for tooltips (only add once)
   if (!c.hasTooltipHandlers) {
-    const tooltip = /** @type {HTMLElement} */ $("chartTooltip");
+    const tooltip = /** @type {HTMLElement | null} */ $("chartTooltip");
+
+    if (!tooltip) return;
 
     /**
+     * @param {HTMLElement} e
      * @param {string | number} x
      * @param {string | number} y
      * @param {ChartPoint | null} point
      */
-    function showTooltip(x, y, point) {
+    function showTooltip(e, x, y, point) {
       if (!point) return;
 
-      const yearDiv = div(tooltip, ".year");
-      const balanceDiv = div(tooltip, ".balance");
+      const yearDiv = div(e, ".year");
+      const balanceDiv = div(e, ".balance");
+
+      if (!yearDiv || !balanceDiv) return;
 
       yearDiv.textContent = `Year ${point.x} (Age ${point.age})`;
       balanceDiv.textContent = `Balance: ${fmt(point.y)}`;
 
-      tooltip.style.left = x + "px";
-      tooltip.style.top = y + "px";
-      tooltip.classList.add("visible");
+      e.style.left = x + "px";
+      e.style.top = y + "px";
+      e.classList.add("visible");
     }
 
-    function hideTooltip() {
-      tooltip.classList.remove("visible");
+    /**
+     * @param {HTMLElement} e
+     */
+    function hideTooltip(e) {
+      e.classList.remove("visible");
     }
 
     /**
@@ -827,17 +852,17 @@ function drawChartContent(
           }
           tooltipY = e.clientY - rect.top - 10;
 
-          showTooltip(tooltipX, tooltipY, nearestPoint);
+          showTooltip(tooltip, tooltipX, tooltipY, nearestPoint);
           c.style.cursor = "pointer";
         } else {
-          hideTooltip();
+          hideTooltip(tooltip);
           c.style.cursor = "default";
         }
       }
     );
 
     c.addEventListener("mouseleave", () => {
-      hideTooltip();
+      hideTooltip(tooltip);
       c.style.cursor = "default";
     });
 
@@ -1072,29 +1097,36 @@ function setupChartTooltips(c) {
   // Setup mouse event handlers for tooltips (only add once)
   if (!c.hasTooltipHandlers) {
     const tooltip = divById("chartTooltip");
+    if (!tooltip) return;
 
     /**
+     * @param {HTMLElement} e
      * @param {string | number} x
      * @param {string | number} y
      * @param {ChartPoint | null} point
      */
-    function showTooltip(x, y, point) {
+    function showTooltip(e, x, y, point) {
       if (c.hasTooltipHandlers) return;
       if (!point) return;
 
-      const yearDiv = div(tooltip, ".year");
-      const balanceDiv = div(tooltip, ".balance");
+      const yearDiv = div(e, ".year");
+      const balanceDiv = div(e, ".balance");
+
+      if (!yearDiv || !balanceDiv) return;
 
       yearDiv.textContent = `Year ${point.x} (Age ${point.age})`;
       balanceDiv.textContent = `Balance: ${fmt(point.y)}`;
 
-      tooltip.style.left = x + "px";
-      tooltip.style.top = y + "px";
-      tooltip.classList.add("visible");
+      e.style.left = x + "px";
+      e.style.top = y + "px";
+      e.classList.add("visible");
     }
 
-    function hideTooltip() {
-      tooltip.classList.remove("visible");
+    /**
+     * @param {HTMLElement} e
+     */
+    function hideTooltip(e) {
+      e.classList.remove("visible");
     }
 
     /**
@@ -1152,16 +1184,16 @@ function setupChartTooltips(c) {
         }
         tooltipY = e.clientY - rect.top - 10;
 
-        showTooltip(tooltipX, tooltipY, nearestPoint);
+        showTooltip(tooltip, tooltipX, tooltipY, nearestPoint);
         c.style.cursor = "pointer";
       } else {
-        hideTooltip();
+        hideTooltip(tooltip);
         c.style.cursor = "default";
       }
     });
 
     c.addEventListener("mouseleave", () => {
-      hideTooltip();
+      hideTooltip(tooltip);
       c.style.cursor = "default";
     });
 
@@ -2344,20 +2376,20 @@ function generatePDFReport() {
 }
 
 // Events
-$("calcBtn").addEventListener("click", doCalculations);
-$("pdfBtn").addEventListener("click", generatePDFReport);
-$("csvBtn").addEventListener("click", exportCSV);
-$("exportJsonBtn").addEventListener("click", exportJSON);
-$("importJsonBtn").addEventListener("click", importJSON);
-$("jsonFileInput").addEventListener("change", handleJSONFile);
-$("clearBtn").addEventListener("click", resetAll);
-$("useCurrentYearValues").addEventListener("change", function () {
+$("calcBtn")?.addEventListener("click", doCalculations);
+$("pdfBtn")?.addEventListener("click", generatePDFReport);
+$("csvBtn")?.addEventListener("click", exportCSV);
+$("exportJsonBtn")?.addEventListener("click", exportJSON);
+$("importJsonBtn")?.addEventListener("click", importJSON);
+$("jsonFileInput")?.addEventListener("change", handleJSONFile);
+$("clearBtn")?.addEventListener("click", resetAll);
+$("useCurrentYearValues")?.addEventListener("change", function () {
   updateSpendingFieldsDisplayMode();
 });
-$("useTaxableCurrentYearValues").addEventListener("change", function () {
+$("useTaxableCurrentYearValues")?.addEventListener("change", function () {
   updateTaxableIncomeFieldsDisplayMode();
 });
-$("useTaxFreeCurrentYearValues").addEventListener("change", function () {
+$("useTaxFreeCurrentYearValues")?.addEventListener("change", function () {
   updateTaxFreeIncomeFieldsDisplayMode();
 });
 
@@ -2434,10 +2466,10 @@ function parseInputParameters() {
   // Basic parameters
   // Parse withdrawal order
   let withdrawalOrder = select("order")
-    .value.split(",")
+    ?.value.split(",")
     .map((/** @type {string} */ s) => s.trim())
     .filter((/** @type {string | any[]} */ s) => s.length > 0);
-  if (withdrawalOrder.length === 0) {
+  if (withdrawalOrder?.length === 0) {
     withdrawalOrder = [
       ACCOUNT_TYPES.SAVINGS,
       ACCOUNT_TYPES.TRAD_401K,
@@ -2456,10 +2488,10 @@ function parseInputParameters() {
   const spendingDecline = pct(num("spendingDecline"));
   const spouseRetireAge = num("spouseRetireAge");
   const spouseSsMonthly = num("spouseSsMonthly");
-  const spouseSsStartAge = num("spouseSsStart");
+  const spouseSsStartAge = num("spouseSsStartAge");
   const spouseSsCola = pct(num("spouseSsCola"));
   const spousePenMonthly = num("spousePenMonthly");
-  const spousePenStartAge = num("spousePenStart");
+  const spousePenStartAge = num("spousePenStartAge");
   const spousePenCola = pct(num("spousePenCola"));
   const spouseTaxSS = pct(num("spouseTaxSS"));
   const spouseTaxPension = pct(num("spouseTaxPension"));
@@ -2480,8 +2512,8 @@ function parseInputParameters() {
   const ssCola = pct(num("ssCola"));
   const penMonthly = num("penMonthly");
   const penCola = pct(num("penCola"));
-  const filingStatus = select("filingStatus").value;
-  const useRMD = checkbox("useRMD").checked;
+  const filingStatus = select("filingStatus")?.value || "single";
+  const useRMD = checkbox("useRMD")?.checked ?? false;
   const order = withdrawalOrder;
 
   const inputs = new Inputs(
@@ -2648,24 +2680,55 @@ function resetAll() {
   document
     .querySelectorAll("input")
     .forEach((i) => (i.value = i.defaultValue ?? ""));
-  select("order").value = "taxable,pretax,roth";
-  select("filingStatus").value = "single";
+
+  const order = select("order");
+  if (order) {
+    order.value = "taxable,pretax,roth";
+  }
+
+  const filingStatus = select("filingStatus");
+  if (filingStatus) {
+    filingStatus.value = "single";
+  }
 
   // Clear spending override fields
   const grid = divById("spendingDetailsGrid");
-  grid.innerHTML = "";
-
+  if (grid) {
+    grid.innerHTML = "";
+  }
   // Clear income adjustment fields
   const taxableGrid = divById("taxableIncomeDetailsGrid");
-  taxableGrid.innerHTML = "";
+  if (taxableGrid) {
+    taxableGrid.innerHTML = "";
+  }
   const taxFreeGrid = divById("taxFreeIncomeDetailsGrid");
-  taxFreeGrid.innerHTML = "";
+  if (taxFreeGrid) {
+    taxFreeGrid.innerHTML = "";
+  }
+  const rows = divById("rows");
+  if (rows) {
+    rows.innerHTML = "";
+  }
+  const kpiAge = divById("kpiAge");
+  if (kpiAge) {
+    kpiAge.textContent = "—";
+  }
 
-  $("rows").innerHTML = "";
-  $("kpiAge").textContent = "—";
-  $("kpiEndBal").textContent = "—";
-  $("kpiDraw").textContent = "—";
-  $("kpiTax").textContent = "—";
+  const kpiEndBal = divById("kpiEndBal");
+  if (kpiEndBal) {
+    kpiEndBal.textContent = "—";
+  }
+
+  const kpiDraw = divById("kpiDraw");
+  if (kpiDraw) {
+    kpiDraw.textContent = "—";
+  }
+
+  const kpiTax = divById("kpiTax");
+  if (kpiTax) {
+    kpiTax.textContent = "—";
+  }
+
   drawChart([]);
 }
 
@@ -2691,6 +2754,8 @@ function doCalculations() {
 function generateOutputAndSummary(inputs, calculations, rows) {
   // Write table
   const tbody = $("rows");
+  if (!tbody) return;
+
   tbody.innerHTML = calculations
     .getAllCalculations()
     .map((calculation, index) => {
@@ -2855,14 +2920,28 @@ function generateOutputAndSummary(inputs, calculations, rows) {
             (lastGoodAge, r) => (r.total > 0 ? r.age : lastGoodAge),
             inputs.currentAge
           );
-  $("kpiAge").innerHTML = `${fundedTo} <span class="pill ${
-    fundedTo >= inputs.endAge ? "ok" : "alert"
-  }">${fundedTo >= inputs.endAge ? "Fully funded" : "Shortfall"}</span>`;
-  $("kpiEndBal").textContent = fmt(Math.max(0, calculation.total));
-  $("kpiDraw").textContent = `${inputs.retireAge}`;
-  $("kpiTax").textContent = fmt(
-    inputs.trad401k + inputs.rothIRA + inputs.savings
-  );
+
+  const kpiAge = divById("kpiAge");
+  if (kpiAge) {
+    kpiAge.innerHTML = `${fundedTo} <span class="pill ${
+      fundedTo >= inputs.endAge ? "ok" : "alert"
+    }">${fundedTo >= inputs.endAge ? "Fully funded" : "Shortfall"}</span>`;
+  }
+
+  const kpiEndBal = divById("kpiEndBal");
+  if (kpiEndBal) {
+    kpiEndBal.textContent = fmt(Math.max(0, calculation.total));
+  }
+
+  const kpiDraw = divById("kpiDraw");
+  if (kpiDraw) {
+    kpiDraw.textContent = `${inputs.retireAge}`;
+  }
+
+  const kpiTax = divById("kpiTax");
+  if (kpiTax) {
+    kpiTax.textContent = fmt(inputs.trad401k + inputs.rothIRA + inputs.savings);
+  }
 
   // Chart (total balance)
   drawChart(
@@ -2878,7 +2957,10 @@ function generateOutputAndSummary(inputs, calculations, rows) {
 }
 
 function updateTaxFreeIncomeFieldsDisplayMode() {
-  const useCurrentYear = checkbox("useTaxFreeCurrentYearValues").checked;
+  const useTaxableCurrentYearValues = checkbox("useTaxFreeCurrentYearValues");
+  if (!useTaxableCurrentYearValues)
+    throw new Error("Checkbox useTaxFreeCurrentYearValues not found");
+  const useCurrentYear = useTaxableCurrentYearValues.checked;
   const currentAge = num("currentAge");
   const endAge = num("endAge");
 
@@ -2886,6 +2968,8 @@ function updateTaxFreeIncomeFieldsDisplayMode() {
 
   for (let age = currentAge; age <= endAge; age++) {
     const field = inputText(`taxFreeIncome_${age}`);
+
+    if (!field) continue;
 
     const currentValue = parseFloat(field.value) || 0;
     const storedCurrentYearValue =
@@ -3028,6 +3112,7 @@ function regenerateSpendingFields() {
   }
 
   const grid = $("spendingDetailsGrid");
+  if (!grid) return;
   grid.innerHTML = ""; // Clear existing fields
 
   // Generate input fields for each retirement year
@@ -3041,6 +3126,7 @@ function regenerateSpendingFields() {
 
     // Add event listener for inflation adjustment
     const field = $(`spending_${age}`);
+    if (!field) continue;
     field.addEventListener("blur", (event) =>
       handleSpendingFieldChange(age, event)
     );
@@ -3051,16 +3137,18 @@ function regenerateSpendingFields() {
  * @param {any} age
  */
 function getSpendingOverride(age) {
-  const field = inputText(`spending_${age}`);
   let result = 0;
+
+  const field = inputText(`spending_${age}`);
   if (field && field.value) {
     const value = parseFloat(field.value);
     if (isNaN(value)) {
       // console.log(`getSpendingOverride(${age}): Invalid number in field`);
       setSpendingFieldValue(age);
-      return 0;
+      return result;
     }
-    const useCurrentYear = checkbox("useCurrentYearValues").checked;
+    const useCurrentYearValues = checkbox("useCurrentYearValues");
+    const useCurrentYear = useCurrentYearValues && useCurrentYearValues.checked;
     const fieldValue = Number(field.value);
 
     if (useCurrentYear) {
@@ -3109,9 +3197,14 @@ function setSpendingFieldValue(age) {
  */
 function applyInflationToSpendingValue(currentYearValue, targetAge) {
   if (!currentYearValue) return 0;
-  const currentAge = parseInt(inputText("currentAge").value) || 0;
+  const currentAgeField = inputText("currentAge");
+  const currentAge = (currentAgeField && parseInt(currentAgeField.value)) || 0;
   const yearsFromNow = targetAge - currentAge;
-  const inflationRate = parseFloat(inputText("inflation").value) / 100 || 0.025;
+
+  const inflationField = inputText("inflation");
+  const inflationRate =
+    (inflationField && parseFloat(inflationField.value) / 100) || 0.025;
+
   return currentYearValue * Math.pow(1 + inflationRate, yearsFromNow);
 }
 
@@ -3123,7 +3216,9 @@ function handleSpendingFieldChange(age, event) {
   const target = /** @type {HTMLInputElement} */ (event.target);
   const inputValue = parseFloat(target.value) || 0;
 
-  const useCurrentYear = checkbox("useCurrentYearValues").checked;
+  const useCurrentYearValuesCheckbox = checkbox("useCurrentYearValues");
+  const useCurrentYear =
+    useCurrentYearValuesCheckbox && useCurrentYearValuesCheckbox.checked;
 
   if (useCurrentYear && inputValue > 0) {
     // Store the current year value but don't change the field value
@@ -3147,7 +3242,9 @@ function handleSpendingFieldChange(age, event) {
 }
 
 function updateSpendingFieldsDisplayMode() {
-  const useCurrentYear = checkbox("useCurrentYearValues").checked;
+  const useCurrentYearValuesCheckbox = checkbox("useCurrentYearValues");
+  const useCurrentYear =
+    useCurrentYearValuesCheckbox && useCurrentYearValuesCheckbox.checked;
   const retireAge = num("retireAge");
   const endAge = num("endAge");
 
@@ -3206,6 +3303,8 @@ function regenerateTaxableIncomeFields() {
   }
 
   const grid = $("taxableIncomeDetailsGrid");
+  if (!grid) return;
+
   grid.innerHTML = ""; // Clear existing fields
 
   // Generate input fields for each year from current age to end age
@@ -3219,6 +3318,7 @@ function regenerateTaxableIncomeFields() {
 
     // Add event listener for inflation adjustment
     const field = $(`taxableIncome_${age}`);
+    if (!field) continue;
     field.addEventListener("blur", (event) =>
       handleTaxableIncomeFieldChange(age, event)
     );
@@ -3230,11 +3330,18 @@ function regenerateTaxableIncomeFields() {
  */
 function getTaxableIncomeOverride(age) {
   const field = inputText(`taxableIncome_${age}`);
-  const value = parseFloat(field.value);
   let result = 0;
-  if (field && field.value && !isNaN(value)) {
-    const useCurrentYear = checkbox("useTaxableCurrentYearValues").checked;
-    const fieldValue = Number(field.value);
+  if (field && field.value) {
+    const fieldValue = parseFloat(field.value);
+    if (isNaN(fieldValue)) {
+      // console.log(`getTaxableIncomeOverride(${age}): Invalid number in field`);
+      return 0;
+    }
+
+    const useTaxableCurrentYearValues = checkbox("useTaxableCurrentYearValues");
+
+    const useCurrentYear =
+      useTaxableCurrentYearValues && useTaxableCurrentYearValues.checked;
 
     if (useCurrentYear) {
       // If in current year mode, check if we have a stored current year value
@@ -3269,7 +3376,10 @@ function getTaxableIncomeOverride(age) {
  * @param {FocusEvent} event
  */
 function handleTaxableIncomeFieldChange(age, event) {
-  const useCurrentYear = checkbox("useTaxableCurrentYearValues").checked;
+  const useTaxableCurrentYearValues = checkbox("useTaxableCurrentYearValues");
+
+  const useCurrentYear =
+    useTaxableCurrentYearValues && useTaxableCurrentYearValues.checked;
   const target = /** @type {HTMLInputElement} */ (event.target);
   const inputValue = parseFloat(target.value) || 0;
 
@@ -3294,7 +3404,9 @@ function handleTaxableIncomeFieldChange(age, event) {
 }
 
 function updateTaxableIncomeFieldsDisplayMode() {
-  const useCurrentYear = checkbox("useTaxableCurrentYearValues").checked;
+  const useTaxableCurrentYearValues = checkbox("useTaxableCurrentYearValues");
+  const useCurrentYear =
+    useTaxableCurrentYearValues && useTaxableCurrentYearValues.checked;
   const currentAge = num("currentAge");
   const endAge = num("endAge");
 
@@ -3351,6 +3463,8 @@ function regenerateTaxFreeIncomeFields() {
   }
 
   const grid = $("taxFreeIncomeDetailsGrid");
+  if (!grid) return;
+
   grid.innerHTML = ""; // Clear existing fields
 
   // Generate input fields for each year from current age to end age
@@ -3364,6 +3478,7 @@ function regenerateTaxFreeIncomeFields() {
 
     // Add event listener for inflation adjustment
     const field = $(`taxFreeIncome_${age}`);
+    if (!field) continue;
     field.addEventListener("blur", (event) =>
       handleTaxFreeIncomeFieldChange(age, event)
     );
@@ -3375,11 +3490,17 @@ function regenerateTaxFreeIncomeFields() {
  */
 function getTaxFreeIncomeOverride(age) {
   const field = inputText(`taxFreeIncome_${age}`);
-  const value = parseFloat(field.value);
   let result = 0;
-  if (field && field.value && !isNaN(value)) {
-    const useCurrentYear = checkbox("useTaxFreeCurrentYearValues").checked;
-    const fieldValue = Number(field.value);
+  if (field && field.value) {
+    const fieldValue = parseFloat(field.value);
+
+    if (isNaN(fieldValue)) {
+      // console.log(`getTaxFreeIncomeOverride(${age}): Invalid number in field`);
+      return 0;
+    }
+    const useTaxFreeCurrentYearValues = checkbox("useTaxFreeCurrentYearValues");
+    const useCurrentYear =
+      useTaxFreeCurrentYearValues && useTaxFreeCurrentYearValues.checked;
 
     if (useCurrentYear) {
       // If in current year mode, check if we have a stored current year value
@@ -3414,7 +3535,9 @@ function getTaxFreeIncomeOverride(age) {
  * @param {FocusEvent} event
  */
 function handleTaxFreeIncomeFieldChange(age, event) {
-  const useCurrentYear = checkbox("useTaxFreeCurrentYearValues").checked;
+  const useTaxFreeCurrentYearValues = checkbox("useTaxFreeCurrentYearValues");
+  const useCurrentYear =
+    useTaxFreeCurrentYearValues && useTaxFreeCurrentYearValues.checked;
   const target = /** @type {HTMLInputElement} */ (event.target);
   const inputValue = parseFloat(target.value) || 0;
 
@@ -3444,9 +3567,15 @@ function handleTaxFreeIncomeFieldChange(age, event) {
  */
 function applyInflationToIncomeValue(currentYearValue, targetAge) {
   if (!currentYearValue) return 0;
-  const currentAge = parseInt(inputText("currentAge").value) || 0;
+
+  const currentAgeField = inputText("currentAge");
+  if (!currentAgeField) return 0;
+
+  const currentAge = parseInt(currentAgeField.value) || 0;
   const yearsFromNow = targetAge - currentAge;
-  const inflationRate = parseFloat(inputText("inflation").value) / 100 || 0.025;
+  const inflationField = inputText("inflation");
+  if (!inflationField) return 0;
+  const inflationRate = parseFloat(inflationField.value) / 100 || 0.025;
   return currentYearValue * Math.pow(1 + inflationRate, yearsFromNow);
 }
 

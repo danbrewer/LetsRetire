@@ -1,10 +1,10 @@
-import { AccountingYear } from "./cAccountingYear";
-import { AccountsManager } from "./cAccountsManager";
-import { Calculation, Calculations } from "./cCalculation";
-import { Inputs } from "./cInputs";
-import { TAX_BASE_YEAR } from "./consts";
-import { RetirementYearCalculator } from "./cRetirementYearCalculator";
-import { WorkingYearCalculator } from "./cWorkingYearCalculator";
+import { AccountingYear } from "./cAccountingYear.js";
+import { AccountsManager } from "./cAccountsManager.js";
+import { Calculation, Calculations } from "./cCalculation.js";
+import { Inputs } from "./cInputs.js";
+import { TAX_BASE_YEAR } from "./consts.js";
+import { RetirementYearCalculator } from "./cRetirementYearCalculator.js";
+import { WorkingYearCalculator } from "./cWorkingYearCalculator.js";
 import * as DefaultUI from "./retirement-ui.js";
 
 /**

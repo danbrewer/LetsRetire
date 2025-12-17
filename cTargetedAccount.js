@@ -1,4 +1,4 @@
-import { Account } from "./cAccount";
+import { Account } from "./cAccount.js";
 
 class TargetedAccount {
   #account;

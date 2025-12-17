@@ -1,6 +1,9 @@
-import { Demographics } from "./cDemographics";
-import { Inputs } from "./cInputs";
-import { EMPLOYEE_401K_LIMIT_2025, EMPLOYEE_401K_CATCHUP_50 } from "./consts";
+import { Demographics } from "./cDemographics.js";
+import { Inputs } from "./cInputs.js";
+import {
+  EMPLOYEE_401K_LIMIT_2025,
+  EMPLOYEE_401K_CATCHUP_50,
+} from "./consts.js";
 
 /**
  * Represents comprehensive employment information for retirement planning calculations.

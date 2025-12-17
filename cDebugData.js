@@ -1,10 +1,10 @@
-import { AccountingYear } from "./cAccountingYear";
-import { Demographics } from "./cDemographics";
-import { Deposits } from "./cDeposits";
-import { FiscalData } from "./cFiscalData";
-import { IncomeBreakdown } from "./cIncomeBreakdown";
-import { Taxes } from "./cTaxes";
-import { Withdrawals } from "./cWithdrawals";
+import { AccountingYear } from "./cAccountingYear.js";
+import { Demographics } from "./cDemographics.js";
+import { Deposits } from "./cDeposits.js";
+import { FiscalData } from "./cFiscalData.js";
+import { IncomeBreakdown } from "./cIncomeBreakdown.js";
+import { Taxes } from "./cTaxes.js";
+import { Withdrawals } from "./cWithdrawals.js";
 
 /**
  * Represents comprehensive debug information for retirement calculation analysis.

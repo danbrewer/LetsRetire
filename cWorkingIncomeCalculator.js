@@ -1,8 +1,8 @@
-import { Demographics } from "./cDemographics";
-import { FiscalData } from "./cFiscalData";
-import { IncomeBreakdown } from "./cIncomeBreakdown";
-import { IncomeRs } from "./cIncomeRs";
-import { IncomeStreams } from "./cIncomeStreams";
+import { Demographics } from "./cDemographics.js";
+import { FiscalData } from "./cFiscalData.js";
+import { IncomeBreakdown } from "./cIncomeBreakdown.js";
+import { IncomeRs } from "./cIncomeRs.js";
+import { IncomeStreams } from "./cIncomeStreams.js";
 
 /**
  * RetirementIncomeCalculator class - Handles retirement income and tax calculations

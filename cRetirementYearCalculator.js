@@ -1,17 +1,18 @@
-import { ACCOUNT_TYPES } from "./cAccount";
-import { AccountingYear } from "./cAccountingYear";
-import { Balance } from "./cBalance";
-import { Balances } from "./cBalances";
-import { Demographics } from "./cDemographics";
-import { FiscalData } from "./cFiscalData";
-import { IncomeStreams } from "./cIncomeStreams";
-import { Inputs } from "./cInputs";
-import { TAX_BASE_YEAR } from "./consts";
-import { RetirementYearData } from "./cRetirementYearData";
-import { Income } from "./cRevenue";
-import { Taxes } from "./cTaxes";
-import { WithdrawalFactory } from "./cWithdrawalFactory";
-import { withLabel } from "./debugUtils";
+import { ACCOUNT_TYPES } from "./cAccount.js";
+import { AccountingYear } from "./cAccountingYear.js";
+import { Balance } from "./cBalance.js";
+import { Balances } from "./cBalances.js";
+import { Demographics } from "./cDemographics.js";
+import { FiscalData } from "./cFiscalData.js";
+import { IncomeStreams } from "./cIncomeStreams.js";
+import { Inputs } from "./cInputs.js";
+import { TAX_BASE_YEAR } from "./consts.js";
+import { RetirementYearData } from "./cRetirementYearData.js";
+import { Income } from "./cRevenue.js";
+import { Taxes } from "./cTaxes.js";
+import { TRANSACTION_CATEGORY } from "./cTransaction.js";
+import { WithdrawalFactory } from "./cWithdrawalFactory.js";
+import { withLabel } from "./debugUtils.js";
 
 /**
  * RetirementYearCalculator class - Handles comprehensive retirement year calculations

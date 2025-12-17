@@ -1,9 +1,9 @@
 // @ts-check
 
 // cYearDataBase.js
-import { AccountingYear } from "./cAccountingYear";
-import { Demographics } from "./cDemographics";
-import { FiscalData } from "./cFiscalData";
+import { AccountingYear } from "./cAccountingYear.js";
+import { Demographics } from "./cDemographics.js";
+import { FiscalData } from "./cFiscalData.js";
 
 /**
  * Abstract base class for year-based financial data.

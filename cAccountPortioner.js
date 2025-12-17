@@ -1,6 +1,6 @@
-import { ACCOUNT_TYPES } from "./cAccount";
-import { AccountingYear } from "./cAccountingYear";
-import { FiscalData } from "./cFiscalData";
+import { ACCOUNT_TYPES } from "./cAccount.js";
+import { AccountingYear } from "./cAccountingYear.js";
+import { FiscalData } from "./cFiscalData.js";
 
 class AccountPortioner {
   #accountYear;

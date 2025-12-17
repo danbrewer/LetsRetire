@@ -1,7 +1,12 @@
-import { Demographics } from "./cDemographics";
-import { FiscalData } from "./cFiscalData";
-import { TAX_BASE_YEAR, constsJS_FILING_STATUS, constsJS_TAX_TABLES_2025, constsJS_STANDARD_DEDUCTION_2025 } from "./consts";
-import { log } from "./debugUtils";
+import { Demographics } from "./cDemographics.js";
+import { FiscalData } from "./cFiscalData.js";
+import {
+  TAX_BASE_YEAR,
+  constsJS_FILING_STATUS,
+  constsJS_TAX_TABLES_2025,
+  constsJS_STANDARD_DEDUCTION_2025,
+} from "./consts.js";
+import { log } from "./debugUtils.js";
 
 class TaxCalculations {
   /**

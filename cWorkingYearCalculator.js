@@ -1,11 +1,12 @@
-import { ACCOUNT_TYPES } from "./cAccount";
-import { AccountingYear } from "./cAccountingYear";
-import { Demographics } from "./cDemographics";
-import { FiscalData } from "./cFiscalData";
-import { Inputs } from "./cInputs";
-import { TAX_BASE_YEAR, PERIODIC_FREQUENCY } from "./consts";
-import { WorkingYearData } from "./cWorkingYearData";
-import { WorkingYearIncome } from "./cWorkingYearIncome";
+import { ACCOUNT_TYPES } from "./cAccount.js";
+import { AccountingYear } from "./cAccountingYear.js";
+import { Demographics } from "./cDemographics.js";
+import { FiscalData } from "./cFiscalData.js";
+import { Inputs } from "./cInputs.js";
+import { TAX_BASE_YEAR, PERIODIC_FREQUENCY } from "./consts.js";
+import { TRANSACTION_CATEGORY } from "./cTransaction.js";
+import { WorkingYearData } from "./cWorkingYearData.js";
+import { WorkingYearIncome } from "./cWorkingYearIncome.js";
 
 /**
  * WorkingYearIncomeCalculator class - Handles working year income and accumulation calculations

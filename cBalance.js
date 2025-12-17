@@ -1,4 +1,4 @@
-import { AccountingYear } from "./cAccountingYear";
+import { AccountingYear } from "./cAccountingYear.js";
 
 /**
  * Represents account balances across all retirement and savings accounts.

@@ -1,13 +1,14 @@
-import { ACCOUNT_TYPES } from "./cAccount";
-import { AccountingYear } from "./cAccountingYear";
-import { AccountPortioner } from "./cAccountPortioner";
-import { Demographics } from "./cDemographics";
-import { FiscalData } from "./cFiscalData";
-import { IncomeRs } from "./cIncomeRs";
-import { IncomeStreams } from "./cIncomeStreams";
-import { PERIODIC_FREQUENCY } from "./consts";
-import { RetirementIncomeCalculator } from "./cRetirementIncomeCalculator";
-import { WorkingIncomeCalculator } from "./cWorkingIncomeCalculator";
+import { ACCOUNT_TYPES } from "./cAccount.js";
+import { AccountingYear } from "./cAccountingYear.js";
+import { AccountPortioner } from "./cAccountPortioner.js";
+import { Demographics } from "./cDemographics.js";
+import { FiscalData } from "./cFiscalData.js";
+import { IncomeRs } from "./cIncomeRs.js";
+import { IncomeStreams } from "./cIncomeStreams.js";
+import { PERIODIC_FREQUENCY } from "./consts.js";
+import { RetirementIncomeCalculator } from "./cRetirementIncomeCalculator.js";
+import { TRANSACTION_CATEGORY } from "./cTransaction.js";
+import { WorkingIncomeCalculator } from "./cWorkingIncomeCalculator.js";
 
 /**
  * WithdrawalFactory class - Handles withdrawal operations for retirement accounts

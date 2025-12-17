@@ -116,3 +116,6 @@ class Transaction {
     this.#date = date;
   }
 }
+
+export { Transaction, TRANSACTION_TYPE, TRANSACTION_CATEGORY };
+export { isValidTransactionType, isValidTransactionCategory };

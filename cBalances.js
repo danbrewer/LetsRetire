@@ -1,6 +1,6 @@
-import { ACCOUNT_TYPES } from "./cAccount";
-import { AccountingYear } from "./cAccountingYear";
-import { withLabel } from "./debugUtils";
+import { ACCOUNT_TYPES } from "./cAccount.js";
+import { AccountingYear } from "./cAccountingYear.js";
+import { withLabel } from "./debugUtils.js";
 
 /**
  * Represents account balances across all retirement and savings accounts.

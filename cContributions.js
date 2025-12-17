@@ -1,7 +1,8 @@
-import { ACCOUNT_TYPES } from "./cAccount";
-import { AccountingYear } from "./cAccountingYear";
-import { EmploymentInfo } from "./cEmploymentInfo";
-import { withLabel } from "./debugUtils";
+import { ACCOUNT_TYPES } from "./cAccount.js";
+import { AccountingYear } from "./cAccountingYear.js";
+import { EmploymentInfo } from "./cEmploymentInfo.js";
+import { TRANSACTION_CATEGORY } from "./cTransaction.js";
+import { withLabel } from "./debugUtils.js";
 
 /**
  * Represents comprehensive contribution breakdown for retirement planning.

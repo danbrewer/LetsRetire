@@ -1,5 +1,6 @@
-import { ACCOUNT_TYPES } from "./cAccount";
-import { AccountingYear } from "./cAccountingYear";
+import { ACCOUNT_TYPES } from "./cAccount.js";
+import { AccountingYear } from "./cAccountingYear.js";
+import { TRANSACTION_CATEGORY } from "./cTransaction.js";
 
 /**
  * Represents withdrawal amounts across all retirement and savings accounts.

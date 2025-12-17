@@ -1,6 +1,6 @@
-import { ACCOUNT_TYPES } from "./cAccount";
-import { AccountsManager } from "./cAccountsManager";
-import { INTEREST_CALCULATION_EPOCH } from "./consts";
+import { ACCOUNT_TYPES } from "./cAccount.js";
+import { AccountsManager } from "./cAccountsManager.js";
+import { INTEREST_CALCULATION_EPOCH } from "./consts.js";
 
 class AccountingYear {
   #accountsManager;

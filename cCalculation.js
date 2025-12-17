@@ -1,5 +1,5 @@
-import { RetirementYearData } from "./cRetirementYearData";
-import { WorkingYearData } from "./cWorkingYearData";
+import { RetirementYearData } from "./cRetirementYearData.js";
+import { WorkingYearData } from "./cWorkingYearData.js";
 
 class Calculation {
   /** @type {WorkingYearData | RetirementYearData} */
