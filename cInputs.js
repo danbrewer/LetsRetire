@@ -1,4 +1,5 @@
 import { ACCOUNT_TYPES } from "./cAccount";
+import { compoundedRate } from "./utils";
 
 class Inputs {
   /** @type {number} */

@@ -13,6 +13,8 @@ import {
 
 import { GaapAnalyzer } from "../cGaapAnalyzer.js";
 
+import {dumpObject} from "../debugUtils.js";
+
 console.log("=".repeat(70));
 console.log("🧪 GAAP ANALYZER TESTS");
 console.log("=".repeat(70));
@@ -61,6 +63,8 @@ runTest(
 
     const analyzer = new GaapAnalyzer(ledger);
     const activity = analyzer.getAccountActivity(cash);
+
+    dumpObject(activity, "Journal Entry Activity");
 
     assertEqual(activity.length, 2, "Should return two postings");
     assert(activity[0].description === "Sale A", "First posting correct");

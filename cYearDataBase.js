@@ -13,7 +13,7 @@ import { FiscalData } from "./cFiscalData";
  *
  * @abstract
  */
-class YearDataBase {
+class YearDataBase{
   /** @type {Demographics} */
   #demographics;
   /** @type {FiscalData} */

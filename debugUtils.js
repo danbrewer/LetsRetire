@@ -1,3 +1,5 @@
+import { formatDateYYYYMMDD } from "./utils.js";
+
 const DUMP_CALCULATION_DETAILS = true; // set to false to disable detailed calc dumps
 
 // =====================
@@ -186,154 +188,332 @@ function _labelFor(value, fallback) {
   return fallback || "Unknown";
 }
 
-// Define the dump method as non-enumerable so it won't appear in Object.entries
-Object.defineProperty(Object.prototype, "dump", {
-  enumerable: false,
-  configurable: true,
-  writable: true,
-  value: function (/** @type {any} */ title, depth = 0) {
-    const indent = "  ".repeat(depth);
-    const colWidth = 30; // adjust for alignment width
+/** 
+@param {any} obj
+@param {string} [title]
+*/
+function dumpObject(obj, title) {
+  makeDumpable(obj).dump(title);
+}
 
-    if (depth === 0) {
-      const header = title || this._description || "Object Dump";
-      console.log(`${header}:`);
-    }
+/**
+ * @param {any} obj
+ */
+function makeDumpable(obj) {
+  Object.defineProperty(obj, "dump", {
+    enumerable: false,
+    configurable: true,
+    writable: false,
+    value(/** @type {string} */ title) {
+      dump(obj, title);
+    },
+  });
+  return obj;
+}
 
-    // Arrays
-    if (Array.isArray(this)) {
-      this.forEach((val, i) => {
-        if (val && typeof val === "object") {
-          console.log(`${indent}- [${i}]`);
-          val.dump(null, depth + 1);
-        } else {
-          console.log(`${indent}- [${i}] ${safeFormat(val)}`);
-        }
-      });
-      return;
-    }
+/**
+ * @param {any} obj
+ * @param {string} [title]
+ */
+function dump(obj, title, depth = 0) {
+  const indent = "  ".repeat(depth);
+  const colWidth = 30; // adjust for alignment width
 
-    for (const [key, value] of Object.entries(this)) {
-      if (key === "_description") continue; // skip
+  if (depth === 0) {
+    const header = title || obj._description || "Object Dump";
+    console.log(`${header}:`);
+  }
 
-      // ------- SPECIAL CASE: calculationDetails -------
-      if (key === "calculationDetails") {
-        if (!DUMP_CALCULATION_DETAILS) {
-          continue; // skip entirely when disabled
-        }
-
-        const contributors = Array.isArray(value) ? value : [value];
-        console.log(`${indent}- calculationDetails:`);
-
-        contributors.forEach((contrib, idx) => {
-          const heading = _labelFor(contrib, `Contributor #${idx + 1}`);
-          console.log(`${indent}  - ${heading}:`);
-
-          if (typeof contrib === "function") {
-            const params = getParamText(contrib);
-            const zeroParams = params !== null && params === "";
-
-            if (zeroParams) {
-              try {
-                const result = contrib.call(this);
-                if (result && typeof result === "object") {
-                  result.dump(null, depth + 2);
-                } else {
-                  console.log(`${indent}    - result() ${safeFormat(result)}`);
-                }
-              } catch (e) {
-                console.log(
-                  // @ts-ignore
-                  `${indent}    - [function threw: ${e?.message ?? e}]`
-                );
-              }
-            } else {
-              const sig = params === null ? "[unknown signature]" : params;
-              console.log(`${indent}    - (${sig}) [function]`);
-            }
-          } else if (contrib && typeof contrib === "object") {
-            contrib.dump(null, depth + 2);
-          } else {
-            console.log(`${indent}    - ${safeFormat(contrib)}`);
-          }
-        });
-        continue;
-      }
-      // ------- END SPECIAL CASE -------
-
-      if (typeof value === "function") {
-        const paramText = getParamText(value);
-        const hasZeroParams = paramText !== null && paramText === "";
-
-        if (hasZeroParams) {
-          try {
-            const result = value.call(this);
-            console.log(
-              `${indent}- ${(key + "()").padEnd(colWidth)} ${alignValue(result, colWidth)}`
-            );
-          } catch (e) {
-            console.log(
-              // @ts-ignore
-              `${indent}- ${(key + "()").padEnd(colWidth)} [function threw: ${e?.message ?? e}]`
-            );
-          }
-        } else {
-          const sig = paramText === null ? "[unknown signature]" : paramText;
-          console.log(`${indent}- ${key}(${sig}) [function]`);
-        }
-      } else if (value && typeof value === "object") {
-        console.log(`${indent}- ${key}:`);
-        value.dump(null, depth + 1);
+  // Arrays
+  if (Array.isArray(obj)) {
+    obj.forEach((val, i) => {
+      if (val && typeof val === "object") {
+        console.log(`${indent}- [${i}]`);
+        val.dump(null, depth + 1);
       } else {
-        if (
-          value &&
-          typeof value === "object" &&
-          "value" in value &&
-          value[DUMP_LABEL]
-        ) {
-          // labeled primitive wrapper
-          console.log(
-            `${indent}- ${value[DUMP_LABEL]}: ${alignValue(value.value, colWidth)}`
-          );
-        } else {
-          console.log(
-            `${indent}- ${key.padEnd(colWidth)} ${alignValue(value, colWidth)}`
-          );
-        }
+        console.log(`${indent}- [${i}] ${safeFormat(val)}`);
       }
-    }
+    });
+    return;
+  }
 
-    // ===================================================
-    // 🔍 NEW SECTION: Include getters from prototype
-    // ===================================================
-    const proto = Object.getPrototypeOf(this);
-    if (proto && proto !== Object.prototype) {
-      const props = Object.getOwnPropertyDescriptors(proto);
+  for (const [key, value] of Object.entries(obj)) {
+    if (key === "_description") continue; // skip
 
-      for (const [key, desc] of Object.entries(props)) {
-        if (key === "constructor") continue;
-        if (typeof desc.get === "function") {
-          try {
-            const value = this[key];
-            if (value && typeof value === "object") {
-              console.log(`${indent}- ${key}:`);
-              value.dump(null, depth + 1);
-            } else {
+    // ------- SPECIAL CASE: calculationDetails -------
+    if (key === "calculationDetails") {
+      if (!DUMP_CALCULATION_DETAILS) {
+        continue; // skip entirely when disabled
+      }
+
+      const contributors = Array.isArray(value) ? value : [value];
+      console.log(`${indent}- calculationDetails:`);
+
+      contributors.forEach((contrib, idx) => {
+        const heading = _labelFor(contrib, `Contributor #${idx + 1}`);
+        console.log(`${indent}  - ${heading}:`);
+
+        if (typeof contrib === "function") {
+          const params = getParamText(contrib);
+          const zeroParams = params !== null && params === "";
+
+          if (zeroParams) {
+            try {
+              const result = contrib.call(obj);
+              if (result && typeof result === "object") {
+                result.dump(null, depth + 2);
+              } else {
+                console.log(`${indent}    - result() ${safeFormat(result)}`);
+              }
+            } catch (e) {
               console.log(
-                `${indent}- ${key.padEnd(colWidth)} ${alignValue(value, colWidth)}`
+                // @ts-ignore
+                `${indent}    - [function threw: ${e?.message ?? e}]`
               );
             }
-          } catch (e) {
+          } else {
+            const sig = params === null ? "[unknown signature]" : params;
+            console.log(`${indent}    - (${sig}) [function]`);
+          }
+        } else if (contrib && typeof contrib === "object") {
+          contrib.dump(null, depth + 2);
+        } else {
+          console.log(`${indent}    - ${safeFormat(contrib)}`);
+        }
+      });
+      continue;
+    }
+    // ------- END SPECIAL CASE -------
+
+    if (typeof value === "function") {
+      const paramText = getParamText(value);
+      const hasZeroParams = paramText !== null && paramText === "";
+
+      if (hasZeroParams) {
+        try {
+          const result = value.call(obj);
+          console.log(
+            `${indent}- ${(key + "()").padEnd(colWidth)} ${alignValue(result, colWidth)}`
+          );
+        } catch (e) {
+          console.log(
+            // @ts-ignore
+            `${indent}- ${(key + "()").padEnd(colWidth)} [function threw: ${e?.message ?? e}]`
+          );
+        }
+      } else {
+        const sig = paramText === null ? "[unknown signature]" : paramText;
+        console.log(`${indent}- ${key}(${sig}) [function]`);
+      }
+    } else if (value instanceof Date) {
+      console.log(
+        `${indent}- ${key.padEnd(colWidth)} ${alignValue(formatDateYYYYMMDD(value), colWidth)}`
+      );
+    } else if (value && typeof value === "object") {
+      console.log(`${indent}- ${key}:`);
+      value.dump(null, depth + 1);
+    } else {
+      if (
+        value &&
+        typeof value === "object" &&
+        "value" in value &&
+        value[DUMP_LABEL]
+      ) {
+        // labeled primitive wrapper
+        console.log(
+          `${indent}- ${value[DUMP_LABEL]}: ${alignValue(value.value, colWidth)}`
+        );
+      } else {
+        console.log(
+          `${indent}- ${key.padEnd(colWidth)} ${alignValue(value, colWidth)}`
+        );
+      }
+    }
+  }
+
+  // ===================================================
+  // 🔍 NEW SECTION: Include getters from prototype
+  // ===================================================
+  const proto = Object.getPrototypeOf(obj);
+  if (proto && proto !== Object.prototype) {
+    const props = Object.getOwnPropertyDescriptors(proto);
+
+    for (const [key, desc] of Object.entries(props)) {
+      if (key === "constructor") continue;
+      if (typeof desc.get === "function") {
+        try {
+          const value = obj[key];
+          if (value && typeof value === "object") {
+            console.log(`${indent}- ${key}:`);
+            value.dump(null, depth + 1);
+          } else {
             console.log(
-              // @ts-ignore
-              `${indent}- ${key.padEnd(colWidth)} [getter threw: ${e?.message ?? e}]`
+              `${indent}- ${key.padEnd(colWidth)} ${alignValue(value, colWidth)}`
             );
           }
+        } catch (e) {
+          console.log(
+            // @ts-ignore
+            `${indent}- ${key.padEnd(colWidth)} [getter threw: ${e?.message ?? e}]`
+          );
         }
       }
     }
-  },
-});
+  }
+}
+
+// // // Define the dump method as non-enumerable so it won't appear in Object.entries
+// Object.defineProperty(Object.prototype, "dump", {
+//   enumerable: false,
+//   configurable: true,
+//   writable: true,
+//   value: function (/** @type {any} */ title, depth = 0) {
+//     const indent = "  ".repeat(depth);
+//     const colWidth = 30; // adjust for alignment width
+
+//     if (depth === 0) {
+//       const header = title || this._description || "Object Dump";
+//       console.log(`${header}:`);
+//     }
+
+//     // Arrays
+//     if (Array.isArray(this)) {
+//       this.forEach((val, i) => {
+//         if (val && typeof val === "object") {
+//           console.log(`${indent}- [${i}]`);
+//           val.dump(null, depth + 1);
+//         } else {
+//           console.log(`${indent}- [${i}] ${safeFormat(val)}`);
+//         }
+//       });
+//       return;
+//     }
+
+//     for (const [key, value] of Object.entries(this)) {
+//       if (key === "_description") continue; // skip
+
+//       // ------- SPECIAL CASE: calculationDetails -------
+//       if (key === "calculationDetails") {
+//         if (!DUMP_CALCULATION_DETAILS) {
+//           continue; // skip entirely when disabled
+//         }
+
+//         const contributors = Array.isArray(value) ? value : [value];
+//         console.log(`${indent}- calculationDetails:`);
+
+//         contributors.forEach((contrib, idx) => {
+//           const heading = _labelFor(contrib, `Contributor #${idx + 1}`);
+//           console.log(`${indent}  - ${heading}:`);
+
+//           if (typeof contrib === "function") {
+//             const params = getParamText(contrib);
+//             const zeroParams = params !== null && params === "";
+
+//             if (zeroParams) {
+//               try {
+//                 const result = contrib.call(this);
+//                 if (result && typeof result === "object") {
+//                   result.dump(null, depth + 2);
+//                 } else {
+//                   console.log(`${indent}    - result() ${safeFormat(result)}`);
+//                 }
+//               } catch (e) {
+//                 console.log(
+//                   // @ts-ignore
+//                   `${indent}    - [function threw: ${e?.message ?? e}]`
+//                 );
+//               }
+//             } else {
+//               const sig = params === null ? "[unknown signature]" : params;
+//               console.log(`${indent}    - (${sig}) [function]`);
+//             }
+//           } else if (contrib && typeof contrib === "object") {
+//             contrib.dump(null, depth + 2);
+//           } else {
+//             console.log(`${indent}    - ${safeFormat(contrib)}`);
+//           }
+//         });
+//         continue;
+//       }
+//       // ------- END SPECIAL CASE -------
+
+//       if (typeof value === "function") {
+//         const paramText = getParamText(value);
+//         const hasZeroParams = paramText !== null && paramText === "";
+
+//         if (hasZeroParams) {
+//           try {
+//             const result = value.call(this);
+//             console.log(
+//               `${indent}- ${(key + "()").padEnd(colWidth)} ${alignValue(result, colWidth)}`
+//             );
+//           } catch (e) {
+//             console.log(
+//               // @ts-ignore
+//               `${indent}- ${(key + "()").padEnd(colWidth)} [function threw: ${e?.message ?? e}]`
+//             );
+//           }
+//         } else {
+//           const sig = paramText === null ? "[unknown signature]" : paramText;
+//           console.log(`${indent}- ${key}(${sig}) [function]`);
+//         }
+//       } else if (value instanceof Date) {
+//         console.log(
+//           `${indent}- ${key.padEnd(colWidth)} ${alignValue(formatDateYYYYMMDD(value), colWidth)}`
+//         );
+//       } else if (value && typeof value === "object") {
+//         console.log(`${indent}- ${key}:`);
+//         value.dump(null, depth + 1);
+//       } else {
+//         if (
+//           value &&
+//           typeof value === "object" &&
+//           "value" in value &&
+//           value[DUMP_LABEL]
+//         ) {
+//           // labeled primitive wrapper
+//           console.log(
+//             `${indent}- ${value[DUMP_LABEL]}: ${alignValue(value.value, colWidth)}`
+//           );
+//         } else {
+//           console.log(
+//             `${indent}- ${key.padEnd(colWidth)} ${alignValue(value, colWidth)}`
+//           );
+//         }
+//       }
+//     }
+
+//     // ===================================================
+//     // 🔍 NEW SECTION: Include getters from prototype
+//     // ===================================================
+//     const proto = Object.getPrototypeOf(this);
+//     if (proto && proto !== Object.prototype) {
+//       const props = Object.getOwnPropertyDescriptors(proto);
+
+//       for (const [key, desc] of Object.entries(props)) {
+//         if (key === "constructor") continue;
+//         if (typeof desc.get === "function") {
+//           try {
+//             const value = this[key];
+//             if (value && typeof value === "object") {
+//               console.log(`${indent}- ${key}:`);
+//               value.dump(null, depth + 1);
+//             } else {
+//               console.log(
+//                 `${indent}- ${key.padEnd(colWidth)} ${alignValue(value, colWidth)}`
+//               );
+//             }
+//           } catch (e) {
+//             console.log(
+//               // @ts-ignore
+//               `${indent}- ${key.padEnd(colWidth)} [getter threw: ${e?.message ?? e}]`
+//             );
+//           }
+//         }
+//       }
+//     }
+//   },
+// });
 
 // helper: align numbers right, strings left
 /**
@@ -347,4 +527,4 @@ function alignValue(val, width) {
   return String(val).padEnd(width);
 }
 
-export { log, withLabel };
+export { log, withLabel, dumpObject, makeDumpable };

@@ -69,3 +69,18 @@ Number.prototype.asPercentage = function () {
 
 const compoundedRate = (/** @type {number} */ r, /** @type {number} */ n) =>
   Math.pow(1 + r, n);
+
+/**
+ * @param {Date} date
+ */
+function formatDateYYYYMMDD(date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+export {
+  formatDateYYYYMMDD,
+  compoundedRate,
+};

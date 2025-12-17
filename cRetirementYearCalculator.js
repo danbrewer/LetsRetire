@@ -11,13 +11,13 @@ import { RetirementYearData } from "./cRetirementYearData";
 import { Income } from "./cRevenue";
 import { Taxes } from "./cTaxes";
 import { WithdrawalFactory } from "./cWithdrawalFactory";
-import { withLabel } from "./debugUtils";
+import { makeDumpable, withLabel } from "./debugUtils";
 
 /**
  * RetirementYearCalculator class - Handles comprehensive retirement year calculations
  * Provides detailed analysis for the distribution phase of retirement planning
  */
-class RetirementYearCalculator {
+class RetirementYearCalculator{
   /** @type {Inputs} */
   #inputs;
   /** @type {AccountingYear} */
@@ -315,7 +315,7 @@ class RetirementYearCalculator {
 
     // fiscalData.dump("fiscalData");
 
-    result.dump("result");
+    makeDumpable(result).dump("result");
     debugger;
     // result.income.dump();
     // result.balances.dump();

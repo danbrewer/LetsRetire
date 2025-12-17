@@ -1,4 +1,5 @@
 import { Inputs } from "./cInputs";
+import { compoundedRate } from "./utils";
 
 class Common {
   // Required Minimum Distribution (RMD) calculation
