@@ -3052,6 +3052,7 @@ function regenerateSpendingFields() {
  */
 function getSpendingOverride(age) {
   const field = inputText(`spending_${age}`);
+  let result = 0;
   if (field && field.value) {
     const value = parseFloat(field.value);
     if (isNaN(value)) {
@@ -3075,22 +3076,21 @@ function getSpendingOverride(age) {
           age
         );
         // console.log(`  Using stored current year value ${storedCurrentYearValue} → inflated ${inflatedValue}`);
-        return inflatedValue;
+        result = inflatedValue;
       } else {
         // Treat the field value as current year value and apply inflation
         const inflatedValue = applyInflationToSpendingValue(fieldValue, age);
         // console.log(`  Using field value as current year ${fieldValue} → inflated ${inflatedValue}`);
-        return inflatedValue;
+        result = inflatedValue;
       }
     } else {
       // Return the field value as-is (already in future dollars)
       // console.log(`  Using field value as future dollars: ${fieldValue}`);
-      return fieldValue;
+      result = fieldValue;
     }
   }
-  // console.log(`getSpendingOverride(${age}): No override (field empty or invalid)`);
   setSpendingFieldValue(age);
-  return 0; // No override specified
+  return result.asCurrency();
 }
 
 /**
@@ -3231,6 +3231,7 @@ function regenerateTaxableIncomeFields() {
 function getTaxableIncomeOverride(age) {
   const field = inputText(`taxableIncome_${age}`);
   const value = parseFloat(field.value);
+  let result = 0;
   if (field && field.value && !isNaN(value)) {
     const useCurrentYear = checkbox("useTaxableCurrentYearValues").checked;
     const fieldValue = Number(field.value);
@@ -3249,18 +3250,18 @@ function getTaxableIncomeOverride(age) {
           Number(storedCurrentYearValue),
           age
         );
-        return inflatedValue;
+        result = inflatedValue;
       } else {
         // Treat the field value as current year value and apply inflation
         const inflatedValue = applyInflationToIncomeValue(fieldValue, age);
-        return inflatedValue;
+        result = inflatedValue;
       }
     } else {
       // Return the field value as-is (already in future dollars)
-      return fieldValue;
+      result = fieldValue;
     }
   }
-  return 0; // Default to 0 if no override specified
+  return result.asCurrency(); // Default to 0 if no override specified
 }
 
 /**
@@ -3375,6 +3376,7 @@ function regenerateTaxFreeIncomeFields() {
 function getTaxFreeIncomeOverride(age) {
   const field = inputText(`taxFreeIncome_${age}`);
   const value = parseFloat(field.value);
+  let result = 0;
   if (field && field.value && !isNaN(value)) {
     const useCurrentYear = checkbox("useTaxFreeCurrentYearValues").checked;
     const fieldValue = Number(field.value);
@@ -3393,18 +3395,18 @@ function getTaxFreeIncomeOverride(age) {
           Number(storedCurrentYearValue),
           age
         );
-        return inflatedValue;
+        result = inflatedValue;
       } else {
         // Treat the field value as current year value and apply inflation
         const inflatedValue = applyInflationToIncomeValue(fieldValue, age);
-        return inflatedValue;
+        result = inflatedValue;
       }
     } else {
       // Return the field value as-is (already in future dollars)
-      return fieldValue;
+      result = fieldValue;
     }
   }
-  return 0; // Default to 0 if no override specified
+  return result.asCurrency();
 }
 
 /**

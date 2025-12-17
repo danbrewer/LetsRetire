@@ -8,15 +8,7 @@ import { Inputs } from "./cInputs";
 import { TAX_BASE_YEAR } from "./consts";
 import { RetirementYearCalculator } from "./cRetirementYearCalculator";
 import { WorkingYearCalculator } from "./cWorkingYearCalculator";
-import {
-  getSpendingOverride,
-  getTaxableIncomeOverride,
-  getTaxFreeIncomeOverride,
-  parseInputParameters,
-  regenerateSpendingFields,
-  regenerateTaxableIncomeFields,
-  regenerateTaxFreeIncomeFields,
-} from "./retirement-ui";
+import * as UI from "./retirement-ui";
 
 /** @param {Calculations} calculations */
 function calc(calculations) {
@@ -25,7 +17,7 @@ function calc(calculations) {
   let lastEndAge = null;
   let lastCurrentAge = null;
 
-  const inputs = parseInputParameters();
+  const inputs = UI.parseInputParameters();
 
   if (!inputs) return;
 
@@ -35,7 +27,7 @@ function calc(calculations) {
     inputs.endAge > inputs.retireAge &&
     (lastRetireAge !== inputs.retireAge || lastEndAge !== inputs.endAge)
   ) {
-    regenerateSpendingFields();
+    UI.regenerateSpendingFields();
     lastRetireAge = inputs.retireAge;
     lastEndAge = inputs.endAge;
   }
@@ -46,49 +38,22 @@ function calc(calculations) {
     inputs.endAge > inputs.initialAge &&
     (lastCurrentAge !== inputs.initialAge || lastEndAge !== inputs.endAge)
   ) {
-    regenerateTaxableIncomeFields();
-    regenerateTaxFreeIncomeFields();
+    UI.regenerateTaxableIncomeFields();
+    UI.regenerateTaxFreeIncomeFields();
     lastCurrentAge = inputs.initialAge;
   }
 
   // Initialize balances object for tracking
-  const accountGroup = new AccountsManager(
-    new Account(
-      ACCOUNT_TYPES.TRAD_401K,
-      inputs.trad401kStartingBalance,
-      inputs.trad401kInterestRate
-    ),
-    new Account(
-      ACCOUNT_TYPES.TRAD_ROTH,
-      inputs.tradRothStartingBalance,
-      inputs.tradRothInterestRate
-    ),
-    new Account(
-      ACCOUNT_TYPES.SAVINGS,
-      inputs.savingsStartingBalance,
-      inputs.savingsInterestRate
-    ),
-    new Account(ACCOUNT_TYPES.REVENUE, 0, 0),
-    new Account(ACCOUNT_TYPES.DISBURSEMENT, 0, 0),
-    new Account(ACCOUNT_TYPES.TAXES, 0, 0),
-    new Account(ACCOUNT_TYPES.WITHHOLDINGS, 0, 0)
-  );
+  const accountsManager = AccountsManager.CreateFromInputs(inputs);
 
   // Working years
-  for (let y = 0; y < inputs.totalWorkingYears; y++) {
-    const workingYearInputs = initializeInputsForWorkingYear(inputs, y);
+  for (let yearIndex = 0; yearIndex < inputs.totalWorkingYears; yearIndex++) {
+    const workingYearInputs = initializeInputsForWorkingYear(inputs, yearIndex);
 
     const accountYear = AccountingYear.FromAccountsManager(
-      accountGroup,
-      TAX_BASE_YEAR + y
+      accountsManager,
+      TAX_BASE_YEAR + yearIndex
     );
-
-    // const incomeStreams = IncomeStreams.CreateUsing(
-    //   this.#demographics,
-    //   accountYear,
-    //   this.#fiscalData,
-    //   workingYearInputs
-    // );
 
     const workingYearIncomeCalculator = new WorkingYearCalculator(
       workingYearInputs,
@@ -118,7 +83,7 @@ function calc(calculations) {
     );
 
     const accountYear = AccountingYear.FromAccountsManager(
-      accountGroup,
+      accountsManager,
       TAX_BASE_YEAR + yearIndex
     );
 
@@ -144,24 +109,15 @@ function calc(calculations) {
 /**
  * @param {Inputs} inputs
  * @param {number} yearIndex
+ * @return {Inputs}
  */
 function initializeInputsForWorkingYear(inputs, yearIndex) {
-  const result = Inputs.Clone(inputs);
+  const result = inputs.clone();
 
   result.yearIndex = yearIndex;
-
-  result.additionalSpending = getSpendingOverride(
-    result.currentAge
-  ).asCurrency();
-
-  result.setTaxableIncomeAdjustment(
-    getTaxableIncomeOverride(
-      getTaxableIncomeOverride(result.currentAge).asCurrency()
-    )
-  );
-  result.taxFreeIncomeAdjustment = getTaxFreeIncomeOverride(
-    result.currentAge
-  ).asCurrency();
+  result.additionalSpending = UI.getSpendingOverride(result.currentAge);
+  result.taxableIncomeAdjustment = UI.getTaxableIncomeOverride(result.currentAge);
+  result.taxFreeIncomeAdjustment = UI.getTaxFreeIncomeOverride(result.currentAge);
 
   return result;
 }
@@ -169,21 +125,15 @@ function initializeInputsForWorkingYear(inputs, yearIndex) {
 /**
  * @param {Inputs} inputs
  * @param {number} yearIndex
+ * @return {Inputs}
  */
 function initializeInputsForRetirementYear(inputs, yearIndex) {
-  const result = Inputs.Clone(inputs);
+  const result = inputs.clone();
 
   result.yearIndex = yearIndex;
-
-  result.additionalSpending = getSpendingOverride(
-    result.currentAge
-  ).asCurrency();
-  result.setTaxableIncomeAdjustment(
-    getTaxableIncomeOverride(result.currentAge).asCurrency()
-  );
-  result.taxFreeIncomeAdjustment = getTaxFreeIncomeOverride(
-    result.currentAge
-  ).asCurrency();
+  result.additionalSpending = UI.getSpendingOverride(result.currentAge);
+  result.taxableIncomeAdjustment = UI.getTaxableIncomeOverride(result.currentAge);
+  result.taxFreeIncomeAdjustment = UI.getTaxFreeIncomeOverride(result.currentAge);
   return result;
 }
 

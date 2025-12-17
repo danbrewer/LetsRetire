@@ -444,7 +444,7 @@ class Inputs {
   /**
    * @param {number} value
    */
-  setTaxableIncomeAdjustment(value) {
+  set taxableIncomeAdjustment(value) {
     this.#taxableIncomeAdjustment = value;
   }
 
@@ -463,49 +463,46 @@ class Inputs {
     return this.#taxFreeIncomeAdjustment;
   }
 
-  /**
-   * @param {Inputs} inputs
-   */
-  static Clone(inputs) {
+  clone() {
     return new Inputs(
-      inputs.initialAge,
-      inputs.initialSpouseAge,
-      inputs.retireAge,
-      inputs.ssStartAge,
-      inputs.penStartAge,
-      inputs.endAge,
-      inputs.inflation,
-      inputs.spendingToday,
-      inputs.spendingDecline,
-      inputs.spouseRetireAge,
-      inputs.spouseSsMonthly,
-      inputs.spouseSsStartAge,
-      inputs.spouseSsCola,
-      inputs.spousePenMonthly,
-      inputs.spousePenStartAge,
-      inputs.spousePenCola,
-      inputs.spouseTaxSS,
-      inputs.spouseTaxPension,
-      inputs.wagesandOtherTaxableCompensation,
-      inputs.salaryGrowth,
-      inputs.pretaxPct,
-      inputs.rothPct,
-      inputs.taxablePct,
-      inputs.matchCap,
-      inputs.matchRate,
-      inputs.trad401kStartingBalance,
-      inputs.tradRothStartingBalance,
-      inputs.savingsStartingBalance,
-      inputs.trad401kInterestRate,
-      inputs.tradRothInterestRate,
-      inputs.savingsInterestRate,
-      inputs.ssMonthly,
-      inputs.ssCola,
-      inputs.penMonthly,
-      inputs.penCola,
-      inputs.filingStatus,
-      inputs.useRMD,
-      inputs.order
+      this.initialAge,
+      this.initialSpouseAge,
+      this.retireAge,
+      this.ssStartAge,
+      this.penStartAge,
+      this.endAge,
+      this.inflation,
+      this.spendingToday,
+      this.spendingDecline,
+      this.spouseRetireAge,
+      this.spouseSsMonthly,
+      this.spouseSsStartAge,
+      this.spouseSsCola,
+      this.spousePenMonthly,
+      this.spousePenStartAge,
+      this.spousePenCola,
+      this.spouseTaxSS,
+      this.spouseTaxPension,
+      this.wagesandOtherTaxableCompensation,
+      this.salaryGrowth,
+      this.pretaxPct,
+      this.rothPct,
+      this.taxablePct,
+      this.matchCap,
+      this.matchRate,
+      this.trad401kStartingBalance,
+      this.tradRothStartingBalance,
+      this.savingsStartingBalance,
+      this.trad401kInterestRate,
+      this.tradRothInterestRate,
+      this.savingsInterestRate,
+      this.ssMonthly,
+      this.ssCola,
+      this.penMonthly,
+      this.penCola,
+      this.filingStatus,
+      this.useRMD,
+      this.order
     );
   }
 }

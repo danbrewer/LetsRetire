@@ -47,7 +47,7 @@ class AccountsManager {
    * @param {Inputs} inputs - Input data containing account balances and rates
    * @returns {AccountsManager} New AccountGroup instance
    */
-  static fromInputs(inputs) {
+  static CreateFromInputs(inputs) {
     const trad401k = new Account(
       ACCOUNT_TYPES.TRAD_401K,
       inputs.trad401kStartingBalance,
