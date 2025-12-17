@@ -1,6 +1,3 @@
-// retirement-calculator.js
-
-import { Account, ACCOUNT_TYPES } from "./cAccount";
 import { AccountingYear } from "./cAccountingYear";
 import { AccountsManager } from "./cAccountsManager";
 import { Calculation, Calculations } from "./cCalculation";
@@ -145,11 +142,7 @@ function initializeInputsForWorkingYear(inputs, yearIndex, UI = DefaultUI) {
  * @param {number} yearIndex
  * @return {Inputs}
  */
-function initializeInputsForRetirementYear(
-  inputs,
-  yearIndex,
-  UI = DefaultUI
-) {
+function initializeInputsForRetirementYear(inputs, yearIndex, UI = DefaultUI) {
   const result = inputs.clone();
 
   result.yearIndex = yearIndex;
