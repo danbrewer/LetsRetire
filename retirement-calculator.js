@@ -8,10 +8,24 @@ import { Inputs } from "./cInputs";
 import { TAX_BASE_YEAR } from "./consts";
 import { RetirementYearCalculator } from "./cRetirementYearCalculator";
 import { WorkingYearCalculator } from "./cWorkingYearCalculator";
-import * as GUI from "./retirement-ui.js";
+import * as DefaultUI from "./retirement-ui.js";
 
-/** @param {Calculations} calculations */
-function calc(calculations, UI = GUI) {
+/**
+ * @typedef {object} RetirementUIFunctions
+ * @property {() => Inputs|null} parseInputParameters
+ * @property {() => void} regenerateSpendingFields
+ * @property {(age:number) => number} getSpendingOverride
+ * @property {(age:number) => number} getTaxableIncomeOverride
+ * @property {(age:number) => number} getTaxFreeIncomeOverride
+ * @property {() => void} regenerateTaxableIncomeFields
+ * @property {() => void} regenerateTaxFreeIncomeFields
+ */
+
+/**
+ * @param {Calculations} calculations
+ * @param {RetirementUIFunctions} [UI=DefaultUI]
+ */
+function calc(calculations, UI = DefaultUI) {
   // Track previous ages to only regenerate spending fields when they change
   let lastRetireAge = null;
   let lastEndAge = null;
@@ -111,7 +125,7 @@ function calc(calculations, UI = GUI) {
  * @param {number} yearIndex
  * @return {Inputs}
  */
-function initializeInputsForWorkingYear(inputs, yearIndex, UI = GUI) {
+function initializeInputsForWorkingYear(inputs, yearIndex, UI = DefaultUI) {
   const result = inputs.clone();
 
   result.yearIndex = yearIndex;
@@ -131,7 +145,11 @@ function initializeInputsForWorkingYear(inputs, yearIndex, UI = GUI) {
  * @param {number} yearIndex
  * @return {Inputs}
  */
-function initializeInputsForRetirementYear(inputs, yearIndex, UI = GUI) {
+function initializeInputsForRetirementYear(
+  inputs,
+  yearIndex,
+  UI = DefaultUI
+) {
   const result = inputs.clone();
 
   result.yearIndex = yearIndex;
