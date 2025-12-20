@@ -197,7 +197,6 @@ class Taxes {
     const taxableIncome = Math.max(0, adjustedIncome - standardDeduction);
 
     const federalIncomeTaxOwed = TaxCalculations.determineFederalIncomeTax(
-      totalIncome,
       taxableIncome,
       fiscalData,
       demographics

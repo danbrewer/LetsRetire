@@ -33,8 +33,6 @@ class WorkingYearCalculator {
   }
 
   calculateWorkingYearData() {
-    // debugger;
-
     const workingYearIncome = WorkingYearIncome.CreateUsing(
       this.#inputs,
       this.#demographics,
@@ -45,36 +43,15 @@ class WorkingYearCalculator {
     // **************
     // Calculations
     // **************
-
-    workingYearIncome.estimateWithholdings();
-
-    // Dump any 401k contributions into the Traditional 401k account
-    this.accountYear.processAsPeriodicDeposits(
-      ACCOUNT_TYPES.TRAD_401K,
-      TRANSACTION_CATEGORY.CONTRIBUTION,
-      workingYearIncome.nonTaxableIncomeReductions,
-      PERIODIC_FREQUENCY.MONTHLY
-    );
-    this.accountYear.recordInterestEarnedForYear(ACCOUNT_TYPES.TRAD_401K);
-
-    // Any income left after spending goes into savings
-    const surplusIncome = Math.max(
-      workingYearIncome.estimatedNetIncome - this.#inputs.spend,
-      0
-    );
-    // Deposit surplus income into savings account
-    this.accountYear.processAsPeriodicDeposits(
-      ACCOUNT_TYPES.SAVINGS,
-      TRANSACTION_CATEGORY.INCOME,
-      surplusIncome,
-      PERIODIC_FREQUENCY.MONTHLY
-    );
+    workingYearIncome.process401kContributions();
+    workingYearIncome.calculateWithholdings();
+    workingYearIncome.processRothIraContributions();
+    workingYearIncome.processMonthlySpending();
 
     // Now calculate interest earned on accounts
-    this.accountYear.recordInterestEarnedForYear(ACCOUNT_TYPES.SAVINGS);
-    this.accountYear.recordInterestEarnedForYear(ACCOUNT_TYPES.TRAD_ROTH);
+    workingYearIncome.applySavingsInterest();
 
-    workingYearIncome.reconcileTaxes();
+    workingYearIncome.reconcileIncomeTaxes();
 
     // Declare and initialize the result object at the top
     const result = WorkingYearData.CreateFrom(

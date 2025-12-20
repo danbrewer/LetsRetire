@@ -25,11 +25,14 @@ class AccountingYear {
    * @param {string} accountName
    * @param {string} category
    * @param {number} amount
+   * @param {number} [month]
+   * @param {number} [day]
+   * @param {string} [party]
    */
-  deposit(accountName, category, amount) {
+  deposit(accountName, category, amount, month = 1, day = 1, party = "") {
     const account = this.#accountsManager.getAccountByName(accountName);
     if (account) {
-      account.deposit(amount, category, this.taxYear);
+      account.deposit(amount, category, this.taxYear, month, day, party);
     } else {
       throw new Error(`Account not found: ${accountName}`);
     }
@@ -48,11 +51,14 @@ class AccountingYear {
    * @param {string} accountName
    * @param {string} category
    * @param {number} amount
+   * @param {number} [month]
+   * @param {number} [day]
+   * @param {string} [party]
    */
-  withdrawal(accountName, category, amount) {
+  withdrawal(accountName, category, amount, month = 1, day = 1, party = "") {
     const account = this.#accountsManager.getAccountByName(accountName);
     if (account) {
-      account.withdrawal(amount, category, this.taxYear);
+      account.withdrawal(amount, category, this.taxYear, month, day, party);
     } else {
       throw new Error(`Account not found: ${accountName}`);
     }
@@ -180,15 +186,17 @@ class AccountingYear {
    * @param {string} category
    * @param {number} amount
    * @param {string} frequency
+   * @param {string | null} memo
    */
-  processAsPeriodicWithdrawals(accountName, category, amount, frequency) {
+  processAsPeriodicWithdrawals(accountName, category, amount, frequency, memo) {
     const account = this.#getAccountByName(accountName);
     if (account) {
       account.processAsPeriodicWithdrawals(
         this.taxYear,
         amount,
         category,
-        frequency
+        frequency,
+        memo
       );
     } else {
       throw new Error(`Account not found: ${accountName}`);
@@ -200,15 +208,17 @@ class AccountingYear {
    * @param {string} category
    * @param {number} amount
    * @param {string} frequency
+   * @param {string} memo
    */
-  processAsPeriodicDeposits(accountName, category, amount, frequency) {
+  processAsPeriodicDeposits(accountName, category, amount, frequency, memo = "") {
     const account = this.#getAccountByName(accountName);
     if (account) {
       account.processAsPeriodicDeposits(
         this.taxYear,
         amount,
         category,
-        frequency
+        frequency,
+        memo
       );
     } else {
       throw new Error(`Account not found: ${accountName}`);

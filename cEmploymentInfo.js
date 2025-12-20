@@ -74,7 +74,7 @@ class EmploymentInfo {
    *
    * @returns {number} Desired pretax contribution amount as currency
    */
-  get desired401kContribution() {
+  get #desired401kContribution() {
     return (this.salary * this.#inputs.pretaxPct).asCurrency();
   }
 
@@ -83,7 +83,7 @@ class EmploymentInfo {
    *
    * @returns {number} Desired Roth contribution amount as currency
    */
-  get desiredRothContribution() {
+  get #desiredRothContribution() {
     return (this.salary * this.#inputs.rothPct).asCurrency();
   }
 
@@ -106,13 +106,13 @@ class EmploymentInfo {
         ? EMPLOYEE_401K_CATCHUP_50
         : 7500;
 
-    let electiveLimit =
+    let maximumContributionAllowed =
       baseLimit + (this.#demographics.currentAge >= 50 ? catchupLimit : 0);
     const totalDesiredContribution =
-      this.desired401kContribution + this.desiredRothContribution;
+      this.#desired401kContribution + this.#desiredRothContribution;
     let scale =
       totalDesiredContribution > 0
-        ? Math.min(1, electiveLimit / totalDesiredContribution)
+        ? Math.min(1, maximumContributionAllowed / totalDesiredContribution)
         : 1;
     return scale;
   }
@@ -122,14 +122,18 @@ class EmploymentInfo {
    *
    * @returns {number} Capped pretax contribution amount as currency
    */
-  get trad401kContribution() {
+  get allowed401kContribution() {
     return (
-      this.desired401kContribution * this.getElectiveScale()
+      this.#desired401kContribution * this.getElectiveScale()
     ).asCurrency();
   }
 
+  get allowedRothContribution(){
+    return (this.#desiredRothContribution * this.getElectiveScale()).asCurrency();
+  }
+
   get nonTaxableBenefits() {
-    return this.#inputs.nonTaxableBenefits.asCurrency();
+    return this.#inputs.benefitsNonTaxable.asCurrency();
   }
 
   // /**

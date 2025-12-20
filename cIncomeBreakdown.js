@@ -136,7 +136,6 @@ class IncomeBreakdown {
 
   get federalIncomeTax() {
     return TaxCalculations.determineFederalIncomeTax(
-      this.#totalIncome,
       this.taxableIncome,
       this.#fiscalData,
       this.#demographics

@@ -41,13 +41,15 @@ class AccountYear {
    * @param {string} category
    * @param {number} amount
    * @param {string} frequency
+   * @param {string | null} memo
    */
-  processAsPeriodicWithdrawals(category, amount, frequency) {
+  processAsPeriodicWithdrawals(category, amount, frequency, memo) {
     this.#account.processAsPeriodicWithdrawals(
       this.#taxYear,
       amount,
       category,
-      frequency
+      frequency,
+      memo
     );
   }
 
@@ -55,13 +57,15 @@ class AccountYear {
    * @param {string} category
    * @param {number} amount
    * @param {string} frequency
+   * @param {string | null} memo
    */
-  processAsPeriodicDeposits(category, amount, frequency) {
+  processAsPeriodicDeposits(category, amount, frequency, memo) {
     this.#account.processAsPeriodicDeposits(
       this.#taxYear,
       amount,
       category,
-      frequency
+      frequency,
+      memo
     );
   }
 

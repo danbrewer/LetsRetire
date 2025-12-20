@@ -4,25 +4,25 @@ const TRANSACTION_TYPE = Object.freeze({
 });
 
 const TRANSACTION_CATEGORY = Object.freeze({
-  INTEREST: "interest",
-  DISBURSEMENT: "disbursement",
-  RMD: "rmd",
-  OVERAGE: "overage",
-  SHORTAGE: "shortage",
-  TRANSFER: "transfer",
-  CONTRIBUTION: "contribution",
-  INCOME: "income",
-  TAXES: "taxes",
-  SPEND: "spend",
-  SAVINGS: "income_from_savings",
-  TRAD_401K: "income_from_401k",
-  TRAD_ROTH: "income_from_roth",
-  OTHER_TAXABLE_INCOME: "other_taxable_income",
-  OTHER_NON_TAXABLE: "other_non_taxable_income",
-  SOCIAL_SEC: "income_from_ss",
-  PENSION: "income_from_pensions",
-  TAX_REFUND: "tax_refund",
-  TAX_PAYMENT: "tax_payment",
+  INTEREST: "Interest",
+  DISBURSEMENT: "Disbursement",
+  RMD: "RMD",
+  OVERAGE: "Overage",
+  SHORTAGE: "Shortage",
+  TRANSFER: "Transfer",
+  CONTRIBUTION: "Contribution",
+  INCOME: "Income",
+  TAXES: "Taxes",
+  SPEND: "Spend",
+  SAVINGS: "Income from Savings",
+  TRAD_401K: "Income from 401k",
+  TRAD_ROTH: "Income from Roth IRA",
+  OTHER_TAXABLE_INCOME: "Other Taxable Income",
+  OTHER_NON_TAXABLE: "Other Non-Taxable Income",
+  SOCIAL_SEC: "Income from Social Security",
+  PENSION: "Income from Pensions",
+  TAX_REFUND: "Tax Refund",
+  TAX_PAYMENT: "Tax Payment",
 });
 
 /**
@@ -51,7 +51,7 @@ class Transaction {
   #amount;
   #transactionType;
   #category;
-  #party;
+  #memo;
   /** @type {Date} */
   #date;
 
@@ -60,7 +60,7 @@ class Transaction {
       amount: this.#amount,
       transactionType: this.#transactionType,
       category: this.#category,
-      party: this.#party,
+      memo: this.#memo,
       date: this.#date,
     };
   }
@@ -77,8 +77,8 @@ class Transaction {
     return this.#category;
   }
 
-  get party() {
-    return this.#party;
+  get memo() {
+    return this.#memo;
   }
 
   get date() {
@@ -90,14 +90,14 @@ class Transaction {
    * @param {string} [transactionType] - The type of transaction
    * @param {string} [category] - The category of the transaction
    * @param {Date} [date] - Transaction date, defaults to current date
-   * @param {string} [party] - The party associated with the transaction
+   * @param {string | null} [memo] - The party associated with the transaction
    */
   constructor(
     amount,
     transactionType,
     category,
     date = new Date(),
-    party = ""
+    memo = null
   ) {
     if (transactionType && !isValidTransactionType(transactionType)) {
       throw new Error(
@@ -112,7 +112,7 @@ class Transaction {
     this.#amount = amount;
     this.#transactionType = transactionType;
     this.#category = category;
-    this.#party = party;
+    this.#memo = memo;
     this.#date = date;
   }
 }

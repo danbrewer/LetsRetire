@@ -238,7 +238,7 @@ class Inputs {
     this.yearIndex = 0;
 
     /** @type {number} */
-    this.nonTaxableBenefits = 500 * 26; // e.g., health/dental/HSA
+    this.benefitsNonTaxable = 500 * 26; // e.g., health/dental/HSA
 
     /** @type {number} */
     this.spendAtRetire = 0;
@@ -421,7 +421,7 @@ class Inputs {
     return this.hasSpouse ? this.initialSpouseAge + this.yearIndex : 0;
   }
 
-  get retirementYear() {
+  get currentYear() {
     return new Date().getFullYear() + this.yearIndex;
   }
 

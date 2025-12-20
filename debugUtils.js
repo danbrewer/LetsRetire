@@ -1,4 +1,4 @@
-import { formatDateYYYYMMDD } from "./utils.js";
+import { DateFunctions } from "./utils.js";
 
 const DUMP_CALCULATION_DETAILS = true; // set to false to disable detailed calc dumps
 
@@ -459,7 +459,7 @@ Object.defineProperty(Object.prototype, "dump", {
         }
       } else if (value instanceof Date) {
         console.log(
-          `${indent}- ${key.padEnd(colWidth)} ${alignValue(formatDateYYYYMMDD(value), colWidth)}`
+          `${indent}- ${key.padEnd(colWidth)} ${alignValue(DateFunctions.formatDateYYYYMMDD(value), colWidth)}`
         );
       } else if (value && typeof value === "object") {
         console.log(`${indent}- ${key}:`);

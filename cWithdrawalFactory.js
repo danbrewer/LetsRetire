@@ -227,7 +227,8 @@ class WithdrawalFactory {
       ACCOUNT_TYPES.TRAD_401K,
       TRANSACTION_CATEGORY.DISBURSEMENT,
       gross401kWithdrawal,
-      PERIODIC_FREQUENCY.MONTHLY
+      PERIODIC_FREQUENCY.MONTHLY,
+      "401k Withdrawal"
     );
 
     this.#accountYear.withdrawal(
@@ -333,7 +334,8 @@ class WithdrawalFactory {
       ACCOUNT_TYPES.SAVINGS,
       TRANSACTION_CATEGORY.DISBURSEMENT,
       withdrawalAmount,
-      PERIODIC_FREQUENCY.MONTHLY
+      PERIODIC_FREQUENCY.MONTHLY,
+      "Savings Withdrawal"
     );
 
     this.#accountYear.deposit(
@@ -383,7 +385,8 @@ class WithdrawalFactory {
       ACCOUNT_TYPES.TRAD_ROTH,
       TRANSACTION_CATEGORY.DISBURSEMENT,
       withdrawalAmount,
-      PERIODIC_FREQUENCY.MONTHLY
+      PERIODIC_FREQUENCY.MONTHLY,
+      "Roth Withdrawal"
     );
     this.#accountYear.deposit(
       ACCOUNT_TYPES.REVENUE,

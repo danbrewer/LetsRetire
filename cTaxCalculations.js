@@ -96,19 +96,21 @@ class TaxCalculations {
   }
 
   /**
-   * @param {number} totalIncome
    * @param {number} taxableIncome
    * @param {FiscalData} fiscalData
    * @param {Demographics} demographics
    */
-  static determineFederalIncomeTax(
-    totalIncome,
-    taxableIncome,
-    fiscalData,
-    demographics
-  ) {
+  static determineFederalIncomeTax(taxableIncome, fiscalData, demographics) {
     let tax = 0,
       prev = 0;
+
+    const standardDeduction = this.getStandardDeduction(
+      fiscalData,
+      demographics
+    );
+    if (taxableIncome < standardDeduction) {
+      return 0;
+    }
 
     const taxBrackets = this.getTaxBrackets(fiscalData, demographics);
     for (const { upTo, rate } of taxBrackets) {
@@ -119,7 +121,6 @@ class TaxCalculations {
     }
 
     const isTaxCalculationValid = this.#isCalculationValid(
-      totalIncome,
       taxableIncome,
       tax,
       this.getStandardDeduction(fiscalData, demographics)
@@ -127,7 +128,7 @@ class TaxCalculations {
 
     if (!isTaxCalculationValid) {
       log.error(
-        `Tax calculation validation failed: totalIncome=${totalIncome}, taxableIncome=${taxableIncome}, federalTaxesOwed=${tax}, standardDeduction=${this.getStandardDeduction(fiscalData, demographics)}`
+        `Tax calculation validation failed: taxableIncome=${taxableIncome}, federalTaxesOwed=${tax}, standardDeduction=${this.getStandardDeduction(fiscalData, demographics)}`
       );
       throw new Error("Invalid tax calculation");
     }
@@ -138,29 +139,22 @@ class TaxCalculations {
   /**
    * Validates that the tax calculations are internally consistent.
    * @returns {boolean} True if tax calculations appear valid
-   * @param {number} totalIncome
    * @param {number} taxableIncome
    * @param {number} federalTaxesOwed
    * @param {number} standardDeduction
    */
   static #isCalculationValid(
-    totalIncome,
     taxableIncome,
     federalTaxesOwed,
     standardDeduction
   ) {
     // Basic validation checks
-    if (totalIncome < 0 || federalTaxesOwed < 0 || standardDeduction < 0) {
-      return false;
-    }
-
-    // Taxable income should not exceed gross income
-    if (taxableIncome > totalIncome) {
+    if (taxableIncome < 0 || federalTaxesOwed < 0 || standardDeduction < 0) {
       return false;
     }
 
     // Federal taxes should not exceed gross income (extreme case check)
-    if (federalTaxesOwed > totalIncome) {
+    if (federalTaxesOwed > taxableIncome) {
       return false;
     }
 

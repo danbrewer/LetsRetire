@@ -29,16 +29,14 @@ class WorkingYearIncome {
   #demographics;
   /** @type {FiscalData} */
   #fiscalData;
-  /** @type {Taxes | null} */
-  #estimatedTaxes = null;
 
   /** @type {EmploymentInfo} */
   #employmentInfo;
 
+  // /** @type {Number | null} */
+  // #estimatedInterestIncome = null;
   /** @type {Number | null} */
-  #estimatedInterestIncome = null;
-  /** @type {Number | null} */
-  #estimatedWithholdings = null;
+  #withholdings = null;
 
   /** @type {Account} */
   #withholdingsAccount = new Account("withholdings", 0, 0);
@@ -68,8 +66,12 @@ class WorkingYearIncome {
     accountYear,
     description = "Income"
   ) {
-    this.#accountYear = /** @type {AccountingYear} */ (Object.freeze(accountYear));
-    this.#demographics = /** @type {Demographics} */ (Object.freeze(demographics));
+    this.#accountYear = /** @type {AccountingYear} */ (
+      Object.freeze(accountYear)
+    );
+    this.#demographics = /** @type {Demographics} */ (
+      Object.freeze(demographics)
+    );
     this.#inputs = /** @type {Inputs} */ (Object.freeze(inputs));
     this.#fiscalData = /** @type {FiscalData} */ (Object.freeze(fiscalData));
 
@@ -80,7 +82,7 @@ class WorkingYearIncome {
 
     this._description = description;
   }
-
+  /* ********* DI'd properties start ********* */
   get accountYear() {
     return this.#accountYear;
   }
@@ -96,38 +98,7 @@ class WorkingYearIncome {
   get fiscalData() {
     return this.#fiscalData;
   }
-
-  #getEstimatedInterestIncome() {
-    if (this.#estimatedInterestIncome === null) {
-      this.#estimatedInterestIncome = this.#accountYear
-        .calculateInterestForYear(
-          ACCOUNT_TYPES.SAVINGS,
-          INTEREST_CALCULATION_EPOCH.ROLLING_BALANCE
-        )
-        .asCurrency();
-    }
-    return this.#estimatedInterestIncome;
-  }
-
-  #getEstimatedTotalTaxableIncome() {
-    return (
-      this.wagesTipsAndCompensation -
-      this.nonTaxableIncomeReductions +
-      this.taxableIncomeAdjustment +
-      this.#getEstimatedInterestIncome()
-    );
-  }
-
-  #getEstimatedWithholdings() {
-    const estimatedFederalTax = TaxCalculations.determineFederalIncomeTax(
-      this.#getEstimatedTotalTaxableIncome(),
-      this.#getEstimatedTotalTaxableIncome(),
-      this.#fiscalData,
-      this.#demographics
-    );
-
-    return estimatedFederalTax.asCurrency();
-  }
+  /* ********* DI'd properties end ********* */
 
   /**
    * Validates income data for logical consistency.
@@ -139,51 +110,62 @@ class WorkingYearIncome {
   #validate() {
     const errors = [];
 
-    if (this.wagesTipsAndCompensation < 0) {
+    if (this.grossWagesTipsAndCompensation < 0) {
       errors.push("Wages, tips and compensation cannot be negative");
     }
 
-    if (this.actualSavingsInterestEarned < 0) {
+    if (this.interestOnSavings < 0) {
       errors.push("Taxable interest income cannot be negative");
     }
 
-    if (this.nonTaxableIncomeReductions < 0) {
+    if (this.nonTaxableWagesAndCompensation < 0) {
       errors.push("Retirement account contributions cannot be negative");
     }
 
-    return {
+    const result = {
       isValid: errors.length === 0,
       errors: errors,
     };
+    return result;
   }
 
-  get wagesTipsAndCompensation() {
-    return this.#inputs.wagesandOtherTaxableCompensation;
+  get grossWagesTipsAndCompensation() {
+    const result = this.#inputs.wagesandOtherTaxableCompensation;
+    return result;
   }
 
-  get nonTaxableIncomeReductions() {
-    return (
-      this.#employmentInfo.trad401kContribution +
-      this.#employmentInfo.nonTaxableBenefits
-    );
+  get nonTaxableWagesAndCompensation() {
+    const result =
+      this.#employmentInfo.allowed401kContribution +
+      this.#employmentInfo.nonTaxableBenefits;
+    return result;
   }
 
-  get withholdings() {
-    return this.#withholdingsAccount
-      .endingBalanceForYear(this.#accountYear.taxYear)
-      .asCurrency();
-  }
-
-  get actualSavingsInterestEarned() {
-    const interestAmount = this.#accountYear.getDeposits(
-      ACCOUNT_TYPES.SAVINGS,
-      TRANSACTION_CATEGORY.INTEREST
-    );
-    return interestAmount.asCurrency();
+  get taxableWagesAndCompensation() {
+    const result =
+      this.grossWagesTipsAndCompensation - this.nonTaxableWagesAndCompensation;
+    return result;
   }
 
   get taxableIncomeAdjustment() {
-    return this.#inputs.taxableIncomeAdjustment;
+    const result = this.#inputs.taxableIncomeAdjustment;
+    return result;
+  }
+
+  // get estimatedInterestIncome() {
+  //   if (this.#estimatedInterestIncome === null) {
+  //     this.#estimatedInterestIncome = this.#accountYear
+  //       .calculateInterestForYear(
+  //         ACCOUNT_TYPES.SAVINGS,
+  //         INTEREST_CALCULATION_EPOCH.ROLLING_BALANCE
+  //       )
+  //       .asCurrency();
+  //   }
+  //   return this.#estimatedInterestIncome;
+  // }
+
+  get taxableIncome() {
+    return this.taxableWagesAndCompensation + this.taxableIncomeAdjustment;
   }
 
   /**
@@ -192,49 +174,75 @@ class WorkingYearIncome {
    * @returns {number} Gross taxable income before deductions
    */
   get totalTaxableIncome() {
-    return (
-      this.wagesTipsAndCompensation -
-      this.nonTaxableIncomeReductions +
+    const result =
+      this.taxableWagesAndCompensation +
       this.taxableIncomeAdjustment +
-      this.actualSavingsInterestEarned
-    );
+      this.interestOnSavings;
+    return result;
   }
 
-  get adjustedGrossIncome() {
+  get withholdings() {
+    if (this.#withholdings === null) {
+      this.calculateWithholdings();
+    }
+    const result = this.#withholdings ?? 0;
+    return result;
+  }
+
+  get netIncomeAfterWithholdings() {
+    return this.taxableIncome - this.withholdings;
+  }
+
+  get totalPreSpendingReductions() {
+    return this.annualRothContributions;
+  }
+
+  get spendableIncome() {
     return Math.max(
-      this.totalTaxableIncome - this.nonTaxableIncomeReductions,
+      this.netIncomeAfterWithholdings - this.totalPreSpendingReductions,
       0
     );
   }
 
-  get taxFreeIncome() {
-    return this.#inputs.taxFreeIncomeAdjustment;
+  get annualSpend() {
+    return this.#fiscalData.spend;
   }
 
-  get federalIncomeTaxWithheld() {
-    return this.#getEstimatedWithholdings();
+  get surplusSpend() {
+    return Math.max(this.spendableIncome - this.annualSpend);
   }
 
-  get federalIncomeTaxOwed() {
-    return this.#taxesDue;
+  get interestOnSavings() {
+    const interestAmount = this.#accountYear.getDeposits(
+      ACCOUNT_TYPES.SAVINGS,
+      TRANSACTION_CATEGORY.INTEREST
+    );
+    return interestAmount.asCurrency();
+  }
+
+  get federalIncomeTaxDue() {
+    const result = this.#taxesDue;
+    return result;
   }
 
   get overpayment() {
-    return this.#taxOverpayment;
+    const result = this.#taxOverpayment;
+    return result;
   }
 
   get underpayment() {
-    return this.#taxUnderpayment;
+    const result = this.#taxUnderpayment;
+    return result;
+  }
+
+  get taxFreeIncome() {
+    const result = this.#inputs.taxFreeIncomeAdjustment;
+    return result;
   }
 
   get netIncome() {
-    return this.#netIncome + this.taxFreeIncome;
-  }
-  get estimatedNetIncome() {
-    return Math.max(
-      this.#getEstimatedTotalTaxableIncome() - this.#getEstimatedWithholdings(),
-      0
-    );
+    const result = this.#netIncome + this.taxFreeIncome;
+    return result;
   }
 
   /**
@@ -246,29 +254,34 @@ class WorkingYearIncome {
     this._description = newDescription;
   }
 
-  estimateWithholdings() {
-    const estimatedTaxes = Taxes.CreateFromTaxableIncome(
-      this.#getEstimatedTotalTaxableIncome(),
-      this.#getEstimatedTotalTaxableIncome(),
+  calculateWithholdings() {
+    if (this.#withholdings !== null) {
+      return; // Already estimated
+    }
+
+    const incomeTaxes = Taxes.CreateFromTaxableIncome(
+      this.taxableIncome,
+      this.taxableIncome,
       this.#fiscalData,
       this.#demographics
     );
 
-    this.#estimatedTaxes = estimatedTaxes;
+    this.#withholdings = incomeTaxes.totalTaxes.asCurrency();
 
     // Estimate tax withholdings
     this.#withholdingsAccount.processAsPeriodicDeposits(
       this.#accountYear.taxYear,
-      this.#estimatedTaxes.totalTaxes.asCurrency(),
+      this.#withholdings,
       TRANSACTION_CATEGORY.TAXES,
-      PERIODIC_FREQUENCY.MONTHLY
+      PERIODIC_FREQUENCY.MONTHLY,
+      "Estimated tax withholdings"
     );
   }
 
-  reconcileTaxes() {
+  reconcileIncomeTaxes() {
     const actualTaxes = Taxes.CreateFromTaxableIncome(
       this.totalTaxableIncome,
-      this.adjustedGrossIncome,
+      this.totalTaxableIncome,
       this.#fiscalData,
       this.#demographics
     );
@@ -290,19 +303,79 @@ class WorkingYearIncome {
       0
     );
 
-    this.#accountYear.deposit(
-      ACCOUNT_TYPES.SAVINGS,
-      TRANSACTION_CATEGORY.TAX_REFUND,
-      this.#taxOverpayment
+    if (this.#taxOverpayment > 0)
+      this.#accountYear.deposit(
+        ACCOUNT_TYPES.SAVINGS,
+        TRANSACTION_CATEGORY.TAX_REFUND,
+        this.#taxOverpayment,
+        12,
+        31
+      );
+
+    if (this.#taxUnderpayment > 0)
+      this.#accountYear.withdrawal(
+        ACCOUNT_TYPES.SAVINGS,
+        TRANSACTION_CATEGORY.TAX_PAYMENT,
+        this.#taxUnderpayment,
+        12,
+        31
+      );
+
+    this.#netIncome = Math.max(this.totalTaxableIncome - this.#taxesDue, 0);
+  }
+
+  process401kContributions() {
+    // Dump any 401k contributions into the Traditional 401k account
+    this.accountYear.processAsPeriodicDeposits(
+      ACCOUNT_TYPES.TRAD_401K,
+      TRANSACTION_CATEGORY.CONTRIBUTION,
+      this.#employmentInfo.allowed401kContribution,
+      PERIODIC_FREQUENCY.MONTHLY
     );
 
-    this.#accountYear.withdrawal(
-      ACCOUNT_TYPES.SAVINGS,
-      TRANSACTION_CATEGORY.TAX_PAYMENT,
-      this.#taxUnderpayment
+    this.#record401kInterest();
+  }
+
+  #record401kInterest() {
+    this.accountYear.recordInterestEarnedForYear(ACCOUNT_TYPES.TRAD_401K);
+  }
+
+  applySavingsInterest() {
+    this.accountYear.recordInterestEarnedForYear(ACCOUNT_TYPES.SAVINGS);
+  }
+
+  processRothIraContributions() {
+    // Any Roth IRA contributions go into the Roth account
+    this.accountYear.processAsPeriodicDeposits(
+      ACCOUNT_TYPES.TRAD_ROTH,
+      TRANSACTION_CATEGORY.CONTRIBUTION,
+      this.annualRothContributions,
+      PERIODIC_FREQUENCY.MONTHLY
     );
 
-    this.#netIncome = Math.max(this.adjustedGrossIncome - this.#taxesDue, 0);
+    this.accountYear.recordInterestEarnedForYear(ACCOUNT_TYPES.TRAD_ROTH);
+  }
+
+  get annualRothContributions() {
+    return Math.min(
+      this.#employmentInfo.allowedRothContribution,
+      this.netIncome
+    );
+  }
+
+  processMonthlySpending() {
+    // Any income left after spending goes into savings
+
+    if (this.surplusSpend == 0) return;
+
+    // Deposit surplus income into savings account
+    this.accountYear.processAsPeriodicDeposits(
+      ACCOUNT_TYPES.SAVINGS,
+      TRANSACTION_CATEGORY.INCOME,
+      this.surplusSpend,
+      PERIODIC_FREQUENCY.MONTHLY,
+      "spending surplus"
+    );
   }
 
   /**

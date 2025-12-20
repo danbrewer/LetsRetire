@@ -30,7 +30,9 @@ class Demographics {
     this.isWorking = isWorking;
     this.hasPartner = hasPartner;
     this.currentAgeOfPartner = currentPartnerAge;
-    this.ssStartAgeOfPartner = hasPartner ? partnerSsStartAge : Number.MAX_VALUE;
+    this.ssStartAgeOfPartner = hasPartner
+      ? partnerSsStartAge
+      : Number.MAX_VALUE;
     this.penStartAgeOfPartner = hasPartner
       ? partnerPenStartAge
       : Number.MAX_VALUE;
@@ -155,7 +157,7 @@ class Demographics {
       inputs.currentAge,
       inputs.ssStartAge,
       inputs.penStartAge,
-      inputs.retirementYear,
+      inputs.currentYear,
       inputs.yearIndex,
       isRetired,
       isWorking,
