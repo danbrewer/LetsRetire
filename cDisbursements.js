@@ -5,7 +5,7 @@
 
 import { ACCOUNT_TYPES } from "./cAccount.js";
 import { AccountingYear } from "./cAccountingYear.js";
-import { TRANSACTION_CATEGORY } from "./cTransaction.js";
+import { Transaction, TransactionCategory } from "./cTransaction.js";
 
 class Disbursements {
   #accountYear;
@@ -40,13 +40,13 @@ class Disbursements {
    */
   get savings() {
     return this.#accountYear
-      .getWithdrawals(ACCOUNT_TYPES.SAVINGS, TRANSACTION_CATEGORY.DISBURSEMENT)
+      .getWithdrawals(ACCOUNT_TYPES.SAVINGS, TransactionCategory.Disbursement)
       .asCurrency();
   }
 
   get interestEarnedOnSavings() {
     return this.#accountYear
-      .getWithdrawals(ACCOUNT_TYPES.SAVINGS, TRANSACTION_CATEGORY.INTEREST)
+      .getWithdrawals(ACCOUNT_TYPES.SAVINGS, TransactionCategory.Interest)
       .asCurrency();
   }
 
@@ -58,7 +58,7 @@ class Disbursements {
     return this.#accountYear
       .getWithdrawals(
         ACCOUNT_TYPES.TRAD_401K,
-        TRANSACTION_CATEGORY.DISBURSEMENT
+        TransactionCategory.Disbursement
       )
       .asCurrency();
   }
@@ -71,7 +71,7 @@ class Disbursements {
     return this.#accountYear
       .getWithdrawals(
         ACCOUNT_TYPES.TRAD_ROTH,
-        TRANSACTION_CATEGORY.DISBURSEMENT
+        TransactionCategory.Disbursement
       )
       .asCurrency();
   }

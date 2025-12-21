@@ -4,7 +4,6 @@ import { Demographics } from "./cDemographics.js";
 import { FiscalData } from "./cFiscalData.js";
 import { Inputs } from "./cInputs.js";
 import { TAX_BASE_YEAR, PERIODIC_FREQUENCY } from "./consts.js";
-import { TRANSACTION_CATEGORY } from "./cTransaction.js";
 import { WorkingYearData } from "./cWorkingYearData.js";
 import { WorkingYearIncome } from "./cWorkingYearIncome.js";
 

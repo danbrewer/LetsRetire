@@ -1,6 +1,6 @@
 import { Account } from "./cAccount.js";
 import { FiscalData } from "./cFiscalData.js";
-import { TRANSACTION_CATEGORY } from "./cTransaction.js";
+import { TransactionCategory } from "./cTransaction.js";
 
 /**
  * Represents detailed breakdown of retirement account activity for a specific year.
@@ -245,9 +245,7 @@ class RetirementAccountBreakdown {
     const withdrawals = account.withdrawalsForYear(fiscalData.taxYear);
     const interestEarned = account.depositsForYear(
       fiscalData.taxYear,
-      typeof TRANSACTION_CATEGORY !== "undefined"
-        ? TRANSACTION_CATEGORY.INTEREST
-        : "interest"
+      TransactionCategory.Interest
     );
     const deposits = account.depositsForYear(fiscalData.taxYear);
     const endingBalance = account

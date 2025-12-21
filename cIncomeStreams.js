@@ -4,7 +4,8 @@ import { Common } from "./cCommon.js";
 import { Demographics } from "./cDemographics.js";
 import { FiscalData } from "./cFiscalData.js";
 import { Inputs } from "./cInputs.js";
-import { TRANSACTION_CATEGORY } from "./cTransaction.js";
+import { TransactionCategory } from "./cTransaction.js";
+// import { TRANSACTION_CATEGORY } from "./cTransaction.js";
 
 class IncomeStreams {
   /** @type {AccountingYear} */
@@ -100,7 +101,7 @@ class IncomeStreams {
     // );
     return (
       this.#accountYear
-        ?.getDeposits(ACCOUNT_TYPES.SAVINGS, TRANSACTION_CATEGORY.INTEREST)
+        ?.getDeposits(ACCOUNT_TYPES.SAVINGS, TransactionCategory.Interest)
         .asCurrency() ?? 0
     );
   }

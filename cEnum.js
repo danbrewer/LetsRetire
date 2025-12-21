@@ -53,11 +53,20 @@ class EnumBase {
 
   /**
    * Convert enum symbol → string name
-   * @param {symbol} sym
+   * @param {symbol | undefined} sym
    * @returns {string | undefined}
    */
   toName(sym) {
-    return this.reverse.get(sym);
+    return sym ? this.reverse.get(sym) : undefined;
+  }
+
+  /**
+   * Convert enum symbol → string name
+   * @param {symbol} sym
+   * @returns {string | undefined}
+   */
+  toString(sym) {
+    return this.toName(sym) ?? String(sym);
   }
 }
 

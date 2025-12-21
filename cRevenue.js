@@ -4,7 +4,7 @@
  */
 
 import { AccountingYear } from "./cAccountingYear.js";
-import { TRANSACTION_CATEGORY } from "./cTransaction.js";
+import { TransactionCategory } from "./cTransaction.js";
 
 class Income {
   /** @type {AccountingYear} */
@@ -22,43 +22,43 @@ class Income {
 
   get savings() {
     return this.#accountYear
-      .getDeposits(this.#accountType, TRANSACTION_CATEGORY.SAVINGS)
+      .getDeposits(this.#accountType, TransactionCategory.Savings)
       .asCurrency();
   }
 
   get netSocialSecurity() {
     return this.#accountYear
-      .getDeposits(this.#accountType, TRANSACTION_CATEGORY.SOCIAL_SEC)
+      .getDeposits(this.#accountType, TransactionCategory.SocialSecurity)
       .asCurrency();
   }
 
   get netPension() {
     return this.#accountYear
-      .getDeposits(this.#accountType, TRANSACTION_CATEGORY.PENSION)
+      .getDeposits(this.#accountType, TransactionCategory.Pension)
       .asCurrency();
   }
 
   get netInterestOnSavings() {
     return this.#accountYear
-      .getDeposits(this.#accountType, TRANSACTION_CATEGORY.INTEREST)
+      .getDeposits(this.#accountType, TransactionCategory.Interest)
       .asCurrency();
   }
 
   get netTrad401k() {
     return this.#accountYear
-      .getDeposits(this.#accountType, TRANSACTION_CATEGORY.TRAD_401K)
+      .getDeposits(this.#accountType, TransactionCategory.Trad401k)
       .asCurrency();
   }
 
   get netOtherTaxableIncome() {
     return this.#accountYear
-      .getDeposits(this.#accountType, TRANSACTION_CATEGORY.OTHER_TAXABLE_INCOME)
+      .getDeposits(this.#accountType, TransactionCategory.OtherTaxableIncome)
       .asCurrency();
   }
 
   get tradRoth() {
     return this.#accountYear
-      .getDeposits(this.#accountType, TRANSACTION_CATEGORY.TRAD_ROTH)
+      .getDeposits(this.#accountType, TransactionCategory.TradRoth)
       .asCurrency();
   }
 

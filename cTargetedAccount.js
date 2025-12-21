@@ -1,3 +1,8 @@
+/**
+ * @typedef {import("./cTransaction.js").TransactionCategorySymbol} TransactionCategorySymbol
+ * @typedef {import("./cTransaction.js").TransactionTypeSymbol} TransactionTypeSymbol
+ */
+
 import { Account } from "./cAccount.js";
 
 class TargetedAccount {
@@ -22,7 +27,7 @@ class TargetedAccount {
 
   /**
    * @param {any} v
-   * @param {string} category
+   * @param {TransactionCategorySymbol} category
    */
   deposit(v, category) {
     return this.#account.deposit(v, category, this.#taxYear);
@@ -30,7 +35,7 @@ class TargetedAccount {
 
   /**
    * @param {number} v
-   * @param {string} category
+   * @param {TransactionCategorySymbol} category
    */
   withdraw(v, category) {
     return this.#account.withdrawal(v, category, this.#taxYear);

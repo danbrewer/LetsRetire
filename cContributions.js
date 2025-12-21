@@ -1,7 +1,7 @@
 import { ACCOUNT_TYPES } from "./cAccount.js";
 import { AccountingYear } from "./cAccountingYear.js";
 import { EmploymentInfo } from "./cEmploymentInfo.js";
-import { TRANSACTION_CATEGORY } from "./cTransaction.js";
+import { TransactionCategory } from "./cTransaction.js";
 import { withLabel } from "./debugUtils.js";
 
 /**
@@ -34,21 +34,21 @@ class Contributions {
   get tradRoth() {
     return this.#accountYear.getDeposits(
       ACCOUNT_TYPES.TRAD_ROTH,
-      TRANSACTION_CATEGORY.CONTRIBUTION
+      TransactionCategory.Contribution
     );
   }
 
   get savings() {
     return this.#accountYear.getDeposits(
       ACCOUNT_TYPES.SAVINGS,
-      TRANSACTION_CATEGORY.CONTRIBUTION
+      TransactionCategory.Contribution
     );
   }
 
   get trad401k() {
     return this.#accountYear.getDeposits(
       ACCOUNT_TYPES.TRAD_401K,
-      TRANSACTION_CATEGORY.CONTRIBUTION
+      TransactionCategory.Contribution
     );
   }
 

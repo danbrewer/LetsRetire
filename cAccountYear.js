@@ -1,5 +1,8 @@
 import { Account } from "./cAccount.js";
-
+/**
+ * @typedef {import("./cTransaction.js").TransactionCategorySymbol} TransactionCategorySymbol
+ * @typedef {import("./cTransaction.js").TransactionTypeSymbol} TransactionTypeSymbol
+ */
 class AccountYear {
   /** @type {Account} */
   #account;
@@ -24,21 +27,21 @@ class AccountYear {
   }
 
   /**
-   * @param {string | undefined} category
+   * @param {import("./cTransaction.js").TransactionCategorySymbol | undefined} category
    */
   deposits(category) {
     return this.#account.depositsForYear(this.#taxYear, category);
   }
 
   /**
-   * @param {string | undefined} category
+   * @param {TransactionCategorySymbol | undefined} category
    */
   withdrawals(category) {
     return this.#account.withdrawalsForYear(this.#taxYear, category);
   }
 
   /**
-   * @param {string} category
+   * @param {TransactionCategorySymbol} category
    * @param {number} amount
    * @param {string} frequency
    * @param {string | null} memo
@@ -54,7 +57,7 @@ class AccountYear {
   }
 
   /**
-   * @param {string} category
+   * @param {TransactionCategorySymbol} category
    * @param {number} amount
    * @param {string} frequency
    * @param {string | null} memo

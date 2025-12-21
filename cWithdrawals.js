@@ -1,6 +1,6 @@
 import { ACCOUNT_TYPES } from "./cAccount.js";
 import { AccountingYear } from "./cAccountingYear.js";
-import { TRANSACTION_CATEGORY } from "./cTransaction.js";
+import { TransactionCategory } from "./cTransaction.js";
 
 /**
  * Represents withdrawal amounts across all retirement and savings accounts.
@@ -47,7 +47,7 @@ class Withdrawals {
     // RMD is typically part of income streams, but we can calculate it here if needed
     // For now, we return 0 as a placeholder
     return this.#accountYear
-      .getWithdrawals(ACCOUNT_TYPES.TRAD_401K, TRANSACTION_CATEGORY.RMD)
+      .getWithdrawals(ACCOUNT_TYPES.TRAD_401K, TransactionCategory.RMD)
       .asCurrency();
   }
 

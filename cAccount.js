@@ -1,9 +1,14 @@
+/**
+ * @typedef {import("./cTransaction.js").TransactionCategorySymbol} TransactionCategorySymbol
+ * @typedef {import("./cTransaction.js").TransactionTypeSymbol} TransactionTypeSymbol
+ */
+
 import { INTEREST_CALCULATION_EPOCH, PERIODIC_FREQUENCY } from "./consts.js";
 import { AccountRegister, AccountRegisterEntry } from "./cAccountRegister.js";
 import {
   Transaction,
-  TRANSACTION_CATEGORY,
-  TRANSACTION_TYPE,
+  TransactionCategory,
+  TransactionType,
 } from "./cTransaction.js";
 import { DateFunctions } from "./utils.js";
 
@@ -40,9 +45,9 @@ class Account {
       (a, b) => a.date.getTime() - b.date.getTime()
     )) {
       if (tx.date.getFullYear() < yyyy) {
-        if (tx.transactionType === TRANSACTION_TYPE.DEPOSIT) {
+        if (tx.transactionType === TransactionType.Deposit) {
           startingBalance += tx.amount;
-        } else if (tx.transactionType === TRANSACTION_TYPE.WITHDRAWAL) {
+        } else if (tx.transactionType === TransactionType.Withdrawal) {
           startingBalance -= tx.amount;
         }
       } else break; // Future transactions don't affect the current year's starting balance
@@ -59,9 +64,9 @@ class Account {
       (a, b) => a.date.getTime() - b.date.getTime()
     )) {
       if (tx.date.getFullYear() === yyyy) {
-        if (tx.transactionType === TRANSACTION_TYPE.DEPOSIT) {
+        if (tx.transactionType === TransactionType.Deposit) {
           endingBalance += tx.amount;
-        } else if (tx.transactionType === TRANSACTION_TYPE.WITHDRAWAL) {
+        } else if (tx.transactionType === TransactionType.Withdrawal) {
           endingBalance -= tx.amount;
         }
       } else if (tx.date.getFullYear() > yyyy) {
@@ -81,9 +86,9 @@ class Account {
     for (const tx of transactions.sort(
       (a, b) => a.date.getTime() - b.date.getTime()
     )) {
-      if (tx.transactionType === TRANSACTION_TYPE.DEPOSIT) {
+      if (tx.transactionType === TransactionType.Deposit) {
         startingBalance += tx.amount;
-      } else if (tx.transactionType === TRANSACTION_TYPE.WITHDRAWAL) {
+      } else if (tx.transactionType === TransactionType.Withdrawal) {
         startingBalance -= tx.amount;
       }
     }
@@ -93,9 +98,9 @@ class Account {
   /**
    * @param {string} name - Name of the account
    * @param {number} openingBalance - Initial balance of the account
-   * @param {number} interestRate - Annual interest rate as a decimal (e.g., 0.05 for 5%)
+   * @param {number} [interestRate] - Annual interest rate as a decimal (e.g., 0.05 for 5%)
    */
-  constructor(name, openingBalance, interestRate) {
+  constructor(name, openingBalance, interestRate = 0) {
     // Validate that name matches one of the ACCOUNT_TYPES values
     const validAccountTypes = Object.values(ACCOUNT_TYPES);
     if (!validAccountTypes.includes(name)) {
@@ -144,7 +149,7 @@ class Account {
 
   /**
    * @param {number} amount
-   * @param {string} category
+   * @param {TransactionCategorySymbol} category
    * @param {Date} date
    * @param {string | null} memo
    */
@@ -153,7 +158,7 @@ class Account {
       throw new Error("Deposit amount must be positive.");
     }
     this.#transactions.push(
-      new Transaction(amount, TRANSACTION_TYPE.DEPOSIT, category, date, memo)
+      new Transaction(amount, TransactionType.Deposit, category, date, memo)
     );
 
     return amount.asCurrency();
@@ -161,7 +166,7 @@ class Account {
 
   /**
    * @param {number} amount
-   * @param {string} category
+   * @param {TransactionCategorySymbol} category
    * @param {number} yyyy
    * @param {number} [month]
    * @param {number} [day]
@@ -171,6 +176,12 @@ class Account {
     if (amount < 0) {
       throw new Error("Deposit amount must be positive.");
     }
+
+    if (month < 1 || month > 12) {
+      throw new Error("Month must be between 1 (January) and 12 (December).");
+    }
+    
+
     this.#deposit(
       amount,
       category,
@@ -183,7 +194,7 @@ class Account {
 
   /**
    * @param {number} amount
-   * @param {string} category
+   * @param {TransactionCategorySymbol} category
    * @param {Date} date
    * @param {string | null} [memo]
    */
@@ -203,7 +214,7 @@ class Account {
     this.#transactions.push(
       new Transaction(
         withdrawalAmount,
-        TRANSACTION_TYPE.WITHDRAWAL,
+        TransactionType.Withdrawal,
         category,
         date,
         memo
@@ -215,7 +226,7 @@ class Account {
 
   /**
    * @param {number} amount - Amount to withdraw
-   * @param {string} category - Category of the withdrawal
+   * @param {TransactionCategorySymbol} category - Category of the withdrawal
    * @param {number} yyyy - Year of the withdrawal
    * @param {number} [month]
    * @param {number} [day]
@@ -318,9 +329,9 @@ class Account {
       // Process transactions for the month
       for (const tx of this.#transactions) {
         if (tx.date.getFullYear() === yyyy && tx.date.getMonth() === month) {
-          if (tx.transactionType === TRANSACTION_TYPE.DEPOSIT) {
+          if (tx.transactionType === TransactionType.Deposit) {
             balance += tx.amount;
-          } else if (tx.transactionType === TRANSACTION_TYPE.WITHDRAWAL) {
+          } else if (tx.transactionType === TransactionType.Withdrawal) {
             balance -= tx.amount;
           }
         }
@@ -331,7 +342,7 @@ class Account {
       if (recordInterestEarned) {
         this.#deposit(
           monthlyInterest,
-          TRANSACTION_CATEGORY.INTEREST,
+          TransactionCategory.Interest,
           new Date(yyyy, month, 1),
           "Interest dividend"
         );
@@ -347,15 +358,15 @@ class Account {
 
   /**
    * @param {number} yyyy
-   * @param {string | undefined} [category = ""]
+   * @param {TransactionCategorySymbol | undefined} [category]
    * @param {string | undefined} [memo = ""]
    */
-  depositsForYear(yyyy, category = "", memo = "") {
+  depositsForYear(yyyy, category, memo) {
     const transactions = this.#transactions.filter(
       (tx) =>
-        tx.transactionType === TRANSACTION_TYPE.DEPOSIT &&
+        tx.transactionType === TransactionType.Deposit &&
         tx.date.getFullYear() === yyyy &&
-        (category === "" ? true : tx.category === category) &&
+        (category ? tx.category === category : true) &&
         (memo === "" ? true : tx.memo === memo)
     );
     const total = transactions.reduce((sum, tx) => sum + tx.amount, 0);
@@ -364,14 +375,14 @@ class Account {
 
   /**
    * @param {number} yyyy
-   * @param {string | undefined} [category = ""]
+   * @param {TransactionCategorySymbol | undefined} [category]
    */
-  withdrawalsForYear(yyyy, category = "") {
+  withdrawalsForYear(yyyy, category) {
     const transactions = this.#transactions.filter(
       (tx) =>
-        tx.transactionType === TRANSACTION_TYPE.WITHDRAWAL &&
+        tx.transactionType === TransactionType.Withdrawal &&
         tx.date.getFullYear() === yyyy &&
-        (category === "" ? true : tx.category === category)
+        (category ? tx.category === category : true)
     );
     const total = transactions.reduce((sum, tx) => sum + tx.amount, 0);
     return total.asCurrency();
@@ -379,10 +390,11 @@ class Account {
 
   /**
    * @param {number} yyyy
+   * @param {TransactionTypeSymbol | undefined} type
    */
-  transactionsForYear(yyyy, type = "") {
+  transactionsForYear(yyyy, type) {
     return this.#transactions.filter((tx) =>
-      tx.date.getFullYear() === yyyy && type === ""
+      tx.date.getFullYear() === yyyy && type === undefined
         ? true
         : tx.transactionType === type
     );
@@ -422,7 +434,7 @@ class Account {
   /**
    * @param {number} yyyy
    * @param {number} amount
-   * @param {string} category
+   * @param {TransactionCategorySymbol} category
    * @param {string} frequency
    * @param {string | null} memo
    */
@@ -435,14 +447,14 @@ class Account {
           yyyy,
           amount,
           category,
-          TRANSACTION_TYPE.WITHDRAWAL
+          TransactionType.Withdrawal
         );
       case PERIODIC_FREQUENCY.QUARTERLY:
         return this.#processAsQuarterlyTransactions(
           yyyy,
           amount,
           category,
-          TRANSACTION_TYPE.WITHDRAWAL,
+          TransactionType.Withdrawal,
           memo
         );
       case PERIODIC_FREQUENCY.MONTHLY:
@@ -450,7 +462,7 @@ class Account {
           yyyy,
           amount,
           category,
-          TRANSACTION_TYPE.WITHDRAWAL,
+          TransactionType.Withdrawal,
           memo
         );
       case PERIODIC_FREQUENCY.DAILY:
@@ -458,7 +470,7 @@ class Account {
           yyyy,
           amount,
           category,
-          TRANSACTION_TYPE.WITHDRAWAL,
+          TransactionType.Withdrawal,
           memo
         );
       // Add more frequencies as needed
@@ -470,7 +482,7 @@ class Account {
   /**
    * @param {number} yyyy
    * @param {number} amount
-   * @param {string} category
+   * @param {TransactionCategorySymbol} category
    * @param {string} frequency
    * @param {string | null} memo
    */
@@ -483,7 +495,7 @@ class Account {
           yyyy,
           amount,
           category,
-          TRANSACTION_TYPE.WITHDRAWAL,
+          TransactionType.Withdrawal,
           memo
         );
       case PERIODIC_FREQUENCY.QUARTERLY:
@@ -491,7 +503,7 @@ class Account {
           yyyy,
           amount,
           category,
-          TRANSACTION_TYPE.DEPOSIT,
+          TransactionType.Deposit,
           memo
         );
       case PERIODIC_FREQUENCY.MONTHLY:
@@ -499,7 +511,7 @@ class Account {
           yyyy,
           amount,
           category,
-          TRANSACTION_TYPE.DEPOSIT,
+          TransactionType.Deposit,
           memo
         );
       case PERIODIC_FREQUENCY.DAILY:
@@ -507,7 +519,7 @@ class Account {
           yyyy,
           amount,
           category,
-          TRANSACTION_TYPE.DEPOSIT,
+          TransactionType.Deposit,
           memo
         );
       // Add more frequencies as needed
@@ -519,8 +531,8 @@ class Account {
   /**
    * @param {number} yyyy
    * @param {number} amount
-   * @param {string} category
-   * @param {string} transactionType
+   * @param {TransactionCategorySymbol} category
+   * @param {TransactionTypeSymbol} transactionType
    * @param {string | null} memo
    */
   #processAsDailyTransactions(yyyy, amount, category, transactionType, memo) {
@@ -528,7 +540,7 @@ class Account {
     const dailyAmount = (amount / daysInYear).asCurrency();
 
     switch (transactionType) {
-      case TRANSACTION_TYPE.WITHDRAWAL:
+      case TransactionType.Withdrawal:
         for (let day = 0; day < daysInYear - 1; day++) {
           this.#withdrawal(dailyAmount, category, new Date(yyyy, 0, day + 1));
         }
@@ -543,7 +555,7 @@ class Account {
           memo
         );
         break;
-      case TRANSACTION_TYPE.DEPOSIT:
+      case TransactionType.Deposit:
         for (let day = 0; day < daysInYear - 1; day++) {
           this.#deposit(
             dailyAmount,
@@ -564,7 +576,9 @@ class Account {
         );
         break;
       default:
-        throw new Error(`Unknown transaction type: ${transactionType}`);
+        throw new Error(
+          `Unknown transaction type: ${transactionType.toString()}`
+        );
     }
 
     // for (let day = 0; day < daysInYear - 1; day++) {
@@ -582,15 +596,15 @@ class Account {
   /**
    * @param {number} yyyy
    * @param {number} amount
-   * @param {string} category
-   * @param {string} transactionType
+   * @param {TransactionCategorySymbol} category
+   * @param {TransactionTypeSymbol} transactionType
    * @param {string | null} memo
    */
   #processAsMonthlyTransactions(yyyy, amount, category, transactionType, memo) {
     const monthlyAmount = (amount / 12).asCurrency();
 
     switch (transactionType) {
-      case TRANSACTION_TYPE.WITHDRAWAL:
+      case TransactionType.Withdrawal:
         for (let month = 0; month < 11; month++) {
           this.#withdrawal(monthlyAmount, category, new Date(yyyy, month, 1));
         }
@@ -605,7 +619,7 @@ class Account {
           memo
         );
         break;
-      case TRANSACTION_TYPE.DEPOSIT:
+      case TransactionType.Deposit:
         for (let month = 0; month < 11; month++) {
           this.#deposit(
             monthlyAmount,
@@ -626,7 +640,9 @@ class Account {
         );
         break;
       default:
-        throw new Error(`Unknown transaction type: ${transactionType}`);
+        throw new Error(
+          `Unknown transaction type: ${transactionType.toString()}`
+        );
     }
 
     // for (let month = 0; month < 11; month++) {
@@ -644,8 +660,8 @@ class Account {
   /**
    * @param {number} yyyy
    * @param {number} amount
-   * @param {string} category
-   * @param {string} transactionType
+   * @param {TransactionCategorySymbol} category
+   * @param {TransactionTypeSymbol} transactionType
    * @param {string | null} memo
    */
   #processAsQuarterlyTransactions(
@@ -658,7 +674,7 @@ class Account {
     const quarterlyAmount = (amount / 4).asCurrency();
 
     switch (transactionType) {
-      case TRANSACTION_TYPE.WITHDRAWAL:
+      case TransactionType.Withdrawal:
         for (let quarter = 0; quarter < 3; quarter++) {
           const month = quarter * 3;
           this.#withdrawal(
@@ -674,7 +690,7 @@ class Account {
         const finalQuarterAmount = (amount - totalWithdrawn).asCurrency();
         this.#withdrawal(finalQuarterAmount, category, new Date(yyyy, 9, 1));
         break;
-      case TRANSACTION_TYPE.DEPOSIT:
+      case TransactionType.Deposit:
         for (let quarter = 0; quarter < 3; quarter++) {
           const month = quarter * 3;
           this.#deposit(
@@ -691,7 +707,9 @@ class Account {
         this.#deposit(finalDepositAmount, category, new Date(yyyy, 9, 1), memo);
         break;
       default:
-        throw new Error(`Unknown transaction type: ${transactionType}`);
+        throw new Error(
+          `Unknown transaction type: ${transactionType.toString()}`
+        );
     }
 
     return amount.asCurrency();
@@ -714,8 +732,8 @@ class Account {
   /**
    * @param {number} yyyy
    * @param {number} amount
-   * @param {string} category
-   * @param {string} transactionType
+   * @param {TransactionCategorySymbol} category
+   * @param {TransactionTypeSymbol} transactionType
    * @param {string | null} memo
    */
   #processAsSemiAnnualTransactions(
@@ -728,7 +746,7 @@ class Account {
     const semiAnnualAmount = (amount / 2).asCurrency();
 
     switch (transactionType) {
-      case TRANSACTION_TYPE.WITHDRAWAL:
+      case TransactionType.Withdrawal:
         this.#withdrawal(semiAnnualAmount, category, new Date(yyyy, 5, 1));
         this.#withdrawal(
           amount - semiAnnualAmount,
@@ -737,7 +755,7 @@ class Account {
           memo
         );
         break;
-      case TRANSACTION_TYPE.DEPOSIT:
+      case TransactionType.Deposit:
         this.#deposit(semiAnnualAmount, category, new Date(yyyy, 5, 1), memo);
         this.#deposit(
           amount - semiAnnualAmount,
@@ -747,7 +765,9 @@ class Account {
         );
         break;
       default:
-        throw new Error(`Unknown transaction type: ${transactionType}`);
+        throw new Error(
+          `Unknown transaction type: ${transactionType.toString}`
+        );
     }
 
     return amount.asCurrency();
@@ -756,43 +776,33 @@ class Account {
   /**
    * @param {Date | null} startDate
    * @param {Date | null} endDate
-   * @param {string | null} category
-   * @param {string | null} type
+   * @param {TransactionCategorySymbol | null} category
    */
-  filterTransactions(startDate, endDate, category, type) {
+  filterTransactions(startDate, endDate, category) {
     return this.#transactions.filter((tx) => {
       const matchesStartDate = startDate ? tx.date >= startDate : true;
       const matchesEndDate = endDate ? tx.date <= endDate : true;
       const matchesCategory = category ? tx.category === category : true;
-      const matchesType = type ? tx.transactionType === type : true;
 
-      return (
-        matchesStartDate && matchesEndDate && matchesCategory && matchesType
-      );
+      return matchesStartDate && matchesEndDate && matchesCategory;
     });
   }
 
   /**
    * @param {Date} startDate
    * @param {Date} endDate
-   * @param {string | null} category
-   * @param {string | null} type
+   * @param {TransactionCategorySymbol | null} category
    * @returns {AccountRegister}
    */
-  buildAccountRegister(startDate, endDate, category, type) {
-    const transactions = this.filterTransactions(
-      startDate,
-      endDate,
-      category,
-      type
-    );
+  buildAccountRegister(startDate, endDate, category) {
+    const transactions = this.filterTransactions(startDate, endDate, category);
 
     // Calculate starting balance (balance as of day before start date)
     const startingBalanceDate = DateFunctions.addDays(startDate, -1);
     let runningBalance = this.#balanceAsOfDate(startingBalanceDate);
 
     // Create register entries from transactions
-    const register = new AccountRegister(startDate, endDate, type, category);
+    const register = new AccountRegister(startDate, endDate, category);
 
     // Add starting balance entry
     register.addBalanceUpdate(startDate, runningBalance, "Starting Balance");
@@ -806,9 +816,9 @@ class Account {
     for (const tx of sortedTransactions) {
       runningBalance += tx.amount;
 
-      if (tx.transactionType === TRANSACTION_TYPE.DEPOSIT) {
+      if (tx.transactionType === TransactionType.Deposit) {
         register.addDeposit(tx.date, tx.memo, tx.amount, runningBalance);
-      } else if (tx.transactionType === TRANSACTION_TYPE.WITHDRAWAL) {
+      } else if (tx.transactionType === TransactionType.Withdrawal) {
         register.addWithdrawal(tx.date, tx.memo, tx.amount, runningBalance);
       }
     }
@@ -816,6 +826,13 @@ class Account {
     register.addBalanceUpdate(endDate, runningBalance, "Ending Balance");
 
     return register;
+  }
+
+  /**
+   * @param {Date} date
+   */
+  balanceAsOfDate(date) {
+    return this.#balanceAsOfDate(date).asCurrency();
   }
 
   /**

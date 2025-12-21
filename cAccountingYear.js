@@ -1,7 +1,12 @@
 import { ACCOUNT_TYPES } from "./cAccount.js";
 import { AccountsManager } from "./cAccountsManager.js";
 import { INTEREST_CALCULATION_EPOCH } from "./consts.js";
+import { TransactionCategory } from "./cTransaction.js";
 
+/**
+ * @typedef {import("./cTransaction.js").TransactionCategorySymbol} TransactionCategorySymbol
+ * @typedef {import("./cTransaction.js").TransactionTypeSymbol} TransactionTypeSymbol
+ */
 class AccountingYear {
   #accountsManager;
 
@@ -23,7 +28,7 @@ class AccountingYear {
 
   /**
    * @param {string} accountName
-   * @param {string} category
+   * @param {TransactionCategorySymbol} category
    * @param {number} amount
    * @param {number} [month]
    * @param {number} [day]
@@ -40,7 +45,7 @@ class AccountingYear {
 
   /**
    * @param {string} accountName
-   * @param {string | undefined} [category = ""]
+   * @param {TransactionCategorySymbol | undefined} [category = ""]
    */
   getDeposits(accountName, category) {
     const account = this.#getAccountByName(accountName);
@@ -49,7 +54,7 @@ class AccountingYear {
 
   /**
    * @param {string} accountName
-   * @param {string} category
+   * @param {TransactionCategorySymbol} category
    * @param {number} amount
    * @param {number} [month]
    * @param {number} [day]
@@ -77,9 +82,9 @@ class AccountingYear {
 
   /**
    * @param {ACCOUNT_TYPES} accountType
-   * @param {string | undefined} [category = ""]
+   * @param {TransactionCategorySymbol | undefined} [category]
    */
-  getWithdrawals(accountType, category = "") {
+  getWithdrawals(accountType, category) {
     const account = this.#accountsManager.getAccountByName(accountType);
     if (account) {
       return account.withdrawalsForYear(this.taxYear, category);
@@ -183,7 +188,7 @@ class AccountingYear {
 
   /**
    * @param {string} accountName
-   * @param {string} category
+   * @param {TransactionCategorySymbol} category
    * @param {number} amount
    * @param {string} frequency
    * @param {string | null} memo
@@ -205,7 +210,7 @@ class AccountingYear {
 
   /**
    * @param {string} accountName
-   * @param {string} category
+   * @param {TransactionCategorySymbol} category
    * @param {number} amount
    * @param {string} frequency
    * @param {string} memo

@@ -7,7 +7,7 @@ import { IncomeRs } from "./cIncomeRs.js";
 import { IncomeStreams } from "./cIncomeStreams.js";
 import { PERIODIC_FREQUENCY } from "./consts.js";
 import { RetirementIncomeCalculator } from "./cRetirementIncomeCalculator.js";
-import { TRANSACTION_CATEGORY } from "./cTransaction.js";
+import { TransactionCategory } from "./cTransaction.js";
 import { WorkingIncomeCalculator } from "./cWorkingIncomeCalculator.js";
 
 /**
@@ -71,7 +71,7 @@ class WithdrawalFactory {
     // Dump misc non-taxable income into savings account just to get it accounted for
     this.#accountYear.deposit(
       ACCOUNT_TYPES.SAVINGS,
-      TRANSACTION_CATEGORY.OTHER_NON_TAXABLE,
+      TransactionCategory.OtherNonTaxable,
       this.#incomeResults?.incomeBreakdown.otherNonTaxableNetIncome ?? 0
     );
 
@@ -225,7 +225,7 @@ class WithdrawalFactory {
   #processTrad401kTransactions(gross401kWithdrawal) {
     this.#accountYear.processAsPeriodicWithdrawals(
       ACCOUNT_TYPES.TRAD_401K,
-      TRANSACTION_CATEGORY.DISBURSEMENT,
+      TransactionCategory.Disbursement,
       gross401kWithdrawal,
       PERIODIC_FREQUENCY.MONTHLY,
       "401k Withdrawal"
@@ -233,67 +233,67 @@ class WithdrawalFactory {
 
     this.#accountYear.withdrawal(
       ACCOUNT_TYPES.TRAD_401K,
-      TRANSACTION_CATEGORY.DISBURSEMENT,
+      TransactionCategory.Disbursement,
       this.#fixedIncomeStreams.rmd
     );
 
     this.#accountYear.deposit(
       ACCOUNT_TYPES.DISBURSEMENT,
-      TRANSACTION_CATEGORY.TRAD_401K,
+      TransactionCategory.Trad401k,
       gross401kWithdrawal
     );
     this.#accountYear.deposit(
       ACCOUNT_TYPES.DISBURSEMENT,
-      TRANSACTION_CATEGORY.RMD,
+      TransactionCategory.RMD,
       this.#fixedIncomeStreams.rmd
     );
     this.#accountYear.deposit(
       ACCOUNT_TYPES.DISBURSEMENT,
-      TRANSACTION_CATEGORY.PENSION,
+      TransactionCategory.Pension,
       (this.#incomeResults?.incomeBreakdown.pension ?? 0) +
         (this.#incomeResults?.incomeBreakdown.pension ?? 0)
     );
     this.#accountYear.deposit(
       ACCOUNT_TYPES.DISBURSEMENT,
-      TRANSACTION_CATEGORY.SOCIAL_SEC,
+      TransactionCategory.SocialSecurity,
       this.#incomeResults?.incomeBreakdown.socialSecurity ?? 0
     );
     this.#accountYear.deposit(
       ACCOUNT_TYPES.DISBURSEMENT,
-      TRANSACTION_CATEGORY.SOCIAL_SEC,
+      TransactionCategory.SocialSecurity,
       this.#incomeResults?.incomeBreakdown.miscTaxableIncome ?? 0
     );
 
     this.#accountYear.deposit(
       ACCOUNT_TYPES.DISBURSEMENT,
-      TRANSACTION_CATEGORY.INTEREST,
+      TransactionCategory.Interest,
       this.#incomeResults?.incomeBreakdown.interestEarnedOnSavings ?? 0
     );
 
     this.#accountYear.deposit(
       ACCOUNT_TYPES.REVENUE,
-      TRANSACTION_CATEGORY.TRAD_401K,
+      TransactionCategory.Trad401k,
       this.#incomeResults?.incomeBreakdown.trad401kNetIncome ?? 0
     );
     this.#accountYear.deposit(
       ACCOUNT_TYPES.REVENUE,
-      TRANSACTION_CATEGORY.PENSION,
+      TransactionCategory.Pension,
       this.#incomeResults?.incomeBreakdown.pensionNetIncome ?? 0
     );
     this.#accountYear.deposit(
       ACCOUNT_TYPES.REVENUE,
-      TRANSACTION_CATEGORY.SOCIAL_SEC,
+      TransactionCategory.SocialSecurity,
       this.#incomeResults?.incomeBreakdown.socialSecurityNetIncome ?? 0
     );
     this.#accountYear.deposit(
       ACCOUNT_TYPES.REVENUE,
-      TRANSACTION_CATEGORY.OTHER_TAXABLE_INCOME,
+      TransactionCategory.OtherTaxableIncome,
       this.#incomeResults?.incomeBreakdown.otherTaxableNetIncome ?? 0
     );
 
     this.#accountYear.deposit(
       ACCOUNT_TYPES.REVENUE,
-      TRANSACTION_CATEGORY.INTEREST,
+      TransactionCategory.Interest,
       this.#incomeResults?.incomeBreakdown.earnedInterestNetIncome ?? 0
     );
   }
@@ -332,7 +332,7 @@ class WithdrawalFactory {
     // Log the monthly spending for savings
     this.#accountYear.processAsPeriodicWithdrawals(
       ACCOUNT_TYPES.SAVINGS,
-      TRANSACTION_CATEGORY.DISBURSEMENT,
+      TransactionCategory.Disbursement,
       withdrawalAmount,
       PERIODIC_FREQUENCY.MONTHLY,
       "Savings Withdrawal"
@@ -340,12 +340,12 @@ class WithdrawalFactory {
 
     this.#accountYear.deposit(
       ACCOUNT_TYPES.DISBURSEMENT,
-      TRANSACTION_CATEGORY.SAVINGS,
+      TransactionCategory.Savings,
       withdrawalAmount
     );
     this.#accountYear.deposit(
       ACCOUNT_TYPES.REVENUE,
-      TRANSACTION_CATEGORY.SAVINGS,
+      TransactionCategory.Savings,
       withdrawalAmount
     );
   }
@@ -383,19 +383,19 @@ class WithdrawalFactory {
     // Reduce the account balance by the net received amount
     this.#accountYear.processAsPeriodicWithdrawals(
       ACCOUNT_TYPES.TRAD_ROTH,
-      TRANSACTION_CATEGORY.DISBURSEMENT,
+      TransactionCategory.Disbursement,
       withdrawalAmount,
       PERIODIC_FREQUENCY.MONTHLY,
       "Roth Withdrawal"
     );
     this.#accountYear.deposit(
       ACCOUNT_TYPES.REVENUE,
-      TRANSACTION_CATEGORY.TRAD_ROTH,
+      TransactionCategory.TradRoth,
       withdrawalAmount
     );
     this.#accountYear.deposit(
       ACCOUNT_TYPES.DISBURSEMENT,
-      TRANSACTION_CATEGORY.TRAD_ROTH,
+      TransactionCategory.TradRoth,
       withdrawalAmount
     );
   }

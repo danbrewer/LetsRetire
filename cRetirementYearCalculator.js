@@ -10,7 +10,7 @@ import { TAX_BASE_YEAR } from "./consts.js";
 import { RetirementYearData } from "./cRetirementYearData.js";
 import { Income } from "./cRevenue.js";
 import { Taxes } from "./cTaxes.js";
-import { TRANSACTION_CATEGORY } from "./cTransaction.js";
+import { TransactionCategory } from "./cTransaction.js";
 import { WithdrawalFactory } from "./cWithdrawalFactory.js";
 import { withLabel } from "./debugUtils.js";
 
@@ -162,7 +162,7 @@ class RetirementYearCalculator{
       withdrawals: this.#accountYear.getWithdrawals(ACCOUNT_TYPES.SAVINGS),
       earnedInterest: this.#accountYear.getDeposits(
         ACCOUNT_TYPES.SAVINGS,
-        TRANSACTION_CATEGORY.INTEREST
+        TransactionCategory.Interest
       ),
       deposits: this.#accountYear.getDeposits(ACCOUNT_TYPES.SAVINGS),
       endingBalance: this.#accountYear.getEndingBalance(ACCOUNT_TYPES.SAVINGS),

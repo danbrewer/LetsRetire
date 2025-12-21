@@ -1,4 +1,10 @@
-import { DateFunctions } from "./utils";
+/**
+ * @typedef {import("./cTransaction.js").TransactionCategorySymbol} TransactionCategorySymbol
+ * @typedef {import("./cTransaction.js").TransactionTypeSymbol} TransactionTypeSymbol
+ */
+
+import { TransactionCategory } from "./cTransaction.js";
+import { DateFunctions } from "./utils.js";
 
 class AccountRegisterEntry {
   /**
@@ -30,13 +36,11 @@ class AccountRegister {
   /**
    * @param {Date} startDate
    * @param {Date} endDate
-   * @param {string | null} type
-   * @param {string | null  } category
+   * @param {TransactionCategorySymbol | null  } category
    */
-  constructor(startDate, endDate, type, category) {
+  constructor(startDate, endDate, category) {
     this.startDate = startDate;
     this.endDate = endDate;
-    this.type = type;
     this.category = category;
     this.#entries = [];
   }
@@ -147,8 +151,7 @@ class AccountRegisterFormatter {
    */
   static dumpRegisterToConsole(accountRegister) {
     // Enhanced debug output with proper alignment
-    console.log("Account Type:", accountRegister.type ?? "All Types");
-    console.log("Category:", accountRegister.category ?? "All Categories");
+    console.log("Category:", TransactionCategory.toName(accountRegister.category) ?? "All Categories");
     console.log(
       "Period:",
       DateFunctions.formatDateYYYYMMDD(accountRegister.startDate),
@@ -160,9 +163,9 @@ class AccountRegisterFormatter {
     // Column headers with proper spacing
     const dateCol = "Date".padEnd(12);
     const memoCol = "Description".padEnd(25);
-    const depositCol = "Deposit".padEnd(12);
-    const withdrawalCol = "Withdrawal".padEnd(12);
-    const balanceCol = "Balance".padStart(12);
+    const depositCol = "Deposit".padStart(15);
+    const withdrawalCol = "Withdrawal".padStart(15);
+    const balanceCol = "Balance ".padStart(13);
 
     console.log(
       `${dateCol}${memoCol}${depositCol}${withdrawalCol}${balanceCol}`
@@ -176,23 +179,18 @@ class AccountRegisterFormatter {
       ).padEnd(12);
       let memo = entry.memo ?? "";
       memo = memo.length > 25 ? memo.substring(0, 22) + "..." : memo.padEnd(25);
-      const deposit = (entry.deposit?.asCurrency().toString() ?? "").padStart(
-        12
-      );
-      const withdrawal = (
-        entry.withdrawal?.asCurrency().toString() ?? ""
-      ).padStart(12);
-      const balance = entry.balance.asCurrency().toString().padStart(12);
-
+      const deposit = (entry.deposit?.toFixed(2) ?? "").padStart(15);
+      const withdrawal = (entry.withdrawal?.toFixed(2) ?? "").padStart(15);
+      const balance = entry.balance.toFixed(2).padStart(13);
       console.log(`${date}${memo}${deposit}${withdrawal}${balance}`);
     }
 
     console.log("-".repeat(80));
     console.log(
-      `${"Final Balance:".padEnd(42)}${accountRegister.endingBalance.toFixed(2).padStart(12)}`
+      `${"Final Balance:".padEnd(42)}${accountRegister.endingBalance.toFixed(2).padStart(38)}`
     );
     console.log("=".repeat(80));
   }
 }
 
-export { AccountRegister, AccountRegisterEntry };
+export { AccountRegister, AccountRegisterEntry, AccountRegisterFormatter };

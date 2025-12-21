@@ -70,22 +70,27 @@ class TestTracker {
     //------------------------------------------------------------
     // TEST SUMMARY
     //------------------------------------------------------------
-    const summaryTitle = `TEST SUMMARY FOR ${this.testFixtureName.toUpperCase()}`;
+    console.log("\n");
+    const summaryTitle = `🧪 TEST SUMMARY FOR ${this.testFixtureName.toUpperCase()}`;
     const separator = "=".repeat(summaryTitle.length + 10);
     console.log(separator);
     console.log("     " + summaryTitle);
     console.log(separator);
-    console.log(`Total tests run:    ${this.testsRun}`);
-    console.log(`Passed:             ${this.testsPassed}`);
-    console.log(`Failed:             ${this.testsFailed}`);
+    console.log(`📊 Total tests run:    ${this.testsRun}`);
+    console.log(`✅ Tests passed:       ${this.testsPassed}`);
+    if (this.testsFailed > 0) {
+      console.log(`❌ Tests failed:       ${this.testsFailed}`);
+    }
 
     if (this.testsFailed === 0) {
-      console.log("\n🎉 ALL TESTS PASSED — BEAUTIFUL WORK!\n");
+      console.log("\n⭐ ALL TESTS PASSED — BEAUTIFUL WORK!\n");
     } else {
       console.log(
         `\n🔥 ${this.testsFailed} TEST(S) FAILED — REVIEW REQUIRED\n`
       );
     }
+    console.log(separator);
+    console.log("\n");
   }
 }
 

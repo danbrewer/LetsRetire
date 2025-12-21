@@ -7,7 +7,7 @@ import { Inputs } from "./cInputs.js";
 import { INTEREST_CALCULATION_EPOCH, PERIODIC_FREQUENCY } from "./consts.js";
 import { TaxCalculations } from "./cTaxCalculations.js";
 import { Taxes } from "./cTaxes.js";
-import { TRANSACTION_CATEGORY } from "./cTransaction.js";
+import { TransactionCategory } from "./cTransaction.js";
 
 /**
  * Represents comprehensive income information for a working year in retirement planning.
@@ -215,7 +215,7 @@ class WorkingYearIncome {
   get interestOnSavings() {
     const interestAmount = this.#accountYear.getDeposits(
       ACCOUNT_TYPES.SAVINGS,
-      TRANSACTION_CATEGORY.INTEREST
+      TransactionCategory.Interest
     );
     return interestAmount.asCurrency();
   }
@@ -272,7 +272,7 @@ class WorkingYearIncome {
     this.#withholdingsAccount.processAsPeriodicDeposits(
       this.#accountYear.taxYear,
       this.#withholdings,
-      TRANSACTION_CATEGORY.TAXES,
+      TransactionCategory.Taxes,
       PERIODIC_FREQUENCY.MONTHLY,
       "Estimated tax withholdings"
     );
@@ -306,7 +306,7 @@ class WorkingYearIncome {
     if (this.#taxOverpayment > 0)
       this.#accountYear.deposit(
         ACCOUNT_TYPES.SAVINGS,
-        TRANSACTION_CATEGORY.TAX_REFUND,
+        TransactionCategory.TaxRefund,
         this.#taxOverpayment,
         12,
         31
@@ -315,7 +315,7 @@ class WorkingYearIncome {
     if (this.#taxUnderpayment > 0)
       this.#accountYear.withdrawal(
         ACCOUNT_TYPES.SAVINGS,
-        TRANSACTION_CATEGORY.TAX_PAYMENT,
+        TransactionCategory.TaxPayment,
         this.#taxUnderpayment,
         12,
         31
@@ -328,7 +328,7 @@ class WorkingYearIncome {
     // Dump any 401k contributions into the Traditional 401k account
     this.accountYear.processAsPeriodicDeposits(
       ACCOUNT_TYPES.TRAD_401K,
-      TRANSACTION_CATEGORY.CONTRIBUTION,
+      TransactionCategory.Contribution,
       this.#employmentInfo.allowed401kContribution,
       PERIODIC_FREQUENCY.MONTHLY
     );
@@ -348,7 +348,7 @@ class WorkingYearIncome {
     // Any Roth IRA contributions go into the Roth account
     this.accountYear.processAsPeriodicDeposits(
       ACCOUNT_TYPES.TRAD_ROTH,
-      TRANSACTION_CATEGORY.CONTRIBUTION,
+      TransactionCategory.Contribution,
       this.annualRothContributions,
       PERIODIC_FREQUENCY.MONTHLY
     );
@@ -371,7 +371,7 @@ class WorkingYearIncome {
     // Deposit surplus income into savings account
     this.accountYear.processAsPeriodicDeposits(
       ACCOUNT_TYPES.SAVINGS,
-      TRANSACTION_CATEGORY.INCOME,
+      TransactionCategory.Income,
       this.surplusSpend,
       PERIODIC_FREQUENCY.MONTHLY,
       "spending surplus"
