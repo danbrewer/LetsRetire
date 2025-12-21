@@ -83,7 +83,7 @@ class TestTracker {
     }
 
     if (this.testsFailed === 0) {
-      console.log("\n⭐ ALL TESTS PASSED — BEAUTIFUL WORK!\n");
+      console.log("\n⭐ ALL TESTS PASSED — HOW ABOUT THAT!\n");
     } else {
       console.log(
         `\n🔥 ${this.testsFailed} TEST(S) FAILED — REVIEW REQUIRED\n`
