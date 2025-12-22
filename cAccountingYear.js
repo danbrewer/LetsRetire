@@ -186,6 +186,12 @@ class AccountingYear {
     );
   }
 
+  /** @param {string} accountName */
+  getInterestEarnedForYear(accountName) {
+    return this.getDeposits(accountName, TransactionCategory.Interest)
+      .asCurrency();
+  }
+
   /**
    * @param {string} accountName
    * @param {TransactionCategorySymbol} category

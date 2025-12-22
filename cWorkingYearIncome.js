@@ -39,7 +39,7 @@ class WorkingYearIncome {
   #withholdings = null;
 
   /** @type {Account} */
-  #withholdingsAccount = new Account("withholdings", 0, 0);
+  #withholdingsAccount = new Account(ACCOUNT_TYPES.WITHHOLDINGS, 0, 0);
 
   /** @type {Number} */
   #taxesDue = 0;
@@ -114,7 +114,7 @@ class WorkingYearIncome {
       errors.push("Wages, tips and compensation cannot be negative");
     }
 
-    if (this.interestOnSavings < 0) {
+    if (this.taxableInterestOnSavings < 0) {
       errors.push("Taxable interest income cannot be negative");
     }
 
@@ -168,19 +168,6 @@ class WorkingYearIncome {
     return this.taxableWagesAndCompensation + this.taxableIncomeAdjustment;
   }
 
-  /**
-   * Calculates gross income from taxable sources only.
-   *
-   * @returns {number} Gross taxable income before deductions
-   */
-  get totalTaxableIncome() {
-    const result =
-      this.taxableWagesAndCompensation +
-      this.taxableIncomeAdjustment +
-      this.interestOnSavings;
-    return result;
-  }
-
   get withholdings() {
     if (this.#withholdings === null) {
       this.calculateWithholdings();
@@ -212,12 +199,25 @@ class WorkingYearIncome {
     return Math.max(this.spendableIncome - this.annualSpend);
   }
 
-  get interestOnSavings() {
+  get taxableInterestOnSavings() {
     const interestAmount = this.#accountYear.getDeposits(
       ACCOUNT_TYPES.SAVINGS,
       TransactionCategory.Interest
     );
     return interestAmount.asCurrency();
+  }
+
+  /**
+   * Calculates gross income from taxable sources only.
+   *
+   * @returns {number} Gross taxable income before deductions
+   */
+  get totalTaxableIncome() {
+    const result =
+      this.taxableWagesAndCompensation +
+      this.taxableIncomeAdjustment +
+      this.taxableInterestOnSavings;
+    return result;
   }
 
   get federalIncomeTaxDue() {

@@ -6,7 +6,6 @@ import { TAX_BASE_YEAR } from "./consts.js";
 import { RetirementYearCalculator } from "./cRetirementYearCalculator.js";
 import { WorkingYearCalculator } from "./cWorkingYearCalculator.js";
 
-
 /**
  * @typedef {object} RetirementUIFunctions
  * @property {() => Inputs|null} parseInputParameters
@@ -62,7 +61,11 @@ function calc(calculations, UI) {
 
   // Working years
   for (let yearIndex = 0; yearIndex < inputs.totalWorkingYears; yearIndex++) {
-    const workingYearInputs = initializeInputsForWorkingYear(inputs, yearIndex, UI);
+    const workingYearInputs = initializeInputsForWorkingYear(
+      inputs,
+      yearIndex,
+      UI
+    );
 
     const accountYear = AccountingYear.FromAccountsManager(
       accountsManager,
@@ -78,6 +81,9 @@ function calc(calculations, UI) {
       workingYearIncomeCalculator.calculateWorkingYearData();
 
     workingYearData.dump("working year");
+    console.log(
+      `------ END OF WORKING YEAR ` + (TAX_BASE_YEAR + yearIndex) + ` ------`
+    );
     debugger;
 
     calculations.addCalculation(
@@ -107,11 +113,27 @@ function calc(calculations, UI) {
       accountYear
     );
 
-    const yearData = calculator.calculateRetirementYearData();
-
-    yearData.dump("retirement year");
+    try {
+      const retirementYearData = calculator.calculateRetirementYearData();
+      retirementYearData.dump("retirement year");
+      console.log(
+        `------ END OF RETIREMENT YEAR ` +
+          (TAX_BASE_YEAR + yearIndex) +
+          ` ------`
+      );
+      calculations.addCalculation(
+        new Calculation(accountYear.taxYear, retirementYearData)
+      );
+    } catch (err) {
+      console.log("Error in retirement year calculator");
+      if (err instanceof Error) {
+        console.error(err.stack);
+      } else {
+        console.error("Non-Error thrown:", err);
+        console.error(new Error().stack);
+      }
+    }
     debugger;
-    calculations.addCalculation(new Calculation(accountYear.taxYear, yearData));
   }
 
   debugger;

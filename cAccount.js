@@ -157,6 +157,9 @@ class Account {
     if (amount < 0) {
       throw new Error("Deposit amount must be positive.");
     }
+    
+    if (amount === 0) return amount.asCurrency();
+
     this.#transactions.push(
       new Transaction(amount, TransactionType.Deposit, category, date, memo)
     );
@@ -202,6 +205,9 @@ class Account {
     if (amount < 0) {
       throw new Error("Withdrawal amount must be positive.");
     }
+
+    if (amount === 0) return amount.asCurrency();
+
     const withdrawalAmount = Math.min(
       amount,
       this.#endingBalanceForYear(date.getFullYear())
@@ -367,7 +373,7 @@ class Account {
         tx.transactionType === TransactionType.Deposit &&
         tx.date.getFullYear() === yyyy &&
         (category ? tx.category === category : true) &&
-        (memo === "" ? true : tx.memo === memo)
+        (memo ? tx.memo === memo : true)
     );
     const total = transactions.reduce((sum, tx) => sum + tx.amount, 0);
     return total.asCurrency();
@@ -413,13 +419,6 @@ class Account {
   endingBalanceForYear(yyyy) {
     return this.#endingBalanceForYear(yyyy).asCurrency();
   }
-
-  // /**
-  //  * @param {string} accountName
-  //  */
-  // static Empty(accountName) {
-  //   return new Account(accountName, 0, 0);
-  // }
 
   /**
    * @param {number} yyyy

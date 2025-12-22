@@ -1,4 +1,4 @@
-import { Account } from "./cAccount.js";
+import { Account, ACCOUNT_TYPES } from "./cAccount.js";
 import { AccountsManager } from "./cAccountsManager.js";
 import { FiscalData } from "./cFiscalData.js";
 import { withLabel } from "./debugUtils.js";
@@ -212,9 +212,9 @@ class Deposits {
    */
   static Empty(description = "Deposits Breakdown") {
     return new Deposits(
-      new Account("savings", 0, 0),
-      new Account("trad401k", 0, 0),
-      new Account("roth", 0, 0),
+      new Account(ACCOUNT_TYPES.SAVINGS, 0, 0),
+      new Account(ACCOUNT_TYPES.TRAD_401K, 0, 0),
+      new Account(ACCOUNT_TYPES.TRAD_ROTH, 0, 0),
       0,
       description
     );
