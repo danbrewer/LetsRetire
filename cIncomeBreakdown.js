@@ -1,10 +1,11 @@
 import { Demographics } from "./cDemographics.js";
 import { FiscalData } from "./cFiscalData.js";
 import { IncomeStreams } from "./cIncomeStreams.js";
+import { SocialSecurityBreakdown } from "./cSsCalculationDetails.js";
 import { TaxCalculations } from "./cTaxCalculations.js";
 
 class IncomeBreakdown {
-  /** @type {SsCalculationDetails | null} */
+  /** @type {SocialSecurityBreakdown | null} */
   #ssCalculationDetails;
   /** @type {number} */
   #standardDeduction = 0;
@@ -20,7 +21,7 @@ class IncomeBreakdown {
   /**
    * @param {IncomeStreams} fixedIncomeStreams
    * @param {number} variableIncomeStream
-   * @param {SsCalculationDetails | null} ssCalculationDetails
+   * @param {SocialSecurityBreakdown | null} ssCalculationDetails
    * @param {Demographics} demographics
    * @param {FiscalData} fiscalData
    *
@@ -60,7 +61,7 @@ class IncomeBreakdown {
   }
 
   get rmd() {
-    return this.#fixedIncomeStreams.rmd.asCurrency();
+    return this.#fixedIncomeStreams.subjectRMD.asCurrency();
   }
 
   get miscTaxableIncome() {
@@ -98,8 +99,8 @@ class IncomeBreakdown {
       this.rmd +
       this.miscTaxableIncome +
       this.trad401kWithdrawal +
-      this.#fixedIncomeStreams.mySs +
-      this.#fixedIncomeStreams.spouseSs +
+      this.#fixedIncomeStreams.subjectSsGross +
+      this.#fixedIncomeStreams.spouseSsGross +
       this.#fixedIncomeStreams.interestEarnedOnSavings
     ).asCurrency();
   }
@@ -251,7 +252,7 @@ class IncomeBreakdown {
   /**
    * @param {IncomeStreams} fixedIncomeStreams
    * @param {number} variableIncomeStream
-   * @param {SsCalculationDetails | null} ssCalculationDetails
+   * @param {SocialSecurityBreakdown | null} ssCalculationDetails
    * @param {Demographics} demographics
    * @param {FiscalData} fiscalData
    **/

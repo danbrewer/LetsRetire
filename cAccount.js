@@ -16,9 +16,9 @@ class ACCOUNT_TYPES {}
 ACCOUNT_TYPES.SAVINGS = "Savings";
 ACCOUNT_TYPES.TRAD_401K = "Trad401k";
 ACCOUNT_TYPES.TRAD_ROTH = "RothIra";
-ACCOUNT_TYPES.REVENUE = "Revenue";
+ACCOUNT_TYPES.CASH = "Cash";
 ACCOUNT_TYPES.INTEREST_ON_SAVINGS = "InterestOnSavings";
-ACCOUNT_TYPES.DISBURSEMENT = "Disbursement";
+ACCOUNT_TYPES.DISBURSEMENT_TRACKING = "Disbursement";
 ACCOUNT_TYPES.TAXES = "Taxes";
 ACCOUNT_TYPES.WITHHOLDINGS = "Withholdings";
 
@@ -157,7 +157,7 @@ class Account {
     if (amount < 0) {
       throw new Error("Deposit amount must be positive.");
     }
-    
+
     if (amount === 0) return amount.asCurrency();
 
     this.#transactions.push(
@@ -183,7 +183,6 @@ class Account {
     if (month < 1 || month > 12) {
       throw new Error("Month must be between 1 (January) and 12 (December).");
     }
-    
 
     this.#deposit(
       amount,

@@ -9,7 +9,7 @@
  * @class SsCalculationDetails
  * @since 1.0.0
  */
-class SsCalculationDetails {
+class SocialSecurityBreakdown {
   /** @type {Number} */
   tier1Threshold = 0;
 
@@ -179,3 +179,5 @@ class SsCalculationDetails {
   //   };
   // }
 }
+
+export { SocialSecurityBreakdown };

@@ -9,6 +9,7 @@ import { TransactionCategory } from "./cTransaction.js";
 class Income {
   /** @type {AccountingYear} */
   #accountYear;
+  
   #accountType;
 
   /**

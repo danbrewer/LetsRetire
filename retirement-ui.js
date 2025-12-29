@@ -2516,6 +2516,9 @@ function parseInputParameters() {
   const filingStatus = select("filingStatus")?.value || "single";
   const useRMD = checkbox("useRMD")?.checked ?? false;
   const order = withdrawalOrder;
+  const flatSsWithholdingRate = 0.07; // pct(num("flatSsWithholdingRate"));
+  const flatTrad401kWithholdingRate = 0.2; // pct(num("flatTrad401kWithholdingRate"));
+  const flatPensionWithholdingRate = 0.2; // pct(num("flatPensionWithholdingRate"));
 
   const inputs = new Inputs(
     currentAge,
@@ -2560,52 +2563,56 @@ function parseInputParameters() {
     // Tax rates and settings
     filingStatus,
     useRMD,
+    flatSsWithholdingRate,
+    flatTrad401kWithholdingRate,
+    flatPensionWithholdingRate,
     order
-    // Basic parameters
-    // (currentAge = num("currentAge")),
-    // (currentSpouseAge = num("spouseAge")),
-    // (retireAge = num("retireAge")),
-    // (ssStartAge = num("ssStart")),
-    // (penStartAge = num("penStart")),
-    // (endAge = num("endAge")),
-    // (inflation = pct(num("inflation"))),
-    // (spendingToday = num("spendingToday")),
-    // (spendingDecline = pct(num("spendingDecline"))),
-    // // Spouse information
-    // (spouseRetireAge = num("spouseRetireAge")),
-    // (spouseSsMonthly = num("spouseSsMonthly")),
-    // (spouseSsStartAge = num("spouseSsStart")),
-    // (spouseSsCola = pct(num("spouseSsCola"))),
-    // (spousePenMonthly = num("spousePenMonthly")),
-    // (spousePenStartAge = num("spousePenStart")),
-    // (spousePenCola = pct(num("spousePenCola"))),
-    // (spouseTaxSS = pct(num("spouseTaxSS"))),
-    // (spouseTaxPension = pct(num("spouseTaxPension"))),
-    // // Employment and contributions
-    // (startingSalary = num("salary")),
-    // (salaryGrowth = pct(num("salaryGrowth"))),
-    // (pretaxPct = pct(num("pretaxPct"))),
-    // (rothPct = pct(num("rothPct"))),
-    // (taxablePct = pct(num("taxablePct"))),
-    // (matchCap = pct(num("matchCap"))),
-    // (matchRate = pct(num("matchRate"))),
-    // // Account balances and returns
-    // (trad401k = num("balPre")),
-    // (rothIRA = num("balRoth")),
-    // (savings = num("balSavings")),
-    // (ret401k = pct(num("retPre"))),
-    // (retRoth = pct(num("retRoth"))),
-    // (retSavings = pct(num("retTax"))),
-    // // Income sources
-    // (ssMonthly = num("ssMonthly")),
-    // (ssCola = pct(num("ssCola"))),
-    // (penMonthly = num("penMonthly")),
-    // (penCola = pct(num("penCola"))),
-    // // Tax rates and settings
-    // (filingStatus = $("filingStatus").value),
-    // (useRMD = $("useRMD").checked),
-    // (order = withdrawalOrder)
   );
+  // Basic parameters
+  // (currentAge = num("currentAge")),
+  // (currentSpouseAge = num("spouseAge")),
+  // (retireAge = num("retireAge")),
+  // (ssStartAge = num("ssStart")),
+  // (penStartAge = num("penStart")),
+  // (endAge = num("endAge")),
+  // (inflation = pct(num("inflation"))),
+  // (spendingToday = num("spendingToday")),
+  // (spendingDecline = pct(num("spendingDecline"))),
+  // // Spouse information
+  // (spouseRetireAge = num("spouseRetireAge")),
+  // (spouseSsMonthly = num("spouseSsMonthly")),
+  // (spouseSsStartAge = num("spouseSsStart")),
+  // (spouseSsCola = pct(num("spouseSsCola"))),
+  // (spousePenMonthly = num("spousePenMonthly")),
+  // (spousePenStartAge = num("spousePenStart")),
+  // (spousePenCola = pct(num("spousePenCola"))),
+  // (spouseTaxSS = pct(num("spouseTaxSS"))),
+  // (spouseTaxPension = pct(num("spouseTaxPension"))),
+  // // Employment and contributions
+  // (startingSalary = num("salary")),
+  // (salaryGrowth = pct(num("salaryGrowth"))),
+  // (pretaxPct = pct(num("pretaxPct"))),
+  // (rothPct = pct(num("rothPct"))),
+  // (taxablePct = pct(num("taxablePct"))),
+  // (matchCap = pct(num("matchCap"))),
+  // (matchRate = pct(num("matchRate"))),
+  // // Account balances and returns
+  // (trad401k = num("balPre")),
+  // (rothIRA = num("balRoth")),
+  // (savings = num("balSavings")),
+  // (ret401k = pct(num("retPre"))),
+  // (retRoth = pct(num("retRoth"))),
+  // (retSavings = pct(num("retTax"))),
+  // // Income sources
+  // (ssMonthly = num("ssMonthly")),
+  // (ssCola = pct(num("ssCola"))),
+  // (penMonthly = num("penMonthly")),
+  // (penCola = pct(num("penCola"))),
+  // // Tax rates and settings
+  // (filingStatus = $("filingStatus").value),
+  // (useRMD = $("useRMD").checked),
+  // (order = withdrawalOrder)
+  // );
 
   // const inputs = {
   //   currentAge: num("currentAge"),
@@ -3045,6 +3052,9 @@ function loadExample() {
     penCola: 0,
     order: "savings,pretax,roth",
     filingStatus: constsJS_FILING_STATUS.MARRIED_FILING_JOINTLY,
+    flatSsWithholdingRate: 0.07,
+    flatTrad401kWithholdingRate: 0.2,
+    flatPensionWithholdingRate: 0.2,
     useRMD: true,
   };
   // const ex = {

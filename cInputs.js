@@ -46,6 +46,9 @@ class Inputs {
    * @param {number} penCola - Pension cost of living adjustment as decimal
    * @param {string} filingStatus - Tax filing status
    * @param {boolean} useRMD - Whether to use Required Minimum Distributions
+   * @param {number} flatSsWithholdingRate - Flat withholding rate for Social Security as decimal
+   * @param {number} flatTrad401kWithholdingRate - Flat withholding rate for traditional 401k as decimal
+   * @param {number} flatPensionWithholdingRate - Flat withholding rate for pension as decimal
    * @param {string[]} order - Withdrawal order for accounts
    */
   constructor(
@@ -86,6 +89,9 @@ class Inputs {
     penCola = 0,
     filingStatus = "single",
     useRMD = false,
+    flatSsWithholdingRate = 0.07,
+    flatTrad401kWithholdingRate = 0.2,
+    flatPensionWithholdingRate = 0.2,
     order = [
       ACCOUNT_TYPES.SAVINGS,
       ACCOUNT_TYPES.TRAD_401K,
@@ -208,6 +214,13 @@ class Inputs {
 
     /** @type {boolean} */
     this.useRMD = useRMD;
+
+    /** @type {number} */
+    this.flatSsWithholdingRate = flatSsWithholdingRate;
+    /** @type {number} */
+    this.flatTrad401kWithholdingRate = flatTrad401kWithholdingRate;
+    /** @type {number} */
+    this.flatPensionWithholdingRate = flatPensionWithholdingRate;
 
     /** @type {string[]} */
     this.order = order;
@@ -510,6 +523,9 @@ class Inputs {
       this.penCola,
       this.filingStatus,
       this.useRMD,
+      this.flatSsWithholdingRate,
+      this.flatTrad401kWithholdingRate,
+      this.flatPensionWithholdingRate,
       this.order
     );
   }

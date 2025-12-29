@@ -20,17 +20,14 @@ class Balances {
    * Creates a new Balances instance with account balance data.
    *
    * @param {AccountingYear} accountYear -Accounting year
-   * @param {any} [calculationDetails=null] - Reference to underlying account objects for debugging
    * @param {string} [description="Account Balances"] - Descriptive label for this balance snapshot
    */
   constructor(
     accountYear,
-    calculationDetails = null,
     description = "Account Balances"
   ) {
     this._description = description;
     this.#accountYear = accountYear;
-    this.calculationDetails = calculationDetails;
   }
 
   get savings() {
@@ -72,14 +69,14 @@ class Balances {
     return this.savings + this.trad401k + this.rothIra;
   }
 
-  /**
-   * Gets the total retirement account balance (401k + Roth, excluding savings).
-   *
-   * @returns {number} Combined retirement account balance
-   */
-  get retirementAccountBalances() {
-    return this.trad401k + this.rothIra;
-  }
+  // /**
+  //  * Gets the total retirement account balance (401k + Roth, excluding savings).
+  //  *
+  //  * @returns {number} Combined retirement account balance
+  //  */
+  // get retirementAccountBalances() {
+  //   return this.trad401k + this.rothIra;
+  // }
 
   /**
    * Gets the percentage of total portfolio held in each account type.
@@ -132,31 +129,31 @@ class Balances {
     }
   }
 
-  /**
-   * Creates a summary object with formatted balance information.
-   *
-   * @returns {Object} Summary containing:
-   *   - savings: Savings account balance
-   *   - trad401k: Traditional 401k balance
-   *   - rothIra: Roth IRA balance
-   *   - total: Total portfolio value
-   *   - retirementTotal: Combined retirement account balance
-   *   - allocations: Percentage allocation by account type
-   *   - largestAccount: Account with highest balance
-   *   - hasNegativeBalances: Whether any balances are negative
-   */
-  getSummary() {
-    return {
-      savings: this.savings,
-      trad401k: this.trad401k,
-      rothIra: this.rothIra,
-      total: this.allBalances,
-      retirementTotal: this.retirementAccountBalances,
-      allocations: this.allocationPercentages,
-      largestAccount: this.getLargestAccount(),
-      hasNegativeBalances: this.hasNegativeBalances,
-    };
-  }
+  // /**
+  //  * Creates a summary object with formatted balance information.
+  //  *
+  //  * @returns {Object} Summary containing:
+  //  *   - savings: Savings account balance
+  //  *   - trad401k: Traditional 401k balance
+  //  *   - rothIra: Roth IRA balance
+  //  *   - total: Total portfolio value
+  //  *   - retirementTotal: Combined retirement account balance
+  //  *   - allocations: Percentage allocation by account type
+  //  *   - largestAccount: Account with highest balance
+  //  *   - hasNegativeBalances: Whether any balances are negative
+  //  */
+  // getSummary() {
+  //   return {
+  //     savings: this.savings,
+  //     trad401k: this.trad401k,
+  //     rothIra: this.rothIra,
+  //     total: this.allBalances,
+  //     retirementTotal: this.retirementAccountBalances,
+  //     allocations: this.allocationPercentages,
+  //     largestAccount: this.getLargestAccount(),
+  //     hasNegativeBalances: this.hasNegativeBalances,
+  //   };
+  // }
 
   /**
    * Updates balance values for account rebalancing or corrections.
@@ -203,12 +200,7 @@ class Balances {
    * @since 1.0.0
    */
   static CreateUsing(accountYear, description = "Account Balances") {
-    const calculationDetails =
-      typeof withLabel === "function"
-        ? withLabel("accountBalances", accountYear)
-        : accountYear;
-
-    return new Balances(accountYear, calculationDetails, description);
+    return new Balances(accountYear, description);
   }
 
   // static Empty() {

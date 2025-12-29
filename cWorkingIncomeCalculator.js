@@ -47,7 +47,7 @@ class WorkingIncomeCalculator {
    *   - otherTaxableIncomeAdjustments: Additional taxable income sources
    *   - nonSsIncome(): Method returning total non-Social Security income
    *   - nonSsIncomeSources: Array of non-Social Security income sources
-   * @returns {IncomeRs} Comprehensive income calculation results containing:
+   * @returns {IncomeBreakdown} Comprehensive income calculation results containing:
    *   - ssBreakdown: Social Security taxation breakdown with taxable/non-taxable portions,
    *     provisional income calculations, and detailed methodology
    *   - incomeBreakdown: Complete income analysis including reportable income, taxable income,
@@ -78,7 +78,7 @@ class WorkingIncomeCalculator {
       this.#fiscalData
     );
 
-    return new IncomeRs(null, incomeBreakdown);
+    return incomeBreakdown;
   }
 
   /**

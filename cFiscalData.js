@@ -9,6 +9,7 @@ class FiscalData {
    * @param {number} yearIndex
    * @param {number} spend
    * @param {number} taxYearBase
+   * 
    */
   constructor(
     inflationRate,
@@ -21,7 +22,9 @@ class FiscalData {
     useRmd = false,
     useSavings = true,
     useTrad401k = true,
-    useRoth = true
+    useRoth = true,
+    flatSsWithholdingRate = 0.07,
+    flatTrad401kWithholdingRate = 0.20
   ) {
     this._description = "Fiscal Year Data";
     this.inflationRate = inflationRate;
@@ -35,6 +38,8 @@ class FiscalData {
     this.useSavings = useSavings;
     this.useTrad401k = useTrad401k;
     this.useRoth = useRoth;
+    this.flatSsWithholdingRate = flatSsWithholdingRate;
+    this.flatTrad401kWithholdingRate = flatTrad401kWithholdingRate;
   }
 
   //   // Getter for description to maintain compatibility
@@ -177,7 +182,9 @@ class FiscalData {
       inputs.useRMD,
       inputs.useSavings,
       inputs.useTrad401k,
-      inputs.useRoth
+      inputs.useRoth,
+      inputs.flatSsWithholdingRate,
+      inputs.flatTrad401kWithholdingRate
     );
   }
 

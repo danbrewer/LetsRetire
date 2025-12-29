@@ -25,13 +25,16 @@
 //    * @param {Taxes} taxes - Tax data
 //    * @param {AccountYear} accountYear - Instance of AccountGroup class
 
+import { ACCOUNT_TYPES } from "./cAccount.js";
 import { AccountingYear } from "./cAccountingYear.js";
 import { Balance } from "./cBalance.js";
 import { Balances } from "./cBalances.js";
 import { Demographics } from "./cDemographics.js";
 import { FiscalData } from "./cFiscalData.js";
+import { IncomeBreakdown } from "./cIncomeBreakdown.js";
 import { RetirementAccountBreakdown } from "./cRetirementAccountBreakdown.js";
 import { Income } from "./cRevenue.js";
+import { SocialSecurityIncome } from "./cSocialSecurityIncome.js";
 import { Taxes } from "./cTaxes.js";
 import { YearDataBase } from "./cYearDataBase.js";
 
@@ -39,52 +42,71 @@ import { YearDataBase } from "./cYearDataBase.js";
 class RetirementYearData extends YearDataBase {
   /** @type {FiscalData} */
   #fiscalData;
+  /** @type {IncomeBreakdown} */
+  #incomeBreakdown;
 
   /**
    * @param {Demographics} demographics
    * @param {FiscalData} fiscalData
    * @param {AccountingYear} accountYear
+   * @param {IncomeBreakdown} incomeBreakdown
    */
-  constructor(demographics, fiscalData, accountYear) {
+  constructor(demographics, fiscalData, accountYear, incomeBreakdown) {
     super(demographics, fiscalData, accountYear);
     this.#fiscalData = Object.freeze(fiscalData);
+    this.#incomeBreakdown = incomeBreakdown;
 
-    /** @type {Income} */
-    this.revenue;
+    // /** @type {Income} */
+    // this.revenue;
 
-    /** @type {Income} */
-    this.disbursements;
+    // /** @type {Income} */
+    // this.disbursements;
 
-    /** @type {Balances} */
-    this.balances;
+    // /** @type {Balances} */
+    // this.balances;
 
-    /** @type {SocialSecurityIncome} */
-    this.socialSecurityIncome;
+    // /** @type {SocialSecurityIncome} */
+    // this.socialSecurityIncome;
 
-    /** @type {Balance} */
-    this.savings;
+    // /** @type {Balance} */
+    // this.savings;
 
-    /** @type {Balance} */
-    this.trad401k;
+    // /** @type {Balance} */
+    // this.trad401k;
 
-    /** @type {Balance} */
-    this.tradRoth;
+    // /** @type {Balance} */
+    // this.tradRoth;
 
-    /** @type {RetirementAccountBreakdown} */
-    this.retirementAccountBreakdown;
-    /** @type {RetirementAccountBreakdown} */
-    this.rothAccountBreakdown;
+    // /** @type {RetirementAccountBreakdown} */
+    // this.retirementAccountBreakdown;
+    // /** @type {RetirementAccountBreakdown} */
+    // this.rothAccountBreakdown;
 
-    /** @type{Taxes} */
-    this.taxes;
+    // /** @type{Taxes} */
+    // this.taxes;
 
-    /** @type {number} */
-    this.shortfallAmount;
+    // /** @type {number} */
+    // this.shortfallAmount;
 
-    /**
-     * @type {any[]}
-     */
-    this.calculationDetails = [];
+    // /**
+    //  * @type {any[]}
+    //  */
+    // this.calculationDetails = [];
+
+    this.revenue = Income.CreateUsing(accountYear, ACCOUNT_TYPES.CASH);
+    this.disbursements = Income.CreateUsing(
+      accountYear,
+      ACCOUNT_TYPES.DISBURSEMENT_TRACKING
+    );
+    this.balances = Balances.CreateUsing(accountYear);
+
+    this.socialSecurityIncome = SocialSecurityIncome.CreateUsing(
+      incomeBreakdown.ssCalculationDetails
+    );
+    this.taxes = Taxes.CreateUsing(incomeBreakdown);
+    this.savings = Balance.CreateUsing(accountYear, ACCOUNT_TYPES.SAVINGS);
+    this.trad401k = Balance.CreateUsing(accountYear, ACCOUNT_TYPES.TRAD_401K);
+    this.tradRoth = Balance.CreateUsing(accountYear, ACCOUNT_TYPES.TRAD_ROTH);
   }
 
   get description() {
@@ -102,12 +124,15 @@ class RetirementYearData extends YearDataBase {
    * @param {Demographics} demographics
    * @param {FiscalData} fiscalData
    * @param {AccountingYear} accountYear
+   * @param {IncomeBreakdown} incomeBreakdown
+   * @returns {RetirementYearData}
    */
-  static CreateUsing(demographics, fiscalData, accountYear) {
+  static CreateUsing(demographics, fiscalData, accountYear, incomeBreakdown) {
     const result = new RetirementYearData(
       demographics,
       fiscalData,
-      accountYear
+      accountYear,
+      incomeBreakdown
     );
     return result;
   }

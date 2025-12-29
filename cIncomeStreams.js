@@ -5,7 +5,6 @@ import { Demographics } from "./cDemographics.js";
 import { FiscalData } from "./cFiscalData.js";
 import { Inputs } from "./cInputs.js";
 import { TransactionCategory } from "./cTransaction.js";
-// import { TRANSACTION_CATEGORY } from "./cTransaction.js";
 
 class IncomeStreams {
   /** @type {AccountingYear} */
@@ -40,23 +39,63 @@ class IncomeStreams {
     return this.#inputs.wagesandOtherTaxableCompensation.asCurrency();
   }
 
-  get myPension() {
+  get subjectPensionGross() {
     return this.#inputs.subjectPension.asCurrency();
   }
 
-  get spousePension() {
-    return this.#inputs.spousePension.asCurrency();
+  get subjectPensionWithholdings() {
+    return (
+      this.#inputs.flatPensionWithholdingRate * this.#inputs.subjectPension
+    ).asCurrency();
   }
 
-  get mySs() {
+  get subjectPensionIncome() {
+    return this.subjectPensionGross - this.subjectPensionWithholdings;
+  }
+
+  get subjectSsGross() {
     return this.#inputs.subjectSs.asCurrency();
   }
 
-  get spouseSs() {
+  get subjectSsWithholdings() {
+    return (
+      this.#inputs.flatSsWithholdingRate * this.#inputs.subjectSs
+    ).asCurrency();
+  }
+
+  get subjectSsIncome() {
+    return this.subjectSsGross - this.subjectSsWithholdings;
+  }
+
+  get spousePensionGross() {
+    return this.#inputs.spousePension.asCurrency();
+  }
+
+  get spousePensionWithholdings() {
+    return (
+      this.#inputs.flatPensionWithholdingRate * this.#inputs.spousePension
+    ).asCurrency();
+  }
+
+  get spousePensionIncome() {
+    return this.spousePensionGross - this.spousePensionWithholdings;
+  }
+
+  get spouseSsGross() {
     return this.#inputs.spouseSs.asCurrency();
   }
 
-  get rmd() {
+  get spouseSsWithholdings() {
+    return (
+      this.#inputs.flatSsWithholdingRate * this.#inputs.spouseSs
+    ).asCurrency();
+  }
+
+  get spouseSsIncome() {
+    return this.spouseSsGross - this.spouseSsWithholdings;
+  }
+
+  get subjectRMD() {
     return Common.calculateRMD(
       this.#fiscalData.useRmd,
       this.#demographics.currentAge,
@@ -91,14 +130,6 @@ class IncomeStreams {
   }
 
   get interestEarnedOnSavings() {
-    // return (
-    //   this.#accountYear
-    //     ?.calculateInterestForYear(
-    //       ACCOUNT_TYPES.SAVINGS,
-    //       INTEREST_CALCULATION_EPOCH.ROLLING_BALANCE
-    //     )
-    //     .asCurrency() ?? 0
-    // );
     return (
       this.#accountYear
         ?.getDeposits(ACCOUNT_TYPES.SAVINGS, TransactionCategory.Interest)
@@ -109,13 +140,13 @@ class IncomeStreams {
   get grossTaxableIncome() {
     return (
       this.wagesAndCompensation +
-      this.myPension +
-      this.spousePension +
+      this.subjectPensionGross +
+      this.spousePensionGross +
       this.interestEarnedOnSavings +
       this.miscTaxableIncome +
-      this.rmd +
-      this.mySs +
-      this.spouseSs +
+      this.subjectRMD +
+      this.subjectSsGross +
+      this.spouseSsGross +
       this.taxFreeIncomeAdjustment
     );
   }
@@ -123,31 +154,31 @@ class IncomeStreams {
   get taxableIncome() {
     return (
       this.wagesAndCompensation +
-      this.myPension +
-      this.spousePension +
+      this.subjectPensionGross +
+      this.spousePensionGross +
       this.interestEarnedOnSavings +
       this.miscTaxableIncome +
-      this.rmd +
-      this.mySs +
-      this.spouseSs
+      this.subjectRMD +
+      this.subjectSsGross +
+      this.spouseSsGross
     );
   }
 
   get ssIncome() {
-    return this.mySs + this.spouseSs;
+    return this.subjectSsGross + this.spouseSsGross;
   }
 
   get pensionIncome() {
-    return this.myPension + this.spousePension;
+    return this.subjectPensionGross + this.spousePensionGross;
   }
 
   get nonSsIncome() {
     return (
-      this.myPension +
-      this.spousePension +
+      this.subjectPensionGross +
+      this.spousePensionGross +
       this.interestEarnedOnSavings +
       this.miscTaxableIncome +
-      this.rmd
+      this.subjectRMD
     );
   }
 
@@ -161,7 +192,7 @@ class IncomeStreams {
   }
 
   get hasRmdIncome() {
-    return this.rmd > 0;
+    return this.subjectRMD > 0;
   }
 
   get incomeBreakdown() {
@@ -169,7 +200,7 @@ class IncomeStreams {
       wagesAndCompensation: this.wagesAndCompensation,
       pension: this.pensionIncome,
       socialSecurity: this.ssIncome,
-      rmd: this.rmd,
+      rmd: this.subjectRMD,
       earnedInterest: this.interestEarnedOnSavings,
       taxableAdjustments: this.miscTaxableIncome,
       taxFreeAdjustments: this.taxFreeIncomeAdjustment,

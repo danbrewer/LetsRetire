@@ -1,3 +1,5 @@
+import { SocialSecurityBreakdown } from "./cSsCalculationDetails.js";
+
 /**
  * Represents comprehensive Social Security income breakdown for retirement planning.
  *
@@ -10,8 +12,8 @@
  * @since 1.0.0
  */
 class SocialSecurityIncome {
-  /** @type {SsCalculationDetails | null} */
-  #calculationDetails;
+  /** @type {SocialSecurityBreakdown | null} */
+  #socialSecurityBreakdown;
 
   // /**
   //  * Creates a new SocialSecurityIncome instance with Social Security benefit data.
@@ -27,10 +29,10 @@ class SocialSecurityIncome {
   //  */
   /**
    *
-   * @param {SsCalculationDetails | null} calculationDetails
+   * @param {SocialSecurityBreakdown | null} calculationDetails
    */
   constructor(calculationDetails) {
-    this.#calculationDetails = calculationDetails;
+    this.#socialSecurityBreakdown = calculationDetails;
   }
 
   /**
@@ -48,7 +50,7 @@ class SocialSecurityIncome {
    * @returns {number} Total primary beneficiary Social Security income
    */
   get subjectTotalSsIncome() {
-    return this.#calculationDetails?.subjectBenefits ?? 0;
+    return this.#socialSecurityBreakdown?.subjectBenefits ?? 0;
   }
 
   /**
@@ -57,7 +59,7 @@ class SocialSecurityIncome {
    * @returns {number} Total spouse Social Security income
    */
   get partnerTotalSsIncome() {
-    return this.#calculationDetails?.partnerBenefits ?? 0;
+    return this.#socialSecurityBreakdown?.partnerBenefits ?? 0;
   }
 
   /**
@@ -66,7 +68,7 @@ class SocialSecurityIncome {
    * @returns {number} Combined Social Security income
    */
   get totalSsIncome() {
-    return this.#calculationDetails?.totalSsBenefits ?? 0;
+    return this.#socialSecurityBreakdown?.totalSsBenefits ?? 0;
   }
 
   /**
@@ -75,7 +77,7 @@ class SocialSecurityIncome {
    * @returns {number} Total taxable Social Security income
    */
   get totalTaxableSsIncome() {
-    return this.#calculationDetails?.taxableAmount ?? 0;
+    return this.#socialSecurityBreakdown?.taxableAmount ?? 0;
   }
 
   /**
@@ -84,7 +86,7 @@ class SocialSecurityIncome {
    * @returns {number} Total non-taxable Social Security income
    */
   get totalNonTaxableSsIncome() {
-    return this.#calculationDetails?.nonTaxableAmount ?? 0;
+    return this.#socialSecurityBreakdown?.nonTaxableAmount ?? 0;
   }
 
   /**
@@ -104,7 +106,7 @@ class SocialSecurityIncome {
    * @returns {number} Primary beneficiary's gross percentage as decimal
    */
   get subjectGrossPercentage() {
-    return this.#calculationDetails?.subjectPortion ?? 0;
+    return this.#socialSecurityBreakdown?.subjectPortion ?? 0;
   }
 
   /**
@@ -113,7 +115,7 @@ class SocialSecurityIncome {
    * @returns {number} Spouse's gross percentage as decimal
    */
   get partnerGrossPercentage() {
-    return this.#calculationDetails?.partnerPortion ?? 0;
+    return this.#socialSecurityBreakdown?.partnerPortion ?? 0;
   }
 
   /**
@@ -122,7 +124,7 @@ class SocialSecurityIncome {
    * @returns {number} Primary beneficiary's taxable percentage as decimal
    */
   get subjectTaxablePercentage() {
-    return this.#calculationDetails?.subjectTaxablePortion ?? 0;
+    return this.#socialSecurityBreakdown?.subjectTaxablePortion ?? 0;
   }
 
   /**
@@ -131,7 +133,7 @@ class SocialSecurityIncome {
    * @returns {number} Spouse's taxable percentage as decimal
    */
   get partnerTaxablePercentage() {
-    return this.#calculationDetails?.partnerTaxablePortion ?? 0;
+    return this.#socialSecurityBreakdown?.partnerTaxablePortion ?? 0;
   }
 
   /**
@@ -154,12 +156,12 @@ class SocialSecurityIncome {
         totalSsIncome > 0 ? this.partnerTotalSsIncome / totalSsIncome : 0,
       primaryTaxableShare:
         totalTaxableIncome > 0
-          ? (this.#calculationDetails?.subjectTaxablePortion ?? 0) /
+          ? (this.#socialSecurityBreakdown?.subjectTaxablePortion ?? 0) /
             totalTaxableIncome
           : 0,
       spouseTaxableShare:
         totalTaxableIncome > 0
-          ? (this.#calculationDetails?.partnerTaxablePortion ?? 0) /
+          ? (this.#socialSecurityBreakdown?.partnerTaxablePortion ?? 0) /
             totalTaxableIncome
           : 0,
     };
@@ -175,10 +177,10 @@ class SocialSecurityIncome {
    */
   getProvisionalIncomeAnalysis() {
     // Assume married filing jointly for now (would need marital status input for precision)
-    const threshold1 = this.#calculationDetails?.tier1Threshold ?? 0;
-    const threshold2 = this.#calculationDetails?.tier2Threshold ?? 0;
+    const threshold1 = this.#socialSecurityBreakdown?.tier1Threshold ?? 0;
+    const threshold2 = this.#socialSecurityBreakdown?.tier2Threshold ?? 0;
 
-    const provisionalIncome = this.#calculationDetails?.provisionalIncome ?? 0;
+    const provisionalIncome = this.#socialSecurityBreakdown?.provisionalIncome ?? 0;
 
     let taxabilityLevel = "none";
     let excessOverThreshold = 0;
@@ -213,19 +215,19 @@ class SocialSecurityIncome {
     const warnings = [];
 
     // Check for negative amounts
-    if ((this.#calculationDetails?.subjectTaxablePortion ?? 0) < 0) {
+    if ((this.#socialSecurityBreakdown?.subjectTaxablePortion ?? 0) < 0) {
       errors.push("Primary beneficiary taxable amount cannot be negative");
     }
-    if ((this.#calculationDetails?.subjectNonTaxablePortion ?? 0) < 0) {
+    if ((this.#socialSecurityBreakdown?.subjectNonTaxablePortion ?? 0) < 0) {
       errors.push("Primary beneficiary non-taxable amount cannot be negative");
     }
-    if ((this.#calculationDetails?.partnerTaxablePortion ?? 0) < 0) {
+    if ((this.#socialSecurityBreakdown?.partnerTaxablePortion ?? 0) < 0) {
       errors.push("Spouse taxable amount cannot be negative");
     }
-    if ((this.#calculationDetails?.partnerNonTaxablePortion ?? 0) < 0) {
+    if ((this.#socialSecurityBreakdown?.partnerNonTaxablePortion ?? 0) < 0) {
       errors.push("Spouse non-taxable amount cannot be negative");
     }
-    if ((this.#calculationDetails?.provisionalIncome ?? 0) < 0) {
+    if ((this.#socialSecurityBreakdown?.provisionalIncome ?? 0) < 0) {
       errors.push("Combined provisional income cannot be negative");
     }
 
@@ -261,7 +263,7 @@ class SocialSecurityIncome {
    * This method provides a convenient way to construct SocialSecurityIncome objects
    * by extracting data from income calculation results and Social Security breakdowns.
    *
-   * @param {SsCalculationDetails | null} calculationDetails - Income calculation results containing SS breakdown:
+   * @param {SocialSecurityBreakdown | null} calculationDetails - Income calculation results containing SS breakdown:
 
    * @returns {SocialSecurityIncome} A new SS income instance with calculation results
    *
@@ -279,3 +281,5 @@ class SocialSecurityIncome {
     return new SocialSecurityIncome(calculationDetails);
   }
 }
+
+export { SocialSecurityIncome };

@@ -60,6 +60,9 @@ function createInputs() {
 
     /* filingStatus */ "married",
     /* useRMD */ true,
+    /* flatSsWithholdingRate */ 0.07,
+    /* flatTrad401kWithholdingRate */ 0.2,
+    /* flatPensionWithholdingRate */ 0.2,
 
     /* order */ [
       ACCOUNT_TYPES.SAVINGS,
@@ -151,7 +154,10 @@ runTest(
     console.log(
       `Calculations created: ${calculations.getAllCalculations().length}`
     );
-    assert(calculations.getAllCalculations().length > 0, "Expected calculations");
+    assert(
+      calculations.getAllCalculations().length > 0,
+      "Expected calculations"
+    );
   },
   testTracker
 );

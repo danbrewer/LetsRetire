@@ -80,11 +80,11 @@ function calc(calculations, UI) {
     const workingYearData =
       workingYearIncomeCalculator.calculateWorkingYearData();
 
-    workingYearData.dump("working year");
-    console.log(
-      `------ END OF WORKING YEAR ` + (TAX_BASE_YEAR + yearIndex) + ` ------`
-    );
-    debugger;
+    // workingYearData.dump("working year");
+    // console.log(
+    //   `------ END OF WORKING YEAR ` + (TAX_BASE_YEAR + yearIndex) + ` ------`
+    // );
+    // debugger;
 
     calculations.addCalculation(
       new Calculation(accountYear.taxYear, workingYearData)

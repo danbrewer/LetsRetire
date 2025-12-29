@@ -64,8 +64,8 @@ class AccountsManager {
       inputs.savingsInterestRate
     );
 
-    const revenue = new Account(ACCOUNT_TYPES.REVENUE, 0, 0);
-    const disbursement = new Account(ACCOUNT_TYPES.DISBURSEMENT, 0, 0);
+    const revenue = new Account(ACCOUNT_TYPES.CASH, 0, 0);
+    const disbursement = new Account(ACCOUNT_TYPES.DISBURSEMENT_TRACKING, 0, 0);
     const taxes = new Account(ACCOUNT_TYPES.TAXES, 0, 0);
     const withholdings = new Account(ACCOUNT_TYPES.WITHHOLDINGS, 0, 0);
     return new AccountsManager(
@@ -170,9 +170,9 @@ class AccountsManager {
         return this.rothIra;
       case ACCOUNT_TYPES.SAVINGS:
         return this.savings;
-      case ACCOUNT_TYPES.REVENUE:
+      case ACCOUNT_TYPES.CASH:
         return this.income;
-      case ACCOUNT_TYPES.DISBURSEMENT:
+      case ACCOUNT_TYPES.DISBURSEMENT_TRACKING:
         return this.disbursement;
       default:
         throw new Error(`Account not found: ${name}`);

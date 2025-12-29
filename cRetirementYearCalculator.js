@@ -9,6 +9,7 @@ import { Inputs } from "./cInputs.js";
 import { TAX_BASE_YEAR } from "./consts.js";
 import { RetirementYearData } from "./cRetirementYearData.js";
 import { Income } from "./cRevenue.js";
+import { SocialSecurityIncome } from "./cSocialSecurityIncome.js";
 import { Taxes } from "./cTaxes.js";
 import { TransactionCategory } from "./cTransaction.js";
 import { WithdrawalFactory } from "./cWithdrawalFactory.js";
@@ -18,11 +19,19 @@ import { withLabel } from "./debugUtils.js";
  * RetirementYearCalculator class - Handles comprehensive retirement year calculations
  * Provides detailed analysis for the distribution phase of retirement planning
  */
-class RetirementYearCalculator{
+class RetirementYearCalculator {
   /** @type {Inputs} */
   #inputs;
   /** @type {AccountingYear} */
   #accountYear;
+  /** @type {Demographics} */
+  #demographics;
+  /** @type {FiscalData} */
+  #fiscalData;
+  /** @type {IncomeStreams} */
+  #incomeStreams;
+  /** @type {WithdrawalFactory} */
+  #withdrawalFactory;
 
   /**
    * Create retirement year calculator with input configuration
@@ -37,6 +46,24 @@ class RetirementYearCalculator{
   constructor(inputs, accountYear) {
     this.#inputs = inputs;
     this.#accountYear = accountYear;
+
+    this.#demographics = Demographics.CreateUsing(this.#inputs, true, false);
+
+    this.#fiscalData = FiscalData.CreateUsing(this.#inputs, TAX_BASE_YEAR);
+
+    this.#incomeStreams = IncomeStreams.CreateUsing(
+      this.#demographics,
+      this.#accountYear,
+      this.#fiscalData,
+      this.#inputs
+    );
+
+    this.#withdrawalFactory = WithdrawalFactory.CreateUsing(
+      this.#incomeStreams,
+      this.#fiscalData,
+      this.#demographics,
+      this.#accountYear
+    );
   }
 
   /**
@@ -87,29 +114,11 @@ class RetirementYearCalculator{
 
     // Declare and initialize the result object at the top
 
-    const demographics = Demographics.CreateUsing(this.#inputs, true, false);
-
-    const fiscalData = FiscalData.CreateUsing(this.#inputs, TAX_BASE_YEAR);
-
-    const fixedIncomeStreams = IncomeStreams.CreateUsing(
-      demographics,
-      this.#accountYear,
-      fiscalData,
-      this.#inputs
-    );
-
     // Build complete taxable income picture for withdrawal functions
 
-    const withdrawalFactory = WithdrawalFactory.CreateUsing(
-      fixedIncomeStreams,
-      fiscalData,
-      demographics,
-      this.#accountYear
-    );
+    this.#withdrawalFactory.processWithdrawals();
 
-    withdrawalFactory.processWithdrawals();
-
-    const incomeResults = withdrawalFactory.getFinalIncomeResults();
+    const incomeBreakdown = this.#withdrawalFactory.getFinalIncomeBreakdown();
 
     // For Social Security breakdown, we still need some manual calculation since we need separate spouse results
     // But we can use the taxable amounts from retirement.js
@@ -117,21 +126,19 @@ class RetirementYearCalculator{
     // @ts-ignore
     const mySsBenefits = {
       _description: "Social Security Benefits Breakdown",
-      income: fixedIncomeStreams.mySs,
+      income: this.#incomeStreams.subjectSsGross,
       taxablePortion:
-        incomeResults.incomeBreakdown.ssCalculationDetails
-          ?.subjectTaxablePortion,
+        incomeBreakdown.ssCalculationDetails?.subjectTaxablePortion,
       nonTaxablePortion:
-        incomeResults.incomeBreakdown.ssCalculationDetails
-          ?.subjectNonTaxablePortion,
+        incomeBreakdown.ssCalculationDetails?.subjectNonTaxablePortion,
       portionOfTotalBenefits:
-        incomeResults.incomeBreakdown.ssCalculationDetails?.subjectPortion,
+        incomeBreakdown.ssCalculationDetails?.subjectPortion,
       calculationDetails: [
         withLabel(
-          "incomeResults.incomeBreakdown.ssCalculationDetails",
-          incomeResults.incomeBreakdown.ssCalculationDetails
+          "incomeResults.ssCalculationDetails",
+          incomeBreakdown.ssCalculationDetails
         ),
-        withLabel("incomeStreams", fixedIncomeStreams),
+        withLabel("incomeStreams", this.#incomeStreams),
       ],
     };
 
@@ -143,15 +150,10 @@ class RetirementYearCalculator{
 
     const totals = {
       _description: "Totals Breakdown",
-      reportableIncome: incomeResults.incomeBreakdown.grossIncome,
-      taxableIncome: incomeResults.incomeBreakdown.taxableIncome,
-      netIncome: incomeResults.incomeBreakdown.netIncome, // getNetIncomeMinusReportedEarnedInterest,
-      calculationDetails: [
-        withLabel(
-          "incomeResults.incomeBreakdown",
-          incomeResults.incomeBreakdown
-        ),
-      ],
+      reportableIncome: incomeBreakdown.grossIncome,
+      taxableIncome: incomeBreakdown.taxableIncome,
+      netIncome: incomeBreakdown.netIncome, // getNetIncomeMinusReportedEarnedInterest,
+      calculationDetails: [withLabel("incomeResults", incomeBreakdown)],
     };
 
     const savings = {
@@ -208,38 +210,37 @@ class RetirementYearCalculator{
 
     const spouseSsBenefits = {
       _description: "Spouse Social Security Benefits Breakdown",
-      income: fixedIncomeStreams.spouseSs,
+      income: this.#incomeStreams.spouseSsGross,
       taxablePortion:
-        incomeResults.incomeBreakdown.ssCalculationDetails
-          ?.partnerTaxablePortion,
+        incomeBreakdown.ssCalculationDetails?.partnerTaxablePortion,
       nonTaxablePortion:
-        incomeResults.incomeBreakdown.ssCalculationDetails
-          ?.partnerNonTaxablePortion,
+        incomeBreakdown.ssCalculationDetails?.partnerNonTaxablePortion,
       portionOfTotalBenefits:
-        incomeResults.incomeBreakdown.ssCalculationDetails?.partnerPortion,
+        incomeBreakdown.ssCalculationDetails?.partnerPortion,
       calculationDetails: [
         withLabel(
-          "incomeResults.incomeBreakdown.ssCalculationDetails",
-          incomeResults.incomeBreakdown.ssCalculationDetails
+          "incomeResults.ssCalculationDetails",
+          incomeBreakdown.ssCalculationDetails
         ),
-        withLabel("incomeStreams", fixedIncomeStreams),
+        withLabel("incomeStreams", this.#incomeStreams),
       ],
     };
 
     const myPensionBenefits = {
       _description: "Pension Benefits Breakdown",
-      income: fixedIncomeStreams.myPension,
+      income: this.#incomeStreams.subjectPensionGross,
     };
 
     const spousePensionBenefits = {
       _description: "Spouse Pension Benefits Breakdown",
-      income: fixedIncomeStreams.spousePension,
+      income: this.#incomeStreams.spousePensionGross,
     };
 
     const result = RetirementYearData.CreateUsing(
-      demographics,
-      fiscalData,
-      this.#accountYear
+      this.#demographics,
+      this.#fiscalData,
+      this.#accountYear,
+      incomeBreakdown
     );
     // demographics,
     // fiscalData,
@@ -271,35 +272,36 @@ class RetirementYearCalculator{
     // accountYear
 
     // incomeResults.incomeBreakdown.dump("incomeBreakdown");
-    debugger;
+    // debugger;
 
     // result.demographics = demographics;
     // result.fiscalData = fiscalData;
-    result.revenue = Income.CreateUsing(
-      this.#accountYear,
-      ACCOUNT_TYPES.REVENUE
-    );
-    result.disbursements = Income.CreateUsing(
-      this.#accountYear,
-      ACCOUNT_TYPES.DISBURSEMENT
-    );
-    result.balances = Balances.CreateUsing(this.#accountYear);
-    result.socialSecurityIncome = SocialSecurityIncome.CreateUsing(
-      incomeResults.incomeBreakdown.ssCalculationDetails
-    );
-    result.taxes = Taxes.CreateUsing(incomeResults.incomeBreakdown);
-    result.savings = Balance.CreateUsing(
-      this.#accountYear,
-      ACCOUNT_TYPES.SAVINGS
-    );
-    result.trad401k = Balance.CreateUsing(
-      this.#accountYear,
-      ACCOUNT_TYPES.TRAD_401K
-    );
-    result.tradRoth = Balance.CreateUsing(
-      this.#accountYear,
-      ACCOUNT_TYPES.TRAD_ROTH
-    );
+    // result.revenue = Income.CreateUsing(
+    //   this.#accountYear,
+    //   ACCOUNT_TYPES.REVENUE
+    // );
+    // result.disbursements = Income.CreateUsing(
+    //   this.#accountYear,
+    //   ACCOUNT_TYPES.DISBURSEMENT
+    // );
+    // result.balances = Balances.CreateUsing(this.#accountYear);
+
+    // result.socialSecurityIncome = SocialSecurityIncome.CreateUsing(
+    //   incomeBreakdown.ssCalculationDetails
+    // );
+    // result.taxes = Taxes.CreateUsing(incomeBreakdown);
+    // result.savings = Balance.CreateUsing(
+    //   this.#accountYear,
+    //   ACCOUNT_TYPES.SAVINGS
+    // );
+    // result.trad401k = Balance.CreateUsing(
+    //   this.#accountYear,
+    //   ACCOUNT_TYPES.TRAD_401K
+    // );
+    // result.tradRoth = Balance.CreateUsing(
+    //   this.#accountYear,
+    //   ACCOUNT_TYPES.TRAD_ROTH
+    // );
     // result.calculationDetails = [
     //   // withLabel("demographics", demographics),
     //   // withLabel("fiscalData", fiscalData),
@@ -316,7 +318,7 @@ class RetirementYearCalculator{
 
     // fiscalData.dump("fiscalData");
 
-    result.dump("result");
+    result.dump("RetirementYearData");
     debugger;
     // result.income.dump();
     // result.balances.dump();

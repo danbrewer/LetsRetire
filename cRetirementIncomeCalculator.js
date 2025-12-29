@@ -1,9 +1,11 @@
 import { Demographics } from "./cDemographics.js";
 import { FiscalData } from "./cFiscalData.js";
 import { IncomeBreakdown } from "./cIncomeBreakdown.js";
+import { IncomeEstimatorResults } from "./cIncomeEstimatorResults.js";
 import { IncomeRs } from "./cIncomeRs.js";
 import { IncomeStreams } from "./cIncomeStreams.js";
 import { SsBenefitsCalculator } from "./cSsBenefitsCalculator.js";
+import { SocialSecurityBreakdown } from "./cSsCalculationDetails.js";
 import { withLabel, log } from "./debugUtils.js";
 /**
  * RetirementIncomeCalculator class - Handles retirement income and tax calculations
@@ -53,7 +55,7 @@ class RetirementIncomeCalculator {
    *   - nonSsIncome(): Method returning total non-Social Security income
    *   - nonSsIncomeSources: Array of non-Social Security income sources
    * @param {Array<number> | null} [nonSsIncomeSources] - (Optional) Array of non-Social Security income sources
-   * @returns {IncomeRs} Comprehensive income calculation results containing:
+   * @returns {IncomeBreakdown} Comprehensive income calculation results containing:
    *   - ssBreakdown: Social Security taxation breakdown with taxable/non-taxable portions,
    *     provisional income calculations, and detailed methodology
    *   - incomeBreakdown: Complete income analysis including reportable income, taxable income,
@@ -75,39 +77,64 @@ class RetirementIncomeCalculator {
    * @since 1.0.0
    * @author Retirement Calculator System
    */
-  calculateIncomeWhen401kWithdrawalIs(
+  calculateIncomeBreakdown(
     variableTaxableIncome,
     incomeStreams,
     nonSsIncomeSources
   ) {
-    if (!nonSsIncomeSources || nonSsIncomeSources.length === 0) {
-      nonSsIncomeSources = [
-        incomeStreams.myPension,
-        incomeStreams.spousePension,
-        incomeStreams.interestEarnedOnSavings,
-        incomeStreams.rmd,
-        incomeStreams.miscTaxableIncome,
-      ];
-    }
-
-    const nonSsIncome = nonSsIncomeSources.reduce((sum, val) => sum + val, 0);
-
-    const ssBreakdown = SsBenefitsCalculator.CalculateUsing(
-      incomeStreams.mySs,
-      incomeStreams.spouseSs,
-      nonSsIncome + variableTaxableIncome,
-      this.#demographics.hasPartner
+    const ssBreakdown = this.calculateSocialSecurityBreakdown(
+      incomeStreams,
+      variableTaxableIncome,
+      nonSsIncomeSources
     );
 
     const incomeBreakdown = IncomeBreakdown.CreateFrom(
       incomeStreams,
       variableTaxableIncome,
-      ssBreakdown.calculationDetails,
+      ssBreakdown,
       this.#demographics,
       this.#fiscalData
     );
 
-    return new IncomeRs(ssBreakdown, incomeBreakdown);
+    // const result = IncomeRs.CreateUsing(incomeBreakdown);
+
+    return incomeBreakdown;
+  }
+
+  /**
+   * @param {IncomeStreams} incomeStreams
+   * @param {number} variableTaxableIncome
+   * @param {Array<number> | null} [nonSsIncomeSources] - (Optional) Array of non-Social Security income sources
+   * @returns {SocialSecurityBreakdown} Comprehensive income calculation results containing:
+   */
+  calculateSocialSecurityBreakdown(
+    incomeStreams,
+    variableTaxableIncome,
+    nonSsIncomeSources
+  ) {
+    if (!nonSsIncomeSources || nonSsIncomeSources.length === 0) {
+      nonSsIncomeSources = [
+        incomeStreams.subjectPensionGross,
+        incomeStreams.spousePensionGross,
+        incomeStreams.interestEarnedOnSavings,
+        incomeStreams.subjectRMD,
+        incomeStreams.miscTaxableIncome,
+      ];
+    }
+
+    const totalNonSsIncome = nonSsIncomeSources.reduce(
+      (sum, val) => sum + val,
+      0
+    );
+    const taxableNonSsIncome = totalNonSsIncome + variableTaxableIncome;
+
+    const result = SsBenefitsCalculator.CalculateSsBreakdown(
+      this.#demographics,
+      incomeStreams,
+      taxableNonSsIncome
+    );
+
+    return result;
   }
 
   /**
@@ -115,101 +142,77 @@ class RetirementIncomeCalculator {
    */
   calculateFixedIncomeOnly(incomeStreams) {
     const nonSsIncomeSources = [
-      incomeStreams.myPension,
-      incomeStreams.spousePension,
-      incomeStreams.rmd,
+      incomeStreams.subjectPensionGross,
+      incomeStreams.spousePensionGross,
+      incomeStreams.subjectRMD,
       incomeStreams.miscTaxableIncome,
     ];
-    return this.calculateIncomeWhen401kWithdrawalIs(
-      0,
-      incomeStreams,
-      nonSsIncomeSources
-    );
+    return this.calculateIncomeBreakdown(0, incomeStreams, nonSsIncomeSources);
   }
 
   /**
    * Determine 401k withdrawal amount needed to hit a specific net target income
    * @param {number} targetIncome - Target net income to achieve
-   * @param {IncomeStreams} incomeStreams - Collection of income sources
-   * @returns {{desiredNetTarget: number, trad401kWithdrawalNeeded: number, tax: number, rmd: number, calculationDetails: any[]}} - Withdrawal calculation results
+   * @param {IncomeStreams} fixedIncomeStreams - Collection of income sources
+   * @returns {IncomeEstimatorResults} - Withdrawal calculation results
    */
-  determine401kWithdrawalsToHitNetTargetOf(targetIncome, incomeStreams) {
+  determineGrossIncomeNeededToHitNetTargetOf(targetIncome, fixedIncomeStreams) {
     // Declare and initialize the result object at the top
-    /** @type {{desiredNetTarget: number, trad401kWithdrawalNeeded: number, tax: number, rmd: number, calculationDetails: any[]}} */
-    const result = {
-      desiredNetTarget: 0,
-      trad401kWithdrawalNeeded: 0,
-      tax: 0,
-      rmd: 0,
-      calculationDetails: [],
-    };
+    /** @type {IncomeEstimatorResults} */
+    const result = new IncomeEstimatorResults(targetIncome, fixedIncomeStreams);
+    let lo = 0;
+    let hi = targetIncome * 2;
 
-    let lo = 0,
-      hi = targetIncome * 2;
+    const maximumIterations = 80;
+    let guestimatedVariableIncomeNeeded = 0;
 
-    /** @type {IncomeRs | null}} */
-    let incomeRs = null;
+    /** @type {IncomeBreakdown | null}} */
+    let incomeBreakdown = this.calculateIncomeBreakdown(
+      guestimatedVariableIncomeNeeded,
+      fixedIncomeStreams
+    );
+    if (incomeBreakdown?.netIncome.asCurrency() < targetIncome) {
+      for (let i = 0; i < maximumIterations; i++) {
+        logIteration(i, lo, hi);
 
-    for (let i = 0; i < 80; i++) {
-      log.info();
-      log.info(
-        `===== Iteration ${i}: lo=$${lo.asCurrency()}, hi=$${hi.asCurrency()} ======`
-      );
-      const guestimate401kWithdrawal = (lo + hi) / 2;
-      log.info(
-        `Guestimate 401k withdrawal: $${guestimate401kWithdrawal.asCurrency()}`
-      );
+        guestimatedVariableIncomeNeeded = (lo + hi) / 2;
+        logGuestimate(guestimatedVariableIncomeNeeded);
 
-      incomeRs = this.calculateIncomeWhen401kWithdrawalIs(
-        guestimate401kWithdrawal,
-        incomeStreams
-      );
+        incomeBreakdown = this.calculateIncomeBreakdown(
+          guestimatedVariableIncomeNeeded,
+          fixedIncomeStreams
+        );
 
-      //   income.incomeBreakdown = incomeRs.incomeBreakdown;
-      //   income.ssBreakdown = incomeRs.ssBreakdown;
+        const netIncome = incomeBreakdown?.netIncome.asCurrency() ?? 0;
 
-      log.info(`Target income is $${targetIncome.asCurrency()}.`);
+        logGuessResults(
+          netIncome,
+          targetIncome,
+          guestimatedVariableIncomeNeeded
+        );
 
-      const netIncome =
-        incomeRs?.incomeBreakdown.netIncome //getNetIncomeMinusReportedEarnedInterest()
-          .asCurrency() ?? 0;
-
-      const highLow =
-        netIncome > targetIncome.asCurrency()
-          ? "TOO HIGH"
-          : netIncome < targetIncome.asCurrency()
-            ? "TOO LOW"
-            : "JUST RIGHT";
-      const highLowTextColor =
-        netIncome > targetIncome.asCurrency()
-          ? "\x1b[31m"
-          : netIncome < targetIncome.asCurrency()
-            ? "\x1b[34m"
-            : "\x1b[32m"; // Red for too high, Blue for too low, Green for just right
-      log.info(
-        `When 401k withdrawal is $${guestimate401kWithdrawal.round(
-          0
-        )} then the net income will be $${netIncome} ${highLowTextColor}(${highLow})\x1b[0m`
-      );
-
-      if (netIncome == targetIncome.asCurrency()) break;
-      if (netIncome < targetIncome) lo = guestimate401kWithdrawal;
-      else hi = guestimate401kWithdrawal;
-      if (hi.asCurrency() - lo.asCurrency() <= 0.01) break;
+        if (netIncome == targetIncome.asCurrency()) break;
+        if (netIncome < targetIncome) lo = guestimatedVariableIncomeNeeded;
+        else hi = guestimatedVariableIncomeNeeded;
+        if (hi.asCurrency() - lo.asCurrency() <= 0.01) break;
+      }
     }
 
+    result.incomeBreakdown = incomeBreakdown;
+
     // Update all the final values in the result object
-    result.desiredNetTarget =
-      incomeRs?.incomeBreakdown.netIncome //getNetIncomeMinusReportedEarnedInterest()
-        .asCurrency() ?? 0;
-    result.trad401kWithdrawalNeeded =
-      incomeRs?.incomeBreakdown.trad401kWithdrawal.asCurrency() ?? 0; // hi.asCurrency();
-    result.rmd = incomeStreams.rmd;
-    result.tax = incomeRs?.incomeBreakdown.federalIncomeTax.asCurrency() ?? 0;
-    result.calculationDetails = [
-      withLabel("incomeRs", incomeRs),
-      withLabel("incomeStreams", incomeStreams),
-    ];
+    // result.desiredNetTarget =
+    //   incomeBreakdown?.netIncome //getNetIncomeMinusReportedEarnedInterest()
+    //     .asCurrency() ?? 0;
+    // result.variableIncomeNeededToHitTarget =
+    //   incomeBreakdown?.trad401kWithdrawal.asCurrency() ?? 0; // hi.asCurrency();
+    // result.rmd = fixedIncomeStreams.rmd;
+    // result.federalIncomeTax =
+    //   incomeBreakdown?.federalIncomeTax.asCurrency() ?? 0;
+    // result.calculationDetails = [
+    //   withLabel("incomeBreakdown", incomeBreakdown),
+    //   withLabel("fixedIncomeStreams", fixedIncomeStreams),
+    // ];
 
     return result;
   }
@@ -255,13 +258,63 @@ function calculateIncomeWhen401kWithdrawalIs(
   fiscalData
 ) {
   const calculator = new RetirementIncomeCalculator(demographics, fiscalData);
-  return calculator.calculateIncomeWhen401kWithdrawalIs(
+  return calculator.calculateIncomeBreakdown(
     variableIncomeFactor,
     incomeStreams
   );
 }
 
-export {
-  RetirementIncomeCalculator,
-  calculateIncomeWhen401kWithdrawalIs,
-};
+/**
+ * @param {number} i
+ * @param {number} lo
+ * @param {number} hi
+ */
+function logIteration(i, lo, hi) {
+  return;
+  log.info();
+  log.info(
+    `===== Iteration ${i}: lo=$${lo.asCurrency()}, hi=$${hi.asCurrency()} ======`
+  );
+}
+
+/**
+ * @param {number} guestimate401kWithdrawal
+ */
+function logGuestimate(guestimate401kWithdrawal) {
+  return;
+  log.info(
+    `Guestimate 401k withdrawal: $${guestimate401kWithdrawal.asCurrency()}`
+  );
+}
+
+/**
+ * @param {number} netIncome
+ * @param {number} targetIncome
+ * @param {number} guestimatedVariableIncomeNeeded
+ */
+function logGuessResults(
+  netIncome,
+  targetIncome,
+  guestimatedVariableIncomeNeeded
+) {
+  return;
+  const highLow =
+    netIncome > targetIncome.asCurrency()
+      ? "TOO HIGH"
+      : netIncome < targetIncome.asCurrency()
+        ? "TOO LOW"
+        : "JUST RIGHT";
+  const highLowTextColor =
+    netIncome > targetIncome.asCurrency()
+      ? "\x1b[31m"
+      : netIncome < targetIncome.asCurrency()
+        ? "\x1b[34m"
+        : "\x1b[32m"; // Red for too high, Blue for too low, Green for just right
+  log.info(
+    `When 401k withdrawal is $${guestimatedVariableIncomeNeeded.round(
+      0
+    )} then the net income will be $${netIncome} ${highLowTextColor}(${highLow})\x1b[0m`
+  );
+}
+
+export { RetirementIncomeCalculator, calculateIncomeWhen401kWithdrawalIs };
