@@ -213,8 +213,8 @@ class Deposits {
   static Empty(description = "Deposits Breakdown") {
     return new Deposits(
       new Account(ACCOUNT_TYPES.SAVINGS, 0, 0),
-      new Account(ACCOUNT_TYPES.TRAD_401K, 0, 0),
-      new Account(ACCOUNT_TYPES.TRAD_ROTH, 0, 0),
+      new Account(ACCOUNT_TYPES.SUBJECT_401K, 0, 0),
+      new Account(ACCOUNT_TYPES.SUBJECT_ROTH_IRA, 0, 0),
       0,
       description
     );
@@ -247,9 +247,9 @@ class Deposits {
    * @since 1.0.0
    */
   static CreateUsing(accounts, fiscalData, description = "Deposits Breakdown") {
-    const trad401k = accounts.trad401k;
+    const trad401k = accounts.subject401k;
     const savings = accounts.savings;
-    const roth = accounts.rothIra;
+    const roth = accounts.subjectRothIra;
 
     const calculationDetails = [];
     if (typeof withLabel === "function") {

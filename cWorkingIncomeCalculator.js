@@ -2,7 +2,8 @@ import { Demographics } from "./cDemographics.js";
 import { FiscalData } from "./cFiscalData.js";
 import { IncomeBreakdown } from "./cIncomeBreakdown.js";
 import { IncomeRs } from "./cIncomeRs.js";
-import { IncomeStreams } from "./cIncomeStreams.js";
+import { FixedIncomeStreams } from "./cFixedIncomeStreams.js";
+import { AdjustableIncomeStreams } from "./cAdjustableIncomeStreams.js";
 
 /**
  * RetirementIncomeCalculator class - Handles retirement income and tax calculations
@@ -37,7 +38,7 @@ class WorkingIncomeCalculator {
    * The function is commonly used in iterative calculations to determine optimal withdrawal
    * strategies or to model income scenarios with different retirement account distributions.
    *
-   * @param {IncomeStreams} incomeStreams - Collection of all income sources containing:
+   * @param {FixedIncomeStreams} fixedIncomeStreams - Collection of all income sources containing:
    *   - mySs: Primary person's Social Security benefits
    *   - spouseSs: Spouse's Social Security benefits (if applicable)
    *   - myPension: Primary person's pension income
@@ -47,6 +48,7 @@ class WorkingIncomeCalculator {
    *   - otherTaxableIncomeAdjustments: Additional taxable income sources
    *   - nonSsIncome(): Method returning total non-Social Security income
    *   - nonSsIncomeSources: Array of non-Social Security income sources
+   * @param {AdjustableIncomeStreams} adjustableIncomeStreams - Collection of adjustable income sources containing:
    * @returns {IncomeBreakdown} Comprehensive income calculation results containing:
    *   - ssBreakdown: Social Security taxation breakdown with taxable/non-taxable portions,
    *     provisional income calculations, and detailed methodology
@@ -69,11 +71,10 @@ class WorkingIncomeCalculator {
    * @since 1.0.0
    * @author Retirement Calculator System
    */
-  calculateIncome(incomeStreams) {
+  calculateIncome(fixedIncomeStreams, adjustableIncomeStreams) {
     const incomeBreakdown = IncomeBreakdown.CreateFrom(
-      incomeStreams,
-      0,
-      null,
+      fixedIncomeStreams,
+      adjustableIncomeStreams,
       this.#demographics,
       this.#fiscalData
     );
@@ -82,7 +83,7 @@ class WorkingIncomeCalculator {
   }
 
   /**
-   * @param {IncomeStreams} incomeStreams
+   * @param {FixedIncomeStreams} incomeStreams
    */
   // calculateFixedIncomeOnly(incomeStreams) {
   //   const nonSsIncomeSources = [

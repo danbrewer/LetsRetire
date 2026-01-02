@@ -1,18 +1,18 @@
 import { FiscalData } from "./cFiscalData.js";
 import { IncomeBreakdown } from "./cIncomeBreakdown.js";
-import { IncomeStreams } from "./cIncomeStreams.js";
+import { FixedIncomeStreams } from "./cFixedIncomeStreams.js";
 
 class IncomeEstimatorResults {
   /** @type {number} */
   #desiredNetTarget;
-  /** @type {IncomeStreams} */
+  /** @type {FixedIncomeStreams} */
   #fixedIncomeStreams;
   /** @type {IncomeBreakdown | null} */
   #incomeBreakdown = null;
 
   /**
    * @param {number} desiredNetTarget - The desired net income target
-   *  @param {IncomeStreams} fixedIncomeStreams - Collection of income sources
+   *  @param {FixedIncomeStreams} fixedIncomeStreams - Collection of income sources
    */
   constructor(desiredNetTarget, fixedIncomeStreams) {
     this.#desiredNetTarget = desiredNetTarget;
@@ -28,12 +28,28 @@ class IncomeEstimatorResults {
   }
 
   get variableIncomeNeededToHitTarget() {
-    return this.#incomeBreakdown?.trad401kWithdrawal.asCurrency() ?? 0;
+    if (this.#incomeBreakdown === null) {
+      return 0;
+    }
+
+    return (
+      this.#incomeBreakdown.combined401kWithdrawalsGross +
+      this.#incomeBreakdown.combinedSavingWithdrawals +
+      this.#incomeBreakdown.combinedRothWithdrawals
+    ).asCurrency();
   }
 
-  get rmd() {
-    return this.#fixedIncomeStreams.subjectRMD;
-  }
+  // get rmd() {
+  //   const gross401kWithdrawals = this.#incomeBreakdown?.combined401kWithdrawalsGross.asCurrency() ?? 0;
+    
+  //   if (gross401kWithdrawals === 0) {
+  //     return 0;
+  //   }
+
+
+
+  //   return this.#fixedIncomeStreams.subjectRMD;
+  // }
 
   get federalIncomeTax() {
     return this.#incomeBreakdown?.federalIncomeTax.asCurrency() ?? 0;

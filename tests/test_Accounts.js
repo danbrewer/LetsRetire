@@ -210,8 +210,8 @@ runTest(
   () => {
     const validTypes = [
       ACCOUNT_TYPES.SAVINGS,
-      ACCOUNT_TYPES.TRAD_401K,
-      ACCOUNT_TYPES.TRAD_ROTH,
+      ACCOUNT_TYPES.SUBJECT_401K,
+      ACCOUNT_TYPES.SUBJECT_ROTH_IRA,
       ACCOUNT_TYPES.CASH,
       ACCOUNT_TYPES.INTEREST_ON_SAVINGS,
       ACCOUNT_TYPES.DISBURSEMENT_TRACKING,
@@ -515,7 +515,7 @@ runTest(
 runTest(
   "Complex account workflow with multiple transaction types",
   () => {
-    const account = new Account(ACCOUNT_TYPES.TRAD_401K, 5000);
+    const account = new Account(ACCOUNT_TYPES.SUBJECT_401K, 5000);
 
     // Simulate a year of account activity
     // Q1 - Regular contributions

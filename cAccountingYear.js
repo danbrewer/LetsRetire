@@ -179,17 +179,20 @@ class AccountingYear {
 
   /**
    * @param {string} accountName
+   * @returns {number}
    */
   recordInterestEarnedForYear(accountName) {
-    return this.#getAccountByName(accountName).recordInterestEarnedForYear(
-      this.taxYear
-    );
+    return this.#getAccountByName(accountName)
+      .recordInterestEarnedForYear(this.taxYear)
+      .asCurrency();
   }
 
   /** @param {string} accountName */
   getInterestEarnedForYear(accountName) {
-    return this.getDeposits(accountName, TransactionCategory.Interest)
-      .asCurrency();
+    return this.getDeposits(
+      accountName,
+      TransactionCategory.Interest
+    ).asCurrency();
   }
 
   /**
@@ -221,7 +224,13 @@ class AccountingYear {
    * @param {string} frequency
    * @param {string} memo
    */
-  processAsPeriodicDeposits(accountName, category, amount, frequency, memo = "") {
+  processAsPeriodicDeposits(
+    accountName,
+    category,
+    amount,
+    frequency,
+    memo = ""
+  ) {
     const account = this.#getAccountByName(accountName);
     if (account) {
       account.processAsPeriodicDeposits(
@@ -241,6 +250,18 @@ class AccountingYear {
    */
   getAccountByName(name) {
     return this.#accountsManager.getAccountByName(name);
+  }
+
+  /**
+   * @param {string} accountName
+   */
+  getAccountTransactions(accountName) {
+    const account = this.#getAccountByName(accountName);
+    if (account) {
+      return account.getTransactionsForYear(this.taxYear);
+    } else {
+      throw new Error(`Account not found: ${accountName}`);
+    }
   }
 
   hasPositiveBalance() {

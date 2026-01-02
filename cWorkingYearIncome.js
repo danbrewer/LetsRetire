@@ -130,7 +130,7 @@ class WorkingYearIncome {
   }
 
   get grossWagesTipsAndCompensation() {
-    const result = this.#inputs.wagesandOtherTaxableCompensation;
+    const result = this.#inputs.taxableWagesandOtherTaxableCompensation;
     return result;
   }
 
@@ -327,7 +327,7 @@ class WorkingYearIncome {
   process401kContributions() {
     // Dump any 401k contributions into the Traditional 401k account
     this.accountYear.processAsPeriodicDeposits(
-      ACCOUNT_TYPES.TRAD_401K,
+      ACCOUNT_TYPES.SUBJECT_401K,
       TransactionCategory.Contribution,
       this.#employmentInfo.allowed401kContribution,
       PERIODIC_FREQUENCY.MONTHLY
@@ -337,7 +337,7 @@ class WorkingYearIncome {
   }
 
   #record401kInterest() {
-    this.accountYear.recordInterestEarnedForYear(ACCOUNT_TYPES.TRAD_401K);
+    this.accountYear.recordInterestEarnedForYear(ACCOUNT_TYPES.SUBJECT_401K);
   }
 
   applySavingsInterest() {
@@ -347,13 +347,15 @@ class WorkingYearIncome {
   processRothIraContributions() {
     // Any Roth IRA contributions go into the Roth account
     this.accountYear.processAsPeriodicDeposits(
-      ACCOUNT_TYPES.TRAD_ROTH,
+      ACCOUNT_TYPES.SUBJECT_ROTH_IRA,
       TransactionCategory.Contribution,
       this.annualRothContributions,
       PERIODIC_FREQUENCY.MONTHLY
     );
 
-    this.accountYear.recordInterestEarnedForYear(ACCOUNT_TYPES.TRAD_ROTH);
+    this.accountYear.recordInterestEarnedForYear(
+      ACCOUNT_TYPES.SUBJECT_ROTH_IRA
+    );
   }
 
   get annualRothContributions() {

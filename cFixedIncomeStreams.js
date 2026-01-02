@@ -1,12 +1,13 @@
 import { ACCOUNT_TYPES } from "./cAccount.js";
 import { AccountingYear } from "./cAccountingYear.js";
+import { AdjustableIncomeStreams } from "./cAdjustableIncomeStreams.js";
 import { Common } from "./cCommon.js";
 import { Demographics } from "./cDemographics.js";
 import { FiscalData } from "./cFiscalData.js";
 import { Inputs } from "./cInputs.js";
 import { TransactionCategory } from "./cTransaction.js";
 
-class IncomeStreams {
+class FixedIncomeStreams {
   /** @type {AccountingYear} */
   #accountYear;
 
@@ -35,8 +36,26 @@ class IncomeStreams {
     this._description = "IncomeStreams";
   }
 
-  get wagesAndCompensation() {
-    return this.#inputs.wagesandOtherTaxableCompensation.asCurrency();
+  get wagesAndCompensationGross() {
+    return this.#inputs.taxableWagesandOtherTaxableCompensation.asCurrency();
+  }
+
+  get wagesAndCompensationEstimatedWithholdings() {
+    return (
+      this.#inputs.flatWageWithholdingRate *
+      this.#inputs.taxableWagesandOtherTaxableCompensation
+    ).asCurrency();
+  }
+
+  get wagesAndCompensationActualIncome() {
+    return (
+      this.wagesAndCompensationGross -
+      this.wagesAndCompensationEstimatedWithholdings
+    ).asCurrency();
+  }
+
+  get trad401kWithholdingRate() {
+    return this.#inputs.flatTrad401kWithholdingRate;
   }
 
   get subjectPensionGross() {
@@ -49,7 +68,7 @@ class IncomeStreams {
     ).asCurrency();
   }
 
-  get subjectPensionIncome() {
+  get subjectPensionActualIncome() {
     return this.subjectPensionGross - this.subjectPensionWithholdings;
   }
 
@@ -63,7 +82,7 @@ class IncomeStreams {
     ).asCurrency();
   }
 
-  get subjectSsIncome() {
+  get subjectSsActualIncome() {
     return this.subjectSsGross - this.subjectSsWithholdings;
   }
 
@@ -77,7 +96,7 @@ class IncomeStreams {
     ).asCurrency();
   }
 
-  get spousePensionIncome() {
+  get spousePensionActualIncome() {
     return this.spousePensionGross - this.spousePensionWithholdings;
   }
 
@@ -91,19 +110,11 @@ class IncomeStreams {
     ).asCurrency();
   }
 
-  get spouseSsIncome() {
+  get spouseSsActualIncome() {
     return this.spouseSsGross - this.spouseSsWithholdings;
   }
 
-  get subjectRMD() {
-    return Common.calculateRMD(
-      this.#fiscalData.useRmd,
-      this.#demographics.currentAge,
-      this.#accountYear.getStartingBalance(ACCOUNT_TYPES.TRAD_401K)
-    );
-  }
-
-  get miscTaxableIncome() {
+  get miscTaxableIncomeWithNoWithholdings() {
     return this.#inputs.taxableIncomeAdjustment.asCurrency();
   }
 
@@ -117,16 +128,21 @@ class IncomeStreams {
    * @param {AccountingYear} accountYear - Accounts object containing savings and 401k accounts
    * @param {FiscalData} fiscalData - Instance of FiscalData class
    * @param {Inputs} inputs - Input data object containing tax adjustments
-   * @returns {IncomeStreams} New IncomeStreams instance
+   * @returns {FixedIncomeStreams} New IncomeStreams instance
    */
   static CreateUsing(demographics, accountYear, fiscalData, inputs) {
     const rmd = Common.calculateRMD(
       fiscalData.useRmd,
       demographics.currentAge,
-      accountYear.getStartingBalance(ACCOUNT_TYPES.TRAD_401K)
+      accountYear.getStartingBalance(ACCOUNT_TYPES.SUBJECT_401K)
     );
 
-    return new IncomeStreams(demographics, accountYear, fiscalData, inputs);
+    return new FixedIncomeStreams(
+      demographics,
+      accountYear,
+      fiscalData,
+      inputs
+    );
   }
 
   get interestEarnedOnSavings() {
@@ -139,73 +155,76 @@ class IncomeStreams {
 
   get grossTaxableIncome() {
     return (
-      this.wagesAndCompensation +
-      this.subjectPensionGross +
-      this.spousePensionGross +
+      this.wagesAndCompensationGross +
+      this.combinedPensionGross +
       this.interestEarnedOnSavings +
-      this.miscTaxableIncome +
-      this.subjectRMD +
-      this.subjectSsGross +
-      this.spouseSsGross +
-      this.taxFreeIncomeAdjustment
+      this.miscTaxableIncomeWithNoWithholdings +
+      this.combinedSsGross
     );
   }
 
   get taxableIncome() {
     return (
-      this.wagesAndCompensation +
-      this.subjectPensionGross +
-      this.spousePensionGross +
+      this.wagesAndCompensationGross +
+      this.combinedPensionGross +
       this.interestEarnedOnSavings +
-      this.miscTaxableIncome +
-      this.subjectRMD +
-      this.subjectSsGross +
-      this.spouseSsGross
+      this.miscTaxableIncomeWithNoWithholdings +
+      this.combinedSsGross
     );
   }
 
-  get ssIncome() {
+  get combinedSsGross() {
     return this.subjectSsGross + this.spouseSsGross;
   }
 
-  get pensionIncome() {
+  get combinedGrossSsWithholdings() {
+    return this.subjectSsWithholdings + this.spouseSsWithholdings;
+  }
+
+  get combinedSsActualIncome() {
+    return this.subjectSsActualIncome + this.spouseSsActualIncome;
+  }
+
+  get combinedPensionGross() {
     return this.subjectPensionGross + this.spousePensionGross;
   }
 
-  get nonSsIncome() {
+  get combinedPensionWithholdings() {
+    return this.subjectPensionWithholdings + this.spousePensionWithholdings;
+  }
+
+  get combinedPensionActualIncome() {
+    return this.subjectPensionActualIncome + this.spousePensionActualIncome;
+  }
+
+  get nonSsGrossIncome() {
     return (
-      this.subjectPensionGross +
-      this.spousePensionGross +
+      this.combinedPensionGross +
       this.interestEarnedOnSavings +
-      this.miscTaxableIncome +
-      this.subjectRMD
+      this.miscTaxableIncomeWithNoWithholdings +
+      this.wagesAndCompensationGross
     );
   }
 
-  // Utility methods for income stream management
-  get hasSocialSecurityIncome() {
-    return this.ssIncome > 0;
-  }
-
-  get hasPensionIncome() {
-    return this.pensionIncome > 0;
-  }
-
-  get hasRmdIncome() {
-    return this.subjectRMD > 0;
+  get totalActualFixedIncome() {
+    const total =
+      this.combinedPensionActualIncome +
+      this.combinedSsActualIncome +
+      this.wagesAndCompensationActualIncome;
+    return total.asCurrency();
   }
 
   get incomeBreakdown() {
     return {
-      wagesAndCompensation: this.wagesAndCompensation,
-      pension: this.pensionIncome,
-      socialSecurity: this.ssIncome,
-      rmd: this.subjectRMD,
+      wagesAndCompensation: this.wagesAndCompensationGross,
+      pension: this.combinedPensionGross,
+      socialSecurity: this.combinedSsGross,
+      // rmd: this.subjectRMD,
       earnedInterest: this.interestEarnedOnSavings,
-      taxableAdjustments: this.miscTaxableIncome,
+      taxableAdjustments: this.miscTaxableIncomeWithNoWithholdings,
       taxFreeAdjustments: this.taxFreeIncomeAdjustment,
     };
   }
 }
 
-export { IncomeStreams };
+export { FixedIncomeStreams };

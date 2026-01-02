@@ -5,7 +5,7 @@
 // import { FiscalData } from "./cFiscalData.js";
 // import { IncomeBreakdown } from "./cIncomeBreakdown.js";
 // import { IncomeRs } from "./cIncomeRs.js";
-// import { IncomeStreams } from "./cIncomeStreams.js";
+// import { IncomeStreams } from "./cFixedIncomeStreams.js";
 // import { PERIODIC_FREQUENCY } from "./consts.js";
 // import { RetirementIncomeCalculator } from "./cRetirementIncomeCalculator.js";
 // import { TransactionCategory } from "./cTransaction.js";

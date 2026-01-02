@@ -38,7 +38,7 @@ function testExpenditures() {
     5000,
     EXPENDITURE_CATEGORY.TRAVEL,
     "Family vacation",
-    ACCOUNT_TYPES.TRAD_401K,
+    ACCOUNT_TYPES.SUBJECT_401K,
     2024
   );
 
@@ -46,7 +46,7 @@ function testExpenditures() {
     2000,
     EXPENDITURE_CATEGORY.HEALTHCARE,
     "Medical expenses",
-    ACCOUNT_TYPES.TRAD_ROTH,
+    ACCOUNT_TYPES.SUBJECT_ROTH_IRA,
     2024
   );
 
@@ -136,7 +136,7 @@ function testExpenditures() {
     2024
   );
   const tradRothSpending = expenditures.getSpendingByAccount(
-    ACCOUNT_TYPES.TRAD_ROTH,
+    ACCOUNT_TYPES.SUBJECT_ROTH_IRA,
     2024
   );
 
@@ -184,7 +184,7 @@ function exampleRetirementIntegration() {
     15000,
     EXPENDITURE_CATEGORY.HEALTHCARE,
     "Healthcare and insurance",
-    ACCOUNT_TYPES.TRAD_401K,
+    ACCOUNT_TYPES.SUBJECT_401K,
     2024
   );
 
@@ -192,7 +192,7 @@ function exampleRetirementIntegration() {
     8000,
     EXPENDITURE_CATEGORY.TRAVEL,
     "Retirement travel",
-    ACCOUNT_TYPES.TRAD_ROTH,
+    ACCOUNT_TYPES.SUBJECT_ROTH_IRA,
     2024
   );
 
@@ -200,7 +200,7 @@ function exampleRetirementIntegration() {
     12000,
     EXPENDITURE_CATEGORY.TAXES,
     "Federal and state taxes",
-    ACCOUNT_TYPES.TRAD_401K,
+    ACCOUNT_TYPES.SUBJECT_401K,
     2024
   );
 

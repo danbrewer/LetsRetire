@@ -40,7 +40,7 @@ class Calculation {
 
   get subjectSocialSecurity() {
     return this.#yearData instanceof RetirementYearData
-      ? this.#yearData.socialSecurityIncome.subjectTotalSsIncome
+      ? 0 //this.#yearData.incomeStreams.subjectSocialSecurity
       : 0;
   }
 

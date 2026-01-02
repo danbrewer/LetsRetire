@@ -34,11 +34,15 @@ class Inputs {
    * @param {number} taxablePct - Taxable savings percentage as decimal
    * @param {number} matchCap - Employer match cap percentage as decimal
    * @param {number} matchRate - Employer match rate as decimal
-   * @param {number} trad401k - Current traditional 401k balance
-   * @param {number} rothIRA - Current Roth IRA balance
-   * @param {number} savings - Current savings balance
+   * @param {number} subject401kStartingBalance - Current traditional 401k balance
+   * @param {number} subjectRothStartingBalance - Current Roth IRA balance
+   * @param {number} spouse401kStartingBalance - Current spouse traditional 401k balance
+   * @param {number} spouseRothStartingBalance - Current spouse Roth IRA balance
+   * @param {number} savingsStartingBalance - Current savings balance
    * @param {number} ret401k - 401k rate of return as decimal
    * @param {number} retRoth - Roth IRA rate of return as decimal
+   * @param {number} retSpouse401k - Spouse 401k rate of return as decimal
+   * @param {number} retSpouseRoth - Spouse Roth IRA rate of return as decimal
    * @param {number} retSavings - Savings rate of return as decimal
    * @param {number} ssMonthly - Monthly Social Security benefits
    * @param {number} ssCola - Social Security cost of living adjustment as decimal
@@ -49,6 +53,7 @@ class Inputs {
    * @param {number} flatSsWithholdingRate - Flat withholding rate for Social Security as decimal
    * @param {number} flatTrad401kWithholdingRate - Flat withholding rate for traditional 401k as decimal
    * @param {number} flatPensionWithholdingRate - Flat withholding rate for pension as decimal
+   * @param {number} flatWageWithholdingRate - Flat withholding rate for wages as decimal
    * @param {string[]} order - Withdrawal order for accounts
    */
   constructor(
@@ -77,11 +82,15 @@ class Inputs {
     taxablePct = 0,
     matchCap = 0,
     matchRate = 0,
-    trad401k = 0,
-    rothIRA = 0,
-    savings = 0,
+    subject401kStartingBalance = 0,
+    subjectRothStartingBalance = 0,
+    spouse401kStartingBalance = 0,
+    spouseRothStartingBalance = 0,
+    savingsStartingBalance = 0,
     ret401k = 0,
     retRoth = 0,
+    retSpouse401k = 0,
+    retSpouseRoth = 0,
     retSavings = 0,
     ssMonthly = 0,
     ssCola = 0,
@@ -92,10 +101,11 @@ class Inputs {
     flatSsWithholdingRate = 0.07,
     flatTrad401kWithholdingRate = 0.2,
     flatPensionWithholdingRate = 0.2,
+    flatWageWithholdingRate = 0.15,
     order = [
       ACCOUNT_TYPES.SAVINGS,
-      ACCOUNT_TYPES.TRAD_401K,
-      ACCOUNT_TYPES.TRAD_ROTH,
+      ACCOUNT_TYPES.SUBJECT_401K,
+      ACCOUNT_TYPES.SUBJECT_ROTH_IRA,
     ]
   ) {
     // Personal information
@@ -178,19 +188,31 @@ class Inputs {
 
     // Account balances and returns
     /** @type {number} */
-    this.trad401kStartingBalance = trad401k;
+    this.subject401kStartingBalance = subject401kStartingBalance;
 
     /** @type {number} */
-    this.tradRothStartingBalance = rothIRA;
+    this.subjectRothStartingBalance = subjectRothStartingBalance;
 
     /** @type {number} */
-    this.savingsStartingBalance = savings;
+    this.spouse401kStartingBalance = spouse401kStartingBalance;
+
+    /** @type {number} */
+    this.spouseRothStartingBalance = spouseRothStartingBalance;
+
+    /** @type {number} */
+    this.savingsStartingBalance = savingsStartingBalance;
 
     /** @type {number} */
     this.trad401kInterestRate = ret401k;
 
     /** @type {number} */
     this.tradRothInterestRate = retRoth;
+
+    /** @type {number} */
+    this.spouseTrad401kInterestRate = retSpouse401k;
+
+    /** @type {number} */
+    this.spouseRothInterestRate = retSpouseRoth;
 
     /** @type {number} */
     this.savingsInterestRate = retSavings;
@@ -221,6 +243,10 @@ class Inputs {
     this.flatTrad401kWithholdingRate = flatTrad401kWithholdingRate;
     /** @type {number} */
     this.flatPensionWithholdingRate = flatPensionWithholdingRate;
+    /** @type {number} */
+    this.flatWageWithholdingRate = flatWageWithholdingRate;
+    /** @type {number} */
+    this.flatWageWithholdingRate = flatWageWithholdingRate;
 
     /** @type {string[]} */
     this.order = order;
@@ -317,8 +343,8 @@ class Inputs {
 
   getTotalAccountBalance() {
     return (
-      this.trad401kStartingBalance +
-      this.tradRothStartingBalance +
+      this.subject401kStartingBalance +
+      this.subjectRothStartingBalance +
       this.savingsStartingBalance
     );
   }
@@ -419,7 +445,15 @@ class Inputs {
     return result;
   }
 
-  get wagesandOtherTaxableCompensation() {
+  get taxableWagesandOtherTaxableCompensation() {
+    const grossWages = this.grossWagesandOtherTaxableCompensation;
+
+    const result = grossWages - this.benefitsAndOtherSalaryReductions;
+
+    return result;
+  }
+
+  get grossWagesandOtherTaxableCompensation() {
     let result = this.#taxableIncomeAdjustment.asCurrency();
     if (!this.#isRetired) {
       result += this.startingSalary.adjustedForInflation(
@@ -427,7 +461,12 @@ class Inputs {
         this.yearIndex
       );
     }
+
     return result;
+  }
+
+  get benefitsAndOtherSalaryReductions() {
+    return 0; // For now. This can include health/dental/HSA contributions, etc. later on
   }
 
   get spouseAge() {
@@ -504,18 +543,22 @@ class Inputs {
       this.spousePenCola,
       this.spouseTaxSS,
       this.spouseTaxPension,
-      this.wagesandOtherTaxableCompensation,
+      this.taxableWagesandOtherTaxableCompensation,
       this.salaryGrowth,
       this.pretaxPct,
       this.rothPct,
       this.taxablePct,
       this.matchCap,
       this.matchRate,
-      this.trad401kStartingBalance,
-      this.tradRothStartingBalance,
+      this.subject401kStartingBalance,
+      this.subjectRothStartingBalance,
+      this.spouse401kStartingBalance,
+      this.spouseRothStartingBalance,
       this.savingsStartingBalance,
       this.trad401kInterestRate,
       this.tradRothInterestRate,
+      this.spouseTrad401kInterestRate,
+      this.spouseRothInterestRate,
       this.savingsInterestRate,
       this.ssMonthly,
       this.ssCola,
@@ -526,6 +569,7 @@ class Inputs {
       this.flatSsWithholdingRate,
       this.flatTrad401kWithholdingRate,
       this.flatPensionWithholdingRate,
+      this.flatWageWithholdingRate,
       this.order
     );
   }

@@ -45,12 +45,16 @@ function createInputs() {
     /* matchCap */ 0,
     /* matchRate */ 0,
 
-    /* trad401k */ 600000,
+    /* trad401k */ 500000,
     /* rothIRA */ 0,
+    /* spouse401k */ 100000,
+    /* spouseRoth */ 0,
     /* savings */ 500000,
 
     /* ret401k */ 0.03,
     /* retRoth */ 0,
+    /* retSpouse401k */ 0.03,
+    /* retSpouseRoth */ 0.03,
     /* retSavings */ 0.03,
 
     /* ssMonthly */ 2500,
@@ -63,11 +67,11 @@ function createInputs() {
     /* flatSsWithholdingRate */ 0.07,
     /* flatTrad401kWithholdingRate */ 0.2,
     /* flatPensionWithholdingRate */ 0.2,
-
+    /* flatWageWithholdingRate */ 0.22,
     /* order */ [
       ACCOUNT_TYPES.SAVINGS,
-      ACCOUNT_TYPES.TRAD_401K,
-      ACCOUNT_TYPES.TRAD_ROTH,
+      ACCOUNT_TYPES.SUBJECT_401K,
+      ACCOUNT_TYPES.SUBJECT_ROTH_IRA,
     ]
   );
 }

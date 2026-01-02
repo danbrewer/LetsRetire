@@ -100,13 +100,19 @@ class RetirementYearData extends YearDataBase {
     );
     this.balances = Balances.CreateUsing(accountYear);
 
-    this.socialSecurityIncome = SocialSecurityIncome.CreateUsing(
-      incomeBreakdown.ssCalculationDetails
-    );
+    // this.socialSecurityIncome = SocialSecurityIncome.CreateUsing(
+    //   incomeBreakdown.ssCalculationDetails
+    // );
     this.taxes = Taxes.CreateUsing(incomeBreakdown);
     this.savings = Balance.CreateUsing(accountYear, ACCOUNT_TYPES.SAVINGS);
-    this.trad401k = Balance.CreateUsing(accountYear, ACCOUNT_TYPES.TRAD_401K);
-    this.tradRoth = Balance.CreateUsing(accountYear, ACCOUNT_TYPES.TRAD_ROTH);
+    this.trad401k = Balance.CreateUsing(
+      accountYear,
+      ACCOUNT_TYPES.SUBJECT_401K
+    );
+    this.tradRoth = Balance.CreateUsing(
+      accountYear,
+      ACCOUNT_TYPES.SUBJECT_ROTH_IRA
+    );
   }
 
   get description() {

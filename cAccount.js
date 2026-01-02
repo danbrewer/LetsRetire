@@ -14,13 +14,19 @@ import { DateFunctions } from "./utils.js";
 
 class ACCOUNT_TYPES {}
 ACCOUNT_TYPES.SAVINGS = "Savings";
-ACCOUNT_TYPES.TRAD_401K = "Trad401k";
-ACCOUNT_TYPES.TRAD_ROTH = "RothIra";
+ACCOUNT_TYPES.SUBJECT_401K = "Trad401k";
+ACCOUNT_TYPES.SUBJECT_ROTH_IRA = "RothIra";
+ACCOUNT_TYPES.SPOUSE_401K = "SpouseTrad401k";
+ACCOUNT_TYPES.SPOUSE_ROTH_IRA = "SpouseRothIra";
+ACCOUNT_TYPES.SUBJECT_PENSION = "SubjectPension";
+ACCOUNT_TYPES.SPOUSE_PENSION = "SpousePension";
 ACCOUNT_TYPES.CASH = "Cash";
 ACCOUNT_TYPES.INTEREST_ON_SAVINGS = "InterestOnSavings";
 ACCOUNT_TYPES.DISBURSEMENT_TRACKING = "Disbursement";
 ACCOUNT_TYPES.TAXES = "Taxes";
 ACCOUNT_TYPES.WITHHOLDINGS = "Withholdings";
+ACCOUNT_TYPES.SUBJECT_SOCIAL_SECURITY = "SubjectSocialSecurity";
+ACCOUNT_TYPES.SPOUSE_SOCIAL_SECURITY = "SpouseSocialSecurity";
 
 // Create a class for the account
 class Account {
@@ -117,7 +123,7 @@ class Account {
   /**
    * @param {number} yyyy
    */
-  getTransactionForYear(yyyy) {
+  getTransactionsForYear(yyyy) {
     return this.#transactions.filter((tx) => tx.date.getFullYear() === yyyy);
   }
 
@@ -130,7 +136,7 @@ class Account {
       openingBalance: this.#openingBalance,
       interestRate: this.#interestRate,
       transactions: yyyy
-        ? this.getTransactionForYear(yyyy)
+        ? this.getTransactionsForYear(yyyy)
         : this.#transactions,
     };
   }

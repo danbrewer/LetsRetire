@@ -47,7 +47,7 @@ class Withdrawals {
     // RMD is typically part of income streams, but we can calculate it here if needed
     // For now, we return 0 as a placeholder
     return this.#accountYear
-      .getWithdrawals(ACCOUNT_TYPES.TRAD_401K, TransactionCategory.RMD)
+      .getWithdrawals(ACCOUNT_TYPES.SUBJECT_401K, TransactionCategory.RMD)
       .asCurrency();
   }
 
@@ -66,14 +66,15 @@ class Withdrawals {
 
   get roth() {
     return this.#accountYear
-      .getWithdrawals(ACCOUNT_TYPES.TRAD_ROTH)
+      .getWithdrawals(ACCOUNT_TYPES.SUBJECT_ROTH_IRA)
       .asCurrency();
   }
 
   get trad401k() {
     return (
-      this.#accountYear.getWithdrawals(ACCOUNT_TYPES.TRAD_401K).asCurrency() -
-      this.rmd
+      this.#accountYear
+        .getWithdrawals(ACCOUNT_TYPES.SUBJECT_401K)
+        .asCurrency() - this.rmd
     );
   }
 

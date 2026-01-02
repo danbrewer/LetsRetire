@@ -3,8 +3,14 @@ import { Inputs } from "./cInputs.js";
 
 class AccountsManager {
   /**
-   * @param {Account} trad401k - Traditional 401k account instance
-   * @param {Account} rothIra - Roth IRA account instance
+   * @param {Account} subjectSocialSecurity - Subject Social Security account instance
+   * @param {Account} spouseSocialSecurity - Spouse Social Security account instance
+   * @param {Account} subject401k - Traditional 401k account instance
+   * @param {Account} spouse401k - Spouse Traditional 401k account instance
+   * @param {Account} subjectPension - Subject Pension account instance
+   * @param {Account} spousePension - Spouse Pension account instance
+   * @param {Account} subjectRothIra - Roth IRA account instance
+   * @param {Account} spouseRothIra - Spouse Roth IRA account instance
    * @param {Account} savings - Savings account instance
    * @param {Account} income - Income account instance
    * @param {Account} disbursement - Disbursement account instance
@@ -12,33 +18,32 @@ class AccountsManager {
    * @param {Account} withholdings - Withholdings account instance
    */
   constructor(
-    trad401k,
-    rothIra,
+    subjectSocialSecurity,
+    spouseSocialSecurity,
+    subject401k,
+    spouse401k,
+    subjectPension,
+    spousePension,
+    subjectRothIra,
+    spouseRothIra,
     savings,
     income,
     disbursement,
     taxes,
     withholdings
   ) {
-    /** @type {Account} */
-    this.trad401k = trad401k;
-
-    /** @type {Account} */
-    this.rothIra = rothIra;
-
-    /** @type {Account} */
+    this.subjecSocialSecurity = subjectSocialSecurity;
+    this.spouseSocialSecurity = spouseSocialSecurity;
+    this.subject401k = subject401k;
+    this.spouseTrad401k = spouse401k;
+    this.subjectPension = subjectPension;
+    this.spousePension = spousePension;
+    this.subjectRothIra = subjectRothIra;
+    this.spouseRothIra = spouseRothIra;
     this.savings = savings;
-
-    /** @type {Account} */
     this.income = income;
-
-    /** @type {Account} */
     this.disbursement = disbursement;
-
-    /** @type {Account} */
     this.taxes = taxes;
-
-    /** @type {Account} */
     this.withholdings = withholdings;
   }
 
@@ -48,15 +53,41 @@ class AccountsManager {
    * @returns {AccountsManager} New AccountGroup instance
    */
   static CreateFromInputs(inputs) {
-    const trad401k = new Account(
-      ACCOUNT_TYPES.TRAD_401K,
-      inputs.trad401kStartingBalance,
+    const subjectSocialSecurity = new Account(
+      ACCOUNT_TYPES.SUBJECT_SOCIAL_SECURITY,
+      0,
+      0
+    );
+
+    const spouseSocialSecurity = new Account(
+      ACCOUNT_TYPES.SPOUSE_SOCIAL_SECURITY,
+      0,
+      0
+    );
+
+    const subject401k = new Account(
+      ACCOUNT_TYPES.SUBJECT_401K,
+      inputs.subject401kStartingBalance,
       inputs.trad401kInterestRate
     );
-    const rothIra = new Account(
-      ACCOUNT_TYPES.TRAD_ROTH,
-      inputs.tradRothStartingBalance,
+    const spouse401k = new Account(
+      ACCOUNT_TYPES.SPOUSE_401K,
+      inputs.spouse401kStartingBalance,
+      inputs.spouseTrad401kInterestRate
+    );
+
+    const subjectPension = new Account(ACCOUNT_TYPES.SUBJECT_PENSION, 0, 0);
+    const spousePension = new Account(ACCOUNT_TYPES.SPOUSE_PENSION, 0, 0);
+
+    const subjectRothIra = new Account(
+      ACCOUNT_TYPES.SUBJECT_ROTH_IRA,
+      inputs.subjectRothStartingBalance,
       inputs.tradRothInterestRate
+    );
+    const spouseRothIra = new Account(
+      ACCOUNT_TYPES.SPOUSE_ROTH_IRA,
+      inputs.spouseRothStartingBalance,
+      inputs.spouseRothInterestRate
     );
     const savings = new Account(
       ACCOUNT_TYPES.SAVINGS,
@@ -69,8 +100,14 @@ class AccountsManager {
     const taxes = new Account(ACCOUNT_TYPES.TAXES, 0, 0);
     const withholdings = new Account(ACCOUNT_TYPES.WITHHOLDINGS, 0, 0);
     return new AccountsManager(
-      trad401k,
-      rothIra,
+      subjectSocialSecurity,
+      spouseSocialSecurity,
+      subject401k,
+      spouse401k,
+      subjectPension,
+      spousePension,
+      subjectRothIra,
+      spouseRothIra,
       savings,
       revenue,
       disbursement,
@@ -84,8 +121,8 @@ class AccountsManager {
    */
   toJSON(yyyy = null) {
     return {
-      trad401k: this.trad401k.toJSON(yyyy),
-      rothIra: this.rothIra.toJSON(yyyy),
+      trad401k: this.subject401k.toJSON(yyyy),
+      rothIra: this.subjectRothIra.toJSON(yyyy),
       savings: this.savings.toJSON(yyyy),
       income: this.income.toJSON(yyyy),
       disbursement: this.disbursement.toJSON(yyyy),
@@ -98,8 +135,14 @@ class AccountsManager {
   static fromJSON(json) {
     const obj = typeof json === "string" ? JSON.parse(json) : json;
     return new AccountsManager(
+      Account.fromJSON(obj.subjectSocialSecurity),
+      Account.fromJSON(obj.spouseSocialSecurity),
       Account.fromJSON(obj.trad401k),
+      Account.fromJSON(obj.spouseTrad401k),
+      Account.fromJSON(obj.subjectPension),
+      Account.fromJSON(obj.spousePension),
       Account.fromJSON(obj.rothIra),
+      Account.fromJSON(obj.spouseRothIra),
       Account.fromJSON(obj.savings),
       Account.fromJSON(obj.income),
       Account.fromJSON(obj.disbursement),
@@ -110,7 +153,7 @@ class AccountsManager {
 
   // Utility methods for account group analysis
   getAllAccounts() {
-    return [this.trad401k, this.rothIra, this.savings, this.income];
+    return [this.subject401k, this.subjectRothIra, this.savings, this.income];
   }
 
   /**
@@ -164,10 +207,18 @@ class AccountsManager {
    */
   getAccountByName(name) {
     switch (name) {
-      case ACCOUNT_TYPES.TRAD_401K:
-        return this.trad401k;
-      case ACCOUNT_TYPES.TRAD_ROTH:
-        return this.rothIra;
+      case ACCOUNT_TYPES.SUBJECT_401K:
+        return this.subject401k;
+      case ACCOUNT_TYPES.SPOUSE_401K:
+        return this.spouseTrad401k;
+      case ACCOUNT_TYPES.SPOUSE_ROTH_IRA:
+        return this.spouseRothIra;
+      case ACCOUNT_TYPES.SUBJECT_ROTH_IRA:
+        return this.subjectRothIra;
+      case ACCOUNT_TYPES.SUBJECT_PENSION:
+        return this.subjectPension;
+      case ACCOUNT_TYPES.SPOUSE_PENSION:
+        return this.spousePension;
       case ACCOUNT_TYPES.SAVINGS:
         return this.savings;
       case ACCOUNT_TYPES.CASH:
@@ -191,8 +242,8 @@ class AccountsManager {
    */
   getBalanceBreakdown(year) {
     return {
-      trad401k: this.trad401k.endingBalanceForYear(year),
-      rothIra: this.rothIra.endingBalanceForYear(year),
+      trad401k: this.subject401k.endingBalanceForYear(year),
+      rothIra: this.subjectRothIra.endingBalanceForYear(year),
       savings: this.savings.endingBalanceForYear(year),
       total: this.getTotalBalance(year),
     };
@@ -260,9 +311,9 @@ class AccountsManager {
           case "SAVINGS":
             return this.savings;
           case "TRADITIONAL_401K":
-            return this.trad401k;
+            return this.subject401k;
           case "ROTH_IRA":
-            return this.rothIra;
+            return this.subjectRothIra;
           default:
             return null;
         }

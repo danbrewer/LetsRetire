@@ -66,7 +66,7 @@ class EmploymentInfo {
   }
 
   get salary() {
-    return this.#inputs.wagesandOtherTaxableCompensation.asCurrency();
+    return this.#inputs.taxableWagesandOtherTaxableCompensation.asCurrency();
   }
 
   /**
@@ -128,8 +128,10 @@ class EmploymentInfo {
     ).asCurrency();
   }
 
-  get allowedRothContribution(){
-    return (this.#desiredRothContribution * this.getElectiveScale()).asCurrency();
+  get allowedRothContribution() {
+    return (
+      this.#desiredRothContribution * this.getElectiveScale()
+    ).asCurrency();
   }
 
   get nonTaxableBenefits() {

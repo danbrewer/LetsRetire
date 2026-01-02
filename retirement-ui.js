@@ -2473,8 +2473,8 @@ function parseInputParameters() {
   if (withdrawalOrder?.length === 0) {
     withdrawalOrder = [
       ACCOUNT_TYPES.SAVINGS,
-      ACCOUNT_TYPES.TRAD_401K,
-      ACCOUNT_TYPES.TRAD_ROTH,
+      ACCOUNT_TYPES.SUBJECT_401K,
+      ACCOUNT_TYPES.SUBJECT_ROTH_IRA,
     ];
   }
 
@@ -2503,13 +2503,13 @@ function parseInputParameters() {
   const taxablePct = pct(num("taxablePct"));
   const matchCap = pct(num("matchCap"));
   const matchRate = pct(num("matchRate"));
-  const trad401k = num("balPre");
-  const rothIRA = num("balRoth");
+  const subject401kStartingBalance = num("balPre");
+  const subjectRothStartingBalance = num("balRoth");
   const savings = num("balSavings");
-  const ret401k = pct(num("retPre"));
-  const retRoth = pct(num("retRoth"));
+  const subject401kReturnRate = pct(num("retPre"));
+  const subjectRothReturnRate = pct(num("retRoth"));
   const retSavings = pct(num("retTax"));
-  const ssMonthly = num("ssMonthly");
+  const subjectSsMonthly = num("ssMonthly");
   const ssCola = pct(num("ssCola"));
   const penMonthly = num("penMonthly");
   const penCola = pct(num("penCola"));
@@ -2519,6 +2519,14 @@ function parseInputParameters() {
   const flatSsWithholdingRate = 0.07; // pct(num("flatSsWithholdingRate"));
   const flatTrad401kWithholdingRate = 0.2; // pct(num("flatTrad401kWithholdingRate"));
   const flatPensionWithholdingRate = 0.2; // pct(num("flatPensionWithholdingRate"));
+  const flatWageWithholdingRate = 0.22; // pct(num("flatWageWithholdingRate"));
+  const spouse401kStartingBalance = 100000;
+  const spouseRothStartingBalance = 50000;
+
+  const spouseSavingsStartingBalance = 0;
+  const spouse401kReturnRate = 0.03;
+  const spouseRothReturnRate = 0.03;
+  const spouseSavingsReturnRate = 0.03;
 
   const inputs = new Inputs(
     currentAge,
@@ -2549,14 +2557,18 @@ function parseInputParameters() {
     matchCap,
     matchRate,
     // Account balances and returns
-    trad401k,
-    rothIRA,
+    subject401kStartingBalance,
+    subjectRothStartingBalance,
+    spouse401kStartingBalance,
+    spouseRothStartingBalance,
     savings,
-    ret401k,
-    retRoth,
+    subject401kReturnRate,
+    subjectRothReturnRate,
+    spouse401kReturnRate,
+    spouseRothReturnRate,
     retSavings,
     // Income sources
-    ssMonthly,
+    subjectSsMonthly,
     ssCola,
     penMonthly,
     penCola,
@@ -2566,6 +2578,7 @@ function parseInputParameters() {
     flatSsWithholdingRate,
     flatTrad401kWithholdingRate,
     flatPensionWithholdingRate,
+    flatWageWithholdingRate,
     order
   );
   // Basic parameters

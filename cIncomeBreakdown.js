@@ -1,45 +1,45 @@
+import { AdjustableIncomeStreams } from "./cAdjustableIncomeStreams.js";
 import { Demographics } from "./cDemographics.js";
 import { FiscalData } from "./cFiscalData.js";
-import { IncomeStreams } from "./cIncomeStreams.js";
+import { FixedIncomeStreams } from "./cFixedIncomeStreams.js";
 import { SocialSecurityBreakdown } from "./cSsCalculationDetails.js";
 import { TaxCalculations } from "./cTaxCalculations.js";
 
 class IncomeBreakdown {
-  /** @type {SocialSecurityBreakdown | null} */
-  #ssCalculationDetails;
+  // /** @type {SocialSecurityBreakdown | null} */
+  // #ssCalculationDetails;
   /** @type {number} */
   #standardDeduction = 0;
-  /** @type {IncomeStreams} */
+  /** @type {FixedIncomeStreams} */
   #fixedIncomeStreams;
-  /** @type {number} */
-  #variableIncomeStream;
+
+  /** @type {AdjustableIncomeStreams} */
+  #adjustableIncomeStreams;
+
   /** @type {Demographics} */
   #demographics;
   /** @type {FiscalData} */
   #fiscalData;
 
   /**
-   * @param {IncomeStreams} fixedIncomeStreams
-   * @param {number} variableIncomeStream
-   * @param {SocialSecurityBreakdown | null} ssCalculationDetails
+   * @param {FixedIncomeStreams} fixedIncomeStreams
+   * @param {AdjustableIncomeStreams} adjustableIncomeStreams
    * @param {Demographics} demographics
    * @param {FiscalData} fiscalData
    *
    */
   constructor(
     fixedIncomeStreams,
-    variableIncomeStream,
-    ssCalculationDetails,
+    adjustableIncomeStreams,
     demographics,
     fiscalData
   ) {
     this.#fixedIncomeStreams = fixedIncomeStreams;
-    this.#variableIncomeStream = variableIncomeStream;
+    this.#adjustableIncomeStreams = adjustableIncomeStreams;
     this.#standardDeduction = TaxCalculations.getStandardDeduction(
       fiscalData,
       demographics
     );
-    this.#ssCalculationDetails = ssCalculationDetails;
     this.#demographics = demographics;
     this.#fiscalData = fiscalData;
   }
@@ -48,84 +48,85 @@ class IncomeBreakdown {
     return this.#fixedIncomeStreams.interestEarnedOnSavings.asCurrency();
   }
 
-  get trad401kWithdrawal() {
-    return this.#variableIncomeStream.asCurrency();
+  get combinedSocialSecurityGross() {
+    return this.#fixedIncomeStreams.combinedSsGross.asCurrency();
+    // #ssCalculationDetails?.totalSsBenefits.asCurrency() ?? 0;
   }
 
-  get socialSecurity() {
-    return this.#ssCalculationDetails?.totalSsBenefits.asCurrency() ?? 0;
+  get combinedSoecialSecurityWithholdings() {
+    return this.#fixedIncomeStreams.combinedGrossSsWithholdings.asCurrency();
   }
 
-  get pension() {
-    return this.#fixedIncomeStreams.pensionIncome.asCurrency();
+  get combinedSocialSecurityActualIncome() {
+    return this.#fixedIncomeStreams.combinedSsActualIncome.asCurrency();
   }
 
-  get rmd() {
-    return this.#fixedIncomeStreams.subjectRMD.asCurrency();
+  get combinedPensionGross() {
+    return this.#fixedIncomeStreams.combinedPensionGross.asCurrency();
   }
+
+  get combinedPensionWithholdings() {
+    return this.#fixedIncomeStreams.combinedPensionWithholdings.asCurrency();
+  }
+
+  get combinedPensionActualIncome() {
+    return this.#fixedIncomeStreams.combinedPensionActualIncome.asCurrency();
+  }
+
+  get earnedIncomeGross() {
+    return 0; // for now; later only if we add earned income streams
+  }
+
+  get earnedIncomeWithholdings() {
+    return 0; // for now; later only if we add earned income streams
+  }
+
+  get earnedIncomeNetIncome() {
+    return this.earnedIncomeGross - this.earnedIncomeWithholdings; // for now; later only if we add earned income streams
+  }
+
+  // get rmd() {
+  //   return this.#fixedIncomeStreams.subjectRMD.asCurrency();
+  // }
 
   get miscTaxableIncome() {
-    return this.#fixedIncomeStreams.miscTaxableIncome.asCurrency();
+    return this.#fixedIncomeStreams.miscTaxableIncomeWithNoWithholdings.asCurrency();
   }
 
   get totalIncome() {
-    return this.#totalIncome.asCurrency();
+    return this.#actualIncome.asCurrency();
   }
 
   get nonTaxableIncome() {
-    return this.#ssCalculationDetails?.nonTaxableAmount.asCurrency() ?? 0;
+    throw new Error("nonTaxableIncome is not implemented yet");
+    // return this.#ssCalculationDetails?.nonTaxableAmount.asCurrency() ?? 0;
   }
 
   get grossIncome() {
+    return this.#grossRevenue.asCurrency();
+  }
+
+  get #grossRevenue() {
     return (
-      this.#fixedIncomeStreams.interestEarnedOnSavings +
-      this.pension +
-      this.rmd +
+      this.earnedIncomeGross +
+      this.combinedSocialSecurityGross +
+      this.combinedPensionGross +
       this.miscTaxableIncome +
-      this.trad401kWithdrawal +
-      (this.#ssCalculationDetails?.taxableAmount ?? 0)
+      this.#adjustableIncomeStreams.combined401kGrossWithdrawal +
+      this.combinedPensionGross +
+      this.interestEarnedOnSavings
     ).asCurrency();
   }
 
-  get adjustedGrossIncome() {
-    return this.grossIncome
-      .asCurrency() // + other adjustments if any
-      .asCurrency();
-  }
-
-  get #totalIncomeStreamGross() {
+  get #actualIncome() {
     return (
-      this.pension +
-      this.rmd +
+      this.interestEarnedOnSavings +
+      this.combinedPensionActualIncome +
       this.miscTaxableIncome +
-      this.trad401kWithdrawal +
-      this.#fixedIncomeStreams.subjectSsGross +
-      this.#fixedIncomeStreams.spouseSsGross +
-      this.#fixedIncomeStreams.interestEarnedOnSavings
+      this.#adjustableIncomeStreams.combined401kActualIncome +
+      this.combinedSocialSecurityActualIncome
     ).asCurrency();
   }
-
-  get #totalIncome() {
-    return (
-      this.#fixedIncomeStreams.interestEarnedOnSavings +
-      this.pension +
-      this.rmd +
-      this.miscTaxableIncome +
-      this.trad401kWithdrawal +
-      (this.#ssCalculationDetails?.totalSsBenefits ?? 0)
-    ).asCurrency();
-  }
-
-  // get adjustedGrossIncome() {
-  //   return (
-  //     this.#fixedIncomeStreams.interestEarnedOnSavings +
-  //     this.pension +
-  //     this.rmd +
-  //     this.miscTaxableIncome +
-  //     this.trad401kWithdrawal +
-  //     this.#ssCalculationDetails.taxableAmount
-  //   ).asCurrency();
-  // }
 
   get standardDeduction() {
     return this.#standardDeduction;
@@ -152,7 +153,7 @@ class IncomeBreakdown {
   // }
 
   get netIncome() {
-    return (this.#totalIncome - this.federalIncomeTax).asCurrency();
+    return (this.#actualIncome - this.federalIncomeTax).asCurrency();
   }
 
   get effectiveTaxRate() {
@@ -161,8 +162,8 @@ class IncomeBreakdown {
   }
 
   grossIncomeAmountAsPercentageOfTotalIncomeStreamGross(amount = 0) {
-    if (this.#totalIncomeStreamGross === 0) return 0;
-    return amount / this.#totalIncomeStreamGross;
+    if (this.#grossRevenue === 0) return 0;
+    return amount / this.#grossRevenue;
   }
 
   grossIncomeAmountAsPercentageOfNetIncome(amount = 0) {
@@ -180,33 +181,36 @@ class IncomeBreakdown {
     ).asCurrency();
   }
 
-  get trad401kNetIncome() {
-    return this.grossIncomeAmountAsPercentageOfNetIncome(
-      this.trad401kWithdrawal
-    );
+  get trad401kTakeHome() {
+    return this.#adjustableIncomeStreams.combined401kActualIncome;
+    // return this.grossIncomeAmountAsPercentageOfNetIncome(
+    //   this.combined401kWithdrawalsGross
+    // );
   }
 
-  get rmdNetIncome() {
-    return this.grossIncomeAmountAsPercentageOfNetIncome(this.rmd);
+  // get rmdNetIncome() {
+  //   return this.grossIncomeAmountAsPercentageOfNetIncome(this.rmd);
+  // }
+
+  get pensionTakeHome() {
+    return this.combinedPensionActualIncome;
+    // return this.grossIncomeAmountAsPercentageOfNetIncome(
+    //   this.combinedPensionGross
+    // );
   }
 
-  get pensionNetIncome() {
-    return this.grossIncomeAmountAsPercentageOfNetIncome(this.pension);
+  get socialSecurityTakeHome() {
+    return this.combinedSocialSecurityActualIncome;
   }
 
-  get socialSecurityNetIncome() {
-    return this.grossIncomeAmountAsPercentageOfNetIncome(
-      this.#ssCalculationDetails?.totalSsBenefits ?? 0
-    ).asCurrency();
+  get miscTaxableActualIncome() {
+    return this.miscTaxableIncome;
+    // this.grossIncomeAmountAsPercentageOfNetIncome(
+    //   this.miscTaxableIncome
+    // );
   }
 
-  get otherTaxableNetIncome() {
-    return this.grossIncomeAmountAsPercentageOfNetIncome(
-      this.miscTaxableIncome
-    );
-  }
-
-  get otherNonTaxableNetIncome() {
+  get miscNonTaxableActualIncome() {
     return this.#fixedIncomeStreams.taxFreeIncomeAdjustment.asCurrency();
   }
 
@@ -216,21 +220,33 @@ class IncomeBreakdown {
     );
   }
 
-  // Private utility methods for income breakdown analysis
-  #getTotalPensionIncome() {
-    return this.pension;
+  get combined401kWithdrawalsGross() {
+    return this.#adjustableIncomeStreams.combined401kGrossWithdrawal;
   }
 
-  #getTotalRetirementIncome() {
-    return this.rmd + this.trad401kWithdrawal;
+  get combinedSavingWithdrawals() {
+    return this.#adjustableIncomeStreams.savingsWithdrawal;
   }
+
+  get combinedRothWithdrawals() {
+    return this.#adjustableIncomeStreams.combinedRothGrossWithdrawal;
+  }
+
+  // Private utility methods for income breakdown analysis
+  #getTotalPensionIncome() {
+    return this.combinedPensionGross;
+  }
+
+  // #getTotalRetirementIncome() {
+  //   return this.#adjustableIncomeStreams.combined401kGrossWithdrawal;
+  // }
 
   getIncomeSourceBreakdown() {
     return {
       pension: this.#getTotalPensionIncome(),
-      socialSecurity: this.#ssCalculationDetails?.totalSsBenefits ?? 0, // Total SS income for breakdown
-      socialSecurityTaxable: this.#ssCalculationDetails?.taxableAmount ?? 0, // Just the taxable portion
-      retirement: this.#getTotalRetirementIncome(),
+      // socialSecurity: this.#ssCalculationDetails?.totalSsBenefits ?? 0, // Total SS income for breakdown
+      // socialSecurityTaxable: this.#ssCalculationDetails?.taxableAmount ?? 0, // Just the taxable portion
+      // retirement: this.#getTotalRetirementIncome(),
       earnedInterest: this.#fixedIncomeStreams.interestEarnedOnSavings,
       otherTaxable: this.miscTaxableIncome,
     };
@@ -245,14 +261,17 @@ class IncomeBreakdown {
   }
 
   get ssCalculationDetails() {
-    return this.#ssCalculationDetails;
+    throw new Error("ssCalculationDetails is not implemented yet");
+    // if (!this.#ssCalculationDetails) {
+    //   throw new Error("SS Calculation Details not available");
+    // }
+    // return this.#ssCalculationDetails;
   }
 
   // Factory method for backward compatibility and dependency injection
   /**
-   * @param {IncomeStreams} fixedIncomeStreams
-   * @param {number} variableIncomeStream
-   * @param {SocialSecurityBreakdown | null} ssCalculationDetails
+   * @param {FixedIncomeStreams} fixedIncomeStreams
+   * @param {AdjustableIncomeStreams} adjustableIncomeStreams
    * @param {Demographics} demographics
    * @param {FiscalData} fiscalData
    **/
@@ -260,15 +279,13 @@ class IncomeBreakdown {
 
   static CreateFrom(
     fixedIncomeStreams,
-    variableIncomeStream,
-    ssCalculationDetails,
+    adjustableIncomeStreams,
     demographics,
     fiscalData
   ) {
     return new IncomeBreakdown(
       fixedIncomeStreams,
-      variableIncomeStream,
-      ssCalculationDetails,
+      adjustableIncomeStreams,
       demographics,
       fiscalData
     );

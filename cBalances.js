@@ -22,10 +22,7 @@ class Balances {
    * @param {AccountingYear} accountYear -Accounting year
    * @param {string} [description="Account Balances"] - Descriptive label for this balance snapshot
    */
-  constructor(
-    accountYear,
-    description = "Account Balances"
-  ) {
+  constructor(accountYear, description = "Account Balances") {
     this._description = description;
     this.#accountYear = accountYear;
   }
@@ -35,11 +32,11 @@ class Balances {
   }
 
   get trad401k() {
-    return this.#accountYear.getEndingBalance(ACCOUNT_TYPES.TRAD_401K);
+    return this.#accountYear.getEndingBalance(ACCOUNT_TYPES.SUBJECT_401K);
   }
 
   get rothIra() {
-    return this.#accountYear.getEndingBalance(ACCOUNT_TYPES.TRAD_ROTH);
+    return this.#accountYear.getEndingBalance(ACCOUNT_TYPES.SUBJECT_ROTH_IRA);
   }
 
   //   /**

@@ -1,31 +1,4 @@
-// const TRANSACTION_TYPE = Object.freeze({
-//   DEPOSIT: "deposit",
-//   WITHDRAWAL: "withdrawal",
-// });
-
 import { EnumBase } from "./cEnum.js";
-
-// const TRANSACTION_CATEGORY = Object.freeze({
-//   INTEREST: "Interest",
-//   DISBURSEMENT: "Disbursement",
-//   RMD: "RMD",
-//   OVERAGE: "Overage",
-//   SHORTAGE: "Shortage",
-//   TRANSFER: "Transfer",
-//   CONTRIBUTION: "Contribution",
-//   INCOME: "Income",
-//   TAXES: "Taxes",
-//   SPEND: "Spend",
-//   SAVINGS: "Income from Savings",
-//   TRAD_401K: "Income from 401k",
-//   TRAD_ROTH: "Income from Roth IRA",
-//   OTHER_TAXABLE_INCOME: "Other Taxable Income",
-//   OTHER_NON_TAXABLE: "Other Non-Taxable Income",
-//   SOCIAL_SEC: "Income from Social Security",
-//   PENSION: "Income from Pensions",
-//   TAX_REFUND: "Tax Refund",
-//   TAX_PAYMENT: "Tax Payment",
-// });
 
 // -------------------------------------------------------------
 // TRANSACTION TYPE ENUM

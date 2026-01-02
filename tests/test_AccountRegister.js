@@ -616,7 +616,7 @@ runTest(
 runTest(
   "Account register with filtered transactions",
   () => {
-    const account = new Account(ACCOUNT_TYPES.TRAD_401K, 25000, 0.07); // 7% 401k
+    const account = new Account(ACCOUNT_TYPES.SUBJECT_401K, 25000, 0.07); // 7% 401k
 
     // Add various categories of transactions
     account.deposit(
@@ -691,7 +691,7 @@ runTest(
     const allRegister = account.buildAccountRegister(
       new Date(2023, 0, 1),
       new Date(2023, 11, 31),
-      null, // all categories
+      null // all categories
     );
 
     assertEqual(
@@ -709,7 +709,11 @@ runTest(
   () => {
     // Create different types of accounts
     const savingsAccount = new Account(ACCOUNT_TYPES.SAVINGS, 10000, 0.02);
-    const rothAccount = new Account(ACCOUNT_TYPES.TRAD_ROTH, 15000, 0.08);
+    const rothAccount = new Account(
+      ACCOUNT_TYPES.SUBJECT_ROTH_IRA,
+      15000,
+      0.08
+    );
 
     // Add transactions to savings
     savingsAccount.deposit(
@@ -835,14 +839,7 @@ runTest(
       5,
       "April expense"
     );
-    account.deposit(
-      400,
-      TransactionCategory.Income,
-      2023,
-      5,
-      25,
-      "May income"
-    );
+    account.deposit(400, TransactionCategory.Income, 2023, 5, 25, "May income");
 
     // Test Q1 register (Jan-Mar)
     const q1Register = account.buildAccountRegister(

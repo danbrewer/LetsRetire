@@ -57,7 +57,7 @@ class Disbursements {
   get trad401k() {
     return this.#accountYear
       .getWithdrawals(
-        ACCOUNT_TYPES.TRAD_401K,
+        ACCOUNT_TYPES.SUBJECT_401K,
         TransactionCategory.Disbursement
       )
       .asCurrency();
@@ -70,7 +70,7 @@ class Disbursements {
   get roth() {
     return this.#accountYear
       .getWithdrawals(
-        ACCOUNT_TYPES.TRAD_ROTH,
+        ACCOUNT_TYPES.SUBJECT_ROTH_IRA,
         TransactionCategory.Disbursement
       )
       .asCurrency();

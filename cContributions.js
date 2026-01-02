@@ -33,7 +33,7 @@ class Contributions {
 
   get tradRoth() {
     return this.#accountYear.getDeposits(
-      ACCOUNT_TYPES.TRAD_ROTH,
+      ACCOUNT_TYPES.SUBJECT_ROTH_IRA,
       TransactionCategory.Contribution
     );
   }
@@ -47,7 +47,7 @@ class Contributions {
 
   get trad401k() {
     return this.#accountYear.getDeposits(
-      ACCOUNT_TYPES.TRAD_401K,
+      ACCOUNT_TYPES.SUBJECT_401K,
       TransactionCategory.Contribution
     );
   }

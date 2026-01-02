@@ -1,5 +1,5 @@
 import { Demographics } from "./cDemographics.js";
-import { IncomeStreams } from "./cIncomeStreams.js";
+import { FixedIncomeStreams } from "./cFixedIncomeStreams.js";
 import { SocialSecurityBreakdown } from "./cSsCalculationDetails.js";
 
 class SsBenefitsCalculator {
@@ -83,7 +83,7 @@ class SsBenefitsCalculator {
 
   /**
    * @param {Demographics} demographics
-   * @param {IncomeStreams} incomeStreams
+   * @param {FixedIncomeStreams} incomeStreams
    * @param {Number} taxableNonSsIncome
    * @returns {SocialSecurityBreakdown}
    */
