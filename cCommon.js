@@ -58,6 +58,49 @@ class Common {
     return (retirementAccountBalance / factor).asCurrency();
   }
 
+  /**
+   * @param {number} gross401kAmount
+   * @param {number} withholdingRate
+   * @returns {number}
+   */
+  static determineActual401kFromGross(gross401kAmount, withholdingRate) {
+    const taxWithheld = gross401kAmount * withholdingRate;
+    const actual401kAmount = gross401kAmount - taxWithheld;
+
+    return actual401kAmount;
+  }
+
+  /**
+   * @param {number} actual401kAmount
+   * @param {number} withholdingRate
+   * @returns {number}
+   */
+  static determineGross401kFromActual(actual401kAmount, withholdingRate) {
+    /* Reverse calculation to find gross amount needed to yield actual amount after tax withholding
+      
+      G: Gross Amount
+      W: Withholding Rate
+      A: Actual Amount
+  
+      A = G - (G * W)
+      A = G * (1 - W)
+  
+      Therefore,
+  
+      G = A / (1 - W)
+  
+      Or in terms of our variable names:
+      
+      grossAmt - (grossAmt * withholdingRate) = actual401kAmount
+      grossAmt * (1 - withholdingRate) = actual401kAmount
+      grossAmt = actual401kAmount / (1 - withholdingRate)
+      */
+
+    const gross401kAmount = actual401kAmount / (1 - withholdingRate);
+
+    return gross401kAmount;
+  }
+
   // Function to calculate initial benefit amounts for retirement
   /**
    * @param {Inputs} inputs

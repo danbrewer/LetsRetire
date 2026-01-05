@@ -122,7 +122,7 @@ class RetirementYearCalculator {
 
     // Build complete taxable income picture for withdrawal functions
 
-    this.#withdrawalFactory.processWithdrawals();
+    this.#withdrawalFactory.processIncome();
 
     const incomeBreakdown = this.#withdrawalFactory.getFinalIncomeBreakdown();
 

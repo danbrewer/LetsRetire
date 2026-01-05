@@ -48,16 +48,16 @@ class IncomeBreakdown {
     return this.#fixedIncomeStreams.interestEarnedOnSavings.asCurrency();
   }
 
-  get combinedSocialSecurityGross() {
+  get combinedSocialSecGross() {
     return this.#fixedIncomeStreams.combinedSsGross.asCurrency();
     // #ssCalculationDetails?.totalSsBenefits.asCurrency() ?? 0;
   }
 
-  get combinedSoecialSecurityWithholdings() {
+  get combinedSocialSecWithholdings() {
     return this.#fixedIncomeStreams.combinedGrossSsWithholdings.asCurrency();
   }
 
-  get combinedSocialSecurityActualIncome() {
+  get combinedSocialSecActualIncome() {
     return this.#fixedIncomeStreams.combinedSsActualIncome.asCurrency();
   }
 
@@ -109,7 +109,7 @@ class IncomeBreakdown {
   get #grossRevenue() {
     return (
       this.earnedIncomeGross +
-      this.combinedSocialSecurityGross +
+      this.combinedSocialSecGross +
       this.combinedPensionGross +
       this.miscTaxableIncome +
       this.#adjustableIncomeStreams.combined401kGrossWithdrawal +
@@ -124,7 +124,7 @@ class IncomeBreakdown {
       this.combinedPensionActualIncome +
       this.miscTaxableIncome +
       this.#adjustableIncomeStreams.combined401kActualIncome +
-      this.combinedSocialSecurityActualIncome
+      this.combinedSocialSecActualIncome
     ).asCurrency();
   }
 
@@ -200,7 +200,7 @@ class IncomeBreakdown {
   }
 
   get socialSecurityTakeHome() {
-    return this.combinedSocialSecurityActualIncome;
+    return this.combinedSocialSecActualIncome;
   }
 
   get miscTaxableActualIncome() {

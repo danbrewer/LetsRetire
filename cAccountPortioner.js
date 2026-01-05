@@ -62,8 +62,6 @@ const ProportionStrategy = new ProportionStrategyEnum();
  */
 
 class AccountPortioner {
-  #ask = 0;
-
   /** @type {AccountingYear} */
   #accountYear;
   /** @type {FiscalData} */
@@ -77,7 +75,14 @@ class AccountPortioner {
   /** @type {number} */
   #trad401kWithdrawal = 0;
 
-  get trad401kWithdrawal() {
+  /** @type {number} */
+  #totalActualWithdrawals = 0;
+
+  get totalActualWithdrawals() {
+    return this.#totalActualWithdrawals;
+  }
+
+  get trad401kGrossWithdrawal() {
     return this.#trad401kWithdrawal.asCurrency();
   }
 
@@ -122,101 +127,73 @@ class AccountPortioner {
   calculatePortions(ask) {
     if (ask <= 0) return;
 
-    const gross401kAvailable = this.#fiscalData.useTrad401k
-      ? this.#accountYear.getEndingBalance(ACCOUNT_TYPES.SUBJECT_401K)
+    const trad401kBalance = this.#fiscalData.useTrad401k
+      ? this.#accountYear.getStartingBalance(ACCOUNT_TYPES.SUBJECT_401K)
       : 0;
+    const flat401kWithholdingRate =
+      this.#fiscalData.flatTrad401kWithholdingRate ?? 0;
 
-    const savingsAvailable = this.#savingsAvailable();
-    const tradRothAvailable = this.#tradRothAvailable();
-    const actual401kAvailable =
-      this.#determineActual401kFromGross(gross401kAvailable);
+    const availableSavings = this.#savingsAvailable();
+    const availableRoth = this.#tradRothAvailable();
+    const availableActualized401k = Common.determineActual401kFromGross(
+      trad401kBalance,
+      flat401kWithholdingRate
+    );
+    let totalFundsAvailable =
+      availableSavings + availableActualized401k + availableRoth;
 
-    let totalPoolAvailable =
-      savingsAvailable + actual401kAvailable + tradRothAvailable;
+    if (totalFundsAvailable <= 0) return;
 
-    if (totalPoolAvailable <= 0) return;
-
-    this.#ask = ask;
-
+    // Satisfy any RMD requirement
     const gross401kRMD = Common.calculateRMD(
       this.#fiscalData.useRmd,
       this.#demographics.currentAge,
       this.#accountYear.getStartingBalance(ACCOUNT_TYPES.SUBJECT_401K)
     );
-
-    const actual401kRMD = this.#determineActual401kFromGross(gross401kRMD);
-
-    let actual401kPortionOfAsk =
-      ask * (actual401kAvailable / totalPoolAvailable);
-
-    // ensure RMD is met
-    if (actual401kRMD > actual401kPortionOfAsk.asCurrency()) {
-      actual401kPortionOfAsk = actual401kRMD;
-    }
-    this.#trad401kWithdrawal = this.#determineGross401kFromActual(
-      actual401kPortionOfAsk
+    const actualized401kRMD = Common.determineActual401kFromGross(
+      gross401kRMD,
+      flat401kWithholdingRate
     );
 
-    ask -= actual401kPortionOfAsk.asCurrency();
-    totalPoolAvailable = savingsAvailable + tradRothAvailable;
+    const pctThatIsActualized401k =
+      availableActualized401k / totalFundsAvailable;
+    let actualized401kPortionOfAsk = ask * pctThatIsActualized401k;
 
-    if (totalPoolAvailable <= 0) return;
+    // Take the higher of the calculated portion or the RMD amount to
+    const actualized401kPortion = Math.max(
+      actualized401kPortionOfAsk,
+      actualized401kRMD
+    );
+
+    const withdrawFrom401kGross = Common.determineGross401kFromActual(
+      actualized401kPortion,
+      this.#fiscalData.flatTrad401kWithholdingRate ?? 0
+    );
+    this.#trad401kWithdrawal = withdrawFrom401kGross;
+
+    ask -= actualized401kPortion.asCurrency();
+
+    totalFundsAvailable = availableSavings + availableRoth;
+    const pctThatIsSavings = availableSavings / totalFundsAvailable;
+    const pctThatIsRoth = availableRoth / totalFundsAvailable;
+
+    if (totalFundsAvailable <= 0) return;
     if (ask <= 0) return;
 
-    const savingsPortionOfAsk = ask * (savingsAvailable / totalPoolAvailable);
-    this.#savingsWithdrawal = savingsPortionOfAsk;
+    const withdrawFromSavings = ask * pctThatIsSavings;
+    this.#savingsWithdrawal = withdrawFromSavings;
 
-    const rothPortionOfAsk = ask - savingsPortionOfAsk.asCurrency();
-    this.#rothIraWithdrawal = rothPortionOfAsk;
+    const withdrawFromRoth = ask * pctThatIsRoth;
+    this.#rothIraWithdrawal = withdrawFromRoth;
+
+    this.#totalActualWithdrawals =
+      actualized401kPortion + withdrawFromSavings + withdrawFromRoth;
   }
 
   #savingsAvailable() {
     return this.#fiscalData.useSavings
       ? this.#accountYear.getEndingBalance(ACCOUNT_TYPES.SAVINGS)
       : 0;
-  }
-
-  /**
-   * @param {number} gross401kAmount
-   * @returns {number}
-   */
-  #determineActual401kFromGross(gross401kAmount) {
-    const flatRate = this.#fiscalData.flatTrad401kWithholdingRate ?? 0;
-    const taxWithheld = gross401kAmount * flatRate;
-    const actual401kAmount = gross401kAmount - taxWithheld;
-
-    return actual401kAmount;
-  }
-
-  /**
-   * @param {number} actual401kAmount
-   * @returns {number}
-   */
-  #determineGross401kFromActual(actual401kAmount) {
-    /* Reverse calculation to find gross amount needed to yield actual amount after tax withholding
-    
-    G: Gross Amount
-    W: Withholding Rate
-    A: Actual Amount
-
-    A = G - (G * W)
-    A = G * (1 - W)
-
-    Therefore,
-
-    G = A / (1 - W)
-
-    Or in terms of our variable names:
-    
-    grossAmt - (grossAmt * withholdingRate) = actual401kAmount
-    grossAmt * (1 - withholdingRate) = actual401kAmount
-    grossAmt = actual401kAmount / (1 - withholdingRate)
-    */
-
-    const withholdingRate = this.#fiscalData.flatTrad401kWithholdingRate ?? 0;
-    const gross401kAmount = actual401kAmount / (1 - withholdingRate);
-
-    return gross401kAmount;
   }
 
   // #actual401kAvailable() {
