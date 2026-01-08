@@ -131,11 +131,6 @@ class FixedIncomeStreams {
    * @returns {FixedIncomeStreams} New IncomeStreams instance
    */
   static CreateUsing(demographics, accountYear, fiscalData, inputs) {
-    const rmd = Common.calculateRMD(
-      fiscalData.useRmd,
-      demographics.currentAge,
-      accountYear.getStartingBalance(ACCOUNT_TYPES.SUBJECT_401K)
-    );
 
     return new FixedIncomeStreams(
       demographics,
@@ -214,12 +209,11 @@ class FixedIncomeStreams {
     return total.asCurrency();
   }
 
-  get incomeBreakdown() {
+  get fixedIncomeBreakdown() {
     return {
       wagesAndCompensation: this.wagesAndCompensationGross,
       pension: this.combinedPensionGross,
       socialSecurity: this.combinedSsGross,
-      // rmd: this.subjectRMD,
       earnedInterest: this.interestEarnedOnSavings,
       taxableAdjustments: this.miscTaxableIncomeWithNoWithholdings,
       taxFreeAdjustments: this.taxFreeIncomeAdjustment,

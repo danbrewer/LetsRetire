@@ -35,7 +35,7 @@ class AccountingYear {
    * @param {string} [party]
    */
   deposit(accountName, category, amount, month = 1, day = 1, party = "") {
-    const account = this.#accountsManager.getAccountByName(accountName);
+    const account = this.#accountsManager.getAccountByType(accountName);
     if (account) {
       account.deposit(amount, category, this.taxYear, month, day, party);
     } else {
@@ -61,7 +61,7 @@ class AccountingYear {
    * @param {string} [party]
    */
   withdrawal(accountName, category, amount, month = 1, day = 1, party = "") {
-    const account = this.#accountsManager.getAccountByName(accountName);
+    const account = this.#accountsManager.getAccountByType(accountName);
     if (account) {
       account.withdrawal(amount, category, this.taxYear, month, day, party);
     } else {
@@ -73,7 +73,7 @@ class AccountingYear {
    * @param {string} accountName
    */
   #getAccountByName(accountName) {
-    const account = this.#accountsManager.getAccountByName(accountName);
+    const account = this.#accountsManager.getAccountByType(accountName);
     if (!account) {
       throw new Error(`Account not found: ${accountName}`);
     }
@@ -85,7 +85,7 @@ class AccountingYear {
    * @param {TransactionCategorySymbol | undefined} [category]
    */
   getWithdrawals(accountType, category) {
-    const account = this.#accountsManager.getAccountByName(accountType);
+    const account = this.#accountsManager.getAccountByType(accountType);
     if (account) {
       return account.withdrawalsForYear(this.taxYear, category);
     } else {
@@ -106,7 +106,7 @@ class AccountingYear {
    * @param {string} accountName
    */
   getStartingBalance(accountName) {
-    const account = this.#accountsManager.getAccountByName(accountName);
+    const account = this.#accountsManager.getAccountByType(accountName);
     if (account) {
       return account.startingBalanceForYear(this.taxYear);
     } else {
@@ -118,7 +118,7 @@ class AccountingYear {
    * @param {string} accountName
    */
   getEndingBalance(accountName) {
-    const account = this.#accountsManager.getAccountByName(accountName);
+    const account = this.#accountsManager.getAccountByType(accountName);
     if (account) {
       return account.endingBalanceForYear(this.taxYear).asCurrency();
     } else {
@@ -146,7 +146,7 @@ class AccountingYear {
   getAvailableFunds(accountNames) {
     let total = 0;
     for (const name of accountNames) {
-      const account = this.#accountsManager.getAccountByName(name);
+      const account = this.#accountsManager.getAccountByType(name);
       if (account) {
         total += Math.max(account.endingBalanceForYear(this.taxYear), 0);
       } else {
@@ -246,21 +246,21 @@ class AccountingYear {
   }
 
   /**
-   * @param {string} name
+   * @param {string} accountType
    */
-  getAccountByName(name) {
-    return this.#accountsManager.getAccountByName(name);
+  getAccountByType(accountType) {
+    return this.#accountsManager.getAccountByType(accountType);
   }
 
   /**
-   * @param {string} accountName
+   * @param {string} accountType
    */
-  getAccountTransactions(accountName) {
-    const account = this.#getAccountByName(accountName);
+  getAccountTransactions(accountType) {
+    const account = this.#getAccountByName(accountType);
     if (account) {
       return account.getTransactionsForYear(this.taxYear);
     } else {
-      throw new Error(`Account not found: ${accountName}`);
+      throw new Error(`Account not found: ${accountType}`);
     }
   }
 

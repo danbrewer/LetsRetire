@@ -72,6 +72,7 @@ class Inputs {
     spouseSsCola = 0,
     spousePenMonthly = 0,
     spousePenStartAge = 0,
+    spouse401kStartAge = 0,
     spousePenCola = 0,
     spouseTaxSS = 0,
     spouseTaxPension = 0,
@@ -154,6 +155,9 @@ class Inputs {
 
     /** @type {number} */
     this.spousePenStartAge = spousePenStartAge;
+
+    /** @type {number} */
+    this.spouse401kStartAge = spouse401kStartAge;
 
     /** @type {number} */
     this.spousePenCola = spousePenCola;
@@ -540,6 +544,7 @@ class Inputs {
       this.spouseSsCola,
       this.spousePenMonthly,
       this.spousePenStartAge,
+      this.spouse401kStartAge,
       this.spousePenCola,
       this.spouseTaxSS,
       this.spouseTaxPension,

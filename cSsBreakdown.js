@@ -10,46 +10,81 @@
  * @since 1.0.0
  */
 class SocialSecurityBreakdown {
+  /** @param {string} method
+   * @param {Number} excessOverTier1
+   * @param {Number} excessOverTier2
+   * @param {Number} taxableSsInTier1
+   * @param {Number} taxableSsInTier2
+   * @param {Number} taxablePortion
+   */
+
+  updateCalculatedValues(
+    method,
+    excessOverTier1,
+    excessOverTier2,
+    taxableSsInTier1,
+    taxableSsInTier2,
+    taxablePortion
+  ) {
+    this.#method = method;
+    this.#incomeExceedingTier1 = excessOverTier1;
+    this.#incomeExceedingTier2 = excessOverTier2;
+    this.#tier1TaxableAmount = taxableSsInTier1;
+    this.#tier2TaxableAmount = taxableSsInTier2;
+    this.taxablePortion = taxablePortion;
+  }
   /** @type {Number} */
-  tier1Threshold = 0;
+  #tier1Threshold = 0;
 
   /** @type {Number} */
-  tier2Threshold = 0;
+  #tier2Threshold = 0;
+
+  /** type {string} */
+  #method = "";
 
   /** @type {Number} */
-  incomeExceedingTier1 = 0;
+  #incomeExceedingTier1 = 0;
 
   /** @type {Number} */
-  incomeExceedingTier2 = 0;
+  #incomeExceedingTier2 = 0;
 
   /** @type {Number} */
-  tier1TaxableAmount = 0;
+  #tier1TaxableAmount = 0;
 
   /** @type {Number} */
-  tier2TaxableAmount = 0;
+  #tier2TaxableAmount = 0;
 
   /** @type {Number} */
-  taxableAmount = 0;
+  taxablePortion = 0;
+
+  /** @type {Number} */
+  #subjectBenefits = 0;
+
+  /** @type {Number} */
+  #partnerBenefits = 0;
+
+  /** @type {Number} */
+  #otherTaxableIncome = 0;
 
   /**
    * Creates a new SsCalculationDetails instance with comprehensive calculation data.
    * @param {number} subjectBenefits
    * @param {number} partnerBenefits
    * @param {number} otherTaxableIncome
-   * @param {boolean} hasSpouse
+   * @param {boolean} marriedFilingJointly
    */
-  constructor(subjectBenefits, partnerBenefits, otherTaxableIncome, hasSpouse) {
+  constructor(subjectBenefits, partnerBenefits, otherTaxableIncome, marriedFilingJointly) {
     this._description = "Social Security Taxation Calculation Details";
-    this.method = "irs-rules";
-    this.subjectBenefits = subjectBenefits;
-    this.partnerBenefits = partnerBenefits;
-    this.otherTaxableIncome = otherTaxableIncome;
-    this.tier1Threshold = hasSpouse ? 32000 : 25000;
-    this.tier2Threshold = hasSpouse ? 44000 : 34000;
+    this.#method = "irs-rules";
+    this.#subjectBenefits = subjectBenefits;
+    this.#partnerBenefits = partnerBenefits;
+    this.#otherTaxableIncome = otherTaxableIncome;
+    this.#tier1Threshold = marriedFilingJointly ? 32000 : 25000;
+    this.#tier2Threshold = marriedFilingJointly ? 44000 : 34000;
   }
 
   get totalSsBenefits() {
-    const totalBenefits = this.subjectBenefits + this.partnerBenefits;
+    const totalBenefits = this.#subjectBenefits + this.#partnerBenefits;
     return totalBenefits.asCurrency();
   }
 
@@ -66,7 +101,7 @@ class SocialSecurityBreakdown {
   }
 
   get provisionalIncome() {
-    return (this.benefits_50pct + this.otherTaxableIncome).asCurrency();
+    return (this.benefits_50pct + this.#otherTaxableIncome).asCurrency();
   }
 
   /**
@@ -75,9 +110,9 @@ class SocialSecurityBreakdown {
    * @returns {string} Taxation tier: "none", "tier1", or "tier2"
    */
   get taxationTier() {
-    if (this.provisionalIncome <= this.tier1Threshold) {
+    if (this.provisionalIncome <= this.#tier1Threshold) {
       return "none";
-    } else if (this.provisionalIncome <= this.tier2Threshold) {
+    } else if (this.provisionalIncome <= this.#tier2Threshold) {
       return "tier1";
     } else {
       return "tier2";
@@ -91,7 +126,7 @@ class SocialSecurityBreakdown {
    */
   get taxablePercentage() {
     if (this.totalSsBenefits === 0) return 0;
-    return this.taxableAmount / this.totalSsBenefits;
+    return this.taxablePortion / this.totalSsBenefits;
   }
 
   /**
@@ -100,27 +135,47 @@ class SocialSecurityBreakdown {
    * @returns {number} Non-taxable Social Security amount
    */
   get nonTaxableAmount() {
-    return this.totalSsBenefits - this.taxableAmount;
+    return this.totalSsBenefits - this.taxablePortion;
   }
 
   get subjectPortion() {
-    return this.subjectBenefits.asPercentageOf(this.totalSsBenefits);
+    return this.#subjectBenefits.asPercentageOf(this.totalSsBenefits);
   }
 
   get subjectTaxablePortion() {
-    return (this.subjectPortion * this.taxableAmount).asCurrency();
+    return (this.subjectPortion * this.taxablePortion).asCurrency();
   }
 
   get subjectNonTaxablePortion() {
     return (this.subjectPortion * this.nonTaxableAmount).asCurrency();
   }
 
+  get tier1Threshold() {
+    return this.#tier1Threshold;
+  }
+
+  get tier2Threshold() {
+    return this.#tier2Threshold;
+  }
+
+  get taxableAmount() {
+    return this.taxablePortion;
+  }
+
+  get subjectBenefits() {
+    return this.#subjectBenefits.asCurrency();
+  }
+
+  get partnerBenefits() {
+    return this.#partnerBenefits.asCurrency();
+  }
+
   get partnerPortion() {
-    return this.partnerBenefits.asPercentageOf(this.totalSsBenefits);
+    return this.#partnerBenefits.asPercentageOf(this.totalSsBenefits);
   }
 
   get partnerTaxablePortion() {
-    return (this.partnerPortion * this.taxableAmount).asCurrency();
+    return (this.partnerPortion * this.taxablePortion).asCurrency();
   }
 
   get partnerNonTaxablePortion() {
@@ -131,6 +186,26 @@ class SocialSecurityBreakdown {
     return this.totalSsBenefits > 0;
   }
 
+  get method() {
+    return this.#method;
+  }
+
+  get incomeExceedingTier1() {
+    return this.#incomeExceedingTier1;
+  }
+
+  get incomeExceedingTier2() {
+    return this.#incomeExceedingTier2;
+  }
+
+  get tier1TaxableAmount() {
+    return this.#tier1TaxableAmount;
+  }
+
+  get tier2TaxableAmount() {
+    return this.#tier2TaxableAmount;
+  }
+
   /**
    * Validates that the calculation follows IRS rules correctly.
    *
@@ -138,12 +213,12 @@ class SocialSecurityBreakdown {
    */
   get isCalculationValid() {
     // Basic validation checks
-    if (this.taxableAmount < 0 || this.taxableAmount > this.totalSsBenefits) {
+    if (this.taxablePortion < 0 || this.taxablePortion > this.totalSsBenefits) {
       return false;
     }
 
     // Provisional income should equal half SS + other taxable income
-    const expectedProvisional = this.benefits_50pct + this.otherTaxableIncome;
+    const expectedProvisional = this.benefits_50pct + this.#otherTaxableIncome;
     if (Math.abs(this.provisionalIncome - expectedProvisional) > 0.01) {
       return false;
     }

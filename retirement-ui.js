@@ -2493,6 +2493,7 @@ function parseInputParameters() {
   const spouseSsCola = pct(num("spouseSsCola"));
   const spousePenMonthly = num("spousePenMonthly");
   const spousePenStartAge = num("spousePenStartAge");
+  const spouse401kStartAge = num("spouse401kStartAge");
   const spousePenCola = pct(num("spousePenCola"));
   const spouseTaxSS = pct(num("spouseTaxSS"));
   const spouseTaxPension = pct(num("spouseTaxPension"));
@@ -2545,6 +2546,7 @@ function parseInputParameters() {
     spouseSsCola,
     spousePenMonthly,
     spousePenStartAge,
+    spouse401kStartAge,
     spousePenCola,
     spouseTaxSS,
     spouseTaxPension,
@@ -3041,6 +3043,7 @@ function loadExample() {
     spouseSsCola: 0.0,
     spousePenMonthly: 500,
     spousePenStartAge: 65,
+    spouse401kStartAge: 62,
     spousePenCola: 0,
     spouseTaxSS: 10,
     spouseTaxPension: 20,

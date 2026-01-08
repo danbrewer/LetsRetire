@@ -63,7 +63,7 @@ class Common {
    * @param {number} withholdingRate
    * @returns {number}
    */
-  static determineActual401kFromGross(gross401kAmount, withholdingRate) {
+  static convertGross401kToActual401k(gross401kAmount, withholdingRate) {
     const taxWithheld = gross401kAmount * withholdingRate;
     const actual401kAmount = gross401kAmount - taxWithheld;
 
@@ -75,7 +75,7 @@ class Common {
    * @param {number} withholdingRate
    * @returns {number}
    */
-  static determineGross401kFromActual(actual401kAmount, withholdingRate) {
+  static convertActual401kToGross401k(actual401kAmount, withholdingRate) {
     /* Reverse calculation to find gross amount needed to yield actual amount after tax withholding
       
       G: Gross Amount

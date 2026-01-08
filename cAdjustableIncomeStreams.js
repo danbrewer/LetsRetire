@@ -44,7 +44,7 @@ class AdjustableIncomeStreams {
     this._description = "AdjustableIncomeStreams";
   }
 
-  get subjectRMD() {
+  get subject401kRMD() {
     return Common.calculateRMD(
       this.#fiscalData.useRmd,
       this.#demographics.currentAge,
@@ -52,7 +52,7 @@ class AdjustableIncomeStreams {
     );
   }
 
-  get spouseRMD() {
+  get spouse401kRMD() {
     return Common.calculateRMD(
       this.#fiscalData.useRmd,
       this.#demographics.currentAgeOfPartner,
@@ -60,17 +60,12 @@ class AdjustableIncomeStreams {
     );
   }
 
-  get combinedRMD() {
-    return this.subjectRMD + this.spouseRMD;
-  }
-
-  get subject401kGrossWithdrawal() {
+  get subjectActual401kGrossWithdrawal() {
     return this.#subject401kWithdrawalGross.asCurrency();
   }
 
-  set subject401kGrossWithdrawal(value) {
+  set subjectActual401kGrossWithdrawal(value) {
     this.#subject401kWithdrawalGross = value;
-    // should this trigger a recalculation of dependent values?
   }
 
   get subject401kWithholdings() {
@@ -82,7 +77,7 @@ class AdjustableIncomeStreams {
 
   get subject401kActualIncome() {
     return (
-      this.subject401kGrossWithdrawal - this.subject401kWithholdings
+      this.subjectActual401kGrossWithdrawal - this.subject401kWithholdings
     ).asCurrency();
   }
 
@@ -97,8 +92,7 @@ class AdjustableIncomeStreams {
 
   get spouse401kWithholdings() {
     return (
-      this.#inputs.flatTrad401kWithholdingRate *
-      this.#spouse401kWithdrawalGross
+      this.#inputs.flatTrad401kWithholdingRate * this.#spouse401kWithdrawalGross
     ).asCurrency();
   }
 
@@ -110,7 +104,7 @@ class AdjustableIncomeStreams {
 
   get combined401kGrossWithdrawal() {
     return (
-      this.subject401kGrossWithdrawal + this.spouse401kGrossWithdrawal
+      this.subjectActual401kGrossWithdrawal + this.spouse401kGrossWithdrawal
     ).asCurrency();
   }
 
@@ -135,7 +129,6 @@ class AdjustableIncomeStreams {
 
   set subjectRothGrossWithdrawal(value) {
     this.#subjectRothWithdrawalGross = value;
-    // should this trigger a recalculation of dependent values?
   }
 
   get spouseRothGrossWithdrawal() {
@@ -157,8 +150,8 @@ class AdjustableIncomeStreams {
     return this.#subject401kWithdrawalGross.asCurrency();
   }
 
-  get combinedGrossAdjustableIncome() {
-    return this.combinedRMD;
+  get grossIncomeSubjectToTaxation() {
+    return this.combined401kWithdrawalsGross;
   }
 }
 

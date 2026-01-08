@@ -266,7 +266,7 @@ class WorkingYearIncome {
       this.#demographics
     );
 
-    this.#withholdings = incomeTaxes.totalTaxes.asCurrency();
+    this.#withholdings = incomeTaxes.federalTaxesOwed.asCurrency();
 
     // Estimate tax withholdings
     this.#withholdingsAccount.processAsPeriodicDeposits(
@@ -286,7 +286,7 @@ class WorkingYearIncome {
       this.#demographics
     );
 
-    this.#taxesDue = actualTaxes.totalTaxes.asCurrency();
+    this.#taxesDue = actualTaxes.federalTaxesOwed.asCurrency();
 
     this.#taxOverpayment = Math.max(
       this.#withholdingsAccount

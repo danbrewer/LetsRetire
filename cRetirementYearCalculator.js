@@ -124,7 +124,9 @@ class RetirementYearCalculator {
 
     this.#withdrawalFactory.processIncome();
 
-    const incomeBreakdown = this.#withdrawalFactory.getFinalIncomeBreakdown();
+    const incomeBreakdown = this.#withdrawalFactory.incomeBreakdown;
+    const ssBreakdown = this.#withdrawalFactory.ssBreakdown;
+    const taxes = this.#withdrawalFactory.taxes;
 
     // For Social Security breakdown, we still need some manual calculation since we need separate spouse results
     // But we can use the taxable amounts from retirement.js
@@ -140,11 +142,8 @@ class RetirementYearCalculator {
       // portionOfTotalBenefits:
       //   incomeBreakdown.ssCalculationDetails?.subjectPortion,
       calculationDetails: [
-        withLabel(
-          "incomeResults.ssCalculationDetails",
-          incomeBreakdown.ssCalculationDetails
-        ),
-        withLabel("incomeStreams", this.#fixedIncomeStreams),
+        withLabel("ssBreakdown", ssBreakdown),
+        // withLabel("incomeStreams", this.#fixedIncomeStreams),
       ],
     };
 
@@ -157,8 +156,8 @@ class RetirementYearCalculator {
     const totals = {
       _description: "Totals Breakdown",
       reportableIncome: incomeBreakdown.grossIncome,
-      taxableIncome: incomeBreakdown.taxableIncome,
-      netIncome: incomeBreakdown.netIncome, // getNetIncomeMinusReportedEarnedInterest,
+      taxableIncome: incomeBreakdown.adjustedGrossIncome,
+      netIncome: incomeBreakdown.actualIncome, // getNetIncomeMinusReportedEarnedInterest,
       calculationDetails: [withLabel("incomeResults", incomeBreakdown)],
     };
 
@@ -225,10 +224,10 @@ class RetirementYearCalculator {
       //   incomeBreakdown.ssCalculationDetails?.partnerPortion,
       calculationDetails: [
         withLabel(
-          "incomeResults.ssCalculationDetails",
-          incomeBreakdown.ssCalculationDetails
+          "ssBreakdown",
+          ssBreakdown //incomeBreakdown.ssCalculationDetails
         ),
-        withLabel("incomeStreams", this.#fixedIncomeStreams),
+        // withLabel("incomeStreams", this.#fixedIncomeStreams),
       ],
     };
 
@@ -246,7 +245,9 @@ class RetirementYearCalculator {
       this.#demographics,
       this.#fiscalData,
       this.#accountYear,
-      incomeBreakdown
+      incomeBreakdown,
+      ssBreakdown,
+      taxes
     );
     // demographics,
     // fiscalData,

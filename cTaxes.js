@@ -22,7 +22,7 @@ class Taxes {
    * @param {number} adjustedGrossIncome - Gross income after adjustments (if any)
    * @param {number} standardDeduction - Standard deduction amount based on filing status and year
    * @param {number}  taxableIncome - Income subject to federal taxation after deductions
-   * @param {number} federalTaxesOwed - Federal income tax liability calculated from tax brackets
+   * @param {number} federalTaxesOwed - Federal tax liability based on taxable income
    * @param {number} otherTaxes - Additional taxes (state, local, FICA, etc.)
    * @param {string} [description="Taxes"] - Descriptive label for this tax calculation
    */
@@ -72,34 +72,24 @@ class Taxes {
     return this.federalTaxesOwed / this.totalTaxableIncome;
   }
 
-  /**
-   * Calculates the marginal tax rate based on taxable income and standard deduction.
-   * Note: This is a simplified calculation - actual marginal rate would require tax bracket analysis.
-   *
-   * @returns {number} Approximate marginal tax rate as decimal
-   */
-  get marginalTaxRate() {
-    if (this.taxableIncome === 0) return 0;
-    return this.federalTaxesOwed / this.taxableIncome;
-  }
+  // /**
+  //  * Gets the total tax burden including federal and other taxes.
+  //  *
+  //  * @returns {number} Total taxes owed from all sources
+  //  */
+  // get totalTaxes() {
+  //   return 0;
+  //   // return this.federalTaxesOwed + this.otherTaxes;
+  // }
 
-  /**
-   * Gets the total tax burden including federal and other taxes.
-   *
-   * @returns {number} Total taxes owed from all sources
-   */
-  get totalTaxes() {
-    return this.federalTaxesOwed + this.otherTaxes;
-  }
-
-  /**
-   * Calculates net income after all taxes.
-   *
-   * @returns {number} Gross income minus total taxes
-   */
-  get netIncome() {
-    return this.totalTaxableIncome - this.totalTaxes;
-  }
+  // /**
+  //  * Calculates net income after all taxes.
+  //  *
+  //  * @returns {number} Gross income minus total taxes
+  //  */
+  // get netIncome() {
+  //   return this.totalTaxableIncome - this.totalTaxes;
+  // }
 
   // /**
   //  * Creates a summary object with key tax metrics.
@@ -165,27 +155,27 @@ class Taxes {
   /**
    * @param {IncomeBreakdown} incomeBreakdown
    */
-  static CreateUsing(incomeBreakdown) {
-    return new Taxes(
-      incomeBreakdown.totalIncome,
-      incomeBreakdown.grossIncome,
-      incomeBreakdown.standardDeduction,
-      incomeBreakdown.taxableIncome,
-      incomeBreakdown.federalIncomeTax,
-      0, // otherTaxes - to be calculated later
-      "Taxes"
-    );
-  }
+  // static CreateUsing(incomeBreakdown) {
+  //   return new Taxes(
+  //     incomeBreakdown.actualIncome,
+  //     incomeBreakdown.grossIncome,
+  //     incomeBreakdown.standardDeduction,
+  //     incomeBreakdown.adjustedGrossIncome,
+  //     incomeBreakdown.federalIncomeTax,
+  //     0, // otherTaxes - to be calculated later
+  //     "Taxes"
+  //   );
+  // }
 
   /**
-   * @param {Number} totalIncome
-   * @param {Number} adjustedIncome
+   * @param {Number} grossIncome
+   * @param {Number} adjustedGrossIncome
    * @param {FiscalData} fiscalData
    * @param {Demographics} demographics
    */
   static CreateFromTaxableIncome(
-    totalIncome,
-    adjustedIncome,
+    grossIncome,
+    adjustedGrossIncome,
     fiscalData,
     demographics
   ) {
@@ -194,7 +184,7 @@ class Taxes {
       demographics
     );
 
-    const taxableIncome = Math.max(0, adjustedIncome - standardDeduction);
+    const taxableIncome = Math.max(0, adjustedGrossIncome - standardDeduction);
 
     const federalIncomeTaxOwed = TaxCalculations.determineFederalIncomeTax(
       taxableIncome,
@@ -203,11 +193,11 @@ class Taxes {
     );
 
     return new Taxes(
-      totalIncome,
-      adjustedIncome,
+      grossIncome,
+      adjustedGrossIncome,
       standardDeduction,
       taxableIncome,
-      federalIncomeTaxOwed,
+      federalIncomeTaxOwed, // federalTaxesOwed
       0, // otherTaxes - for future development
       "Taxes"
     );

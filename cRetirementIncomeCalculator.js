@@ -1,11 +1,11 @@
 import { Demographics } from "./cDemographics.js";
 import { FiscalData } from "./cFiscalData.js";
 import { IncomeBreakdown } from "./cIncomeBreakdown.js";
-import { IncomeEstimatorResults } from "./cIncomeEstimatorResults.js";
+// import { IncomeEstimatorResults } from "./cIncomeEstimatorResults.js";
 import { IncomeRs } from "./cIncomeRs.js";
 import { FixedIncomeStreams } from "./cFixedIncomeStreams.js";
 import { SsBenefitsCalculator } from "./cSsBenefitsCalculator.js";
-import { SocialSecurityBreakdown } from "./cSsCalculationDetails.js";
+import { SocialSecurityBreakdown } from "./cSsBreakdown.js";
 import { withLabel, log } from "./debugUtils.js";
 import { AdjustableIncomeStreams } from "./cAdjustableIncomeStreams.js";
 /**
@@ -100,7 +100,7 @@ class RetirementIncomeCalculator {
 
   /**
    * @param {FixedIncomeStreams} fixedIncomeStreams
-   * @param {AdjustableIncomeStreams | null} adjustableIncomeStreams
+   * @param {AdjustableIncomeStreams} adjustableIncomeStreams
    * @param {Array<number> | null} [nonSsIncomeSources] - (Optional) Array of non-Social Security income sources
    * @returns {SocialSecurityBreakdown} Comprehensive income calculation results containing:
    */
@@ -111,12 +111,10 @@ class RetirementIncomeCalculator {
   ) {
     if (!nonSsIncomeSources || nonSsIncomeSources.length === 0) {
       nonSsIncomeSources = [
-        fixedIncomeStreams.subjectPensionGross,
-        fixedIncomeStreams.spousePensionGross,
+        fixedIncomeStreams.combinedPensionGross,
         fixedIncomeStreams.interestEarnedOnSavings,
-        // fixedIncomeStreams.subjectRMD,
         fixedIncomeStreams.miscTaxableIncomeWithNoWithholdings,
-        adjustableIncomeStreams?.combinedGrossAdjustableIncome ?? 0,
+        adjustableIncomeStreams?.grossIncomeSubjectToTaxation ?? 0,
       ];
     }
 
@@ -129,7 +127,7 @@ class RetirementIncomeCalculator {
     const result = SsBenefitsCalculator.CalculateSsBreakdown(
       this.#demographics,
       fixedIncomeStreams,
-      taxableNonSsIncome
+      adjustableIncomeStreams
     );
 
     return result;
@@ -326,8 +324,3 @@ function logGuessResults(
     )} then the net income will be $${netIncome} ${highLowTextColor}(${highLow})\x1b[0m`
   );
 }
-
-export {
-  RetirementIncomeCalculator,
-  calculateIncomeWhenAdjustableIncomeIs as calculateIncomeWhen401kWithdrawalIs,
-};

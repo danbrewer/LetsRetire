@@ -35,6 +35,7 @@ import { IncomeBreakdown } from "./cIncomeBreakdown.js";
 import { RetirementAccountBreakdown } from "./cRetirementAccountBreakdown.js";
 import { Income } from "./cRevenue.js";
 import { SocialSecurityIncome } from "./cSocialSecurityIncome.js";
+import { SocialSecurityBreakdown } from "./cSsBreakdown.js";
 import { Taxes } from "./cTaxes.js";
 import { YearDataBase } from "./cYearDataBase.js";
 
@@ -44,17 +45,29 @@ class RetirementYearData extends YearDataBase {
   #fiscalData;
   /** @type {IncomeBreakdown} */
   #incomeBreakdown;
+  /** @type {SocialSecurityBreakdown} */
+  #ssBreakdown;
 
   /**
    * @param {Demographics} demographics
    * @param {FiscalData} fiscalData
    * @param {AccountingYear} accountYear
    * @param {IncomeBreakdown} incomeBreakdown
+   * @param {SocialSecurityBreakdown} ssBreakdown
+   * @param {Taxes} taxes
    */
-  constructor(demographics, fiscalData, accountYear, incomeBreakdown) {
+  constructor(
+    demographics,
+    fiscalData,
+    accountYear,
+    incomeBreakdown,
+    ssBreakdown,
+    taxes
+  ) {
     super(demographics, fiscalData, accountYear);
     this.#fiscalData = Object.freeze(fiscalData);
     this.#incomeBreakdown = incomeBreakdown;
+    this.#ssBreakdown = ssBreakdown;
 
     // /** @type {Income} */
     // this.revenue;
@@ -93,7 +106,10 @@ class RetirementYearData extends YearDataBase {
     //  */
     // this.calculationDetails = [];
 
-    this.revenue = Income.CreateUsing(accountYear, ACCOUNT_TYPES.CASH);
+    this.livingExpenseFunds = Income.CreateUsing(
+      accountYear,
+      ACCOUNT_TYPES.LIVINGEXPENSESFUND
+    );
     this.disbursements = Income.CreateUsing(
       accountYear,
       ACCOUNT_TYPES.DISBURSEMENT_TRACKING
@@ -103,7 +119,7 @@ class RetirementYearData extends YearDataBase {
     // this.socialSecurityIncome = SocialSecurityIncome.CreateUsing(
     //   incomeBreakdown.ssCalculationDetails
     // );
-    this.taxes = Taxes.CreateUsing(incomeBreakdown);
+    this.taxes = taxes;
     this.savings = Balance.CreateUsing(accountYear, ACCOUNT_TYPES.SAVINGS);
     this.trad401k = Balance.CreateUsing(
       accountYear,
@@ -131,14 +147,25 @@ class RetirementYearData extends YearDataBase {
    * @param {FiscalData} fiscalData
    * @param {AccountingYear} accountYear
    * @param {IncomeBreakdown} incomeBreakdown
+   * @param {SocialSecurityBreakdown} ssBreakdown
+   * @param {Taxes} taxes
    * @returns {RetirementYearData}
    */
-  static CreateUsing(demographics, fiscalData, accountYear, incomeBreakdown) {
+  static CreateUsing(
+    demographics,
+    fiscalData,
+    accountYear,
+    incomeBreakdown,
+    ssBreakdown,
+    taxes
+  ) {
     const result = new RetirementYearData(
       demographics,
       fiscalData,
       accountYear,
-      incomeBreakdown
+      incomeBreakdown,
+      ssBreakdown,
+      taxes
     );
     return result;
   }

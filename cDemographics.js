@@ -5,6 +5,7 @@ class Demographics {
    * @param {number} currentAge
    * @param {number} ssStartAge
    * @param {number} penStartAge
+   * @param {number} partner401kStartAge
    * @param {number} retirementYear
    * @param {number} yearIndex
    */
@@ -20,6 +21,7 @@ class Demographics {
     currentPartnerAge = 0,
     partnerSsStartAge = Number.MAX_VALUE,
     partnerPenStartAge = Number.MAX_VALUE,
+    partner401kStartAge = Number.MAX_VALUE,
     filingStatus = "single"
   ) {
     this.currentAge = currentAge;
@@ -35,6 +37,9 @@ class Demographics {
       : Number.MAX_VALUE;
     this.penStartAgeOfPartner = hasPartner
       ? partnerPenStartAge
+      : Number.MAX_VALUE;
+    this.trad401kStartAgeOfPartner = hasPartner
+      ? partner401kStartAge
       : Number.MAX_VALUE;
     this.filingStatus = filingStatus;
     this._description = `Retirement Year ${yearIndex + 1} (Age ${this.currentAge}) (Year ${this.retirementYear})`;
@@ -57,6 +62,13 @@ class Demographics {
   get isPartnerEligibleForPension() {
     return (
       this.hasPartner && this.currentAgeOfPartner >= this.penStartAgeOfPartner
+    );
+  }
+
+  get isPartnerEligibleFor401k() {
+    return (
+      this.hasPartner &&
+      this.currentAgeOfPartner >= this.trad401kStartAgeOfPartner
     );
   }
 
@@ -165,6 +177,7 @@ class Demographics {
       inputs.spouseAge,
       inputs.spouseSsStartAge,
       inputs.spousePenStartAge,
+      inputs.spouse401kStartAge,
       inputs.filingStatus
     );
   }

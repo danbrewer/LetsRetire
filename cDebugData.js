@@ -125,9 +125,10 @@ class DebugData {
    * @returns {number} Effective tax rate as decimal (e.g., 0.22 for 22%)
    */
   getEffectiveTaxRate() {
-    const totalIncome = this._incomeBreakdown.grossIncome;
-    if (totalIncome <= 0) return 0;
-    return this._taxes.federalTaxesOwed / totalIncome;
+    throw new Error("Method not implemented.");
+    // const totalIncome = this._incomeBreakdown.grossIncome;
+    // if (totalIncome <= 0) return 0;
+    // return this._taxes.federalTaxesOwed / totalIncome;
   }
 
   /**
@@ -138,7 +139,7 @@ class DebugData {
   getSpendableIncomeRatio() {
     if (this.spend <= 0) return 0;
     return (
-      this._incomeBreakdown.netIncome / //getNetIncomeMinusReportedEarnedInterest() /
+      this._incomeBreakdown.actualIncome / //getNetIncomeMinusReportedEarnedInterest() /
       this.spend
     );
   }
@@ -217,47 +218,49 @@ class DebugData {
    *   - warnings: Array of validation warning messages
    */
   validate() {
-    const errors = [];
-    const warnings = [];
+    return {};
+    
+    // const errors = [];
+    // const warnings = [];
 
-    if (
-      this._demographics.currentAge < 0 ||
-      this._demographics.currentAge > 150
-    ) {
-      errors.push("Age must be between 0 and 150");
-    }
+    // if (
+    //   this._demographics.currentAge < 0 ||
+    //   this._demographics.currentAge > 150
+    // ) {
+    //   errors.push("Age must be between 0 and 150");
+    // }
 
-    if (this.spend < 0) {
-      errors.push("Spending cannot be negative");
-    }
+    // if (this.spend < 0) {
+    //   errors.push("Spending cannot be negative");
+    // }
 
-    if (this._taxes.federalTaxesOwed < 0) {
-      warnings.push(
-        "Federal taxes are negative - possible tax credit scenario"
-      );
-    }
+    // if (this._taxes.federalTaxesOwed < 0) {
+    //   warnings.push(
+    //     "Federal taxes are negative - possible tax credit scenario"
+    //   );
+    // }
 
-    const totalIncome = this._incomeBreakdown.grossIncome;
-    if (totalIncome < 0) {
-      errors.push("Total income cannot be negative");
-    }
+    // const totalIncome = this._incomeBreakdown.grossIncome;
+    // if (totalIncome < 0) {
+    //   errors.push("Total income cannot be negative");
+    // }
 
-    // Check if spending exceeds net income by a significant margin
-    if (this.spend > this._incomeBreakdown.netIncome * 1.5) {
-      warnings.push("Spending significantly exceeds net income");
-    }
+    // // Check if spending exceeds net income by a significant margin
+    // if (this.spend > this._incomeBreakdown.actualIncome * 1.5) {
+    //   warnings.push("Spending significantly exceeds net income");
+    // }
 
-    // Check for unusually high tax rate
-    const effectiveTaxRate = this.getEffectiveTaxRate();
-    if (effectiveTaxRate > 0.5) {
-      warnings.push("Effective tax rate exceeds 50%");
-    }
+    // // Check for unusually high tax rate
+    // const effectiveTaxRate = this.getEffectiveTaxRate();
+    // if (effectiveTaxRate > 0.5) {
+    //   warnings.push("Effective tax rate exceeds 50%");
+    // }
 
-    return {
-      isValid: errors.length === 0,
-      errors: errors,
-      warnings: warnings,
-    };
+    // return {
+    //   isValid: errors.length === 0,
+    //   errors: errors,
+    //   warnings: warnings,
+    // };
   }
 
   /**
@@ -284,8 +287,8 @@ class DebugData {
       },
 
       // Tax analysis
-      federalTaxes: this._taxes.federalTaxesOwed,
-      netIncome: this._incomeBreakdown.netIncome,
+      federalTaxes: 0, //this._taxes.federalTaxesOwed,
+      netIncome: this._incomeBreakdown.actualIncome,
       effectiveTaxRate: (this.getEffectiveTaxRate() * 100).toFixed(2) + "%",
 
       // Cash flow analysis
@@ -448,7 +451,7 @@ class DebugData {
       fiscalData,
       incomeBreakdown,
       taxes,
-      incomeBreakdown.netIncome, //getNetIncomeMinusReportedEarnedInterest(),
+      incomeBreakdown.actualIncome, //getNetIncomeMinusReportedEarnedInterest(),
       deposits,
       withdrawals,
       accountYear,

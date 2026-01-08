@@ -2,6 +2,9 @@ import { Account, ACCOUNT_TYPES } from "./cAccount.js";
 import { Inputs } from "./cInputs.js";
 
 class AccountsManager {
+  /** @type {Map<ACCOUNT_TYPES, Account>} */
+  #accountsByType;
+
   /**
    * @param {Account} subjectSocialSecurity - Subject Social Security account instance
    * @param {Account} spouseSocialSecurity - Spouse Social Security account instance
@@ -32,19 +35,51 @@ class AccountsManager {
     taxes,
     withholdings
   ) {
-    this.subjecSocialSecurity = subjectSocialSecurity;
-    this.spouseSocialSecurity = spouseSocialSecurity;
-    this.subject401k = subject401k;
-    this.spouseTrad401k = spouse401k;
-    this.subjectPension = subjectPension;
-    this.spousePension = spousePension;
-    this.subjectRothIra = subjectRothIra;
-    this.spouseRothIra = spouseRothIra;
-    this.savings = savings;
-    this.income = income;
-    this.disbursement = disbursement;
-    this.taxes = taxes;
-    this.withholdings = withholdings;
+    // this.subjecSocialSecurity = subjectSocialSecurity;
+    // this.spouseSocialSecurity = spouseSocialSecurity;
+    // this.subject401k = subject401k;
+    // this.spouseTrad401k = spouse401k;
+    // this.subjectPension = subjectPension;
+    // this.spousePension = spousePension;
+    // this.subjectRothIra = subjectRothIra;
+    // this.spouseRothIra = spouseRothIra;
+    // this.savings = savings;
+    // this.income = income;
+    // this.disbursement = disbursement;
+    // this.taxes = taxes;
+    // this.withholdings = withholdings;
+    // Initialize private dictionaries keyed by account name and type
+    // this.#accountsByName = new Map([
+    //   [subjectSocialSecurity.name, subjectSocialSecurity],
+    //   [spouseSocialSecurity.name, spouseSocialSecurity],
+    //   [subject401k.name, subject401k],
+    //   [spouse401k.name, spouse401k],
+    //   [subjectPension.name, subjectPension],
+    //   [spousePension.name, spousePension],
+    //   [subjectRothIra.name, subjectRothIra],
+    //   [spouseRothIra.name, spouseRothIra],
+    //   [savings.name, savings],
+    //   [income.name, income],
+    //   [disbursement.name, disbursement],
+    //   [taxes.name, taxes],
+    //   [withholdings.name, withholdings],
+    // ]);
+
+    this.#accountsByType = new Map([
+      [ACCOUNT_TYPES.SUBJECT_SOCIAL_SECURITY, subjectSocialSecurity],
+      [ACCOUNT_TYPES.SPOUSE_SOCIAL_SECURITY, spouseSocialSecurity],
+      [ACCOUNT_TYPES.SUBJECT_401K, subject401k],
+      [ACCOUNT_TYPES.SPOUSE_401K, spouse401k],
+      [ACCOUNT_TYPES.SUBJECT_PENSION, subjectPension],
+      [ACCOUNT_TYPES.SPOUSE_PENSION, spousePension],
+      [ACCOUNT_TYPES.SUBJECT_ROTH_IRA, subjectRothIra],
+      [ACCOUNT_TYPES.SPOUSE_ROTH_IRA, spouseRothIra],
+      [ACCOUNT_TYPES.SAVINGS, savings],
+      [ACCOUNT_TYPES.LIVINGEXPENSESFUND, income],
+      [ACCOUNT_TYPES.DISBURSEMENT_TRACKING, disbursement],
+      [ACCOUNT_TYPES.TAXES, taxes],
+      [ACCOUNT_TYPES.WITHHOLDINGS, withholdings],
+    ]);
   }
 
   /**
@@ -95,7 +130,7 @@ class AccountsManager {
       inputs.savingsInterestRate
     );
 
-    const revenue = new Account(ACCOUNT_TYPES.CASH, 0, 0);
+    const revenue = new Account(ACCOUNT_TYPES.LIVINGEXPENSESFUND, 0, 0);
     const disbursement = new Account(ACCOUNT_TYPES.DISBURSEMENT_TRACKING, 0, 0);
     const taxes = new Account(ACCOUNT_TYPES.TAXES, 0, 0);
     const withholdings = new Account(ACCOUNT_TYPES.WITHHOLDINGS, 0, 0);
@@ -117,15 +152,51 @@ class AccountsManager {
   }
 
   /**
+   * @param {ACCOUNT_TYPES} accountType
+   * @returns {Account}
+   */
+  #getAccountByType(accountType) {
+    const account = this.#accountsByType.get(accountType);
+    if (account) {
+      return account;
+    }
+    throw new Error(`Account type not found: ${accountType}`);
+  }
+
+  get subject401k() {
+    return this.#getAccountByType(ACCOUNT_TYPES.SUBJECT_401K);
+  }
+
+  get spouseTrad401k() {
+    return this.#getAccountByType(ACCOUNT_TYPES.SPOUSE_401K);
+  }
+
+  get subjectRothIra() {
+    return this.#getAccountByType(ACCOUNT_TYPES.SUBJECT_ROTH_IRA);
+  }
+
+  get savings() {
+    return this.#getAccountByType(ACCOUNT_TYPES.SAVINGS);
+  }
+
+  get income() {
+    return this.#getAccountByType(ACCOUNT_TYPES.LIVINGEXPENSESFUND);
+  }
+
+  get disbursement() {
+    return this.#getAccountByType(ACCOUNT_TYPES.DISBURSEMENT_TRACKING);
+  }
+
+  /**
    * @param {number | null} yyyy
    */
   toJSON(yyyy = null) {
     return {
-      trad401k: this.subject401k.toJSON(yyyy),
-      rothIra: this.subjectRothIra.toJSON(yyyy),
-      savings: this.savings.toJSON(yyyy),
-      income: this.income.toJSON(yyyy),
-      disbursement: this.disbursement.toJSON(yyyy),
+      trad401k: this.subject401k?.toJSON(yyyy),
+      rothIra: this.subjectRothIra?.toJSON(yyyy),
+      savings: this.savings?.toJSON(yyyy),
+      income: this.income?.toJSON(yyyy),
+      disbursement: this.disbursement?.toJSON(yyyy),
     };
   }
 
@@ -161,7 +232,7 @@ class AccountsManager {
    */
   getTotalBalance(year) {
     return this.getAllAccounts().reduce((total, account) => {
-      return total + account.endingBalanceForYear(year);
+      return total + (account?.endingBalanceForYear(year) ?? 0);
     }, 0);
   }
 
@@ -170,7 +241,7 @@ class AccountsManager {
    */
   getTotalStartingBalance(year) {
     return this.getAllAccounts().reduce((total, account) => {
-      return total + account.startingBalanceForYear(year);
+      return total + (account?.endingBalanceForYear(year) ?? 0);
     }, 0);
   }
 
@@ -179,7 +250,7 @@ class AccountsManager {
    */
   getTotalWithdrawals(year) {
     return this.getAllAccounts().reduce((total, account) => {
-      return total + account.withdrawalsForYear(year);
+      return total + (account?.withdrawalsForYear(year) ?? 0);
     }, 0);
   }
 
@@ -188,7 +259,7 @@ class AccountsManager {
    */
   getTotalDeposits(year) {
     return this.getAllAccounts().reduce((total, account) => {
-      return total + account.depositsForYear(year);
+      return total + (account?.depositsForYear(year) ?? 0);
     }, 0);
   }
 
@@ -198,36 +269,40 @@ class AccountsManager {
    */
   getTotalInterestEarned(year, calculationMethod) {
     return this.getAllAccounts().reduce((total, account) => {
-      return total + account.calculateInterestForYear(calculationMethod, year);
+      return (
+        total +
+        (account?.calculateInterestForYear(calculationMethod, year) ?? 0)
+      );
     }, 0);
   }
 
   /**
    * @param {ACCOUNT_TYPES} name
    */
-  getAccountByName(name) {
-    switch (name) {
-      case ACCOUNT_TYPES.SUBJECT_401K:
-        return this.subject401k;
-      case ACCOUNT_TYPES.SPOUSE_401K:
-        return this.spouseTrad401k;
-      case ACCOUNT_TYPES.SPOUSE_ROTH_IRA:
-        return this.spouseRothIra;
-      case ACCOUNT_TYPES.SUBJECT_ROTH_IRA:
-        return this.subjectRothIra;
-      case ACCOUNT_TYPES.SUBJECT_PENSION:
-        return this.subjectPension;
-      case ACCOUNT_TYPES.SPOUSE_PENSION:
-        return this.spousePension;
-      case ACCOUNT_TYPES.SAVINGS:
-        return this.savings;
-      case ACCOUNT_TYPES.CASH:
-        return this.income;
-      case ACCOUNT_TYPES.DISBURSEMENT_TRACKING:
-        return this.disbursement;
-      default:
-        throw new Error(`Account not found: ${name}`);
-    }
+  getAccountByType(name) {
+    return this.#accountsByType.get(name);
+    // switch (name) {
+    //   case ACCOUNT_TYPES.SUBJECT_401K:
+    //     return this.subject401k;
+    //   case ACCOUNT_TYPES.SPOUSE_401K:
+    //     return this.spouseTrad401k;
+    //   case ACCOUNT_TYPES.SPOUSE_ROTH_IRA:
+    //     return this.spouseRothIra;
+    //   case ACCOUNT_TYPES.SUBJECT_ROTH_IRA:
+    //     return this.subjectRothIra;
+    //   case ACCOUNT_TYPES.SUBJECT_PENSION:
+    //     return this.subjectPension;
+    //   case ACCOUNT_TYPES.SPOUSE_PENSION:
+    //     return this.spousePension;
+    //   case ACCOUNT_TYPES.SAVINGS:
+    //     return this.savings;
+    //   case ACCOUNT_TYPES.CASH:
+    //     return this.income;
+    //   case ACCOUNT_TYPES.DISBURSEMENT_TRACKING:
+    //     return this.disbursement;
+    //   default:
+    //     throw new Error(`Account not found: ${name}`);
+    // }
   }
 
   /**
@@ -242,9 +317,9 @@ class AccountsManager {
    */
   getBalanceBreakdown(year) {
     return {
-      trad401k: this.subject401k.endingBalanceForYear(year),
-      rothIra: this.subjectRothIra.endingBalanceForYear(year),
-      savings: this.savings.endingBalanceForYear(year),
+      trad401k: this.subject401k?.endingBalanceForYear(year) ?? 0,
+      rothIra: this.subjectRothIra?.endingBalanceForYear(year) ?? 0,
+      savings: this.savings?.endingBalanceForYear(year) ?? 0,
       total: this.getTotalBalance(year),
     };
   }

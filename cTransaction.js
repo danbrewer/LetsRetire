@@ -32,8 +32,20 @@ class TransactionTypeEnum extends EnumBase {
    */
   toName(sym) {
     const name = super.toName(sym);
-    if (!name) throw new Error(`Invalid TransactionType symbol: ${String(sym)}`);
+    if (!name)
+      throw new Error(`Invalid TransactionType symbol: ${String(sym)}`);
     return /** @type {TransactionTypeName} */ (name);
+  }
+
+  /**
+   * Convert string name back to symbol
+   * @param {string} name
+   * @returns {TransactionTypeSymbol}
+   */
+  fromString(name) {
+    const symbol = this.map[name];
+    if (!symbol) throw new Error(`Invalid TransactionType name: ${name}`);
+    return symbol;
   }
 }
 
@@ -163,7 +175,6 @@ class TransactionCategoryEnum extends EnumBase {
    * @returns {string | undefined}
    */
   toName(sym) {
-
     if (sym === undefined || sym === null) {
       return undefined;
     }
@@ -172,6 +183,17 @@ class TransactionCategoryEnum extends EnumBase {
     if (!name)
       throw new Error(`Invalid TransactionCategory symbol: ${String(sym)}`);
     return /** @type {TransactionCategoryName} */ (name);
+  }
+
+  /**
+   * Convert string name back to symbol
+   * @param {string} name
+   * @returns {TransactionCategorySymbol}
+   */
+  fromString(name) {
+    const symbol = this.map[name];
+    if (!symbol) throw new Error(`Invalid TransactionCategory name: ${name}`);
+    return symbol;
   }
 }
 
@@ -247,16 +269,6 @@ class Transaction {
   /** @type {Date} */
   #date;
 
-  toJSON() {
-    return {
-      amount: this.#amount,
-      transactionType: this.#transactionType,
-      category: this.#category,
-      memo: this.#memo,
-      date: this.#date,
-    };
-  }
-
   get amount() {
     return this.#amount;
   }
@@ -275,6 +287,89 @@ class Transaction {
 
   get date() {
     return this.#date;
+  }
+
+  /**
+   * Convert transaction to JSON-friendly format with readable enum values
+   * Used for debugging and display purposes
+   * @returns {object}
+   */
+  toJSON() {
+    return {
+      amount: this.#amount,
+      transactionType: TransactionType.toName(this.#transactionType),
+      category: TransactionCategory.toName(this.#category),
+      memo: this.#memo || "(no memo)",
+      date: this.#date.toISOString().split("T")[0], // Just the date part
+    };
+  }
+
+  /**
+   * @typedef {Object} SerializableTransactionData
+   * @property {number} amount
+   * @property {string | undefined} transactionType
+   * @property {string | undefined} category
+   * @property {string | null} memo
+   * @property {string} date
+   * @property {string} _type
+   */
+
+  /**
+   * Convert transaction to serializable format that preserves enum symbols
+   * Used for data persistence and round-trip serialization
+   * @returns {SerializableTransactionData}
+   */
+  toSerializable() {
+    return {
+      amount: this.#amount,
+      transactionType: this.#transactionType.description, // Preserve symbol identity
+      category: this.#category.description,
+      memo: this.#memo,
+      date: this.#date.toISOString(),
+      _type: "Transaction", // Type marker for deserialization
+    };
+  }
+
+  /**
+   * Create Transaction from serializable data
+   * @param {SerializableTransactionData} data - Serialized transaction data
+   * @returns {Transaction}
+   */
+  static fromSerializable(data) {
+    if (data._type !== "Transaction") {
+      throw new Error("Invalid serialized Transaction data");
+    }
+
+    // Convert symbol descriptions back to enum symbols
+    const transactionType = TransactionType.fromString(data.transactionType ?? "");
+    const category = TransactionCategory.fromString(data.category ?? "");
+
+    return new Transaction(
+      data.amount,
+      transactionType,
+      category,
+      new Date(data.date),
+      data.memo
+    );
+  }
+
+  /**
+   * Get a debug-friendly representation with more formatting options
+   * @returns {object}
+   */
+  toDebugObject() {
+    return {
+      amount: this.#amount,
+      transactionType: TransactionType.toName(this.#transactionType),
+      category: TransactionCategory.toName(this.#category),
+      memo: this.#memo || "(no memo)",
+      date: this.#date.toISOString().split("T")[0],
+      fullDate: this.#date.toISOString(),
+      formattedAmount: this.#amount.toLocaleString("en-US", {
+        style: "currency",
+        currency: "USD",
+      }),
+    };
   }
 
   /**
@@ -298,7 +393,9 @@ class Transaction {
       throw new Error("Invalid TransactionCategory");
     }
     if (amount <= 0) {
-      throw new Error("Transaction amounts must always be positive and non-zero.");
+      throw new Error(
+        "Transaction amounts must always be positive and non-zero."
+      );
     }
     this.#amount = amount;
     this.#transactionType = transactionType;

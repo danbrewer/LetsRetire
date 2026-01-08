@@ -33,6 +33,7 @@ function createInputs() {
     /* spouseSsCola */ 0,
     /* spousePenMonthly */ 500,
     /* spousePenStartAge */ 65,
+    /* spouse401kStartAge */ 62,
     /* spousePenCola */ 0,
     /* spouseTaxSS */ 0.1,
     /* spouseTaxPension */ 0.2,

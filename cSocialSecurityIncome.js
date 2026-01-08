@@ -1,4 +1,4 @@
-import { SocialSecurityBreakdown } from "./cSsCalculationDetails.js";
+import { SocialSecurityBreakdown } from "./cSsBreakdown.js";
 
 /**
  * Represents comprehensive Social Security income breakdown for retirement planning.
@@ -180,7 +180,8 @@ class SocialSecurityIncome {
     const threshold1 = this.#socialSecurityBreakdown?.tier1Threshold ?? 0;
     const threshold2 = this.#socialSecurityBreakdown?.tier2Threshold ?? 0;
 
-    const provisionalIncome = this.#socialSecurityBreakdown?.provisionalIncome ?? 0;
+    const provisionalIncome =
+      this.#socialSecurityBreakdown?.provisionalIncome ?? 0;
 
     let taxabilityLevel = "none";
     let excessOverThreshold = 0;
@@ -263,7 +264,7 @@ class SocialSecurityIncome {
    * This method provides a convenient way to construct SocialSecurityIncome objects
    * by extracting data from income calculation results and Social Security breakdowns.
    *
-   * @param {SocialSecurityBreakdown | null} calculationDetails - Income calculation results containing SS breakdown:
+   * @param {SocialSecurityBreakdown | null} socialSecurityBreakdown - Income calculation results containing SS breakdown:
 
    * @returns {SocialSecurityIncome} A new SS income instance with calculation results
    *
@@ -275,10 +276,10 @@ class SocialSecurityIncome {
    * @static
    * @since 1.0.0
    */
-  static CreateUsing(calculationDetails) {
+  static CreateUsing(socialSecurityBreakdown) {
     // Build calculation details with label if withLabel function is available
 
-    return new SocialSecurityIncome(calculationDetails);
+    return new SocialSecurityIncome(socialSecurityBreakdown);
   }
 }
 
