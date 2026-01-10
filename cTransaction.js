@@ -56,7 +56,6 @@ const TransactionType = new TransactionTypeEnum();
  *         | typeof TransactionType.Withdrawal} TransactionTypeSymbol
  */
 
-
 // -------------------------------------------------------------
 // TRANSACTION CATEGORY ENUM
 // -------------------------------------------------------------
@@ -64,7 +63,7 @@ const TransactionType = new TransactionTypeEnum();
 const TransactionCategoryNames = /** @type {const} */ ({
   Interest: "Interest",
   Disbursement: "Disbursement",
-  RMD: "RMD",
+  RMD: "Req Min Dist",
   Overage: "Overage",
   Shortage: "Shortage",
   Transfer: "Transfer",
@@ -72,13 +71,13 @@ const TransactionCategoryNames = /** @type {const} */ ({
   Income: "Income",
   Taxes: "Taxes",
   Spend: "Spend",
-  Savings: "Income from Savings",
-  Trad401k: "Income from 401k",
-  TradRoth: "Income from Roth IRA",
+  Savings: "Savings",
+  Trad401k: "Traditional 401k",
+  TradRoth: "Traditional Roth IRA",
   OtherTaxableIncome: "Other Taxable Income",
   OtherNonTaxable: "Other Non-Taxable Income",
-  SocialSecurity: "Income from Social Security",
-  Pension: "Income from Pensions",
+  SocialSecurity: "Social Security",
+  Pension: "Pension",
   TaxRefund: "Tax Refund",
   TaxPayment: "Tax Payment",
 });
@@ -93,79 +92,79 @@ class TransactionCategoryEnum extends EnumBase {
   }
 
   get Interest() {
-    return this.map["Interest"];
+    return this.map[TransactionCategoryNames.Interest];
   }
 
   get Disbursement() {
-    return this.map["Disbursement"];
+    return this.map[TransactionCategoryNames.Disbursement];
   }
 
   get RMD() {
-    return this.map["RMD"];
+    return this.map[TransactionCategoryNames.RMD];
   }
 
   get Overage() {
-    return this.map["Overage"];
+    return this.map[TransactionCategoryNames.Overage];
   }
 
   get Shortage() {
-    return this.map["Shortage"];
+    return this.map[TransactionCategoryNames.Shortage];
   }
 
   get Transfer() {
-    return this.map["Transfer"];
+    return this.map[TransactionCategoryNames.Transfer];
   }
 
   get Contribution() {
-    return this.map["Contribution"];
+    return this.map[TransactionCategoryNames.Contribution];
   }
 
   get Income() {
-    return this.map["Income"];
+    return this.map[TransactionCategoryNames.Income];
   }
 
   get Taxes() {
-    return this.map["Taxes"];
+    return this.map[TransactionCategoryNames.Taxes];
   }
 
   get Spend() {
-    return this.map["Spend"];
+    return this.map[TransactionCategoryNames.Spend];
   }
 
   get Savings() {
-    return this.map["Income from Savings"];
+    return this.map[TransactionCategoryNames.Savings];
   }
 
   get Trad401k() {
-    return this.map["Income from 401k"];
+    return this.map[TransactionCategoryNames.Trad401k];
   }
 
   get TradRoth() {
-    return this.map["Income from Roth IRA"];
+    return this.map[TransactionCategoryNames.TradRoth];
   }
 
   get OtherTaxableIncome() {
-    return this.map["Other Taxable Income"];
+    return this.map[TransactionCategoryNames.OtherTaxableIncome];
   }
 
   get OtherNonTaxable() {
-    return this.map["Other Non-Taxable Income"];
+    return this.map[TransactionCategoryNames.OtherNonTaxable];
   }
 
   get SocialSecurity() {
-    return this.map["Income from Social Security"];
+    return this.map[TransactionCategoryNames.SocialSecurity];
   }
 
   get Pension() {
-    return this.map["Income from Pensions"];
+    return this.map[TransactionCategoryNames.Pension];
   }
 
   get TaxRefund() {
-    return this.map["Tax Refund"];
+    return this.map[TransactionCategoryNames.TaxRefund];
   }
 
   get TaxPayment() {
-    return this.map["Tax Payment"];
+    return this.map[TransactionCategoryNames.TaxPayment];
   }
 
   // (others optional — same as GaapAccountType)
@@ -222,41 +221,6 @@ const TransactionCategory = new TransactionCategoryEnum();
  *         } TransactionCategorySymbol
  */
 
-
-
-
-
-
-// /**
-//  * @typedef {typeof TRANSACTION_TYPE[keyof typeof TRANSACTION_TYPE]} TransactionType
-//  */
-
-// /**
-//  * @typedef {typeof TRANSACTION_CATEGORY[keyof typeof TRANSACTION_CATEGORY]} TransactionCategory
-//  */
-
-// /**
-//  * Helper function to check if a value is a valid transaction type
-//  * @param {string} value
-//  * @returns {boolean}
-//  */
-// function isValidTransactionType(value) {
-//   return /** @type {string[]} */ (Object.values(TRANSACTION_TYPE)).includes(
-//     value
-//   );
-// }
-
-// /**
-//  * Helper function to check if a value is a valid transaction category
-//  * @param {string} value
-//  * @returns {boolean}
-//  */
-// function isValidTransactionCategory(value) {
-//   return /** @type {string[]} */ (Object.values(TRANSACTION_CATEGORY)).includes(
-//     value
-//   );
-// }
-
 class Transaction {
   /** @type {number} */
   #amount;
@@ -296,11 +260,11 @@ class Transaction {
    */
   toJSON() {
     return {
-      amount: this.#amount,
+      date: this.#date.toISOString().split("T")[0], // Just the date part
       transactionType: TransactionType.toName(this.#transactionType),
       category: TransactionCategory.toName(this.#category),
       memo: this.#memo || "(no memo)",
-      date: this.#date.toISOString().split("T")[0], // Just the date part
+      amount: this.#amount,
     };
   }
 
@@ -341,7 +305,9 @@ class Transaction {
     }
 
     // Convert symbol descriptions back to enum symbols
-    const transactionType = TransactionType.fromString(data.transactionType ?? "");
+    const transactionType = TransactionType.fromString(
+      data.transactionType ?? ""
+    );
     const category = TransactionCategory.fromString(data.category ?? "");
 
     return new Transaction(

@@ -324,8 +324,13 @@ class RetirementYearCalculator {
     // accounts.trad401k.dump("401k");
 
     // fiscalData.dump("fiscalData");
+    // result.livingExpenseFunds.dumpTransactionsByCategory();
+    result.savingsTransactionAnalyzer.dumpTransactionsByCategory();
 
-    result.dump("RetirementYearData");
+    result.savingsTransactionAnalyzer.dumpTransactionsSummaryByCategory()
+
+    result.savingsTransactionAnalyzer.dumpTransactions();
+    // result.dump("RetirementYearData");
     debugger;
     // result.income.dump();
     // result.balances.dump();

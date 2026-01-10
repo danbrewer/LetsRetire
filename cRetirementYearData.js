@@ -32,9 +32,7 @@ import { Balances } from "./cBalances.js";
 import { Demographics } from "./cDemographics.js";
 import { FiscalData } from "./cFiscalData.js";
 import { IncomeBreakdown } from "./cIncomeBreakdown.js";
-import { RetirementAccountBreakdown } from "./cRetirementAccountBreakdown.js";
-import { Income } from "./cRevenue.js";
-import { SocialSecurityIncome } from "./cSocialSecurityIncome.js";
+import { AccountAnalyzer } from "./cAccountAnalyzer.js";
 import { SocialSecurityBreakdown } from "./cSsBreakdown.js";
 import { Taxes } from "./cTaxes.js";
 import { YearDataBase } from "./cYearDataBase.js";
@@ -106,14 +104,19 @@ class RetirementYearData extends YearDataBase {
     //  */
     // this.calculationDetails = [];
 
-    this.livingExpenseFunds = Income.CreateUsing(
+    this.livingExpenseFunds = AccountAnalyzer.CreateUsing(
       accountYear,
       ACCOUNT_TYPES.LIVINGEXPENSESFUND
     );
-    this.disbursements = Income.CreateUsing(
+    this.disbursementsAnalyzer = AccountAnalyzer.CreateUsing(
       accountYear,
       ACCOUNT_TYPES.DISBURSEMENT_TRACKING
     );
+    this.savingsTransactionAnalyzer = AccountAnalyzer.CreateUsing(
+      accountYear,
+      ACCOUNT_TYPES.SAVINGS
+    );
+
     this.balances = Balances.CreateUsing(accountYear);
 
     // this.socialSecurityIncome = SocialSecurityIncome.CreateUsing(

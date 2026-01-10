@@ -56,7 +56,7 @@ class AdjustableIncomeStreams {
     return Common.calculateRMD(
       this.#fiscalData.useRmd,
       this.#demographics.currentAgeOfPartner,
-      this.#accountYear.getStartingBalance(ACCOUNT_TYPES.SPOUSE_401K)
+      this.#accountYear.getStartingBalance(ACCOUNT_TYPES.PARTNER_401K)
     );
   }
 
@@ -81,13 +81,12 @@ class AdjustableIncomeStreams {
     ).asCurrency();
   }
 
-  get spouse401kGrossWithdrawal() {
+  get spouseActual401kGrossWithdrawal() {
     return this.#spouse401kWithdrawalGross.asCurrency();
   }
-
-  set spouse401kGrossWithdrawal(value) {
+  
+  set spouseActual401kGrossWithdrawal(value) {
     this.#spouse401kWithdrawalGross = value;
-    // should this trigger a recalculation of dependent values?
   }
 
   get spouse401kWithholdings() {
@@ -98,13 +97,13 @@ class AdjustableIncomeStreams {
 
   get spouse401kActualIncome() {
     return (
-      this.spouse401kGrossWithdrawal - this.spouse401kWithholdings
+      this.spouseActual401kGrossWithdrawal - this.spouse401kWithholdings
     ).asCurrency();
   }
 
   get combined401kGrossWithdrawal() {
     return (
-      this.subjectActual401kGrossWithdrawal + this.spouse401kGrossWithdrawal
+      this.subjectActual401kGrossWithdrawal + this.spouseActual401kGrossWithdrawal
     ).asCurrency();
   }
 

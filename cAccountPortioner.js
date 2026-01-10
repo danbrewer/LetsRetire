@@ -146,7 +146,7 @@ class AccountPortioner {
     const partner401kBalance = this.#demographics.isPartnerEligibleFor401k
       ? this.#fiscalData.useTrad401k
         ? this.#accountYear
-            .getStartingBalance(ACCOUNT_TYPES.SPOUSE_401K)
+            .getStartingBalance(ACCOUNT_TYPES.PARTNER_401K)
             .asCurrency()
         : 0
       : 0;
@@ -175,7 +175,7 @@ class AccountPortioner {
     const grossPartner401kRMD = Common.calculateRMD(
       this.#fiscalData.useRmd,
       this.#demographics.currentAgeOfPartner,
-      this.#accountYear.getStartingBalance(ACCOUNT_TYPES.SPOUSE_401K)
+      this.#accountYear.getStartingBalance(ACCOUNT_TYPES.PARTNER_401K)
     ).asCurrency();
     const partner401kRMDActualized = Common.convertGross401kToActual401k(
       grossPartner401kRMD,

@@ -69,7 +69,7 @@ class AccountsManager {
       [ACCOUNT_TYPES.SUBJECT_SOCIAL_SECURITY, subjectSocialSecurity],
       [ACCOUNT_TYPES.SPOUSE_SOCIAL_SECURITY, spouseSocialSecurity],
       [ACCOUNT_TYPES.SUBJECT_401K, subject401k],
-      [ACCOUNT_TYPES.SPOUSE_401K, spouse401k],
+      [ACCOUNT_TYPES.PARTNER_401K, spouse401k],
       [ACCOUNT_TYPES.SUBJECT_PENSION, subjectPension],
       [ACCOUNT_TYPES.SPOUSE_PENSION, spousePension],
       [ACCOUNT_TYPES.SUBJECT_ROTH_IRA, subjectRothIra],
@@ -106,7 +106,7 @@ class AccountsManager {
       inputs.trad401kInterestRate
     );
     const spouse401k = new Account(
-      ACCOUNT_TYPES.SPOUSE_401K,
+      ACCOUNT_TYPES.PARTNER_401K,
       inputs.spouse401kStartingBalance,
       inputs.spouseTrad401kInterestRate
     );
@@ -168,7 +168,7 @@ class AccountsManager {
   }
 
   get spouseTrad401k() {
-    return this.#getAccountByType(ACCOUNT_TYPES.SPOUSE_401K);
+    return this.#getAccountByType(ACCOUNT_TYPES.PARTNER_401K);
   }
 
   get subjectRothIra() {

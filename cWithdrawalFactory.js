@@ -130,6 +130,8 @@ class WithdrawalFactory {
     // Take withdrawals in order of Savings, Roth, 401k
     this.#withdrawRothPortion();
     this.#withdrawFromSubject401k();
+    this.#withdrawFromPartner401k();
+
     this.#withdrawFromSavings();
 
     this.#processActualIncome();
@@ -145,6 +147,34 @@ class WithdrawalFactory {
     if (shortfall > 0) {
       console.error(`Unable to cover fiscal spend: ${shortfall.toFixed(2)}`);
     }
+  }
+  #withdrawFromPartner401k() {
+    const amount = this.#accountPortioner?.partner401kGrossWithdrawal ?? 0;
+    if (amount <= 0) return 0;
+
+    const grossFundsAvailable = this.#accountYear.getAvailableFunds([
+      ACCOUNT_TYPES.PARTNER_401K,
+    ]);
+
+    if (grossFundsAvailable <= 0) return 0;
+
+    const gross401kWithdrawal = Math.min(amount, grossFundsAvailable);
+
+    this.#adjustableIncomeStreams.spouseActual401kGrossWithdrawal =
+      gross401kWithdrawal;
+
+    this.#processGrossPeriodic401kWithdrawals(
+      gross401kWithdrawal,
+      ACCOUNT_TYPES.PARTNER_401K,
+      "Withdrawal from Partner 401k"
+    );
+
+    this.#processGrossPeriodic401kIncome(
+      gross401kWithdrawal,
+      "Partner 401k Income"
+    );
+
+    return gross401kWithdrawal;
   }
 
   #determineSocialSecurityBreakdown() {
@@ -218,7 +248,7 @@ class WithdrawalFactory {
     if (this.#combinedActualWorkingIncome == 0) return;
 
     this.#accountYear.processAsPeriodicDeposits(
-      ACCOUNT_TYPES.SAVINGS,
+      ACCOUNT_TYPES.LIVINGEXPENSESFUND,
       TransactionCategory.Income,
       this.#combinedActualWorkingIncome,
       PERIODIC_FREQUENCY.MONTHLY,
@@ -234,7 +264,7 @@ class WithdrawalFactory {
     if (this.#ssCombinedTakeHome == 0) return;
 
     this.#accountYear.processAsPeriodicDeposits(
-      ACCOUNT_TYPES.SAVINGS,
+      ACCOUNT_TYPES.LIVINGEXPENSESFUND,
       TransactionCategory.SocialSecurity,
       this.#ssCombinedTakeHome,
       PERIODIC_FREQUENCY.MONTHLY,
@@ -250,7 +280,7 @@ class WithdrawalFactory {
     if (this.#combinedPensionActualIncome == 0) return;
 
     this.#accountYear.processAsPeriodicDeposits(
-      ACCOUNT_TYPES.SAVINGS,
+      ACCOUNT_TYPES.LIVINGEXPENSESFUND,
       TransactionCategory.Pension,
       this.#combinedPensionActualIncome,
       PERIODIC_FREQUENCY.MONTHLY,
@@ -266,8 +296,16 @@ class WithdrawalFactory {
 
     if (this.#nonTaxableActualIncome == 0) return;
 
+    // this.#accountYear.processAsPeriodicDeposits(
+    //   ACCOUNT_TYPES.SAVINGS,
+    //   TransactionCategory.OtherNonTaxable,
+    //   this.#nonTaxableActualIncome,
+    //   PERIODIC_FREQUENCY.MONTHLY,
+    //   "Tax-free income"
+    // );
+
     this.#accountYear.processAsPeriodicDeposits(
-      ACCOUNT_TYPES.SAVINGS,
+      ACCOUNT_TYPES.LIVINGEXPENSESFUND,
       TransactionCategory.OtherNonTaxable,
       this.#nonTaxableActualIncome,
       PERIODIC_FREQUENCY.MONTHLY,
@@ -330,7 +368,7 @@ class WithdrawalFactory {
     );
 
     this.#accountYear.processAsPeriodicDeposits(
-      ACCOUNT_TYPES.SAVINGS,
+      ACCOUNT_TYPES.LIVINGEXPENSESFUND,
       TransactionCategory.Trad401k,
       actual401kAmount,
       PERIODIC_FREQUENCY.MONTHLY,
@@ -642,16 +680,12 @@ class WithdrawalFactory {
       PERIODIC_FREQUENCY.MONTHLY,
       "Roth Withdrawal"
     );
+
     this.#accountYear.deposit(
-      ACCOUNT_TYPES.SAVINGS,
+      ACCOUNT_TYPES.LIVINGEXPENSESFUND,
       TransactionCategory.TradRoth,
       withdrawalAmount
     );
-    // this.#accountYear.deposit(
-    //   ACCOUNT_TYPES.DISBURSEMENT_TRACKING,
-    //   TransactionCategory.TradRoth,
-    //   withdrawalAmount
-    // );
   }
 
   /**
@@ -678,11 +712,9 @@ class WithdrawalFactory {
     return this.#ssBreakdown;
   }
 
-  get taxes(){
+  get taxes() {
     if (!this.#taxes) {
-      console.error(
-        "Taxes requested before they were calculated."
-      );
+      console.error("Taxes requested before they were calculated.");
       throw new Error("Taxes are not available.");
     }
     return this.#taxes;

@@ -109,4 +109,47 @@ class DateFunctions {
   }
 }
 
-export { compoundedRate, DateFunctions };
+class StringFunctions {
+  /**
+   * @param {string} str
+   */
+  static capitalizeWords(str) {
+    return str.replace(/\b\w/g, (char) => char.toUpperCase());
+  }
+
+  /**
+   * Pads a string to a fixed width.
+   *
+   * @param {string | number} value
+   * @param {number} width
+   * @param {"left" | "right" | "center"} [align = "left"]
+   * @param {string} [padChar=" "]
+   */
+  static padAndAlign(value, width, align = "left", padChar = " ") {
+    const str = String(value);
+
+    if (str.length >= width) return str;
+
+    if (align === "center") {
+      const totalPadding = width - str.length;
+      const leftPadding = Math.floor(totalPadding / 2);
+      const rightPadding = totalPadding - leftPadding;
+      return (
+        str.padStart(str.length + leftPadding, padChar).padEnd(width, padChar)
+      );
+    }
+    return align === "right"
+      ? str.padStart(width, padChar)
+      : str.padEnd(width, padChar);
+  }
+
+  /**
+   * @param {string} str
+   * @param {number} count
+   */
+  static repeat(str, count) {
+    return str.repeat(count);
+  }
+}
+
+export { compoundedRate, DateFunctions, StringFunctions };

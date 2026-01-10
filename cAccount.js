@@ -16,7 +16,7 @@ class ACCOUNT_TYPES {}
 ACCOUNT_TYPES.SAVINGS = "Savings";
 ACCOUNT_TYPES.SUBJECT_401K = "Trad401k";
 ACCOUNT_TYPES.SUBJECT_ROTH_IRA = "RothIra";
-ACCOUNT_TYPES.SPOUSE_401K = "SpouseTrad401k";
+ACCOUNT_TYPES.PARTNER_401K = "SpouseTrad401k";
 ACCOUNT_TYPES.SPOUSE_ROTH_IRA = "SpouseRothIra";
 ACCOUNT_TYPES.SUBJECT_PENSION = "SubjectPension";
 ACCOUNT_TYPES.SPOUSE_PENSION = "SpousePension";
@@ -451,7 +451,8 @@ class Account {
           yyyy,
           amount,
           category,
-          TransactionType.Withdrawal
+          TransactionType.Withdrawal,
+          memo
         );
       case PERIODIC_FREQUENCY.QUARTERLY:
         return this.#processAsQuarterlyTransactions(
@@ -610,7 +611,12 @@ class Account {
     switch (transactionType) {
       case TransactionType.Withdrawal:
         for (let month = 0; month < 11; month++) {
-          this.#withdrawal(monthlyAmount, category, new Date(yyyy, month, 1));
+          this.#withdrawal(
+            monthlyAmount,
+            category,
+            new Date(yyyy, month, 1),
+            memo
+          );
         }
 
         // Adjust final month to account for rounding
