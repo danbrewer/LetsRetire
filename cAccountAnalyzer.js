@@ -9,7 +9,7 @@ import {
   TransactionCategory,
   TransactionType,
 } from "./cTransaction.js";
-import { DateFunctions, StringFunctions } from "./utils.js";
+import { DateFunctions, StringFunctions, Boxes } from "./utils.js";
 
 /**
  * @typedef {Object} TransactionReport
@@ -80,34 +80,26 @@ class AccountAnalyzer {
    * @param {Transaction[]} txns
    */
   #dumpTransactionCategoryDetails(category, txns) {
-    console.log(`${StringFunctions.padAndAlign(StringFunctions.repeat("~", 90), 100, "center")}`);
-    console.log(
-      `${StringFunctions.padAndAlign(`Category: ${category}`, 100, "center")}`
-    );
-    console.log(`${StringFunctions.padAndAlign(StringFunctions.repeat("~", 90), 100, "center")}`);
-
+    // console.log(`${StringFunctions.padAndAlign(StringFunctions.repeat("~", 90), 100, "center")}`);
+    Boxes.singleTopBorder(100);
+    Boxes.addDetailData(`Category: ${category}`, "left");
+    Boxes.doubleDivider();
     if (txns.length === 0) {
       console.log("No transactions in this category.");
+      Boxes.singleBorderBottom();
       return;
     }
 
-    const dateHeader = StringFunctions.padAndAlign("Date", 12);
-    const memoHeader = StringFunctions.padAndAlign("Memo", 20);
-    const depositHeader = StringFunctions.padAndAlign("Deposit", 15, "center");
-    const withdrawalHeader = StringFunctions.padAndAlign(
-      "Withdrawal",
-      15,
-      "center"
-    );
-    console.log(
-      `${dateHeader}    ${memoHeader}    ${depositHeader}    ${withdrawalHeader}`
-    );
-    console.log(StringFunctions.repeat("-", 100));
+    const dateHdr = StringFunctions.padAndAlign("Date", 12);
+    const memoHdr = StringFunctions.padAndAlign("Memo", 20);
+    const depositHdr = StringFunctions.padAndAlign("Deposit", 15, "center");
+    const withdrawHdr = StringFunctions.padAndAlign("Withdrawal", 15, "center");
+    const headers = `${dateHdr}    ${memoHdr}    ${depositHdr}    ${withdrawHdr}`;
+    Boxes.addDetailData(headers, "left");
+    Boxes.singleDivider(100);
+
     let balance = 0;
     for (const t of txns) {
-      const transactionType = StringFunctions.capitalizeWords(
-        TransactionType.toName(t.transactionType)
-      );
       const date = DateFunctions.formatDateYYYYMMDD(t.date);
       const dateField = StringFunctions.padAndAlign(date, 12);
       const deposit =
@@ -124,14 +116,13 @@ class AccountAnalyzer {
         15,
         "right"
       );
-      const amountField = StringFunctions.padAndAlign(t.amount, 12, "right");
       const memoField = StringFunctions.padAndAlign(t.memo ?? "", 20);
-      console.log(
-        `${dateField}    ${memoField}    ${depositField}    ${withdrawalField}`
+      Boxes.addDetailData(
+        `${dateField}    ${memoField}    ${depositField}    ${withdrawalField}`,
+        "left"
       );
       balance += t.amount;
     }
-    console.log(StringFunctions.repeat("=", 100));
     const dateFooter = StringFunctions.padAndAlign(" ", 12);
     const memoFooter = StringFunctions.padAndAlign("Totals:", 20);
     const depositTotal = txns
@@ -152,10 +143,10 @@ class AccountAnalyzer {
       15,
       "right"
     );
-    console.log(
-      `${dateFooter}    ${memoFooter}    ${depositTotalField}    ${withdrawalTotalField}`
-    );
-    console.log("");
+    Boxes.doubleDivider(100);
+    const footer = `${dateFooter}    ${memoFooter}    ${depositTotalField}    ${withdrawalTotalField}`;
+    Boxes.addDetailData(footer, "left");
+    Boxes.singleBorderBottom(100);
   }
 
   /** @param {string} [reportTitle] */
@@ -165,16 +156,7 @@ class AccountAnalyzer {
     }
     if (reportTitle) {
       console.log("");
-      console.log(StringFunctions.repeat("=", 100));
-      console.log(
-        StringFunctions.padAndAlign(
-          `${reportTitle}`,
-          100,
-          "center"
-        )
-      );
-      console.log(StringFunctions.repeat("=", 100));
-      console.log("");
+      Boxes.doubleBox(reportTitle);
     }
     const transactions = this.getTransactionsGroupedByCategory();
 
@@ -185,45 +167,38 @@ class AccountAnalyzer {
 
   dumpTransactionsSummaryByCategory(accountName = "") {
     if (!accountName) {
-      accountName = this.#accountType;
+      accountName = `Transaction Summary for Account: ${this.#accountType}`;
     }
     if (accountName) {
       console.log("");
-      console.log(StringFunctions.repeat("=", 100));
-      console.log(
-        StringFunctions.padAndAlign(
-          `Transaction Summary for Account: ${accountName}`,
-          100,
-          "center"
-        )
-      );
-      console.log(StringFunctions.repeat("=", 100));
-      console.log("");
+      Boxes.doubleBox(accountName);
     }
 
     const transactions = this.getTransactionsGroupedByCategory();
 
-    console.log(
-      `${StringFunctions.padAndAlign("Category", 30)}${StringFunctions.padAndAlign(
-        "Total Amount",
-        20,
-        "right"
-      )}${StringFunctions.padAndAlign("Transaction Count", 20, "right")}`
-    );
-    console.log(StringFunctions.repeat("-", 70));
+    const headers = `${StringFunctions.padAndAlign("Category", 30)}${StringFunctions.padAndAlign(
+      "Total Amount",
+      20,
+      "right"
+    )}${StringFunctions.padAndAlign("Transaction Count", 20, "right")}`;
+
+    Boxes.singleTopBorder();
+    Boxes.addDetailData(headers, "left");
+    Boxes.singleDivider();
 
     for (const [category, txns] of transactions) {
       const total = txns.reduce((sum, tx) => sum + tx.amount, 0);
       const count = txns.length;
 
-      console.log(
-        `${StringFunctions.padAndAlign(category, 30)}${StringFunctions.padAndAlign(
-          total.asCurrency(),
-          20,
-          "right"
-        )}${StringFunctions.padAndAlign(count.toString(), 20, "right")}`
-      );
+      const data = `${StringFunctions.padAndAlign(category, 30)}${StringFunctions.padAndAlign(
+        total.asCurrency(),
+        20,
+        "right"
+      )}${StringFunctions.padAndAlign(count.toString(), 20, "right")}`;
+
+      Boxes.addDetailData(data, "left");
     }
+    Boxes.singleBorderBottom();
   }
 
   /** @param {string} [reportTitle] */
@@ -231,15 +206,11 @@ class AccountAnalyzer {
     if (!reportTitle) {
       reportTitle = `${this.#accountType} Account Activity`;
     }
-    console.log("");
-    console.log(StringFunctions.repeat("=", 100));
-    console.log(StringFunctions.padAndAlign(reportTitle, 100, "center"));
-    console.log(StringFunctions.repeat("=", 100));
-    console.log("");
 
     const startingBalance = this.#accountYear
       .getStartingBalance(this.#accountType)
       .asCurrency();
+    const startingBalanceOutput = `Starting Balance: ${StringFunctions.padAndAlign(startingBalance, 8, "right")}`;
 
     const endingBalance = this.#accountYear
       .getEndingBalance(this.#accountType)
@@ -258,16 +229,17 @@ class AccountAnalyzer {
       8,
       "center"
     );
-
     const balanceHeader = StringFunctions.padAndAlign("Balance", 8, "center");
+    const headers = `${dateHeader}    ${categoryHeader}    ${memoHeader}    ${depositHeader}    ${withdrawalHeader}    ${balanceHeader}`;
 
-    console.log(
-      `${dateHeader}    ${categoryHeader}    ${memoHeader}    ${depositHeader}    ${withdrawalHeader}    ${balanceHeader}`
-    );
-    console.log(StringFunctions.repeat("-", 100));
-    console.log(
-      `${StringFunctions.padAndAlign("", 31)}    ${StringFunctions.padAndAlign("Starting Balance:", 44)}    ${StringFunctions.padAndAlign(startingBalance, 8, "right")}`
-    );
+    Boxes.doubleBox(reportTitle);
+
+    Boxes.singleTopBorder();
+    Boxes.addDetailData(startingBalanceOutput);
+
+    Boxes.singleDivider();
+    Boxes.addDetailData(headers, "left");
+    Boxes.doubleDivider();
     let balance = startingBalance;
     for (const t of transactions) {
       const date = DateFunctions.formatDateYYYYMMDD(t.date);
@@ -296,20 +268,21 @@ class AccountAnalyzer {
         8,
         "right"
       );
-      console.log(
-        `${dateField}    ${categoryField}    ${memoField}    ${depositField}    ${withdrawalField}    ${balanceField}`
-      );
+
+      const detailData = `${dateField}    ${categoryField}    ${memoField}    ${depositField}    ${withdrawalField}    ${balanceField}`;
+
+      Boxes.addDetailData(detailData, "left");
     }
     if (endingBalance !== balance) {
       console.warn(
         `Warning: Calculated ending balance ${balance.asCurrency()} does not match reported ending balance ${endingBalance.asCurrency()}`
       );
     }
-    console.log(StringFunctions.repeat("-", 100));
-    console.log(
-      `${StringFunctions.padAndAlign("", 31)}    ${StringFunctions.padAndAlign("Ending Balance:", 44)}    ${StringFunctions.padAndAlign(endingBalance, 8, "right")}`
+    Boxes.doubleDivider();
+    Boxes.addDetailData(
+      `Ending Balance: ${StringFunctions.padAndAlign(endingBalance, 8, "right")}`
     );
-    console.log("");
+    Boxes.singleBorderBottom();
   }
 
   /**
