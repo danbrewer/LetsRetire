@@ -386,6 +386,7 @@ class WithdrawalFactory {
 
   #applyPeriodic401kInterestEarned() {
     this.#accountYear.recordInterestEarnedForYear(ACCOUNT_TYPES.SUBJECT_401K);
+    this.#accountYear.recordInterestEarnedForYear(ACCOUNT_TYPES.PARTNER_401K);
   }
 
   #withdrawFromSubject401k() {
@@ -406,7 +407,7 @@ class WithdrawalFactory {
     this.#processPeriodicDisbursement(
       gross401kWithdrawal,
       ACCOUNT_TYPES.SUBJECT_401K,
-      "Withdrawal from Subject 401k"
+      "Gross withdrawal"
     );
 
     this.#processGrossPeriodic401kIncome(gross401kWithdrawal, "Subject");
@@ -777,6 +778,12 @@ class WithdrawalFactory {
       withdrawalAmount,
       PERIODIC_FREQUENCY.MONTHLY,
       "Roth Withdrawal"
+    );
+
+    this.#trackAsPeriodicDisbursements(
+      TransactionCategory.TradRoth,
+      withdrawalAmount,
+      "Combined Roths"
     );
 
     this.#accountYear.deposit(

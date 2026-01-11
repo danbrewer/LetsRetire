@@ -35,36 +35,6 @@ class AccountsManager {
     taxes,
     withholdings
   ) {
-    // this.subjecSocialSecurity = subjectSocialSecurity;
-    // this.spouseSocialSecurity = spouseSocialSecurity;
-    // this.subject401k = subject401k;
-    // this.spouseTrad401k = spouse401k;
-    // this.subjectPension = subjectPension;
-    // this.spousePension = spousePension;
-    // this.subjectRothIra = subjectRothIra;
-    // this.spouseRothIra = spouseRothIra;
-    // this.savings = savings;
-    // this.income = income;
-    // this.disbursement = disbursement;
-    // this.taxes = taxes;
-    // this.withholdings = withholdings;
-    // Initialize private dictionaries keyed by account name and type
-    // this.#accountsByName = new Map([
-    //   [subjectSocialSecurity.name, subjectSocialSecurity],
-    //   [spouseSocialSecurity.name, spouseSocialSecurity],
-    //   [subject401k.name, subject401k],
-    //   [spouse401k.name, spouse401k],
-    //   [subjectPension.name, subjectPension],
-    //   [spousePension.name, spousePension],
-    //   [subjectRothIra.name, subjectRothIra],
-    //   [spouseRothIra.name, spouseRothIra],
-    //   [savings.name, savings],
-    //   [income.name, income],
-    //   [disbursement.name, disbursement],
-    //   [taxes.name, taxes],
-    //   [withholdings.name, withholdings],
-    // ]);
-
     this.#accountsByType = new Map([
       [ACCOUNT_TYPES.SUBJECT_SOCIAL_SECURITY, subjectSocialSecurity],
       [ACCOUNT_TYPES.SPOUSE_SOCIAL_SECURITY, spouseSocialSecurity],
@@ -73,7 +43,7 @@ class AccountsManager {
       [ACCOUNT_TYPES.SUBJECT_PENSION, subjectPension],
       [ACCOUNT_TYPES.SPOUSE_PENSION, spousePension],
       [ACCOUNT_TYPES.SUBJECT_ROTH_IRA, subjectRothIra],
-      [ACCOUNT_TYPES.SPOUSE_ROTH_IRA, spouseRothIra],
+      [ACCOUNT_TYPES.PARTNER_ROTH_IRA, spouseRothIra],
       [ACCOUNT_TYPES.SAVINGS, savings],
       [ACCOUNT_TYPES.LIVINGEXPENSESFUND, income],
       [ACCOUNT_TYPES.DISBURSEMENT_TRACKING, disbursement],
@@ -120,7 +90,7 @@ class AccountsManager {
       inputs.tradRothInterestRate
     );
     const spouseRothIra = new Account(
-      ACCOUNT_TYPES.SPOUSE_ROTH_IRA,
+      ACCOUNT_TYPES.PARTNER_ROTH_IRA,
       inputs.spouseRothStartingBalance,
       inputs.spouseRothInterestRate
     );
@@ -281,28 +251,6 @@ class AccountsManager {
    */
   getAccountByType(name) {
     return this.#accountsByType.get(name);
-    // switch (name) {
-    //   case ACCOUNT_TYPES.SUBJECT_401K:
-    //     return this.subject401k;
-    //   case ACCOUNT_TYPES.SPOUSE_401K:
-    //     return this.spouseTrad401k;
-    //   case ACCOUNT_TYPES.SPOUSE_ROTH_IRA:
-    //     return this.spouseRothIra;
-    //   case ACCOUNT_TYPES.SUBJECT_ROTH_IRA:
-    //     return this.subjectRothIra;
-    //   case ACCOUNT_TYPES.SUBJECT_PENSION:
-    //     return this.subjectPension;
-    //   case ACCOUNT_TYPES.SPOUSE_PENSION:
-    //     return this.spousePension;
-    //   case ACCOUNT_TYPES.SAVINGS:
-    //     return this.savings;
-    //   case ACCOUNT_TYPES.CASH:
-    //     return this.income;
-    //   case ACCOUNT_TYPES.DISBURSEMENT_TRACKING:
-    //     return this.disbursement;
-    //   default:
-    //     throw new Error(`Account not found: ${name}`);
-    // }
   }
 
   /**
@@ -323,53 +271,6 @@ class AccountsManager {
       total: this.getTotalBalance(year),
     };
   }
-
-  // /**
-  //  * @param {number} year
-  //  */
-  // getAccountSummary(year) {
-  //   return {
-  //     trad401k: {
-  //       name: this.trad401k.name,
-  //       startingBalance: this.trad401k.startingBalanceForYear(year),
-  //       withdrawals: this.trad401k.withdrawalsForYear(year),
-  //       deposits: this.trad401k.depositsForYear(year),
-  //       endingBalance: this.trad401k.endingBalanceForYear(year),
-  //       interestRate: this.trad401k.interestRate,
-  //     },
-  //     rothIra: {
-  //       name: this.rothIra.name,
-  //       startingBalance: this.rothIra.startingBalanceForYear(year),
-  //       withdrawals: this.rothIra.withdrawalsForYear(year),
-  //       deposits: this.rothIra.depositsForYear(year),
-  //       endingBalance: this.rothIra.endingBalanceForYear(year),
-  //       interestRate: this.rothIra.interestRate,
-  //     },
-  //     savings: {
-  //       name: this.savings.name,
-  //       startingBalance: this.savings.startingBalanceForYear(year),
-  //       withdrawals: this.savings.withdrawalsForYear(year),
-  //       deposits: this.savings.depositsForYear(year),
-  //       endingBalance: this.savings.endingBalanceForYear(year),
-  //       interestRate: this.savings.interestRate,
-  //     },
-  //     totals: {
-  //       startingBalance: this.getTotalStartingBalance(year),
-  //       endingBalance: this.getTotalBalance(year),
-  //       withdrawals: this.getTotalWithdrawals(year),
-  //       deposits: this.getTotalDeposits(year),
-  //     },
-  //   };
-  // }
-
-  //   // Method to apply interest rate changes to all accounts
-  //   updateInterestRates(trad401kRate, rothIraRate, savingsRate) {
-  //     // Note: Account class would need setter methods for this to work
-  //     // This is a placeholder for future implementation
-  //     console.warn(
-  //       "updateInterestRates method requires Account class to have rate setters"
-  //     );
-  //   }
 
   // Method to get accounts in withdrawal order
   /**
@@ -395,19 +296,6 @@ class AccountsManager {
       })
       .filter((account) => account !== null);
   }
-
-  // static Empty() {
-  //   return new AccountsManager(
-  //     Account.Empty(ACCOUNT_TYPES.TRAD_401K),
-  //     Account.Empty(ACCOUNT_TYPES.TRAD_ROTH),
-  //     Account.Empty(ACCOUNT_TYPES.SAVINGS),
-  //     Account.Empty(ACCOUNT_TYPES.REVENUE),
-  //     Account.Empty(ACCOUNT_TYPES.DISBURSEMENT)
-  //   );
-  // }
 }
-
-// Create instance using the factory method for backward compatibility
-// const accounts = AccountGroup.fromInputs(inputs);
 
 export { AccountsManager };

@@ -331,8 +331,9 @@ class RetirementYearCalculator {
 
     // result.savingsTransactionAnalyzer.dumpAllTransactions();
     // result.livingExpenseFunds.dumpAllTransactions();
-    result.disbursementsAnalyzer.dumpAllTransactions();
-    result.withholdingsTransactionAnalyzer.dumpAllTransactions();
+    // result.disbursementsAnalyzer.dumpAllTransactions();
+    // result.withholdingsTransactionAnalyzer.dumpAllTransactions();
+    result.partner401kAnalyzer.dumpAllTransactions();
 
     // result.dump("RetirementYearData");
     debugger;

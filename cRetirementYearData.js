@@ -121,6 +121,20 @@ class RetirementYearData extends YearDataBase {
       ACCOUNT_TYPES.WITHHOLDINGS
     );
 
+    this.subject401kAnalyzer = AccountAnalyzer.CreateUsing(
+      accountYear,
+      ACCOUNT_TYPES.SUBJECT_401K
+    );
+    this.subjectRothAnalyzer = AccountAnalyzer.CreateUsing(
+      accountYear,
+      ACCOUNT_TYPES.SUBJECT_ROTH_IRA
+    );
+    this.partner401kAnalyzer = AccountAnalyzer.CreateUsing(
+      accountYear,
+      ACCOUNT_TYPES.PARTNER_401K
+    );
+
+    
     this.balances = Balances.CreateUsing(accountYear);
 
     // this.socialSecurityIncome = SocialSecurityIncome.CreateUsing(
