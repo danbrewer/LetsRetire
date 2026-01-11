@@ -153,7 +153,7 @@ class AccountAnalyzer {
   dumpCategoryDetails(reportTitle) {
     console.log();
     if (!reportTitle) {
-      reportTitle = `${this.#accountType} Account Activity by Category`;
+      reportTitle = `${this.#accountType} Account Activity by Category (${this.#accountYear.taxYear})`;
     }
     if (reportTitle) {
       console.log("");
@@ -169,7 +169,7 @@ class AccountAnalyzer {
   dumpCategorySummaries(accountName = "") {
     console.log();
     if (!accountName) {
-      accountName = `Transaction Summary for Account: ${this.#accountType}`;
+      accountName = `Transaction Summary for Account: ${this.#accountType} (${this.#accountYear.taxYear})`;
     }
     if (accountName) {
       console.log("");
@@ -207,7 +207,7 @@ class AccountAnalyzer {
   dumpAllTransactions(reportTitle) {
     console.log();
     if (!reportTitle) {
-      reportTitle = `${this.#accountType} Account Activity`;
+      reportTitle = `${this.#accountType} Account Activity (${this.#accountYear.taxYear})`;
     }
 
     const startingBalance = this.#accountYear

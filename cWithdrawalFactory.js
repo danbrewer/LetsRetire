@@ -17,6 +17,10 @@ import { SocialSecurityBreakdown } from "./cSsBreakdown.js";
 import { SsBenefitsCalculator } from "./cSsBenefitsCalculator.js";
 
 /**
+ * @typedef {import("./cTransaction.js").TransactionCategorySymbol} TransactionCategorySymbol
+ * @typedef {import("./cTransaction.js").TransactionTypeSymbol} TransactionTypeSymbol
+ */
+/**
  * WithdrawalFactory class - Handles withdrawal operations for retirement accounts
  * Manages withdrawals from different account types with tax calculations
  */
@@ -163,16 +167,13 @@ class WithdrawalFactory {
     this.#adjustableIncomeStreams.spouseActual401kGrossWithdrawal =
       gross401kWithdrawal;
 
-    this.#processGrossPeriodic401kWithdrawals(
+    this.#processPeriodicDisbursement(
       gross401kWithdrawal,
       ACCOUNT_TYPES.PARTNER_401K,
       "Withdrawal from Partner 401k"
     );
 
-    this.#processGrossPeriodic401kIncome(
-      gross401kWithdrawal,
-      "Partner 401k Income"
-    );
+    this.#processGrossPeriodic401kIncome(gross401kWithdrawal, "Partner");
 
     return gross401kWithdrawal;
   }
@@ -213,7 +214,7 @@ class WithdrawalFactory {
         TransactionCategory.Spend,
         surplusAmount,
         PERIODIC_FREQUENCY.MONTHLY,
-        "Actual income exceeds spend"
+        "Spend budget surplus"
       );
     } else {
       const deficitAmount = this.#fiscalData.spend - this.#actualIncome;
@@ -228,7 +229,7 @@ class WithdrawalFactory {
           TransactionCategory.Spend,
           catchupAmount,
           PERIODIC_FREQUENCY.MONTHLY,
-          "Spend exceeds actual income"
+          "Spend budget catch-up"
         );
         this.#actualIncome += catchupAmount;
       }
@@ -255,6 +256,18 @@ class WithdrawalFactory {
       "Combined Working Income"
     );
 
+    this.#trackAsMonthlyWithholdings(
+      TransactionCategory.Income,
+      this.#incomeBreakdown?.combinedEarnedIncomeWithholdings ?? 0,
+      "Working Income"
+    );
+
+    // this.#trackAsPeriodicDisbursements(
+    //   TransactionCategory.Income,
+    //   this.#combinedActualWorkingIncome,
+    //   "Combined Working Income"
+    // );
+
     this.#actualIncome += this.#combinedActualWorkingIncome;
   }
 
@@ -265,24 +278,45 @@ class WithdrawalFactory {
 
     // Subject SS income goes into living expenses fund
     if (this.#fixedIncomeStreams.subjectSsActualIncome ?? 0 > 0) {
-       this.#accountYear.processAsPeriodicDeposits(
-         ACCOUNT_TYPES.LIVINGEXPENSESFUND,
-         TransactionCategory.SocialSecurity,
-         this.#fixedIncomeStreams.subjectSsActualIncome,
-         PERIODIC_FREQUENCY.MONTHLY,
-         "Subject SS Income"
-       );
+      this.#accountYear.processAsPeriodicDeposits(
+        ACCOUNT_TYPES.LIVINGEXPENSESFUND,
+        TransactionCategory.SocialSecurity,
+        this.#fixedIncomeStreams.subjectSsActualIncome,
+        PERIODIC_FREQUENCY.MONTHLY,
+        "Subject SS Income"
+      );
+      this.#trackAsMonthlyWithholdings(
+        TransactionCategory.SocialSecurity,
+        this.#fixedIncomeStreams.subjectSsWithholdings ?? 0,
+        "Subject"
+      );
+      // this.#trackAsPeriodicDisbursements(
+      //   TransactionCategory.SocialSecurity,
+      //   this.#fixedIncomeStreams.subjectSsGross ?? 0,
+      //   "Subject SS"
+      // );
     }
 
     // Spouse SS income goes into living expenses fund
     if (this.#fixedIncomeStreams.spouseSsActualIncome ?? 0 > 0) {
-        this.#accountYear.processAsPeriodicDeposits(
-          ACCOUNT_TYPES.LIVINGEXPENSESFUND,
-          TransactionCategory.SocialSecurity,
-          this.#fixedIncomeStreams.spouseSsActualIncome,
-          PERIODIC_FREQUENCY.MONTHLY,
-          "Spouse SS Income"
-        );
+      this.#accountYear.processAsPeriodicDeposits(
+        ACCOUNT_TYPES.LIVINGEXPENSESFUND,
+        TransactionCategory.SocialSecurity,
+        this.#fixedIncomeStreams.spouseSsActualIncome,
+        PERIODIC_FREQUENCY.MONTHLY,
+        "Spouse SS Income"
+      );
+
+      this.#trackAsMonthlyWithholdings(
+        TransactionCategory.SocialSecurity,
+        this.#fixedIncomeStreams.spouseSsWithholdings ?? 0,
+        "Partner"
+      );
+      // this.#trackAsPeriodicDisbursements(
+      //   TransactionCategory.SocialSecurity,
+      //   this.#fixedIncomeStreams.spouseSsGross ?? 0,
+      //   "Spouse SS"
+      // );
     }
 
     this.#actualIncome += this.#ssCombinedTakeHome;
@@ -299,6 +333,18 @@ class WithdrawalFactory {
       this.#combinedPensionActualIncome,
       PERIODIC_FREQUENCY.MONTHLY,
       "Combined Pension Income"
+    );
+
+    // this.#trackAsPeriodicDisbursements(
+    //   TransactionCategory.Pension,
+    //   this.#combinedPensionActualIncome,
+    //   "Combined Pension"
+    // );
+
+    this.#trackAsMonthlyWithholdings(
+      TransactionCategory.Pension,
+      this.#incomeBreakdown?.combinedPensionWithholdings ?? 0,
+      "Combined pensions"
     );
 
     this.#actualIncome += this.#combinedPensionActualIncome;
@@ -357,25 +403,22 @@ class WithdrawalFactory {
     this.#adjustableIncomeStreams.subjectActual401kGrossWithdrawal =
       gross401kWithdrawal;
 
-    this.#processGrossPeriodic401kWithdrawals(
+    this.#processPeriodicDisbursement(
       gross401kWithdrawal,
       ACCOUNT_TYPES.SUBJECT_401K,
       "Withdrawal from Subject 401k"
     );
 
-    this.#processGrossPeriodic401kIncome(
-      gross401kWithdrawal,
-      "Subject 401k Income"
-    );
+    this.#processGrossPeriodic401kIncome(gross401kWithdrawal, "Subject");
 
     return gross401kWithdrawal;
   }
 
   /**
    * @param {number} gross401kWithdrawal
-   * @param {string} memo
+   * @param {string} party
    */
-  #processGrossPeriodic401kIncome(gross401kWithdrawal, memo) {
+  #processGrossPeriodic401kIncome(gross401kWithdrawal, party) {
     const actual401kAmount = Common.convertGross401kToActual401k(
       gross401kWithdrawal,
       this.#fiscalData.flatTrad401kWithholdingRate ?? 0
@@ -386,20 +429,53 @@ class WithdrawalFactory {
       TransactionCategory.Trad401k,
       actual401kAmount,
       PERIODIC_FREQUENCY.MONTHLY,
-      memo
+      party
     );
 
     const withholdingAmount = gross401kWithdrawal - actual401kAmount;
 
-    this.#accountYear.processAsPeriodicDeposits(
-      ACCOUNT_TYPES.WITHHOLDINGS,
+    this.#trackAsMonthlyWithholdings(
       TransactionCategory.Trad401k,
       withholdingAmount,
-      PERIODIC_FREQUENCY.MONTHLY,
-      `${memo} Withholdings`
+      `${party} Withholdings`
+    );
+
+    this.#trackAsPeriodicDisbursements(
+      TransactionCategory.Trad401k,
+      gross401kWithdrawal,
+      `${party} 401k Gross`
     );
 
     this.#actualIncome += actual401kAmount;
+  }
+
+  /**
+   * @param {TransactionCategorySymbol} transactionCategory
+   * @param {number} amount
+   * @param {string} memo
+   */
+  #trackAsPeriodicDisbursements(transactionCategory, amount, memo) {
+    this.#accountYear.processAsPeriodicDeposits(
+      ACCOUNT_TYPES.DISBURSEMENT_TRACKING,
+      transactionCategory,
+      amount,
+      PERIODIC_FREQUENCY.MONTHLY,
+      memo
+    );
+  }
+  /**
+   * @param {TransactionCategorySymbol} transactionCategory
+   * @param {number} withholdingAmount
+   * @param {string} memo
+   */
+  #trackAsMonthlyWithholdings(transactionCategory, withholdingAmount, memo) {
+    this.#accountYear.processAsPeriodicDeposits(
+      ACCOUNT_TYPES.WITHHOLDINGS,
+      transactionCategory,
+      withholdingAmount,
+      PERIODIC_FREQUENCY.MONTHLY,
+      memo
+    );
   }
 
   #applyPeriodicRothInterest() {
@@ -539,23 +615,17 @@ class WithdrawalFactory {
 
   /**
    * Process Traditional 401k transactions
-   * @param {number} gross401kWithdrawal - Gross withdrawal amount
+   * @param {number} amount - Gross withdrawal amount
    * @param {string} accountType - Account type
    * @param {string} memo - Memo for the transaction
    */
-  #processGrossPeriodic401kWithdrawals(gross401kWithdrawal, accountType, memo) {
+  #processPeriodicDisbursement(amount, accountType, memo) {
     this.#accountYear.processAsPeriodicWithdrawals(
       accountType,
       TransactionCategory.Disbursement,
-      gross401kWithdrawal,
+      amount,
       PERIODIC_FREQUENCY.MONTHLY,
       memo
-    );
-
-    this.#accountYear.deposit(
-      ACCOUNT_TYPES.DISBURSEMENT_TRACKING,
-      TransactionCategory.Trad401k,
-      gross401kWithdrawal
     );
 
     // this.#accountYear.deposit(
@@ -648,18 +718,24 @@ class WithdrawalFactory {
     // Log the monthly spending for savings
     this.#accountYear.processAsPeriodicWithdrawals(
       ACCOUNT_TYPES.SAVINGS,
-      TransactionCategory.Disbursement,
+      TransactionCategory.Transfer,
       withdrawalAmount,
       PERIODIC_FREQUENCY.MONTHLY,
-      "For monthly spending"
+      "Xfer to Living Expenses Fund"
     );
+
+    // this.#trackAsPeriodicDisbursements(
+    //   TransactionCategory.Savings,
+    //   withdrawalAmount,
+    //   "Savings Withdrawal"
+    // );
 
     this.#accountYear.processAsPeriodicDeposits(
       ACCOUNT_TYPES.LIVINGEXPENSESFUND,
-      TransactionCategory.Savings,
+      TransactionCategory.Transfer,
       withdrawalAmount,
       PERIODIC_FREQUENCY.MONTHLY,
-      "Pull from Savings"
+      "Xfer from Savings"
     );
 
     this.#adjustableIncomeStreams.savingsWithdrawal += withdrawalAmount;

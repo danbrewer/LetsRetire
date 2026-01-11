@@ -116,6 +116,10 @@ class RetirementYearData extends YearDataBase {
       accountYear,
       ACCOUNT_TYPES.SAVINGS
     );
+    this.withholdingsTransactionAnalyzer = AccountAnalyzer.CreateUsing(
+      accountYear,
+      ACCOUNT_TYPES.WITHHOLDINGS
+    );
 
     this.balances = Balances.CreateUsing(accountYear);
 
