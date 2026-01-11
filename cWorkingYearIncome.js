@@ -38,8 +38,8 @@ class WorkingYearIncome {
   /** @type {Number | null} */
   #withholdings = null;
 
-  /** @type {Account} */
-  #withholdingsAccount = new Account(ACCOUNT_TYPES.WITHHOLDINGS, 0, 0);
+  // /** @type {Account} */
+  // #withholdingsAccount =  Account.createWithOpeningBalance(ACCOUNT_TYPES.WITHHOLDINGS, 0, new Date(this.#fiscalData.taxYear, 0, 1), 0);
 
   /** @type {Number} */
   #taxesDue = 0;
@@ -269,10 +269,10 @@ class WorkingYearIncome {
     this.#withholdings = incomeTaxes.federalTaxesOwed.asCurrency();
 
     // Estimate tax withholdings
-    this.#withholdingsAccount.processAsPeriodicDeposits(
-      this.#accountYear.taxYear,
-      this.#withholdings,
+    this.#accountYear.processAsPeriodicDeposits(
+      ACCOUNT_TYPES.WITHHOLDINGS,
       TransactionCategory.Taxes,
+      this.#withholdings,
       PERIODIC_FREQUENCY.MONTHLY,
       "Estimated tax withholdings"
     );
@@ -289,17 +289,13 @@ class WorkingYearIncome {
     this.#taxesDue = actualTaxes.federalTaxesOwed.asCurrency();
 
     this.#taxOverpayment = Math.max(
-      this.#withholdingsAccount
-        .endingBalanceForYear(this.#accountYear.taxYear)
-        .asCurrency() - this.#taxesDue,
+      this.#accountYear.getEndingBalance(ACCOUNT_TYPES.WITHHOLDINGS),
       0
     );
 
     this.#taxUnderpayment = Math.max(
       this.#taxesDue -
-        this.#withholdingsAccount
-          .endingBalanceForYear(this.#accountYear.taxYear)
-          .asCurrency(),
+        this.#accountYear.getEndingBalance(ACCOUNT_TYPES.WITHHOLDINGS),
       0
     );
 

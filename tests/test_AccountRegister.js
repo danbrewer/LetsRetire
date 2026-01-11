@@ -514,7 +514,12 @@ runTest(
   "Account integration with sample transactions",
   () => {
     // Create a savings account with some transactions
-    const account = new Account(ACCOUNT_TYPES.SAVINGS, 5000, 0.03); // 3% interest
+    const account = Account.createWithOpeningBalance(
+      ACCOUNT_TYPES.SAVINGS,
+      5000,
+      new Date(2023, 0, 1),
+      0.03
+    );
 
     // Add some deposits
     account.deposit(2000, TransactionCategory.Income, 2023, 1, 15, "Salary");
@@ -616,7 +621,12 @@ runTest(
 runTest(
   "Account register with filtered transactions",
   () => {
-    const account = new Account(ACCOUNT_TYPES.SUBJECT_401K, 25000, 0.07); // 7% 401k
+    const account = Account.createWithOpeningBalance(
+      ACCOUNT_TYPES.SUBJECT_401K,
+      25000,
+      new Date(2023, 0, 1),
+      0.07
+    );
 
     // Add various categories of transactions
     account.deposit(
@@ -708,10 +718,16 @@ runTest(
   "Multiple account types with registers",
   () => {
     // Create different types of accounts
-    const savingsAccount = new Account(ACCOUNT_TYPES.SAVINGS, 10000, 0.02);
-    const rothAccount = new Account(
+    const savingsAccount = Account.createWithOpeningBalance(
+      ACCOUNT_TYPES.SAVINGS,
+      10000,
+      new Date(2023, 0, 1),
+      0.02
+    );
+    const rothAccount = Account.createWithOpeningBalance(
       ACCOUNT_TYPES.SUBJECT_ROTH_IRA,
       15000,
+      new Date(2023, 0, 1),
       0.08
     );
 
@@ -804,7 +820,12 @@ runTest(
 runTest(
   "Account register with date range filtering",
   () => {
-    const account = new Account(ACCOUNT_TYPES.SAVINGS, 1000, 0.01);
+    const account = Account.createWithOpeningBalance(
+      ACCOUNT_TYPES.SAVINGS,
+      1000,
+      new Date(2023, 0, 1),
+      0.01
+    );
 
     // Add transactions across different months
     account.deposit(

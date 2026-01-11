@@ -183,42 +183,6 @@ class Deposits {
     };
   }
 
-  /**
-   * Factory method to create an empty Deposits instance with all values set to zero.
-   *
-   * This method provides a convenient way to initialize a Deposits object with
-   * no deposits, useful for scenarios where deposit calculations haven't been
-   * performed yet or for baseline comparisons.
-   *
-   * @param {string} [description="Deposits Breakdown"] - Optional description
-   *
-   * @returns {Deposits} A new Deposits instance with all values set to zero
-   *
-   * @example
-   * // Create empty deposits for initialization
-   * const deposits = Deposits.Empty();
-   * console.log(deposits.total()); // 0
-   * console.log(deposits.hasDeposits()); // false
-   *
-   * // Later, update with actual deposit amounts
-   * deposits.updateDeposits({
-   *   trad401k: 25000,
-   *   rmd: 5000
-   * });
-   * console.log(deposits.total()); // 30000
-   *
-   * @static
-   * @since 1.0.0
-   */
-  static Empty(description = "Deposits Breakdown") {
-    return new Deposits(
-      new Account(ACCOUNT_TYPES.SAVINGS, 0, 0),
-      new Account(ACCOUNT_TYPES.SUBJECT_401K, 0, 0),
-      new Account(ACCOUNT_TYPES.SUBJECT_ROTH_IRA, 0, 0),
-      0,
-      description
-    );
-  }
 
   /**
    * Factory method to create a Deposits instance from account group and income data.

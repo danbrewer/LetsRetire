@@ -43,9 +43,6 @@ class Account {
   /** @type {string} */
   #name = "";
 
-  /** @type {number} */
-  #openingBalance = 0;
-
   /** @type {number} Annual interest rate as a decimal (e.g., 0.05 for 5%) */
   #interestRate = 0;
 
@@ -110,10 +107,9 @@ class Account {
 
   /**
    * @param {string} name - Name of the account
-   * @param {number} openingBalance - Initial balance of the account
    * @param {number} [interestRate] - Annual interest rate as a decimal (e.g., 0.05 for 5%)
    */
-  constructor(name, openingBalance, interestRate = 0) {
+  constructor(name, interestRate = 0) {
     // Validate that name matches one of the ACCOUNT_TYPES values
     const validAccountTypes = Object.values(ACCOUNT_TYPES);
     if (!validAccountTypes.includes(name)) {
@@ -123,8 +119,138 @@ class Account {
     }
 
     this.#name = name;
-    this.#openingBalance = openingBalance;
     this.#interestRate = interestRate; // Annual interest rate as a decimal (e.g., 0.05 for 5%)
+  }
+
+  /**
+   * Set the opening balance for the account on a specific date
+   * This creates the first transaction that establishes when the account opened
+   * @param {number} amount - Opening balance amount (must be positive)
+   * @param {Date} openingDate - Date when account was opened
+   * @param {string} [memo] - Optional memo for the opening transaction
+   */
+  setOpeningBalance(amount, openingDate, memo = "Account opening balance") {
+    if (amount <= 0) {
+      throw new Error("Opening balance must be positive");
+    }
+
+    // Check if account already has transactions
+    if (this.#transactions.length > 0) {
+      throw new Error(
+        "Cannot set opening balance - account already has transactions"
+      );
+    }
+
+    this.#transactions.push(
+      new Transaction(
+        amount,
+        TransactionType.Deposit,
+        TransactionCategory.Transfer,
+        new Date(openingDate),
+        memo
+      )
+    );
+  }
+
+  /**
+   * Convenience method to set opening balance by year/month/day
+   * @param {number} amount - Opening balance amount
+   * @param {number} year - Year account was opened
+   * @param {number} [month] - Month (1-12, defaults to 1)
+   * @param {number} [day] - Day (defaults to 1)
+   * @param {string} [memo] - Optional memo
+   */
+  setOpeningBalanceByDate(
+    amount,
+    year,
+    month = 1,
+    day = 1,
+    memo = "Account opening balance"
+  ) {
+    const openingDate = new Date(year, month - 1, day);
+    this.setOpeningBalance(amount, openingDate, memo);
+  }
+
+  /**
+   * Factory method to create account with opening balance
+   * @param {string} name - Account name
+   * @param {number} openingBalance - Opening balance amount
+   * @param {Date} openingDate - Date when account opened
+   * @param {number} [interestRate] - Interest rate
+   * @param {string} [memo] - Opening memo
+   * @returns {Account}
+   */
+  static createWithOpeningBalance(
+    name,
+    openingBalance,
+    openingDate,
+    interestRate = 0,
+    memo = "Account opening balance"
+  ) {
+    const account = new Account(name, interestRate);
+    account.setOpeningBalance(openingBalance, openingDate, memo);
+    return account;
+  }
+
+  /**
+   * Factory method to create account with opening balance by year
+   * @param {string} name - Account name
+   * @param {number} openingBalance - Opening balance amount
+   * @param {number} year - Opening year
+   * @param {number} [interestRate] - Interest rate
+   * @param {number} [month] - Month (1-12)
+   * @param {number} [day] - Day
+   * @param {string} [memo] - Opening memo
+   * @returns {Account}
+   */
+  static createWithOpeningBalanceByYear(
+    name,
+    openingBalance,
+    year,
+    interestRate = 0,
+    month = 1,
+    day = 1,
+    memo = "Account opening balance"
+  ) {
+    const openingDate = new Date(year, month - 1, day);
+    return Account.createWithOpeningBalance(
+      name,
+      openingBalance,
+      openingDate,
+      interestRate,
+      memo
+    );
+  }
+
+  /**
+   * Get the date when this account was first opened (earliest transaction date)
+   * @returns {Date | null} Opening date or null if no transactions
+   */
+  get accountOpeningDate() {
+    if (this.#transactions.length === 0) return null;
+
+    return this.#transactions
+      .slice()
+      .sort((a, b) => a.date.getTime() - b.date.getTime())[0].date;
+  }
+
+  /**
+   * Get the year when this account was first opened
+   * @returns {number | null} Opening year or null if no transactions
+   */
+  get accountOpeningYear() {
+    const openingDate = this.accountOpeningDate;
+    return openingDate ? openingDate.getFullYear() : null;
+  }
+
+  /**
+   * Check if account was open during a specific year
+   * @param {number} year - Year to check
+   * @returns {boolean}
+   */
+  wasOpenInYear(year) {
+    const openingYear = this.accountOpeningYear;
+    return openingYear !== null && openingYear <= year;
   }
 
   /**
@@ -140,7 +266,6 @@ class Account {
   toJSON(yyyy = null) {
     return {
       name: this.#name,
-      openingBalance: this.#openingBalance,
       interestRate: this.#interestRate,
       transactions: yyyy
         ? this.getTransactionsForYear(yyyy)
@@ -153,7 +278,7 @@ class Account {
   }
 
   get initialBalance() {
-    return this.#openingBalance.asCurrency();
+    return this.#transactions.length > 0 ? this.#transactions[0].amount : 0;
   }
 
   get interestRate() {
@@ -857,7 +982,7 @@ class Account {
    */
   static fromJSON(json) {
     const obj = typeof json === "string" ? JSON.parse(json) : json;
-    const account = new Account(obj.name, obj.initialBalance, obj.interestRate);
+    const account = new Account(obj.name, obj.interestRate);
     return account;
   }
 }
