@@ -150,7 +150,8 @@ class AccountAnalyzer {
   }
 
   /** @param {string} [reportTitle] */
-  dumpTransactionsByCategory(reportTitle) {
+  dumpCategoryDetails(reportTitle) {
+    console.log();
     if (!reportTitle) {
       reportTitle = `${this.#accountType} Account Activity by Category`;
     }
@@ -165,7 +166,8 @@ class AccountAnalyzer {
     }
   }
 
-  dumpTransactionsSummaryByCategory(accountName = "") {
+  dumpCategorySummaries(accountName = "") {
+    console.log();
     if (!accountName) {
       accountName = `Transaction Summary for Account: ${this.#accountType}`;
     }
@@ -202,7 +204,8 @@ class AccountAnalyzer {
   }
 
   /** @param {string} [reportTitle] */
-  dumpTransactions(reportTitle) {
+  dumpAllTransactions(reportTitle) {
+    console.log();
     if (!reportTitle) {
       reportTitle = `${this.#accountType} Account Activity`;
     }

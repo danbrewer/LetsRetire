@@ -260,16 +260,30 @@ class WithdrawalFactory {
 
   #processCombinedSocialSecurityIncomes() {
     this.#ssCombinedTakeHome =
-      this.#incomeBreakdown?.combinedSocialSecActualIncome ?? 0;
+      this.#fixedIncomeStreams?.combinedSsActualIncome ?? 0;
     if (this.#ssCombinedTakeHome == 0) return;
 
-    this.#accountYear.processAsPeriodicDeposits(
-      ACCOUNT_TYPES.LIVINGEXPENSESFUND,
-      TransactionCategory.SocialSecurity,
-      this.#ssCombinedTakeHome,
-      PERIODIC_FREQUENCY.MONTHLY,
-      "Combined Social Security Income"
-    );
+    // Subject SS income goes into living expenses fund
+    if (this.#fixedIncomeStreams.subjectSsActualIncome ?? 0 > 0) {
+       this.#accountYear.processAsPeriodicDeposits(
+         ACCOUNT_TYPES.LIVINGEXPENSESFUND,
+         TransactionCategory.SocialSecurity,
+         this.#fixedIncomeStreams.subjectSsActualIncome,
+         PERIODIC_FREQUENCY.MONTHLY,
+         "Subject SS Income"
+       );
+    }
+
+    // Spouse SS income goes into living expenses fund
+    if (this.#fixedIncomeStreams.spouseSsActualIncome ?? 0 > 0) {
+        this.#accountYear.processAsPeriodicDeposits(
+          ACCOUNT_TYPES.LIVINGEXPENSESFUND,
+          TransactionCategory.SocialSecurity,
+          this.#fixedIncomeStreams.spouseSsActualIncome,
+          PERIODIC_FREQUENCY.MONTHLY,
+          "Spouse SS Income"
+        );
+    }
 
     this.#actualIncome += this.#ssCombinedTakeHome;
   }
@@ -637,7 +651,15 @@ class WithdrawalFactory {
       TransactionCategory.Disbursement,
       withdrawalAmount,
       PERIODIC_FREQUENCY.MONTHLY,
-      "Savings Withdrawal"
+      "For monthly spending"
+    );
+
+    this.#accountYear.processAsPeriodicDeposits(
+      ACCOUNT_TYPES.LIVINGEXPENSESFUND,
+      TransactionCategory.Savings,
+      withdrawalAmount,
+      PERIODIC_FREQUENCY.MONTHLY,
+      "Pull from Savings"
     );
 
     this.#adjustableIncomeStreams.savingsWithdrawal += withdrawalAmount;

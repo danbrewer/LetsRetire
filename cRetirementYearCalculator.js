@@ -325,11 +325,12 @@ class RetirementYearCalculator {
 
     // fiscalData.dump("fiscalData");
     // result.livingExpenseFunds.dumpTransactionsByCategory();
-    result.savingsTransactionAnalyzer.dumpTransactionsByCategory();
+    // result.savingsTransactionAnalyzer.dumpCategoryDetails();
 
-    result.savingsTransactionAnalyzer.dumpTransactionsSummaryByCategory()
+    // result.savingsTransactionAnalyzer.dumpCategorySummaries();
 
-    result.savingsTransactionAnalyzer.dumpTransactions();
+    // result.savingsTransactionAnalyzer.dumpAllTransactions();
+    result.livingExpenseFunds.dumpAllTransactions();
     // result.dump("RetirementYearData");
     debugger;
     // result.income.dump();
