@@ -86,7 +86,7 @@ class SsBenefitsCalculator {
 
     const ssBreakdown = new SocialSecurityBreakdown(
       fixedIncomeStreams.subjectSsGross,
-      fixedIncomeStreams.spouseSsGross,
+      fixedIncomeStreams.partnerSsGross,
       taxableNonSsIncome,
       demographics.hasPartner
     );

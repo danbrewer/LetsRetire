@@ -13,7 +13,7 @@ import { FiscalData } from "./cFiscalData.js";
  *
  * @abstract
  */
-class YearDataBase{
+class BaseYearData {
   /** @type {Demographics} */
   #demographics;
   /** @type {FiscalData} */
@@ -62,4 +62,4 @@ class YearDataBase{
   }
 }
 
-export { YearDataBase };
+export { BaseYearData as YearDataBase };

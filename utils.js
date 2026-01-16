@@ -77,7 +77,7 @@ class DateFunctions {
    */
   static addYears(date, years) {
     const month = date.getMonth();
-    const day = date.getDay();
+    const day = date.getDate();
     const newYear = date.getFullYear() + years;
 
     let newDate = new Date(newYear, month, day);

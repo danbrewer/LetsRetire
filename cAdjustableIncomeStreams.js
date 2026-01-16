@@ -6,15 +6,12 @@ import { FiscalData } from "./cFiscalData.js";
 import { Inputs } from "./cInputs.js";
 
 class AdjustableIncomeStreams {
-  /** @type {AccountingYear} */
-  #accountYear;
-
   /** @type {FiscalData} */
   #fiscalData;
-
+  /** @type {AccountingYear} */
+  #accountYear;
   /** @type {Inputs} */
   #inputs;
-
   /** @type {Demographics} */
   #demographics;
 
@@ -36,10 +33,10 @@ class AdjustableIncomeStreams {
    * @param {Inputs} inputs - Input data object containing tax adjustments
    */
   constructor(demographics, accountYear, fiscalData, inputs) {
-    this.#demographics = demographics;
     this.#accountYear = accountYear;
-    this.#fiscalData = fiscalData;
     this.#inputs = inputs;
+    this.#demographics = demographics;
+    this.#fiscalData = fiscalData;
 
     this._description = "AdjustableIncomeStreams";
   }
@@ -84,7 +81,7 @@ class AdjustableIncomeStreams {
   get spouseActual401kGrossWithdrawal() {
     return this.#spouse401kWithdrawalGross.asCurrency();
   }
-  
+
   set spouseActual401kGrossWithdrawal(value) {
     this.#spouse401kWithdrawalGross = value;
   }
@@ -103,7 +100,8 @@ class AdjustableIncomeStreams {
 
   get combined401kGrossWithdrawal() {
     return (
-      this.subjectActual401kGrossWithdrawal + this.spouseActual401kGrossWithdrawal
+      this.subjectActual401kGrossWithdrawal +
+      this.spouseActual401kGrossWithdrawal
     ).asCurrency();
   }
 

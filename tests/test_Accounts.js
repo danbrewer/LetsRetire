@@ -30,7 +30,7 @@ runTest(
     const transaction = new Transaction(
       1000,
       TransactionType.Deposit,
-      TransactionCategory.Income,
+      TransactionCategory.IncomeNet,
       testDate,
       "Salary payment"
     );
@@ -43,7 +43,7 @@ runTest(
     );
     assertEqual(
       transaction.category,
-      TransactionCategory.Income,
+      TransactionCategory.IncomeNet,
       "Category should be SALARY"
     );
     assertEqual(transaction.date, testDate, "Date should be set correctly");
@@ -69,7 +69,7 @@ runTest(
         new Transaction(
           -100,
           TransactionType.Deposit,
-          TransactionCategory.Income,
+          TransactionCategory.IncomeNet,
           testDate,
           "Invalid transaction"
         ),
@@ -81,7 +81,7 @@ runTest(
         new Transaction(
           0,
           TransactionType.Deposit,
-          TransactionCategory.Income,
+          TransactionCategory.IncomeNet,
           testDate,
           "Zero amount"
         ),
@@ -103,7 +103,7 @@ runTest(
     const depositTx = new Transaction(
       100,
       TransactionType.Deposit,
-      TransactionCategory.Income,
+      TransactionCategory.IncomeNet,
       testDate,
       "Valid deposit"
     );
@@ -125,7 +125,7 @@ runTest(
           100,
           // @ts-ignore
           "INVALID_TYPE",
-          TransactionCategory.Income,
+          TransactionCategory.IncomeNet,
           testDate,
           "Invalid type"
         ),
@@ -145,7 +145,7 @@ runTest(
 
     // Test all valid categories
     const validCategories = [
-      TransactionCategory.Income,
+      TransactionCategory.IncomeNet,
       TransactionCategory.Interest,
       TransactionCategory.OtherNonTaxable,
       TransactionCategory.Disbursement,
@@ -212,9 +212,9 @@ runTest(
       ACCOUNT_TYPES.SAVINGS,
       ACCOUNT_TYPES.SUBJECT_401K,
       ACCOUNT_TYPES.SUBJECT_ROTH_IRA,
-      ACCOUNT_TYPES.LIVINGEXPENSESFUND,
+      ACCOUNT_TYPES.CASH,
       ACCOUNT_TYPES.INTEREST_ON_SAVINGS,
-      ACCOUNT_TYPES.DISBURSEMENT_TRACKING,
+      ACCOUNT_TYPES.DISBURSEMENT,
       ACCOUNT_TYPES.TAXES,
       ACCOUNT_TYPES.WITHHOLDINGS,
     ];
@@ -238,7 +238,7 @@ runTest(
     // Make a deposit
     const result = account.deposit(
       500,
-      TransactionCategory.Income,
+      TransactionCategory.IncomeNet,
       2023,
       6,
       15,
@@ -256,7 +256,7 @@ runTest(
     const register = account.buildAccountRegister(
       new Date("2023-01-01"),
       new Date("2023-12-31"),
-      TransactionCategory.Income
+      TransactionCategory.IncomeNet
     );
     assert(register.entries.length > 0, "Should have transaction entries");
   },
@@ -292,7 +292,7 @@ runTest(
     const register = account.buildAccountRegister(
       new Date("2023-01-01"),
       new Date("2023-12-31"),
-      TransactionCategory.Income
+      TransactionCategory.IncomeNet
     );
     assert(register.entries.length > 0, "Should have transaction entries");
   },
@@ -308,7 +308,7 @@ runTest(
     const account = new Account(ACCOUNT_TYPES.SAVINGS, 1000);
 
     // Add transactions in different years
-    account.deposit(500, TransactionCategory.Income, 2023, 3, 15);
+    account.deposit(500, TransactionCategory.IncomeNet, 2023, 3, 15);
     account.withdrawal(200, TransactionCategory.Disbursement, 2023, 6, 10);
     account.deposit(300, TransactionCategory.Interest, 2024, 1, 1);
 
@@ -348,7 +348,7 @@ runTest(
     const account = new Account(ACCOUNT_TYPES.SAVINGS, 1000);
 
     // Add transactions on specific dates
-    account.deposit(500, TransactionCategory.Income, 2023, 3, 15);
+    account.deposit(500, TransactionCategory.IncomeNet, 2023, 3, 15);
     account.withdrawal(200, TransactionCategory.Disbursement, 2023, 6, 10);
     account.deposit(300, TransactionCategory.Interest, 2023, 9, 5);
 
@@ -387,7 +387,7 @@ runTest(
     // Add multiple transactions
     account.deposit(
       1000,
-      TransactionCategory.Income,
+      TransactionCategory.IncomeNet,
       2023,
       1,
       15,
@@ -414,7 +414,7 @@ runTest(
     const register = account.buildAccountRegister(
       new Date(2023, 0, 1),
       new Date(2023, 1, 28),
-      TransactionCategory.Income
+      TransactionCategory.IncomeNet
     );
 
     assert(register, "Register should be created");
@@ -450,7 +450,7 @@ runTest(
 
     // Test negative deposit
     assertThrows(
-      () => account.deposit(-100, TransactionCategory.Income, 2023, 1, 1),
+      () => account.deposit(-100, TransactionCategory.IncomeNet, 2023, 1, 1),
       "Should reject negative deposit amounts"
     );
 
@@ -474,7 +474,7 @@ runTest(
     const transaction = new Transaction(
       1000,
       TransactionType.Deposit,
-      TransactionCategory.Income,
+      TransactionCategory.IncomeNet,
       testDate,
       "Test transaction"
     );
@@ -521,7 +521,7 @@ runTest(
     // Q1 - Regular contributions
     account.deposit(
       1000,
-      TransactionCategory.Income,
+      TransactionCategory.IncomeNet,
       2023,
       1,
       15,
@@ -529,7 +529,7 @@ runTest(
     );
     account.deposit(
       1000,
-      TransactionCategory.Income,
+      TransactionCategory.IncomeNet,
       2023,
       2,
       15,
@@ -537,7 +537,7 @@ runTest(
     );
     account.deposit(
       1000,
-      TransactionCategory.Income,
+      TransactionCategory.IncomeNet,
       2023,
       3,
       15,
@@ -547,7 +547,7 @@ runTest(
     // Q2 - Contributions and fees
     account.deposit(
       1000,
-      TransactionCategory.Income,
+      TransactionCategory.IncomeNet,
       2023,
       4,
       15,
@@ -563,7 +563,7 @@ runTest(
     );
     account.deposit(
       1000,
-      TransactionCategory.Income,
+      TransactionCategory.IncomeNet,
       2023,
       5,
       15,
@@ -571,7 +571,7 @@ runTest(
     );
     account.deposit(
       1000,
-      TransactionCategory.Income,
+      TransactionCategory.IncomeNet,
       2023,
       6,
       15,
@@ -581,7 +581,7 @@ runTest(
     // Q3 - Contributions and market gains
     account.deposit(
       1000,
-      TransactionCategory.Income,
+      TransactionCategory.IncomeNet,
       2023,
       7,
       15,
@@ -589,7 +589,7 @@ runTest(
     );
     account.deposit(
       250,
-      TransactionCategory.Income,
+      TransactionCategory.IncomeNet,
       2023,
       7,
       31,
@@ -597,7 +597,7 @@ runTest(
     );
     account.deposit(
       1000,
-      TransactionCategory.Income,
+      TransactionCategory.IncomeNet,
       2023,
       8,
       15,
@@ -605,7 +605,7 @@ runTest(
     );
     account.deposit(
       1000,
-      TransactionCategory.Income,
+      TransactionCategory.IncomeNet,
       2023,
       9,
       15,
@@ -615,7 +615,7 @@ runTest(
     // Q4 - Final contributions and year-end interest
     account.deposit(
       1000,
-      TransactionCategory.Income,
+      TransactionCategory.IncomeNet,
       2023,
       10,
       15,
@@ -623,7 +623,7 @@ runTest(
     );
     account.deposit(
       1000,
-      TransactionCategory.Income,
+      TransactionCategory.IncomeNet,
       2023,
       11,
       15,
@@ -631,7 +631,7 @@ runTest(
     );
     account.deposit(
       1000,
-      TransactionCategory.Income,
+      TransactionCategory.IncomeNet,
       2023,
       12,
       15,
@@ -659,7 +659,7 @@ runTest(
     const annualRegister = account.buildAccountRegister(
       new Date("2023-01-01"),
       new Date("2023-12-31"),
-      TransactionCategory.Income
+      TransactionCategory.IncomeNet
     );
 
     assert(
@@ -688,7 +688,7 @@ runTest(
   () => {
     // Test that TransactionCategory enum is properly defined
     assert(
-      TransactionCategory.Income,
+      TransactionCategory.IncomeNet,
       "TransactionCategory.Income should exist"
     );
     assert(
@@ -698,7 +698,7 @@ runTest(
 
     // Test enum values are accessible
     const incomeCategories = [
-      TransactionCategory.Income,
+      TransactionCategory.IncomeNet,
       TransactionCategory.Interest,
       TransactionCategory.Disbursement,
     ];

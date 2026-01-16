@@ -27,7 +27,7 @@ class Balance {
     this.#accountType = accountType;
   }
 
-  get startingBalance() {
+  get startingBalanceForYear() {
     return this.#accountYear.getStartingBalance(this.#accountType).asCurrency();
   }
 
@@ -35,11 +35,11 @@ class Balance {
     return this.#accountYear.getWithdrawals(this.#accountType);
   }
 
-  get deposits() {
+  get depositsForYear() {
     return this.#accountYear.getDeposits(this.#accountType);
   }
 
-  get endingBalance() {
+  get endingBalanceForYear() {
     return this.#accountYear.getEndingBalance(this.#accountType).asCurrency();
   }
 

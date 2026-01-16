@@ -25,62 +25,58 @@ import { SsBenefitsCalculator } from "./cSsBenefitsCalculator.js";
  * Manages withdrawals from different account types with tax calculations
  */
 class WithdrawalFactory {
-  /** @type {FixedIncomeStreams} */
-  #fixedIncomeStreams;
+  // /** @type {FixedIncomeStreams} */
+  // #fixedIncomeStreams;
 
-  /** @type {AdjustableIncomeStreams} */
-  #adjustableIncomeStreams;
+  // /** @type {AdjustableIncomeStreams} */
+  // #adjustableIncomeStreams;
 
-  /** @type {FiscalData} */
-  #fiscalData;
+  // /** @type {FiscalData} */
+  // #fiscalData;
 
-  /** @type {Demographics} */
-  #demographics;
+  // /** @type {Demographics} */
+  // #demographics;
 
-  /** @type {AccountingYear} */
-  #accountYear;
+  // /** @type {AccountingYear} */
+  // #accountYear;
 
-  /** @type {IncomeBreakdown} */
-  #incomeBreakdown;
+  // /** @type {IncomeBreakdown} */
+  // #incomeBreakdown;
 
   // /** @type {WorkingIncomeCalculator} */
   // #workingIncomeCalculator;
 
-  /** @type {AccountPortioner | null} */
-  #accountPortioner = null;
-  /** @type {number} */
-  #ssCombinedTakeHome = 0;
+  // /** @type {AccountPortioner | null} */
+  // #accountPortioner = null;
+  // /** @type {number} */
+  // #ssCombinedTakeHome = 0;
 
-  /** @type {number} */
-  #combinedPensionActualIncome = 0;
-  /** @type {number} */
-  #combinedActualWorkingIncome = 0;
-  /** @type {number} */
-  #nonTaxableActualIncome = 0;
-  /** @type {number} */
-  #actualIncome = 0;
-  /** @type {number} */
-  #actualSpend = 0;
+  // /** @type {number} */
+  // #combinedPensionActualIncome = 0;
+  // /** @type {number} */
+  // #combinedActualWorkingIncome = 0;
+  // /** @type {number} */
+  // #nonTaxableActualIncome = 0;
+  // /** @type {number} */
+  // #actualIncome = 0;
+  // /** @type {number} */
+  // #actualSpend = 0;
 
-  /** @type {SocialSecurityBreakdown | null} */
-  #ssBreakdown = null;
+  // /** @type {SocialSecurityBreakdown | null} */
+  // #ssBreakdown = null;
 
-  /** @type {Taxes | null} */
-  #taxes = null;
+  // /** @type {Taxes | null} */
+  // #taxes = null;
 
   /**
    * Create withdrawal factory for a specific retirement year
-   * @param {FixedIncomeStreams} fixedIncomeStreams
-   * @param {AdjustableIncomeStreams} adjustableIncomeStreams
-   * @param {FiscalData} fiscalData
-   * @param {Demographics} demographics
    * @param {AccountingYear} accountYear
    */
   constructor(
-    fixedIncomeStreams,
-    adjustableIncomeStreams,
-    fiscalData,
-    demographics,
+    // fixedIncomeStreams,
+    // adjustableIncomeStreams,
+    // fiscalData,
+    // demographics,
     accountYear
   ) {
     // **************
@@ -92,418 +88,514 @@ class WithdrawalFactory {
     }
     // **************
 
-    this.#fixedIncomeStreams = fixedIncomeStreams;
-    this.#adjustableIncomeStreams = adjustableIncomeStreams;
-    this.#fiscalData = fiscalData;
-    this.#demographics = demographics;
-    this.#accountYear = accountYear;
+    // this.#fixedIncomeStreams = fixedIncomeStreams;
+    // this.#adjustableIncomeStreams = adjustableIncomeStreams;
+    // this.#fiscalData = fiscalData;
+    // this.#demographics = demographics;
+    // this.#accountYear = accountYear;
 
-    this.#incomeBreakdown = IncomeBreakdown.CreateFrom(
-      fixedIncomeStreams,
-      adjustableIncomeStreams,
-      demographics,
-      fiscalData
-    );
-
-    this.#accountPortioner = AccountPortioner.CreateFrom(
-      this.#accountYear,
-      this.#fiscalData,
-      this.#demographics,
-      this.#fixedIncomeStreams
-    );
-  }
-
-  processIncome() {
-    this.#actualIncome = 0;
-
-    // Dump misc non-taxable income into savings account just to get it accounted for
-    this.#processNonTaxableIncome();
-
-    // Process non-variable income streams into savings account
-    this.#processCombinedPensionIncomes();
-    this.#processCombinedWorkingIncomes();
-    this.#processCombinedSocialSecurityIncomes();
-
-    const ask = this.#fiscalData.spend;
-    const totalFixedIncome = this.totalFixedIncome;
-
-    // reduce the "ask" by the estimated net income from SS, Pension, etc
-    let shortfall = ask - totalFixedIncome;
-    this.#determineWithdrawalPortions(shortfall);
-
-    // Take withdrawals in order of Savings, Roth, 401k
-    this.#withdrawRothPortion();
-    this.#withdrawFromSubject401k();
-    this.#withdrawFromPartner401k();
-
-    this.#withdrawFromSavings();
-
-    this.#processActualIncome();
-
-    this.#applyPeriodic401kInterestEarned();
-    this.#applyPeriodicRothInterest();
-    this.#applyPeriodicSavingsInterest();
-
-    this.#processIncomeTaxes();
-
-    // If still shortfall, we're busted
-    shortfall = this.#fiscalData.spend - this.#actualIncome;
-    if (shortfall > 0) {
-      console.error(`Unable to cover fiscal spend: ${shortfall.toFixed(2)}`);
-    }
-  }
-  #withdrawFromPartner401k() {
-    const amount = this.#accountPortioner?.partner401kGrossWithdrawal ?? 0;
-    if (amount <= 0) return 0;
-
-    const grossFundsAvailable = this.#accountYear.getAvailableFunds([
-      ACCOUNT_TYPES.PARTNER_401K,
-    ]);
-
-    if (grossFundsAvailable <= 0) return 0;
-
-    const gross401kWithdrawal = Math.min(amount, grossFundsAvailable);
-
-    this.#adjustableIncomeStreams.spouseActual401kGrossWithdrawal =
-      gross401kWithdrawal;
-
-    this.#processPeriodicDisbursement(
-      gross401kWithdrawal,
-      ACCOUNT_TYPES.PARTNER_401K,
-      "Withdrawal from Partner 401k"
-    );
-
-    this.#processGrossPeriodic401kIncome(gross401kWithdrawal, "Partner");
-
-    return gross401kWithdrawal;
-  }
-
-  #determineSocialSecurityBreakdown() {
-    const ssBreakdown = SsBenefitsCalculator.CalculateSsBreakdown(
-      this.#demographics,
-      this.#fixedIncomeStreams,
-      this.#adjustableIncomeStreams
-    );
-
-    return ssBreakdown;
-  }
-
-  #processIncomeTaxes() {
-    this.#ssBreakdown = this.#determineSocialSecurityBreakdown();
-
-    const grossIncome = this.#incomeBreakdown?.grossIncome ?? 0;
-    const taxableIncome = grossIncome - this.#ssBreakdown.nonTaxableAmount;
-
-    this.#taxes = Taxes.CreateFromTaxableIncome(
-      grossIncome,
-      taxableIncome,
-      this.#fiscalData,
-      this.#demographics
-    );
-  }
-
-  #processActualIncome() {
-    this.#actualSpend = Math.min(this.#actualIncome, this.#fiscalData.spend);
-
-    if (this.#actualIncome == this.#fiscalData.spend) return;
-
-    if (this.#actualIncome > this.#fiscalData.spend) {
-      const surplusAmount = this.#actualIncome - this.#fiscalData.spend;
-      this.#accountYear.processAsPeriodicDeposits(
-        ACCOUNT_TYPES.SAVINGS,
-        TransactionCategory.Spend,
-        surplusAmount,
-        PERIODIC_FREQUENCY.MONTHLY,
-        "Spend budget surplus"
-      );
-    } else {
-      const deficitAmount = this.#fiscalData.spend - this.#actualIncome;
-      const availableFunds = this.#accountYear.getAvailableFunds([
-        ACCOUNT_TYPES.SAVINGS,
-      ]);
-      if (availableFunds > 0) {
-        const catchupAmount = Math.min(deficitAmount, availableFunds);
-
-        this.#accountYear.processAsPeriodicWithdrawals(
-          ACCOUNT_TYPES.SAVINGS,
-          TransactionCategory.Spend,
-          catchupAmount,
-          PERIODIC_FREQUENCY.MONTHLY,
-          "Spend budget catch-up"
-        );
-        this.#actualIncome += catchupAmount;
-      }
-    }
-  }
-
-  /**
-   * @param {number} amountToPortion
-   */
-  #determineWithdrawalPortions(amountToPortion) {
-    this.#accountPortioner?.calculatePortions(amountToPortion);
-  }
-
-  #processCombinedWorkingIncomes() {
-    this.#combinedActualWorkingIncome =
-      this.#incomeBreakdown?.combinedEarnedIncomeTakehome ?? 0;
-    if (this.#combinedActualWorkingIncome == 0) return;
-
-    this.#accountYear.processAsPeriodicDeposits(
-      ACCOUNT_TYPES.LIVINGEXPENSESFUND,
-      TransactionCategory.Income,
-      this.#combinedActualWorkingIncome,
-      PERIODIC_FREQUENCY.MONTHLY,
-      "Combined Working Income"
-    );
-
-    this.#trackAsMonthlyWithholdings(
-      TransactionCategory.Income,
-      this.#incomeBreakdown?.combinedEarnedIncomeWithholdings ?? 0,
-      "Working Income"
-    );
-
-    // this.#trackAsPeriodicDisbursements(
-    //   TransactionCategory.Income,
-    //   this.#combinedActualWorkingIncome,
-    //   "Combined Working Income"
+    // this.#incomeBreakdown = IncomeBreakdown.CreateFrom(
+    //   fixedIncomeStreams,
+    //   adjustableIncomeStreams,
+    //   demographics,
+    //   fiscalData
     // );
 
-    this.#actualIncome += this.#combinedActualWorkingIncome;
-  }
-
-  #processCombinedSocialSecurityIncomes() {
-    this.#ssCombinedTakeHome =
-      this.#fixedIncomeStreams?.combinedSsActualIncome ?? 0;
-    if (this.#ssCombinedTakeHome == 0) return;
-
-    // Subject SS income goes into living expenses fund
-    if (this.#fixedIncomeStreams.subjectSsActualIncome ?? 0 > 0) {
-      this.#accountYear.processAsPeriodicDeposits(
-        ACCOUNT_TYPES.LIVINGEXPENSESFUND,
-        TransactionCategory.SocialSecurity,
-        this.#fixedIncomeStreams.subjectSsActualIncome,
-        PERIODIC_FREQUENCY.MONTHLY,
-        "Subject SS Income"
-      );
-      this.#trackAsMonthlyWithholdings(
-        TransactionCategory.SocialSecurity,
-        this.#fixedIncomeStreams.subjectSsWithholdings ?? 0,
-        "Subject"
-      );
-      // this.#trackAsPeriodicDisbursements(
-      //   TransactionCategory.SocialSecurity,
-      //   this.#fixedIncomeStreams.subjectSsGross ?? 0,
-      //   "Subject SS"
-      // );
-    }
-
-    // Spouse SS income goes into living expenses fund
-    if (this.#fixedIncomeStreams.spouseSsActualIncome ?? 0 > 0) {
-      this.#accountYear.processAsPeriodicDeposits(
-        ACCOUNT_TYPES.LIVINGEXPENSESFUND,
-        TransactionCategory.SocialSecurity,
-        this.#fixedIncomeStreams.spouseSsActualIncome,
-        PERIODIC_FREQUENCY.MONTHLY,
-        "Spouse SS Income"
-      );
-
-      this.#trackAsMonthlyWithholdings(
-        TransactionCategory.SocialSecurity,
-        this.#fixedIncomeStreams.spouseSsWithholdings ?? 0,
-        "Partner"
-      );
-      // this.#trackAsPeriodicDisbursements(
-      //   TransactionCategory.SocialSecurity,
-      //   this.#fixedIncomeStreams.spouseSsGross ?? 0,
-      //   "Spouse SS"
-      // );
-    }
-
-    this.#actualIncome += this.#ssCombinedTakeHome;
-  }
-
-  #processCombinedPensionIncomes() {
-    this.#combinedPensionActualIncome =
-      this.#incomeBreakdown?.combinedPensionTakeHome ?? 0;
-    if (this.#combinedPensionActualIncome == 0) return;
-
-    this.#accountYear.processAsPeriodicDeposits(
-      ACCOUNT_TYPES.LIVINGEXPENSESFUND,
-      TransactionCategory.Pension,
-      this.#combinedPensionActualIncome,
-      PERIODIC_FREQUENCY.MONTHLY,
-      "Combined Pension Income"
-    );
-
-    // this.#trackAsPeriodicDisbursements(
-    //   TransactionCategory.Pension,
-    //   this.#combinedPensionActualIncome,
-    //   "Combined Pension"
+    // this.#accountPortioner = AccountPortioner.CreateFrom(
+    //   this.#accountYear,
+    //   this.#fiscalData,
+    //   this.#demographics,
+    //   this.#fixedIncomeStreams
     // );
-
-    this.#trackAsMonthlyWithholdings(
-      TransactionCategory.Pension,
-      this.#incomeBreakdown?.combinedPensionWithholdings ?? 0,
-      "Combined pensions"
-    );
-
-    this.#actualIncome += this.#combinedPensionActualIncome;
   }
 
-  #processNonTaxableIncome() {
-    this.#nonTaxableActualIncome =
-      this.#incomeBreakdown?.miscNonTaxableActualIncome ?? 0;
+  // processIncome() {
+  //   this.#actualIncome = 0;
 
-    if (this.#nonTaxableActualIncome == 0) return;
+  //   // Dump misc non-taxable income into savings account just to get it accounted for
+  //   this.#processNonTaxableIncome();
 
-    // this.#accountYear.processAsPeriodicDeposits(
-    //   ACCOUNT_TYPES.SAVINGS,
-    //   TransactionCategory.OtherNonTaxable,
-    //   this.#nonTaxableActualIncome,
-    //   PERIODIC_FREQUENCY.MONTHLY,
-    //   "Tax-free income"
-    // );
+  //   // Process non-variable income streams into savings account
+  //   this.#processCombinedPensionIncomes();
+  //   this.#processCombinedWorkingIncomes();
+  //   this.#processCombinedSocialSecurityIncomes();
 
-    this.#accountYear.processAsPeriodicDeposits(
-      ACCOUNT_TYPES.LIVINGEXPENSESFUND,
-      TransactionCategory.OtherNonTaxable,
-      this.#nonTaxableActualIncome,
-      PERIODIC_FREQUENCY.MONTHLY,
-      "Tax-free income"
-    );
+  //   const ask = this.#fiscalData.spend;
+  //   const totalFixedIncome = this.totalFixedIncome;
 
-    this.#actualIncome += this.#nonTaxableActualIncome;
-  }
+  //   // reduce the "ask" by the estimated net income from SS, Pension, etc
+  //   let shortfall = ask - totalFixedIncome;
+  //   this.#determineWithdrawalPortions(shortfall);
 
-  get totalFixedIncome() {
-    return (
-      this.#combinedActualWorkingIncome +
-      this.#ssCombinedTakeHome +
-      this.#combinedPensionActualIncome +
-      this.#nonTaxableActualIncome
-    );
-  }
+  //   // Take withdrawals in order of Savings, Roth, 401k
+  //   this.#withdrawRothPortion();
+  //   this.#withdrawFromSubject401k();
+  //   this.#withdrawFromPartner401k();
 
-  #applyPeriodic401kInterestEarned() {
-    this.#accountYear.recordInterestEarnedForYear(ACCOUNT_TYPES.SUBJECT_401K);
-    this.#accountYear.recordInterestEarnedForYear(ACCOUNT_TYPES.PARTNER_401K);
-  }
+  //   this.#withdrawFromSavings();
 
-  #withdrawFromSubject401k() {
-    const amount = this.#accountPortioner?.subject401kGrossWithdrawal ?? 0;
-    if (amount <= 0) return 0;
+  //   this.#processActualIncome();
 
-    const grossFundsAvailable = this.#accountYear.getAvailableFunds([
-      ACCOUNT_TYPES.SUBJECT_401K,
-    ]);
+  //   this.#applyPeriodic401kInterestEarned();
+  //   this.#applyPeriodicRothInterest();
+  //   this.#applyPeriodicSavingsInterest();
 
-    if (grossFundsAvailable <= 0) return 0;
+  //   this.#processIncomeTaxes();
 
-    const gross401kWithdrawal = Math.min(amount, grossFundsAvailable);
+  //   // If still shortfall, we're busted
+  //   shortfall = this.#fiscalData.spend - this.#actualIncome;
+  //   if (shortfall > 0) {
+  //     console.error(`Unable to cover fiscal spend: ${shortfall.toFixed(2)}`);
+  //   }
+  // }
 
-    this.#adjustableIncomeStreams.subjectActual401kGrossWithdrawal =
-      gross401kWithdrawal;
+  // #withdrawFromPartner401k() {
+  //   const amount = this.#accountPortioner?.partner401kGrossWithdrawal ?? 0;
+  //   if (amount <= 0) return 0;
 
-    this.#processPeriodicDisbursement(
-      gross401kWithdrawal,
-      ACCOUNT_TYPES.SUBJECT_401K,
-      "Gross withdrawal"
-    );
+  //   const grossFundsAvailable = this.#accountYear.getAvailableFunds([
+  //     ACCOUNT_TYPES.PARTNER_401K,
+  //   ]);
 
-    this.#processGrossPeriodic401kIncome(gross401kWithdrawal, "Subject");
+  //   if (grossFundsAvailable <= 0) return 0;
 
-    return gross401kWithdrawal;
-  }
+  //   const gross401kWithdrawal = Math.min(amount, grossFundsAvailable);
 
-  /**
-   * @param {number} gross401kWithdrawal
-   * @param {string} party
-   */
-  #processGrossPeriodic401kIncome(gross401kWithdrawal, party) {
-    const actual401kAmount = Common.convertGross401kToActual401k(
-      gross401kWithdrawal,
-      this.#fiscalData.flatTrad401kWithholdingRate ?? 0
-    );
+  //   this.#adjustableIncomeStreams.spouseActual401kGrossWithdrawal =
+  //     gross401kWithdrawal;
 
-    this.#accountYear.processAsPeriodicDeposits(
-      ACCOUNT_TYPES.LIVINGEXPENSESFUND,
-      TransactionCategory.Trad401k,
-      actual401kAmount,
-      PERIODIC_FREQUENCY.MONTHLY,
-      party
-    );
+  //   this.#processPeriodicDisbursement(
+  //     gross401kWithdrawal,
+  //     ACCOUNT_TYPES.PARTNER_401K,
+  //     "Withdrawal from Partner 401k"
+  //   );
 
-    const withholdingAmount = gross401kWithdrawal - actual401kAmount;
+  //   this.#processGrossPeriodic401kIncome(gross401kWithdrawal, "Partner");
 
-    this.#trackAsMonthlyWithholdings(
-      TransactionCategory.Trad401k,
-      withholdingAmount,
-      `${party} Withholdings`
-    );
+  //   return gross401kWithdrawal;
+  // }
 
-    this.#trackAsPeriodicDisbursements(
-      TransactionCategory.Trad401k,
-      gross401kWithdrawal,
-      `${party} 401k Gross`
-    );
+  // #determineSocialSecurityBreakdown() {
+  //   const ssBreakdown = SsBenefitsCalculator.CalculateSsBreakdown(
+  //     this.#demographics,
+  //     this.#fixedIncomeStreams,
+  //     this.#adjustableIncomeStreams
+  //   );
 
-    this.#actualIncome += actual401kAmount;
-  }
+  //   return ssBreakdown;
+  // }
 
-  /**
-   * @param {TransactionCategorySymbol} transactionCategory
-   * @param {number} amount
-   * @param {string} memo
-   */
-  #trackAsPeriodicDisbursements(transactionCategory, amount, memo) {
-    this.#accountYear.processAsPeriodicDeposits(
-      ACCOUNT_TYPES.DISBURSEMENT_TRACKING,
-      transactionCategory,
-      amount,
-      PERIODIC_FREQUENCY.MONTHLY,
-      memo
-    );
-  }
-  /**
-   * @param {TransactionCategorySymbol} transactionCategory
-   * @param {number} withholdingAmount
-   * @param {string} memo
-   */
-  #trackAsMonthlyWithholdings(transactionCategory, withholdingAmount, memo) {
-    this.#accountYear.processAsPeriodicDeposits(
-      ACCOUNT_TYPES.WITHHOLDINGS,
-      transactionCategory,
-      withholdingAmount,
-      PERIODIC_FREQUENCY.MONTHLY,
-      memo
-    );
-  }
+  // #processIncomeTaxes() {
+  //   this.#ssBreakdown = this.#determineSocialSecurityBreakdown();
 
-  #applyPeriodicRothInterest() {
-    this.#accountYear.recordInterestEarnedForYear(
-      ACCOUNT_TYPES.SUBJECT_ROTH_IRA
-    );
-  }
+  //   const grossIncome = this.#incomeBreakdown?.grossIncome ?? 0;
+  //   const taxableIncome = grossIncome - this.#ssBreakdown.nonTaxableAmount;
 
-  /** @return {Number} */
-  #withdrawRothPortion() {
-    const amount = this.#accountPortioner?.rothIraWithdrawal ?? 0;
-    if (amount <= 0) return 0;
+  //   this.#taxes = Taxes.CreateFromTaxableIncome(
+  //     grossIncome,
+  //     taxableIncome,
+  //     this.#fiscalData,
+  //     this.#demographics
+  //   );
 
-    const avaiableFunds = this.#accountYear.getAvailableFunds([
-      ACCOUNT_TYPES.SUBJECT_ROTH_IRA,
-    ]);
+  //   this.#accountYear.deposit(
+  //     ACCOUNT_TYPES.TAXES,
+  //     TransactionCategory.Taxes,
+  //     this.#taxes.federalTaxesOwed.asCurrency(),
+  //     12,
+  //     31,
+  //     "Federal Income Taxes Owed"
+  //   );
 
-    if (avaiableFunds <= 0) return 0;
+  //   const totalWithholdings =
+  //     this.#accountYear.getEndingBalance(ACCOUNT_TYPES.WITHHOLDINGS) -
+  //     this.#accountYear.getStartingBalance(ACCOUNT_TYPES.WITHHOLDINGS);
 
-    const withdrawalAmount = Math.min(amount, avaiableFunds);
+  //   const taxesDue =
+  //     this.#taxes.federalTaxesOwed.asCurrency() - totalWithholdings;
+  //   if (taxesDue > 0) {
+  //     this.#accountYear.withdrawal(
+  //       ACCOUNT_TYPES.SAVINGS,
+  //       TransactionCategory.Taxes,
+  //       taxesDue,
+  //       12,
+  //       31,
+  //       "Fed Tax Payment"
+  //     );
+  //   }
+  //   if (taxesDue < 0) {
+  //     this.#accountYear.deposit(
+  //       ACCOUNT_TYPES.SAVINGS,
+  //       TransactionCategory.Taxes,
+  //       -taxesDue,
+  //       12,
+  //       31,
+  //       "Fed Tax Refund"
+  //     );
+  //   }
+  // }
 
-    this.#processPeriodicRothTransactions(withdrawalAmount);
+  // #processActualIncome() {
+  //   this.#actualSpend = Math.min(this.#actualIncome, this.#fiscalData.spend);
 
-    this.#actualIncome += withdrawalAmount;
+  //   if (this.#actualIncome == this.#fiscalData.spend) return;
 
-    return withdrawalAmount;
-  }
+  //   if (this.#actualIncome > this.#fiscalData.spend) {
+  //     const surplusAmount = this.#actualIncome - this.#fiscalData.spend;
+  //     this.#accountYear.processAsPeriodicDeposits(
+  //       ACCOUNT_TYPES.SAVINGS,
+  //       TransactionCategory.Spend,
+  //       surplusAmount,
+  //       PERIODIC_FREQUENCY.MONTHLY,
+  //       "Spend budget surplus"
+  //     );
+  //   } else {
+  //     const deficitAmount = this.#fiscalData.spend - this.#actualIncome;
+  //     const availableFunds = this.#accountYear.getAvailableFunds([
+  //       ACCOUNT_TYPES.SAVINGS,
+  //     ]);
+  //     if (availableFunds > 0) {
+  //       const catchupAmount = Math.min(deficitAmount, availableFunds);
+
+  //       this.#accountYear.processAsPeriodicWithdrawals(
+  //         ACCOUNT_TYPES.SAVINGS,
+  //         TransactionCategory.Spend,
+  //         catchupAmount,
+  //         PERIODIC_FREQUENCY.MONTHLY,
+  //         "Spend budget catch-up"
+  //       );
+  //       this.#actualIncome += catchupAmount;
+  //     }
+  //   }
+  // }
+
+  // /**
+  //  * @param {number} amountToPortion
+  //  */
+  // #determineWithdrawalPortions(amountToPortion) {
+  //   this.#accountPortioner?.calculatePortions(amountToPortion);
+  // }
+
+  // #processCombinedWorkingIncomes() {
+  //   this.#combinedActualWorkingIncome =
+  //     this.#incomeBreakdown?.combinedEarnedIncomeTakehome ?? 0;
+  //   if (this.#combinedActualWorkingIncome == 0) return;
+
+  //   this.#accountYear.processAsPeriodicDeposits(
+  //     ACCOUNT_TYPES.LIVINGEXPENSESFUND,
+  //     TransactionCategory.Income,
+  //     this.#combinedActualWorkingIncome,
+  //     PERIODIC_FREQUENCY.MONTHLY,
+  //     "Combined Working Income"
+  //   );
+
+  //   this.#trackAsMonthlyWithholdings(
+  //     TransactionCategory.Income,
+  //     this.#incomeBreakdown?.combinedEarnedIncomeWithholdings ?? 0,
+  //     "Working Income"
+  //   );
+
+  //   // this.#trackAsPeriodicDisbursements(
+  //   //   TransactionCategory.Income,
+  //   //   this.#combinedActualWorkingIncome,
+  //   //   "Combined Working Income"
+  //   // );
+
+  //   this.#actualIncome += this.#combinedActualWorkingIncome;
+  // }
+
+  // #processCombinedSocialSecurityIncomes() {
+  //   this.#ssCombinedTakeHome =
+  //     this.#fixedIncomeStreams?.combinedSsActualIncome ?? 0;
+  //   if (this.#ssCombinedTakeHome == 0) return;
+
+  //   // Subject SS income goes into living expenses fund
+  //   if (this.#fixedIncomeStreams.subjectSsActualIncome ?? 0 > 0) {
+  //     this.#accountYear.processAsPeriodicDeposits(
+  //       ACCOUNT_TYPES.LIVINGEXPENSESFUND,
+  //       TransactionCategory.SocialSecurity,
+  //       this.#fixedIncomeStreams.subjectSsActualIncome ?? 0,
+  //       PERIODIC_FREQUENCY.MONTHLY,
+  //       "Subject"
+  //     );
+
+  //     this.#accountYear.processAsPeriodicDeposits(
+  //       ACCOUNT_TYPES.SUBJECT_SOCIAL_SECURITY,
+  //       TransactionCategory.Withholdings,
+  //       this.#fixedIncomeStreams.subjectSsWithholdings ?? 0,
+  //       PERIODIC_FREQUENCY.MONTHLY,
+  //       "Subject"
+  //     );
+
+  //     this.#accountYear.processAsPeriodicDeposits(
+  //       ACCOUNT_TYPES.SUBJECT_SOCIAL_SECURITY,
+  //       TransactionCategory.Disbursement,
+  //       this.#fixedIncomeStreams.subjectSsActualIncome ?? 0,
+  //       PERIODIC_FREQUENCY.MONTHLY,
+  //       "Subject"
+  //     );
+
+  //     this.#trackAsMonthlyWithholdings(
+  //       TransactionCategory.SocialSecurity,
+  //       this.#fixedIncomeStreams.subjectSsWithholdings ?? 0,
+  //       "Subject"
+  //     );
+  //     // this.#trackAsPeriodicDisbursements(
+  //     //   TransactionCategory.SocialSecurity,
+  //     //   this.#fixedIncomeStreams.subjectSsGross ?? 0,
+  //     //   "Subject SS"
+  //     // );
+  //   }
+
+  //   // Spouse SS income goes into living expenses fund
+  //   if (this.#fixedIncomeStreams.partnerSsActualIncome ?? 0 > 0) {
+  //     this.#accountYear.processAsPeriodicDeposits(
+  //       ACCOUNT_TYPES.LIVINGEXPENSESFUND,
+  //       TransactionCategory.SocialSecurity,
+  //       this.#fixedIncomeStreams.partnerSsActualIncome,
+  //       PERIODIC_FREQUENCY.MONTHLY,
+  //       "Partner Actual Income"
+  //     );
+
+  //     this.#trackAsMonthlyWithholdings(
+  //       TransactionCategory.SocialSecurity,
+  //       this.#fixedIncomeStreams.partnerSsWithholdings ?? 0,
+  //       "Partner"
+  //     );
+
+  //     this.#accountYear.processAsPeriodicDeposits(
+  //       ACCOUNT_TYPES.PARTNER_SOCIAL_SECURITY,
+  //       TransactionCategory.Withholdings,
+  //       this.#fixedIncomeStreams.partnerSsWithholdings ?? 0,
+  //       PERIODIC_FREQUENCY.MONTHLY,
+  //       "Spouse Withholdings"
+  //     );
+
+  //     this.#accountYear.processAsPeriodicDeposits(
+  //       ACCOUNT_TYPES.PARTNER_SOCIAL_SECURITY,
+  //       TransactionCategory.Disbursement,
+  //       this.#fixedIncomeStreams.partnerSsActualIncome ?? 0,
+  //       PERIODIC_FREQUENCY.MONTHLY,
+  //       "Spouse Actual Income"
+  //     );
+  //     // this.#trackAsPeriodicDisbursements(
+  //     //   TransactionCategory.SocialSecurity,
+  //     //   this.#fixedIncomeStreams.spouseSsGross ?? 0,
+  //     //   "Spouse SS"
+  //     // );
+  //   }
+
+  //   this.#actualIncome += this.#ssCombinedTakeHome;
+  // }
+
+  // #processCombinedPensionIncomes() {
+  //   this.#combinedPensionActualIncome =
+  //     this.#incomeBreakdown?.combinedPensionTakeHome ?? 0;
+  //   if (this.#combinedPensionActualIncome == 0) return;
+
+  //   this.#accountYear.processAsPeriodicDeposits(
+  //     ACCOUNT_TYPES.LIVINGEXPENSESFUND,
+  //     TransactionCategory.Pension,
+  //     this.#combinedPensionActualIncome,
+  //     PERIODIC_FREQUENCY.MONTHLY,
+  //     "Combined"
+  //   );
+
+  //   this.#trackAsMonthlyWithholdings(
+  //     TransactionCategory.Pension,
+  //     this.#incomeBreakdown?.combinedPensionWithholdings ?? 0,
+  //     "Combined pensions"
+  //   );
+
+  //   this.#accountYear.processAsPeriodicDeposits(
+  //     ACCOUNT_TYPES.SUBJECT_PENSION,
+  //     TransactionCategory.Income,
+  //     this.#fixedIncomeStreams?.subjectPensionActualIncome ?? 0,
+  //     PERIODIC_FREQUENCY.MONTHLY,
+  //     "Actual"
+  //   );
+
+  //   this.#accountYear.processAsPeriodicDeposits(
+  //     ACCOUNT_TYPES.SUBJECT_PENSION,
+  //     TransactionCategory.Withholdings,
+  //     this.#fixedIncomeStreams?.subjectPensionWithholdings ?? 0,
+  //     PERIODIC_FREQUENCY.MONTHLY,
+  //     "Withholdings"
+  //   );
+
+  //   this.#accountYear.processAsPeriodicDeposits(
+  //     ACCOUNT_TYPES.PARTNER_PENSION,
+  //     TransactionCategory.Income,
+  //     this.#fixedIncomeStreams?.partnerPensionActualIncome ?? 0,
+  //     PERIODIC_FREQUENCY.MONTHLY,
+  //     "Actual"
+  //   );
+
+  //   this.#accountYear.processAsPeriodicDeposits(
+  //     ACCOUNT_TYPES.PARTNER_PENSION,
+  //     TransactionCategory.Withholdings,
+  //     this.#fixedIncomeStreams?.partnerPensionWithholdings ?? 0,
+  //     PERIODIC_FREQUENCY.MONTHLY,
+  //     "Withholdings"
+  //   );
+
+  //   this.#actualIncome += this.#combinedPensionActualIncome;
+  // }
+
+  // #processNonTaxableIncome() {
+  //   this.#nonTaxableActualIncome =
+  //     this.#incomeBreakdown?.miscNonTaxableActualIncome ?? 0;
+
+  //   if (this.#nonTaxableActualIncome == 0) return;
+
+  //   // this.#accountYear.processAsPeriodicDeposits(
+  //   //   ACCOUNT_TYPES.SAVINGS,
+  //   //   TransactionCategory.OtherNonTaxable,
+  //   //   this.#nonTaxableActualIncome,
+  //   //   PERIODIC_FREQUENCY.MONTHLY,
+  //   //   "Tax-free income"
+  //   // );
+
+  //   this.#accountYear.processAsPeriodicDeposits(
+  //     ACCOUNT_TYPES.LIVINGEXPENSESFUND,
+  //     TransactionCategory.OtherNonTaxable,
+  //     this.#nonTaxableActualIncome,
+  //     PERIODIC_FREQUENCY.MONTHLY,
+  //     "Tax-free income"
+  //   );
+
+  //   this.#actualIncome += this.#nonTaxableActualIncome;
+  // }
+
+  // get totalFixedIncome() {
+  //   return (
+  //     this.#combinedActualWorkingIncome +
+  //     this.#ssCombinedTakeHome +
+  //     this.#combinedPensionActualIncome +
+  //     this.#nonTaxableActualIncome
+  //   );
+  // }
+
+  // #applyPeriodic401kInterestEarned() {
+  //   this.#accountYear.recordInterestEarnedForYear(ACCOUNT_TYPES.SUBJECT_401K);
+  //   this.#accountYear.recordInterestEarnedForYear(ACCOUNT_TYPES.PARTNER_401K);
+  // }
+
+  // #withdrawFromSubject401k() {
+  //   const amount = this.#accountPortioner?.subject401kGrossWithdrawal ?? 0;
+  //   if (amount <= 0) return 0;
+
+  //   const grossFundsAvailable = this.#accountYear.getAvailableFunds([
+  //     ACCOUNT_TYPES.SUBJECT_401K,
+  //   ]);
+
+  //   if (grossFundsAvailable <= 0) return 0;
+
+  //   const gross401kWithdrawal = Math.min(amount, grossFundsAvailable);
+
+  //   this.#adjustableIncomeStreams.subjectActual401kGrossWithdrawal =
+  //     gross401kWithdrawal;
+
+  //   this.#processPeriodicDisbursement(
+  //     gross401kWithdrawal,
+  //     ACCOUNT_TYPES.SUBJECT_401K,
+  //     "Gross withdrawal"
+  //   );
+
+  //   this.#processGrossPeriodic401kIncome(gross401kWithdrawal, "Subject");
+
+  //   return gross401kWithdrawal;
+  // }
+
+  // /**
+  //  * @param {number} gross401kWithdrawal
+  //  * @param {string} party
+  //  */
+  // #processGrossPeriodic401kIncome(gross401kWithdrawal, party) {
+  //   const actual401kAmount = Common.convertGross401kToActual401k(
+  //     gross401kWithdrawal,
+  //     this.#fiscalData.flatTrad401kWithholdingRate ?? 0
+  //   );
+
+  //   this.#accountYear.processAsPeriodicDeposits(
+  //     ACCOUNT_TYPES.LIVINGEXPENSESFUND,
+  //     TransactionCategory.Trad401k,
+  //     actual401kAmount,
+  //     PERIODIC_FREQUENCY.MONTHLY,
+  //     party
+  //   );
+
+  //   const withholdingAmount = gross401kWithdrawal - actual401kAmount;
+
+  //   this.#trackAsMonthlyWithholdings(
+  //     TransactionCategory.Trad401k,
+  //     withholdingAmount,
+  //     `${party} Withholdings`
+  //   );
+
+  //   this.#trackAsPeriodicDisbursements(
+  //     TransactionCategory.Trad401k,
+  //     gross401kWithdrawal,
+  //     `${party} 401k Gross`
+  //   );
+
+  //   this.#actualIncome += actual401kAmount;
+  // }
+
+  // /**
+  //  * @param {TransactionCategorySymbol} transactionCategory
+  //  * @param {number} amount
+  //  * @param {string} memo
+  //  */
+  // #trackAsPeriodicDisbursements(transactionCategory, amount, memo) {
+  //   this.#accountYear.processAsPeriodicDeposits(
+  //     ACCOUNT_TYPES.DISBURSEMENT,
+  //     transactionCategory,
+  //     amount,
+  //     PERIODIC_FREQUENCY.MONTHLY,
+  //     memo
+  //   );
+  // }
+  // /**
+  //  * @param {TransactionCategorySymbol} transactionCategory
+  //  * @param {number} withholdingAmount
+  //  * @param {string} memo
+  //  */
+  // #trackAsMonthlyWithholdings(transactionCategory, withholdingAmount, memo) {
+  //   this.#accountYear.processAsPeriodicDeposits(
+  //     ACCOUNT_TYPES.WITHHOLDINGS,
+  //     transactionCategory,
+  //     withholdingAmount,
+  //     PERIODIC_FREQUENCY.MONTHLY,
+  //     memo
+  //   );
+  // }
+
+  // #applyPeriodicRothInterest() {
+  //   this.#accountYear.recordInterestEarnedForYear(
+  //     ACCOUNT_TYPES.SUBJECT_ROTH_IRA
+  //   );
+  // }
+
+  // /** @return {Number} */
+  // #withdrawRothPortion() {
+  //   const amount = this.#accountPortioner?.rothIraWithdrawal ?? 0;
+  //   if (amount <= 0) return 0;
+
+  //   const avaiableFunds = this.#accountYear.getAvailableFunds([
+  //     ACCOUNT_TYPES.SUBJECT_ROTH_IRA,
+  //   ]);
+
+  //   if (avaiableFunds <= 0) return 0;
+
+  //   const withdrawalAmount = Math.min(amount, avaiableFunds);
+
+  //   this.#processPeriodicRothTransactions(withdrawalAmount);
+
+  //   this.#actualIncome += withdrawalAmount;
+
+  //   return withdrawalAmount;
+  // }
 
   // /**
   //  * @param {number} amount
@@ -516,29 +608,44 @@ class WithdrawalFactory {
   //   );
   // }
 
-  /** @return {Number}  */
-  #withdrawFromSavings() {
-    const amount = this.#accountPortioner?.savingsWithdrawal ?? 0;
-    if (amount <= 0) return amount;
+  // /** @return {Number}  */
+  // #withdrawFromSavings() {
+  //   const amount = this.#accountPortioner?.savingsWithdrawal ?? 0;
+  //   if (amount <= 0) return amount;
 
-    const avaiableFunds = this.#accountYear.getAvailableFunds([
-      ACCOUNT_TYPES.SAVINGS,
-    ]);
+  //   const avaiableFunds = this.#accountYear.getAvailableFunds([
+  //     ACCOUNT_TYPES.SAVINGS,
+  //   ]);
 
-    if (avaiableFunds <= 0) return 0;
+  //   if (avaiableFunds <= 0) return 0;
 
-    const withdrawalAmount = Math.min(amount, avaiableFunds);
+  //   const withdrawalAmount = Math.min(amount, avaiableFunds);
 
-    this.#processPeriodicSavingsWithdrawals(withdrawalAmount);
+  //   this.#processPeriodicSavingsWithdrawals(withdrawalAmount);
 
-    this.#actualIncome += withdrawalAmount;
+  //   this.#actualIncome += withdrawalAmount;
 
-    return withdrawalAmount;
-  }
+  //   return withdrawalAmount;
+  // }
 
-  #applyPeriodicSavingsInterest() {
-    this.#accountYear.recordInterestEarnedForYear(ACCOUNT_TYPES.SAVINGS);
-  }
+  // #applyPeriodicSavingsInterest() {
+  //   this.#accountYear.recordInterestEarnedForYear(ACCOUNT_TYPES.SAVINGS);
+
+  //   const transactions = this.#accountYear
+  //     .getAccountTransactions(ACCOUNT_TYPES.SAVINGS)
+  //     .filter((t) => t.category === TransactionCategory.Interest);
+
+  //   for (const transaction of transactions) {
+  //     this.#accountYear.deposit(
+  //       ACCOUNT_TYPES.INTEREST_ON_SAVINGS,
+  //       TransactionCategory.Interest,
+  //       transaction.amount,
+  //       transaction.date.getMonth() + 1,
+  //       transaction.date.getDate(),
+  //       transaction.memo
+  //     );
+  //   }
+  // }
 
   /**
    * Withdraw from a targeted account
@@ -614,20 +721,20 @@ class WithdrawalFactory {
   //   return Math.max(this.#incomeBreakdown.netIncome, 0);
   // }
 
-  /**
-   * Process Traditional 401k transactions
-   * @param {number} amount - Gross withdrawal amount
-   * @param {string} accountType - Account type
-   * @param {string} memo - Memo for the transaction
-   */
-  #processPeriodicDisbursement(amount, accountType, memo) {
-    this.#accountYear.processAsPeriodicWithdrawals(
-      accountType,
-      TransactionCategory.Disbursement,
-      amount,
-      PERIODIC_FREQUENCY.MONTHLY,
-      memo
-    );
+  // /**
+  //  * Process Traditional 401k transactions
+  //  * @param {number} amount - Gross withdrawal amount
+  //  * @param {string} accountType - Account type
+  //  * @param {string} memo - Memo for the transaction
+  //  */
+  // #processPeriodicDisbursement(amount, accountType, memo) {
+  //   this.#accountYear.processAsPeriodicWithdrawals(
+  //     accountType,
+  //     TransactionCategory.Disbursement,
+  //     amount,
+  //     PERIODIC_FREQUENCY.MONTHLY,
+  //     memo
+  //   );
 
     // this.#accountYear.deposit(
     //   ACCOUNT_TYPES.DISBURSEMENT_TRACKING,
@@ -685,73 +792,18 @@ class WithdrawalFactory {
     // );
   }
 
-  /**
-   * Handle Savings account withdrawal
-   * @param {number} amount - Amount needed
-   * @param {boolean} trialRun - Whether this is a trial run
-   * @returns {number} - Withdrawal amount
-   */
-  #handleSavingsWithdrawal(amount, trialRun) {
-    if (!this.#fiscalData.useSavings) return 0; // already processed a savings withdrawal this year
-
-    const fundsNeeded = amount;
-    const fundsAvailable = this.#accountYear.getAvailableFunds([
-      ACCOUNT_TYPES.SAVINGS,
-    ]);
-
-    if (fundsAvailable == 0) return 0;
-
-    // Determine how much to withdraw to meet the desired spend
-    let withdrawalAmount = Math.min(fundsAvailable, fundsNeeded);
-
-    if (!trialRun) {
-      this.#processPeriodicSavingsWithdrawals(withdrawalAmount);
-    }
-
-    return withdrawalAmount;
-  }
-
-  /**
-   * Process Savings account transactions
-   * @param {number} withdrawalAmount - Amount to withdraw
-   */
-  #processPeriodicSavingsWithdrawals(withdrawalAmount) {
-    // Log the monthly spending for savings
-    this.#accountYear.processAsPeriodicWithdrawals(
-      ACCOUNT_TYPES.SAVINGS,
-      TransactionCategory.Transfer,
-      withdrawalAmount,
-      PERIODIC_FREQUENCY.MONTHLY,
-      "Xfer to Living Expenses Fund"
-    );
-
-    // this.#trackAsPeriodicDisbursements(
-    //   TransactionCategory.Savings,
-    //   withdrawalAmount,
-    //   "Savings Withdrawal"
-    // );
-
-    this.#accountYear.processAsPeriodicDeposits(
-      ACCOUNT_TYPES.LIVINGEXPENSESFUND,
-      TransactionCategory.Transfer,
-      withdrawalAmount,
-      PERIODIC_FREQUENCY.MONTHLY,
-      "Xfer from Savings"
-    );
-
-    this.#adjustableIncomeStreams.savingsWithdrawal += withdrawalAmount;
-  }
-
   // /**
-  //  * Handle Roth IRA withdrawal
+  //  * Handle Savings account withdrawal
   //  * @param {number} amount - Amount needed
+  //  * @param {boolean} trialRun - Whether this is a trial run
   //  * @returns {number} - Withdrawal amount
   //  */
-  // #handleRothWithdrawal(amount) {
-  //   // Roth withdrawal (no tax impact)
+  // #handleSavingsWithdrawal(amount, trialRun) {
+  //   if (!this.#fiscalData.useSavings) return 0; // already processed a savings withdrawal this year
+
   //   const fundsNeeded = amount;
   //   const fundsAvailable = this.#accountYear.getAvailableFunds([
-  //     ACCOUNT_TYPES.SUBJECT_ROTH_IRA,
+  //     ACCOUNT_TYPES.SAVINGS,
   //   ]);
 
   //   if (fundsAvailable == 0) return 0;
@@ -760,97 +812,152 @@ class WithdrawalFactory {
   //   let withdrawalAmount = Math.min(fundsAvailable, fundsNeeded);
 
   //   if (!trialRun) {
-  //     this.#processRothTransactions(withdrawalAmount);
+  //     this.#processPeriodicSavingsWithdrawals(withdrawalAmount);
   //   }
 
   //   return withdrawalAmount;
   // }
 
-  /**
-   * Process Roth IRA transactions
-   * @param {number} withdrawalAmount - Amount to withdraw
-   */
-  #processPeriodicRothTransactions(withdrawalAmount) {
-    // Reduce the account balance by the net received amount
-    this.#accountYear.processAsPeriodicWithdrawals(
-      ACCOUNT_TYPES.SUBJECT_ROTH_IRA,
-      TransactionCategory.Disbursement,
-      withdrawalAmount,
-      PERIODIC_FREQUENCY.MONTHLY,
-      "Roth Withdrawal"
-    );
+  // /**
+  //  * Process Savings account transactions
+  //  * @param {number} withdrawalAmount - Amount to withdraw
+  //  */
+  // #processPeriodicSavingsWithdrawals(withdrawalAmount) {
+  //   // Log the monthly spending for savings
+  //   this.#accountYear.processAsPeriodicWithdrawals(
+  //     ACCOUNT_TYPES.SAVINGS,
+  //     TransactionCategory.Transfer,
+  //     withdrawalAmount,
+  //     PERIODIC_FREQUENCY.MONTHLY,
+  //     "Living Expenses"
+  //   );
 
-    this.#trackAsPeriodicDisbursements(
-      TransactionCategory.TradRoth,
-      withdrawalAmount,
-      "Combined Roths"
-    );
+  //   // this.#trackAsPeriodicDisbursements(
+  //   //   TransactionCategory.Savings,
+  //   //   withdrawalAmount,
+  //   //   "Savings Withdrawal"
+  //   // );
 
-    this.#accountYear.deposit(
-      ACCOUNT_TYPES.LIVINGEXPENSESFUND,
-      TransactionCategory.TradRoth,
-      withdrawalAmount
-    );
-  }
+  //   this.#accountYear.processAsPeriodicDeposits(
+  //     ACCOUNT_TYPES.LIVINGEXPENSESFUND,
+  //     TransactionCategory.Transfer,
+  //     withdrawalAmount,
+  //     PERIODIC_FREQUENCY.MONTHLY,
+  //     "Xfer from Savings"
+  //   );
 
-  /**
-   * Get the final income results from the last withdrawal calculation
-   * @returns {IncomeBreakdown} - Final income results
-   */
-  get incomeBreakdown() {
-    if (!this.#incomeBreakdown) {
-      console.error(
-        "Income results requested before any withdrawals were processed."
-      );
-      throw new Error("Income results are not available.");
-    }
-    return this.#incomeBreakdown;
-  }
+  //   this.#adjustableIncomeStreams.savingsWithdrawal += withdrawalAmount;
+  // }
 
-  get ssBreakdown() {
-    if (!this.#ssBreakdown) {
-      console.error(
-        "Social Security breakdown requested before it was calculated."
-      );
-      throw new Error("Social Security breakdown is not available.");
-    }
-    return this.#ssBreakdown;
-  }
+  // // /**
+  // //  * Handle Roth IRA withdrawal
+  // //  * @param {number} amount - Amount needed
+  // //  * @returns {number} - Withdrawal amount
+  // //  */
+  // // #handleRothWithdrawal(amount) {
+  // //   // Roth withdrawal (no tax impact)
+  // //   const fundsNeeded = amount;
+  // //   const fundsAvailable = this.#accountYear.getAvailableFunds([
+  // //     ACCOUNT_TYPES.SUBJECT_ROTH_IRA,
+  // //   ]);
 
-  get taxes() {
-    if (!this.#taxes) {
-      console.error("Taxes requested before they were calculated.");
-      throw new Error("Taxes are not available.");
-    }
-    return this.#taxes;
-  }
+  // //   if (fundsAvailable == 0) return 0;
 
-  /**
-   * Get available funds for specific account types
-   * @param {string[]} accountTypes - Array of account types to check
-   * @returns {number} - Total available funds
-   */
-  getAvailableFunds(accountTypes) {
-    return this.#accountYear.getAvailableFunds(accountTypes);
-  }
+  // //   // Determine how much to withdraw to meet the desired spend
+  // //   let withdrawalAmount = Math.min(fundsAvailable, fundsNeeded);
 
-  /**
-   * Check if a specific account type is enabled for use
-   * @param {string} accountType - Account type to check
-   * @returns {boolean} - Whether the account type is enabled
-   */
-  isAccountTypeEnabled(accountType) {
-    switch (accountType) {
-      case ACCOUNT_TYPES.SUBJECT_401K:
-        return this.#fiscalData.useTrad401k;
-      case ACCOUNT_TYPES.SAVINGS:
-        return this.#fiscalData.useSavings;
-      case ACCOUNT_TYPES.SUBJECT_ROTH_IRA:
-        return true; // Roth is typically always available if funds exist
-      default:
-        return false;
-    }
-  }
+  // //   if (!trialRun) {
+  // //     this.#processRothTransactions(withdrawalAmount);
+  // //   }
+
+  // //   return withdrawalAmount;
+  // // }
+
+  // /**
+  //  * Process Roth IRA transactions
+  //  * @param {number} withdrawalAmount - Amount to withdraw
+  //  */
+  // #processPeriodicRothTransactions(withdrawalAmount) {
+  //   // Reduce the account balance by the net received amount
+  //   this.#accountYear.processAsPeriodicWithdrawals(
+  //     ACCOUNT_TYPES.SUBJECT_ROTH_IRA,
+  //     TransactionCategory.Disbursement,
+  //     withdrawalAmount,
+  //     PERIODIC_FREQUENCY.MONTHLY,
+  //     "Roth Withdrawal"
+  //   );
+
+  //   this.#trackAsPeriodicDisbursements(
+  //     TransactionCategory.TradRoth,
+  //     withdrawalAmount,
+  //     "Combined Roths"
+  //   );
+
+  //   this.#accountYear.deposit(
+  //     ACCOUNT_TYPES.LIVINGEXPENSESFUND,
+  //     TransactionCategory.TradRoth,
+  //     withdrawalAmount
+  //   );
+  // }
+
+  // /**
+  //  * Get the final income results from the last withdrawal calculation
+  //  * @returns {IncomeBreakdown} - Final income results
+  //  */
+  // get incomeBreakdown() {
+  //   if (!this.#incomeBreakdown) {
+  //     console.error(
+  //       "Income results requested before any withdrawals were processed."
+  //     );
+  //     throw new Error("Income results are not available.");
+  //   }
+  //   return this.#incomeBreakdown;
+  // }
+
+  // get ssBreakdown() {
+  //   if (!this.#ssBreakdown) {
+  //     console.error(
+  //       "Social Security breakdown requested before it was calculated."
+  //     );
+  //     throw new Error("Social Security breakdown is not available.");
+  //   }
+  //   return this.#ssBreakdown;
+  // }
+
+  // get taxes() {
+  //   if (!this.#taxes) {
+  //     console.error("Taxes requested before they were calculated.");
+  //     throw new Error("Taxes are not available.");
+  //   }
+  //   return this.#taxes;
+  // }
+
+  // /**
+  //  * Get available funds for specific account types
+  //  * @param {string[]} accountTypes - Array of account types to check
+  //  * @returns {number} - Total available funds
+  //  */
+  // getAvailableFunds(accountTypes) {
+  //   return this.#accountYear.getAvailableFunds(accountTypes);
+  // }
+
+  // /**
+  //  * Check if a specific account type is enabled for use
+  //  * @param {string} accountType - Account type to check
+  //  * @returns {boolean} - Whether the account type is enabled
+  //  */
+  // isAccountTypeEnabled(accountType) {
+  //   switch (accountType) {
+  //     case ACCOUNT_TYPES.SUBJECT_401K:
+  //       return this.#fiscalData.useTrad401k;
+  //     case ACCOUNT_TYPES.SAVINGS:
+  //       return this.#fiscalData.useSavings;
+  //     case ACCOUNT_TYPES.SUBJECT_ROTH_IRA:
+  //       return true; // Roth is typically always available if funds exist
+  //     default:
+  //       return false;
+  //   }
+  // }
 
   //   /**
   //    * Get current income streams
@@ -905,22 +1012,22 @@ class WithdrawalFactory {
    * @param {Demographics} demographics
    * @param {AccountingYear} accountYear
    */
-  static CreateUsing(
-    fixedIncomeStreams,
-    adjustableIncomeStreams,
-    fiscalData,
-    demographics,
-    accountYear
-  ) {
-    return new WithdrawalFactory(
-      fixedIncomeStreams,
-      adjustableIncomeStreams,
-      fiscalData,
-      demographics,
-      accountYear
-    );
-  }
-}
+  // static CreateUsing(
+  //   fixedIncomeStreams,
+  //   adjustableIncomeStreams,
+  //   fiscalData,
+  //   demographics,
+  //   accountYear
+  // ) {
+  //   return new WithdrawalFactory(
+  //     fixedIncomeStreams,
+  //     adjustableIncomeStreams,
+  //     fiscalData,
+  //     demographics,
+  //     accountYear
+  //   );
+  // }
+// }
 
 // // Legacy function for backward compatibility
 // /**

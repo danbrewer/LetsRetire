@@ -38,7 +38,7 @@ import { Taxes } from "./cTaxes.js";
 import { YearDataBase } from "./cYearDataBase.js";
 
 //    */
-class RetirementYearData extends YearDataBase {
+class RetirementYearResults extends YearDataBase {
   /** @type {FiscalData} */
   #fiscalData;
   /** @type {IncomeBreakdown} */
@@ -67,79 +67,8 @@ class RetirementYearData extends YearDataBase {
     this.#incomeBreakdown = incomeBreakdown;
     this.#ssBreakdown = ssBreakdown;
 
-    // /** @type {Income} */
-    // this.revenue;
-
-    // /** @type {Income} */
-    // this.disbursements;
-
-    // /** @type {Balances} */
-    // this.balances;
-
-    // /** @type {SocialSecurityIncome} */
-    // this.socialSecurityIncome;
-
-    // /** @type {Balance} */
-    // this.savings;
-
-    // /** @type {Balance} */
-    // this.trad401k;
-
-    // /** @type {Balance} */
-    // this.tradRoth;
-
-    // /** @type {RetirementAccountBreakdown} */
-    // this.retirementAccountBreakdown;
-    // /** @type {RetirementAccountBreakdown} */
-    // this.rothAccountBreakdown;
-
-    // /** @type{Taxes} */
-    // this.taxes;
-
-    // /** @type {number} */
-    // this.shortfallAmount;
-
-    // /**
-    //  * @type {any[]}
-    //  */
-    // this.calculationDetails = [];
-
-    this.livingExpenseFunds = AccountAnalyzer.CreateUsing(
-      accountYear,
-      ACCOUNT_TYPES.LIVINGEXPENSESFUND
-    );
-    this.disbursementsAnalyzer = AccountAnalyzer.CreateUsing(
-      accountYear,
-      ACCOUNT_TYPES.DISBURSEMENT_TRACKING
-    );
-    this.savingsTransactionAnalyzer = AccountAnalyzer.CreateUsing(
-      accountYear,
-      ACCOUNT_TYPES.SAVINGS
-    );
-    this.withholdingsTransactionAnalyzer = AccountAnalyzer.CreateUsing(
-      accountYear,
-      ACCOUNT_TYPES.WITHHOLDINGS
-    );
-
-    this.subject401kAnalyzer = AccountAnalyzer.CreateUsing(
-      accountYear,
-      ACCOUNT_TYPES.SUBJECT_401K
-    );
-    this.subjectRothAnalyzer = AccountAnalyzer.CreateUsing(
-      accountYear,
-      ACCOUNT_TYPES.SUBJECT_ROTH_IRA
-    );
-    this.partner401kAnalyzer = AccountAnalyzer.CreateUsing(
-      accountYear,
-      ACCOUNT_TYPES.PARTNER_401K
-    );
-
-    
     this.balances = Balances.CreateUsing(accountYear);
 
-    // this.socialSecurityIncome = SocialSecurityIncome.CreateUsing(
-    //   incomeBreakdown.ssCalculationDetails
-    // );
     this.taxes = taxes;
     this.savings = Balance.CreateUsing(accountYear, ACCOUNT_TYPES.SAVINGS);
     this.trad401k = Balance.CreateUsing(
@@ -170,7 +99,7 @@ class RetirementYearData extends YearDataBase {
    * @param {IncomeBreakdown} incomeBreakdown
    * @param {SocialSecurityBreakdown} ssBreakdown
    * @param {Taxes} taxes
-   * @returns {RetirementYearData}
+   * @returns {RetirementYearResults}
    */
   static CreateUsing(
     demographics,
@@ -180,7 +109,7 @@ class RetirementYearData extends YearDataBase {
     ssBreakdown,
     taxes
   ) {
-    const result = new RetirementYearData(
+    const result = new RetirementYearResults(
       demographics,
       fiscalData,
       accountYear,
@@ -278,4 +207,4 @@ class RetirementYearData extends YearDataBase {
 // Create instance using the factory method for backward compatibility
 // const result = RetirementYearData.Empty();
 
-export { RetirementYearData };
+export { RetirementYearResults };

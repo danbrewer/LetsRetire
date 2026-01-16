@@ -1,13 +1,13 @@
-import { RetirementYearData } from "./cRetirementYearData.js";
+import { RetirementYearResults } from "./cRetirementYearData.js";
 import { WorkingYearData } from "./cWorkingYearData.js";
 
 class Calculation {
-  /** @type {WorkingYearData | RetirementYearData} */
+  /** @type {WorkingYearData | RetirementYearResults} */
   #yearData;
 
   /**
    * @param {number} taxYear
-   * @param {WorkingYearData | RetirementYearData} yearData
+   * @param {WorkingYearData | RetirementYearResults} yearData
    */
   constructor(taxYear, yearData) {
     if (yearData === null) {
@@ -39,13 +39,13 @@ class Calculation {
   }
 
   get subjectSocialSecurity() {
-    return this.#yearData instanceof RetirementYearData
+    return this.#yearData instanceof RetirementYearResults
       ? 0 //this.#yearData.incomeStreams.subjectSocialSecurity
       : 0;
   }
 
   get subjectPension() {
-    return this.#yearData instanceof RetirementYearData
+    return this.#yearData instanceof RetirementYearResults
       ? 0 // TODO: add pension to RetirementYearData
       : 0;
   }
@@ -130,27 +130,27 @@ class Calculation {
     return 0; // TODO: add taxes to RetirementYearData
   }
 
-  get effectiveTaxRate(){
+  get effectiveTaxRate() {
     return 0; // TODO: add effectiveTaxRate to RetirementYearData
   }
 
-  get balSavings(){
+  get balSavings() {
     return null; // TODO: add balSavings to RetirementYearData
   }
 
-  get balTran401k(){
+  get balTran401k() {
     return 0; // TODO: add balTran401k to RetirementYearData
   }
 
-  get balRoth(){
+  get balRoth() {
     return 0; // TODO: add balRoth to RetirementYearData
   }
 
-  get balTotal(){
+  get balTotal() {
     return 0; // TODO: add balTotal to RetirementYearData
   }
 
-  get total(){
+  get total() {
     return 0; // TODO: add total to RetirementYearData
   }
 }

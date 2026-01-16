@@ -45,7 +45,7 @@ class IncomeBreakdown {
   }
 
   get combinedEarnedIncomeGross() {
-    return this.#fixedIncomeStreams.wagesAndCompensationGross; // for now; later only if we add earned income streams
+    return this.#fixedIncomeStreams.wagesAndCompensationTaxable; // for now; later only if we add earned income streams
   }
 
   get combinedEarnedIncomeWithholdings() {
@@ -274,7 +274,6 @@ class IncomeBreakdown {
   // get netToGrossIncomeRatio() {
   //   return this.actualIncome > 0 ? this.netIncome / this.actualIncome : 0;
   // }
-
 
   // Factory method for backward compatibility and dependency injection
   /**

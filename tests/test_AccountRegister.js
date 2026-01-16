@@ -60,7 +60,7 @@ runTest(
     const register = new AccountRegister(
       startDate,
       endDate,
-      TransactionCategory.Income
+      TransactionCategory.IncomeNet
     );
 
     assertEqual(
@@ -71,7 +71,7 @@ runTest(
     assertEqual(register.endDate, endDate, "End date should be set correctly");
     assertEqual(
       register.category,
-      TransactionCategory.Income,
+      TransactionCategory.IncomeNet,
       "Category should be set correctly"
     );
     assertEqual(
@@ -90,7 +90,7 @@ runTest(
     const register = new AccountRegister(
       new Date(2023, 0, 1),
       new Date(2023, 11, 31),
-      TransactionCategory.Income
+      TransactionCategory.IncomeNet
     );
 
     register.addDeposit(new Date(2023, 0, 15), "Salary", 2000, 2000);
@@ -130,7 +130,7 @@ runTest(
     const register = new AccountRegister(
       new Date(2023, 0, 1),
       new Date(2023, 11, 31),
-      TransactionCategory.Income
+      TransactionCategory.IncomeNet
     );
 
     register.addWithdrawal(new Date(2023, 0, 15), "Rent", 1200, 800);
@@ -162,7 +162,7 @@ runTest(
     const register = new AccountRegister(
       new Date(2023, 0, 1),
       new Date(2023, 11, 31),
-      TransactionCategory.Income
+      TransactionCategory.IncomeNet
     );
 
     register.addBalanceUpdate(new Date(2023, 0, 31), 1500, "End of Month");
@@ -189,7 +189,7 @@ runTest(
     const register = new AccountRegister(
       new Date(2023, 0, 1),
       new Date(2023, 11, 31),
-      TransactionCategory.Income
+      TransactionCategory.IncomeNet
     );
 
     register.startingBalance = 1000;
@@ -223,7 +223,7 @@ runTest(
     const register = new AccountRegister(
       new Date(2023, 0, 1),
       new Date(2023, 11, 31),
-      TransactionCategory.Income
+      TransactionCategory.IncomeNet
     );
 
     register.endingBalance = 2500;
@@ -253,7 +253,7 @@ runTest(
     const register = new AccountRegister(
       new Date(2023, 0, 1),
       new Date(2023, 0, 31),
-      TransactionCategory.Income
+      TransactionCategory.IncomeNet
     );
 
     // Set starting balance
@@ -294,7 +294,7 @@ runTest(
     const register = new AccountRegister(
       new Date(2023, 0, 1),
       new Date(2023, 11, 31),
-      TransactionCategory.Income
+      TransactionCategory.IncomeNet
     );
 
     register.addDeposit(new Date(2023, 0, 15), "Test", 100, 100);
@@ -321,7 +321,7 @@ runTest(
     const register = new AccountRegister(
       new Date(2023, 0, 1),
       new Date(2023, 0, 31),
-      TransactionCategory.Income
+      TransactionCategory.IncomeNet
     );
 
     register.startingBalance = 1000;
@@ -522,7 +522,7 @@ runTest(
     );
 
     // Add some deposits
-    account.deposit(2000, TransactionCategory.Income, 2023, 1, 15, "Salary");
+    account.deposit(2000, TransactionCategory.IncomeNet, 2023, 1, 15, "Salary");
     account.deposit(
       500,
       TransactionCategory.Transfer,
@@ -830,7 +830,7 @@ runTest(
     // Add transactions across different months
     account.deposit(
       500,
-      TransactionCategory.Income,
+      TransactionCategory.IncomeNet,
       2023,
       1,
       15,
@@ -846,7 +846,7 @@ runTest(
     );
     account.deposit(
       300,
-      TransactionCategory.Income,
+      TransactionCategory.IncomeNet,
       2023,
       3,
       20,
@@ -860,7 +860,14 @@ runTest(
       5,
       "April expense"
     );
-    account.deposit(400, TransactionCategory.Income, 2023, 5, 25, "May income");
+    account.deposit(
+      400,
+      TransactionCategory.IncomeNet,
+      2023,
+      5,
+      25,
+      "May income"
+    );
 
     // Test Q1 register (Jan-Mar)
     const q1Register = account.buildAccountRegister(

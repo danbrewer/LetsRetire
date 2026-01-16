@@ -45,7 +45,7 @@ class Common {
       100: 6.4,
     };
 
-    debugger;
+    // debugger;
     // For ages beyond 100, use declining factors
     let factor;
     if (age <= 100) {

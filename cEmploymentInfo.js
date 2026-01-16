@@ -65,78 +65,82 @@ class EmploymentInfo {
     return this._description;
   }
 
-  get salary() {
-    return this.#inputs.taxableWagesandOtherTaxableCompensation.asCurrency();
-  }
+  // get salary() {
+  //   return this.#inputs.subjectSalary.asCurrency();
+  // }
 
-  /**
-   * Calculates the desired pretax 401k contribution amount based on salary and percentage.
-   *
-   * @returns {number} Desired pretax contribution amount as currency
-   */
-  get #desired401kContribution() {
-    return (this.salary * this.#inputs.pretaxPct).asCurrency();
-  }
+  // /**
+  //  * Calculates the desired pretax 401k contribution amount based on salary and percentage.
+  //  *
+  //  * @returns {number} Desired pretax contribution amount as currency
+  //  */
+  // get #desired401kContribution() {
+  //   return (
+  //     this.salary * this.#inputs.subject401kContributionRate
+  //   ).asCurrency();
+  // }
 
-  /**
-   * Calculates the desired Roth 401k contribution amount based on salary and percentage.
-   *
-   * @returns {number} Desired Roth contribution amount as currency
-   */
-  get #desiredRothContribution() {
-    return (this.salary * this.#inputs.rothPct).asCurrency();
-  }
+  // /**
+  //  * Calculates the desired Roth 401k contribution amount based on salary and percentage.
+  //  *
+  //  * @returns {number} Desired Roth contribution amount as currency
+  //  */
+  // get #desiredRothContribution() {
+  //   return (
+  //     this.salary * this.#inputs.subjectRothContributionRate
+  //   ).asCurrency();
+  // }
 
-  /**
-   * Calculates the elective scaling factor to ensure contributions don't exceed IRS limits.
-   *
-   * This method determines what percentage of desired contributions can actually be made
-   * based on annual contribution limits and catch-up provisions for employees 50+.
-   *
-   * @returns {number} Scaling factor (0-1) to apply to desired contributions
-   */
-  getElectiveScale() {
-    // Use global constants if available, otherwise use 2025 values as defaults
-    const baseLimit =
-      typeof EMPLOYEE_401K_LIMIT_2025 !== "undefined"
-        ? EMPLOYEE_401K_LIMIT_2025
-        : 23000;
-    const catchupLimit =
-      typeof EMPLOYEE_401K_CATCHUP_50 !== "undefined"
-        ? EMPLOYEE_401K_CATCHUP_50
-        : 7500;
+  // /**
+  //  * Calculates the elective scaling factor to ensure contributions don't exceed IRS limits.
+  //  *
+  //  * This method determines what percentage of desired contributions can actually be made
+  //  * based on annual contribution limits and catch-up provisions for employees 50+.
+  //  *
+  //  * @returns {number} Scaling factor (0-1) to apply to desired contributions
+  //  */
+  // getElectiveScale() {
+  //   // Use global constants if available, otherwise use 2025 values as defaults
+  //   const baseLimit =
+  //     typeof EMPLOYEE_401K_LIMIT_2025 !== "undefined"
+  //       ? EMPLOYEE_401K_LIMIT_2025
+  //       : 23000;
+  //   const catchupLimit =
+  //     typeof EMPLOYEE_401K_CATCHUP_50 !== "undefined"
+  //       ? EMPLOYEE_401K_CATCHUP_50
+  //       : 7500;
 
-    let maximumContributionAllowed =
-      baseLimit + (this.#demographics.currentAge >= 50 ? catchupLimit : 0);
-    const totalDesiredContribution =
-      this.#desired401kContribution + this.#desiredRothContribution;
-    let scale =
-      totalDesiredContribution > 0
-        ? Math.min(1, maximumContributionAllowed / totalDesiredContribution)
-        : 1;
-    return scale;
-  }
+  //   let maximumContributionAllowed =
+  //     baseLimit + (this.#demographics.currentAge >= 50 ? catchupLimit : 0);
+  //   const totalDesiredContribution =
+  //     this.#desired401kContribution + this.#desiredRothContribution;
+  //   let scale =
+  //     totalDesiredContribution > 0
+  //       ? Math.min(1, maximumContributionAllowed / totalDesiredContribution)
+  //       : 1;
+  //   return scale;
+  // }
 
-  /**
-   * Calculates the actual pretax 401k contribution after applying IRS limits.
-   *
-   * @returns {number} Capped pretax contribution amount as currency
-   */
-  get allowed401kContribution() {
-    return (
-      this.#desired401kContribution * this.getElectiveScale()
-    ).asCurrency();
-  }
+  // /**
+  //  * Calculates the actual pretax 401k contribution after applying IRS limits.
+  //  *
+  //  * @returns {number} Capped pretax contribution amount as currency
+  //  */
+  // get allowed401kContribution() {
+  //   return (
+  //     this.#desired401kContribution * this.getElectiveScale()
+  //   ).asCurrency();
+  // }
 
-  get allowedRothContribution() {
-    return (
-      this.#desiredRothContribution * this.getElectiveScale()
-    ).asCurrency();
-  }
+  // get allowedRothContribution() {
+  //   return (
+  //     this.#desiredRothContribution * this.getElectiveScale()
+  //   ).asCurrency();
+  // }
 
-  get nonTaxableBenefits() {
-    return this.#inputs.benefitsNonTaxable.asCurrency();
-  }
+  // get nonTaxableBenefits() {
+  //   return this.#inputs.benefitsNonTaxable.asCurrency();
+  // }
 
   // /**
   //  * Calculates the actual Roth 401k contribution after applying IRS limits.
@@ -341,76 +345,6 @@ class EmploymentInfo {
   static CreateUsing(demographics, inputs, description = "Employment Info") {
     return new EmploymentInfo(demographics, inputs, description);
   }
-
-  /**
-   * Factory method to create an EmploymentInfo from individual values.
-   *
-   * @param {number} age - Employee age for contribution calculations
-   * @param {number} salary - Annual salary amount
-   * @param {number} pretaxPct - Pretax contribution percentage (as decimal)
-   * @param {number} rothPct - Roth contribution percentage (as decimal)
-   * @param {number} matchCap - Employee match cap percentage (as decimal)
-   * @param {number} matchRate - Employer match rate (as decimal)
-   * @param {string} [description="Employment Info"] - Optional description
-   *
-   * @returns {EmploymentInfo} A new EmploymentInfo instance with specified values
-   *
-   * @example
-   * // Create employment info from known values
-   * const employment = EmploymentInfo.CreateFrom(
-   *   80000,  // salary
-   *   0.10,   // 10% pretax
-   *   0.05,   // 5% Roth
-   *   0.06,   // 6% match cap
-   *   0.50    // 50% match rate
-   * );
-   *
-   * @static
-   * @since 1.0.0
-   */
-  // static CreateFrom(
-  //   age,
-  //   salary,
-  //   pretaxPct,
-  //   rothPct,
-  //   matchCap,
-  //   matchRate,
-  //   description = "Employment Info"
-  // ) {
-  //   return new EmploymentInfo(
-  //     age,
-  //     salary,
-  //     pretaxPct,
-  //     rothPct,
-  //     matchCap,
-  //     matchRate,
-  //     description
-  //   );
-  // }
-
-  /**
-   * Factory method to create an empty EmploymentInfo instance.
-   *
-   * @param {string} [description="Employment Info"] - Optional description
-   * @returns {EmploymentInfo} A new EmploymentInfo instance with zero values
-   *
-   * @example
-   * // Create empty employment info for later population
-   * const employment = EmploymentInfo.Empty();
-   * employment.updateEmploymentInfo({
-   *   salary: 70000,
-   *   pretaxContributionPercentage: 0.08
-   * });
-   *
-   * @static
-   * @since 1.0.0
-   */
-  // static Empty(description = "Employment Info") {
-  //   return new EmploymentInfo(0, 0, 0, 0, 0, 0, description);
-  // }
 }
-
-// Maintain backward compatibility - this will need salary and inputs context
-// const employmentInfo = EmploymentInfo.CreateUsing(salary, inputs);
 
 export { EmploymentInfo };

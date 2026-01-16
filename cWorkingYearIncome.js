@@ -3,6 +3,7 @@ import { AccountingYear } from "./cAccountingYear.js";
 import { Demographics } from "./cDemographics.js";
 import { EmploymentInfo } from "./cEmploymentInfo.js";
 import { FiscalData } from "./cFiscalData.js";
+import { FixedIncomeStreams } from "./cFixedIncomeStreams.js";
 import { Inputs } from "./cInputs.js";
 import { INTEREST_CALCULATION_EPOCH, PERIODIC_FREQUENCY } from "./consts.js";
 import { TaxCalculations } from "./cTaxCalculations.js";
@@ -29,17 +30,11 @@ class WorkingYearIncome {
   #demographics;
   /** @type {FiscalData} */
   #fiscalData;
+  /** @type {FixedIncomeStreams} */
+  #fixedIncomeStreams;
 
-  /** @type {EmploymentInfo} */
-  #employmentInfo;
-
-  // /** @type {Number | null} */
-  // #estimatedInterestIncome = null;
   /** @type {Number | null} */
   #withholdings = null;
-
-  // /** @type {Account} */
-  // #withholdingsAccount =  Account.createWithOpeningBalance(ACCOUNT_TYPES.WITHHOLDINGS, 0, new Date(this.#fiscalData.taxYear, 0, 1), 0);
 
   /** @type {Number} */
   #taxesDue = 0;
@@ -75,8 +70,9 @@ class WorkingYearIncome {
     this.#inputs = /** @type {Inputs} */ (Object.freeze(inputs));
     this.#fiscalData = /** @type {FiscalData} */ (Object.freeze(fiscalData));
 
-    this.#employmentInfo = EmploymentInfo.CreateUsing(
+    this.#fixedIncomeStreams = FixedIncomeStreams.CreateUsing(
       this.#demographics,
+      accountYear,
       this.#inputs
     );
 
@@ -130,42 +126,27 @@ class WorkingYearIncome {
   }
 
   get grossWagesTipsAndCompensation() {
-    const result = this.#inputs.taxableWagesandOtherTaxableCompensation;
+    const result = this.#inputs.subjectSalary;
     return result;
   }
 
   get nonTaxableWagesAndCompensation() {
-    const result =
-      this.#employmentInfo.allowed401kContribution +
-      this.#employmentInfo.nonTaxableBenefits;
+    const result = this.#fixedIncomeStreams.wagesAndCompensationNonTaxable;
     return result;
   }
 
   get taxableWagesAndCompensation() {
-    const result =
-      this.grossWagesTipsAndCompensation - this.nonTaxableWagesAndCompensation;
+    const result = this.#fixedIncomeStreams.wagesAndCompensationGross;
     return result;
   }
 
   get taxableIncomeAdjustment() {
-    const result = this.#inputs.taxableIncomeAdjustment;
+    const result = this.#fixedIncomeStreams.miscTaxableIncomeWithNoWithholdings;
     return result;
   }
 
-  // get estimatedInterestIncome() {
-  //   if (this.#estimatedInterestIncome === null) {
-  //     this.#estimatedInterestIncome = this.#accountYear
-  //       .calculateInterestForYear(
-  //         ACCOUNT_TYPES.SAVINGS,
-  //         INTEREST_CALCULATION_EPOCH.ROLLING_BALANCE
-  //       )
-  //       .asCurrency();
-  //   }
-  //   return this.#estimatedInterestIncome;
-  // }
-
   get taxableIncome() {
-    return this.taxableWagesAndCompensation + this.taxableIncomeAdjustment;
+    return this.#fixedIncomeStreams.taxableIncome; // this.taxableWagesAndCompensation + this.taxableIncomeAdjustment;
   }
 
   get withholdings() {
@@ -255,6 +236,7 @@ class WorkingYearIncome {
   }
 
   calculateWithholdings() {
+
     if (this.#withholdings !== null) {
       return; // Already estimated
     }
@@ -271,10 +253,10 @@ class WorkingYearIncome {
     // Estimate tax withholdings
     this.#accountYear.processAsPeriodicDeposits(
       ACCOUNT_TYPES.WITHHOLDINGS,
-      TransactionCategory.Taxes,
+      TransactionCategory.Wages,
       this.#withholdings,
       PERIODIC_FREQUENCY.MONTHLY,
-      "Estimated tax withholdings"
+      "Combined"
     );
   }
 
@@ -320,20 +302,38 @@ class WorkingYearIncome {
     this.#netIncome = Math.max(this.totalTaxableIncome - this.#taxesDue, 0);
   }
 
+  #processTakeHomeIncome() {
+    // Deposit take-home pay into the savings account
+    this.accountYear.processAsPeriodicDeposits(
+      ACCOUNT_TYPES.CASH,
+      TransactionCategory.Wages,
+      this.netIncome,
+      PERIODIC_FREQUENCY.MONTHLY,
+      "take-home pay"
+    );
+  }
+
   process401kContributions() {
     // Dump any 401k contributions into the Traditional 401k account
     this.accountYear.processAsPeriodicDeposits(
       ACCOUNT_TYPES.SUBJECT_401K,
       TransactionCategory.Contribution,
-      this.#employmentInfo.allowed401kContribution,
+      this.#fixedIncomeStreams.allowed401kContribution,
       PERIODIC_FREQUENCY.MONTHLY
     );
-
-    this.#record401kInterest();
   }
 
-  #record401kInterest() {
+  apply401kInterest() {
     this.accountYear.recordInterestEarnedForYear(ACCOUNT_TYPES.SUBJECT_401K);
+  }
+
+  applyRothInterest() {
+    this.accountYear.recordInterestEarnedForYear(
+      ACCOUNT_TYPES.SUBJECT_ROTH_IRA
+    );
+    this.accountYear.recordInterestEarnedForYear(
+      ACCOUNT_TYPES.PARTNER_ROTH_IRA
+    );
   }
 
   applySavingsInterest() {
@@ -348,15 +348,11 @@ class WorkingYearIncome {
       this.annualRothContributions,
       PERIODIC_FREQUENCY.MONTHLY
     );
-
-    this.accountYear.recordInterestEarnedForYear(
-      ACCOUNT_TYPES.SUBJECT_ROTH_IRA
-    );
   }
 
   get annualRothContributions() {
     return Math.min(
-      this.#employmentInfo.allowedRothContribution,
+      this.#fixedIncomeStreams.allowedRothContribution,
       this.netIncome
     );
   }
@@ -369,7 +365,7 @@ class WorkingYearIncome {
     // Deposit surplus income into savings account
     this.accountYear.processAsPeriodicDeposits(
       ACCOUNT_TYPES.SAVINGS,
-      TransactionCategory.Income,
+      TransactionCategory.IncomeNet,
       this.surplusSpend,
       PERIODIC_FREQUENCY.MONTHLY,
       "spending surplus"

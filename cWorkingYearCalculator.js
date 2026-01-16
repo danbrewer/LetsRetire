@@ -2,6 +2,7 @@ import { ACCOUNT_TYPES } from "./cAccount.js";
 import { AccountingYear } from "./cAccountingYear.js";
 import { Demographics } from "./cDemographics.js";
 import { FiscalData } from "./cFiscalData.js";
+import { FixedIncomeStreams } from "./cFixedIncomeStreams.js";
 import { Inputs } from "./cInputs.js";
 import { TAX_BASE_YEAR, PERIODIC_FREQUENCY } from "./consts.js";
 import { WorkingYearData } from "./cWorkingYearData.js";
@@ -16,8 +17,12 @@ class WorkingYearCalculator {
   #inputs;
   /** @type {FiscalData} */
   #fiscalData;
+  /** @type {AccountingYear} */
+  #accountYear;
   /** @type {Demographics} */
   #demographics;
+  /** @type {FixedIncomeStreams} */
+  #fixedIncomeStreams;
 
   /**
    * Create working year income calculator with input configuration
@@ -26,9 +31,15 @@ class WorkingYearCalculator {
    */
   constructor(inputs, accountYear) {
     this.#inputs = inputs;
-    this.accountYear = accountYear;
+    this.#accountYear = accountYear;
     this.#demographics = Demographics.CreateUsing(inputs, false, true);
     this.#fiscalData = FiscalData.CreateUsing(inputs, TAX_BASE_YEAR);
+
+    this.#fixedIncomeStreams = FixedIncomeStreams.CreateUsing(
+      this.#demographics,
+      accountYear,
+      this.#inputs
+    );
   }
 
   calculateWorkingYearData() {
@@ -36,7 +47,7 @@ class WorkingYearCalculator {
       this.#inputs,
       this.#demographics,
       this.#fiscalData,
-      this.accountYear
+      this.#accountYear
     );
 
     // **************
@@ -45,10 +56,12 @@ class WorkingYearCalculator {
     workingYearIncome.process401kContributions();
     workingYearIncome.calculateWithholdings();
     workingYearIncome.processRothIraContributions();
+
     workingYearIncome.processMonthlySpending();
 
     // Now calculate interest earned on accounts
     workingYearIncome.applySavingsInterest();
+    workingYearIncome.apply401kInterest();
 
     workingYearIncome.reconcileIncomeTaxes();
 
@@ -56,7 +69,7 @@ class WorkingYearCalculator {
     const result = WorkingYearData.CreateFrom(
       this.#demographics,
       this.#fiscalData,
-      this.accountYear,
+      this.#accountYear,
       workingYearIncome
     );
 

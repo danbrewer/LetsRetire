@@ -12,6 +12,11 @@ import {
 import { DateFunctions, StringFunctions, Boxes } from "./utils.js";
 
 /**
+ * @typedef {import("./cTransaction.js").TransactionCategorySymbol} TransactionCategorySymbol
+ * @typedef {import("./cTransaction.js").TransactionTypeSymbol} TransactionTypeSymbol
+ */
+
+/**
  * @typedef {Object} TransactionReport
  * @property {string} transactionType
  * @property {string} category
@@ -51,30 +56,6 @@ class AccountAnalyzer {
     this.#accountYear = accountYear;
     this.#accountType = accountType;
   }
-
-  // /**
-  //  * Get all transactions sorted by category
-  //  * @returns {TransactionReport[]}
-  //  */
-  // getTransactionsByCategory() {
-  //   const transactions = this.#accountYear
-  //     .getAccountTransactions(this.#accountType)
-  //     .sort((a, b) => {
-  //       const categoryA = TransactionCategory.toName(a.category);
-  //       const categoryB = TransactionCategory.toName(b.category);
-
-  //       // Handle null/undefined cases
-  //       if (!categoryA && !categoryB) return 0;
-  //       if (!categoryA) return 1; // Put null/undefined at end
-  //       if (!categoryB) return -1; // Put null/undefined at end
-
-  //       return categoryA.localeCompare(categoryB);
-  //     });
-
-  //   return transactions.map(
-  //     (tx) => /** @type {TransactionReport} */ (tx.toJSON())
-  //   ); // Return readable format
-  // }
 
   /** @param {string} category
    * @param {Transaction[]} txns
@@ -188,9 +169,11 @@ class AccountAnalyzer {
     Boxes.addDetailData(headers, "left");
     Boxes.singleDivider();
 
+    let grandTotal = 0;
     for (const [category, txns] of transactions) {
       const total = txns.reduce((sum, tx) => sum + tx.amount, 0);
       const count = txns.length;
+      grandTotal += total;
 
       const data = `${StringFunctions.padAndAlign(category, 30)}${StringFunctions.padAndAlign(
         total.asCurrency(),
@@ -200,11 +183,88 @@ class AccountAnalyzer {
 
       Boxes.addDetailData(data, "left");
     }
+    const grandTotalField = StringFunctions.padAndAlign(
+      grandTotal.asCurrency(),
+      20,
+      "right"
+    );
+    Boxes.doubleDivider();
+    const totalLabel = StringFunctions.padAndAlign("Grand Total:", 30);
+    Boxes.addDetailData(`${totalLabel}${grandTotalField}`, "left");
     Boxes.singleBorderBottom();
   }
 
   /** @param {string} [reportTitle] */
-  dumpAllTransactions(reportTitle) {
+  dumpAnnualTransactions(reportTitle) {
+    console.log();
+    if (!reportTitle) {
+      reportTitle = `${this.#accountType} Annual Account Activity (${this.#accountYear.taxYear})`;
+    }
+
+    const transactions = this.#accountYear
+      .getAccountTransactions(this.#accountType)
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+    const dateHeader = StringFunctions.padAndAlign("Date", 12);
+    const categoryHeader = StringFunctions.padAndAlign("Category", 15);
+    const memoHeader = StringFunctions.padAndAlign("Memo", 20);
+    const depositHeader = StringFunctions.padAndAlign("Deposit", 8, "center");
+    const withdrawalHeader = StringFunctions.padAndAlign(
+      "Withdrawal",
+      8,
+      "center"
+    );
+    const balanceHeader = StringFunctions.padAndAlign("Balance", 8, "center");
+    const headers = `${dateHeader}    ${categoryHeader}    ${memoHeader}    ${depositHeader}    ${withdrawalHeader}    ${balanceHeader}`;
+
+    Boxes.topBorderDouble();
+    Boxes.addDetailData(reportTitle);
+    Boxes.doubleDivider();
+    Boxes.addDetailData(headers, "left");
+    Boxes.doubleDivider();
+    let balance = 0;
+    for (const t of transactions) {
+      const date = DateFunctions.formatDateYYYYMMDD(t.date);
+      const dateField = StringFunctions.padAndAlign(date, 12);
+      const categoryName = TransactionCategory.toName(t.category) || "Unknown";
+      const categoryField = StringFunctions.padAndAlign(categoryName, 15);
+      const deposit =
+        t.transactionType === TransactionType.Deposit
+          ? t.amount.asCurrency()
+          : "";
+      const withdrawal =
+        t.transactionType === TransactionType.Withdrawal
+          ? t.amount.asCurrency()
+          : "";
+      const depositField = StringFunctions.padAndAlign(deposit, 8, "right");
+      const withdrawalField = StringFunctions.padAndAlign(
+        withdrawal,
+        8,
+        "right"
+      );
+      const memoField = StringFunctions.padAndAlign(t.memo ?? "", 20);
+      balance +=
+        t.transactionType === TransactionType.Deposit ? t.amount : -t.amount;
+      const balanceField = StringFunctions.padAndAlign(
+        balance.asCurrency(),
+        8,
+        "right"
+      );
+
+      const detailData = `${dateField}    ${categoryField}    ${memoField}    ${depositField}    ${withdrawalField}    ${balanceField}`;
+
+      Boxes.addDetailData(detailData, "left");
+    }
+
+    Boxes.doubleDivider();
+    Boxes.addDetailData(
+      `Ending Balance: ${StringFunctions.padAndAlign(balance.asCurrency(), 8, "right")}`
+    );
+    Boxes.singleBorderBottom();
+  }
+
+  /** @param {string} [reportTitle] */
+  dumpAccountActivity(reportTitle) {
     console.log();
     if (!reportTitle) {
       reportTitle = `${this.#accountType} Account Activity (${this.#accountYear.taxYear})`;
@@ -235,9 +295,9 @@ class AccountAnalyzer {
     const balanceHeader = StringFunctions.padAndAlign("Balance", 8, "center");
     const headers = `${dateHeader}    ${categoryHeader}    ${memoHeader}    ${depositHeader}    ${withdrawalHeader}    ${balanceHeader}`;
 
-    Boxes.doubleBox(reportTitle);
-
-    Boxes.singleTopBorder();
+    Boxes.topBorderDouble();
+    Boxes.addDetailData(reportTitle);
+    Boxes.doubleDivider();
     Boxes.addDetailData(startingBalanceOutput);
 
     Boxes.singleDivider();
@@ -345,41 +405,31 @@ class AccountAnalyzer {
     return sortedTransactionMap;
   }
 
-  // /**
-  //  * Get transactions as an array of category objects with totals, sorted by category name
-  //  * @returns {TransactionsSummaryByCategoryReport[]}
-  //  */
-  // getTransactionSummaryByCategory() {
-  //   const grouped = this.getTransactionsGroupedByCategory();
-  //   const summary = [];
+  get startingBalance() {
+    return this.#accountYear.getStartingBalance(this.#accountType).asCurrency();
+  }
 
-  //   for (const [categoryName, transactions] of grouped) {
-  //     const total = transactions.reduce((sum, tx) => sum + tx.amount, 0);
-  //     summary.push({
-  //       category: categoryName,
-  //       transactions, // Already converted to TransactionReport[] in grouped method
-  //       total,
-  //       count: transactions.length,
-  //     });
-  //   }
+  /**
+   * @param {TransactionCategorySymbol | undefined} [category]
+   */
+  getTotalWithdrawals(category) {
+    return this.#accountYear
+      .getWithdrawals(this.#accountType, category)
+      .asCurrency();
+  }
 
-  //   return summary; // Already sorted by category name from grouped method
-  // }
+  /**
+   * @param {TransactionCategorySymbol | undefined} [category]
+   */
+  getTotalDeposits(category) {
+    return this.#accountYear
+      .getDeposits(this.#accountType, category)
+      .asCurrency();
+  }
 
-  // /**
-  //  * Get all transactions sorted first by category, then by date within category
-  //  * @returns {TransactionReport[]}
-  //  */
-  // getTransactionsByCategoryThenDate() {
-  //   const grouped = this.getTransactionsGroupedByCategory();
-  //   const sorted = [];
-
-  //   for (const [categoryName, transactions] of grouped) {
-  //     sorted.push(...transactions); // transactions are already TransactionReport[] from grouped method
-  //   }
-
-  //   return sorted;
-  // }
+  get endingBalance() {
+    return this.#accountYear.getEndingBalance(this.#accountType).asCurrency();
+  }
 
   get total() {
     return this.#accountYear.getDeposits(this.#accountType).asCurrency();

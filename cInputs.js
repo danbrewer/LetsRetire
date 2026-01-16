@@ -27,13 +27,13 @@ class Inputs {
    * @param {number} spousePenCola - Spouse pension cost of living adjustment as decimal
    * @param {number} spouseTaxSS - Spouse Social Security tax rate as decimal
    * @param {number} spouseTaxPension - Spouse pension tax rate as decimal
-   * @param {number} startingSalary - Starting annual salary
-   * @param {number} salaryGrowth - Annual salary growth rate as decimal
-   * @param {number} pretaxPct - Pre-tax 401k contribution percentage as decimal
-   * @param {number} rothPct - Roth IRA contribution percentage as decimal
+   * @param {number} subjectStartingSalary - Starting annual salary
+   * @param {number} subjectSalaryGrowthRate - Annual salary growth rate as decimal
+   * @param {number} subject401kContributionRate - Pre-tax 401k contribution percentage as decimal
+   * @param {number} subjectRothContributionRate - Roth IRA contribution percentage as decimal
    * @param {number} taxablePct - Taxable savings percentage as decimal
    * @param {number} matchCap - Employer match cap percentage as decimal
-   * @param {number} matchRate - Employer match rate as decimal
+   * @param {number} subject401kMatchRate - Employer match rate as decimal
    * @param {number} subject401kStartingBalance - Current traditional 401k balance
    * @param {number} subjectRothStartingBalance - Current Roth IRA balance
    * @param {number} spouse401kStartingBalance - Current spouse traditional 401k balance
@@ -76,13 +76,13 @@ class Inputs {
     spousePenCola = 0,
     spouseTaxSS = 0,
     spouseTaxPension = 0,
-    startingSalary = 0,
-    salaryGrowth = 0,
-    pretaxPct = 0,
-    rothPct = 0,
+    subjectStartingSalary = 0,
+    subjectSalaryGrowthRate = 0,
+    subject401kContributionRate = 0,
+    subjectRothContributionRate = 0,
     taxablePct = 0,
     matchCap = 0,
-    matchRate = 0,
+    subject401kMatchRate = 0,
     subject401kStartingBalance = 0,
     subjectRothStartingBalance = 0,
     spouse401kStartingBalance = 0,
@@ -170,16 +170,16 @@ class Inputs {
 
     // Employment and contributions
     /** @type {number} */
-    this.startingSalary = startingSalary;
+    this.subjectStartingSalary = subjectStartingSalary;
 
     /** @type {number} */
-    this.salaryGrowth = salaryGrowth;
+    this.subjectSalaryGrowthRate = subjectSalaryGrowthRate;
 
     /** @type {number} */
-    this.pretaxPct = pretaxPct;
+    this.subject401kContributionRate = subject401kContributionRate;
 
     /** @type {number} */
-    this.rothPct = rothPct;
+    this.subjectRothContributionRate = subjectRothContributionRate;
 
     /** @type {number} */
     this.taxablePct = taxablePct;
@@ -188,7 +188,7 @@ class Inputs {
     this.matchCap = matchCap;
 
     /** @type {number} */
-    this.matchRate = matchRate;
+    this.subject401kMatchRate = subject401kMatchRate;
 
     // Account balances and returns
     /** @type {number} */
@@ -449,27 +449,31 @@ class Inputs {
     return result;
   }
 
-  get taxableWagesandOtherTaxableCompensation() {
-    const grossWages = this.grossWagesandOtherTaxableCompensation;
+  // get subjectTaxableWagesAndCompensation() {
+  //   const grossWages = this.subjectGrossTaxableCompensation;
 
-    const result = grossWages - this.benefitsAndOtherSalaryReductions;
+  //   const result = grossWages - this.subjectGrossSalaryReductions;
 
-    return result;
+  //   return result;
+  // }
+
+  get subjectSalary(){
+    return this.subjectStartingSalary.adjustedForInflation(
+      this.subjectSalaryGrowthRate,
+      this.yearIndex
+    );
   }
 
-  get grossWagesandOtherTaxableCompensation() {
-    let result = this.#taxableIncomeAdjustment.asCurrency();
-    if (!this.#isRetired) {
-      result += this.startingSalary.adjustedForInflation(
-        this.salaryGrowth,
-        this.yearIndex
-      );
-    }
+  // get subjectGrossTaxableCompensation() {
+  //   let result = this.#taxableIncomeAdjustment.asCurrency();
+  //   if (!this.#isRetired) {
+  //     result += this.subjectSalary;
+  //   }
 
-    return result;
-  }
+  //   return result;
+  // }
 
-  get benefitsAndOtherSalaryReductions() {
+  get subjectGrossSalaryReductions() {
     return 0; // For now. This can include health/dental/HSA contributions, etc. later on
   }
 
@@ -548,13 +552,13 @@ class Inputs {
       this.spousePenCola,
       this.spouseTaxSS,
       this.spouseTaxPension,
-      this.taxableWagesandOtherTaxableCompensation,
-      this.salaryGrowth,
-      this.pretaxPct,
-      this.rothPct,
+      this.subjectStartingSalary,
+      this.subjectSalaryGrowthRate,
+      this.subject401kContributionRate,
+      this.subjectRothContributionRate,
       this.taxablePct,
       this.matchCap,
-      this.matchRate,
+      this.subject401kMatchRate,
       this.subject401kStartingBalance,
       this.subjectRothStartingBalance,
       this.spouse401kStartingBalance,

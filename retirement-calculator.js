@@ -94,7 +94,7 @@ function calc(calculations, UI) {
   // Retirement years
   for (
     let yearIndex = inputs.totalWorkingYears;
-    yearIndex < inputs.totalLivingYears - inputs.totalWorkingYears;
+    yearIndex < inputs.totalLivingYears;
     yearIndex++
   ) {
     const retirementYearInputs = initializeInputsForRetirementYear(
@@ -133,7 +133,7 @@ function calc(calculations, UI) {
         console.error(new Error().stack);
       }
     }
-    debugger;
+    //debugger;
   }
 
   debugger;

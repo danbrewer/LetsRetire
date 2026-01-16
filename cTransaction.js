@@ -68,8 +68,11 @@ const TransactionCategoryNames = /** @type {const} */ ({
   Shortage: "Shortage",
   Transfer: "Transfer",
   Contribution: "Contribution",
-  Income: "Income",
+  IncomeNet: "Income",
+  IncomeGross: "Income Gross",
+  IncomeDeductions: "Income Deductions",
   Taxes: "Taxes",
+  Wages: "Wages",
   Spend: "Spend",
   Savings: "Savings",
   Trad401k: "Trad 401k",
@@ -80,6 +83,7 @@ const TransactionCategoryNames = /** @type {const} */ ({
   Pension: "Pension",
   TaxRefund: "Tax Refund",
   TaxPayment: "Tax Payment",
+  Withholdings: "Withholdings",
 });
 
 /**
@@ -119,12 +123,23 @@ class TransactionCategoryEnum extends EnumBase {
     return this.map[TransactionCategoryNames.Contribution];
   }
 
-  get Income() {
-    return this.map[TransactionCategoryNames.Income];
+  get IncomeNet() {
+    return this.map[TransactionCategoryNames.IncomeNet];
+  }
+
+  get IncomeGross() {
+    return this.map[TransactionCategoryNames.IncomeNet];
+  }
+  get IncomeDeductions() {
+    return this.map[TransactionCategoryNames.IncomeNet];
   }
 
   get Taxes() {
     return this.map[TransactionCategoryNames.Taxes];
+  }
+
+  get Wages() {
+    return this.map[TransactionCategoryNames.Wages];
   }
 
   get Spend() {
@@ -167,6 +182,10 @@ class TransactionCategoryEnum extends EnumBase {
     return this.map[TransactionCategoryNames.TaxPayment];
   }
 
+  get Withholdings() {
+    return this.map[TransactionCategoryNames.Withholdings];
+  }
+
   // (others optional — same as GaapAccountType)
 
   /**
@@ -206,7 +225,7 @@ const TransactionCategory = new TransactionCategoryEnum();
  *         | typeof TransactionCategory.Shortage
  *         | typeof TransactionCategory.Transfer
  *         | typeof TransactionCategory.Contribution
- *         | typeof TransactionCategory.Income
+ *         | typeof TransactionCategory.IncomeNet
  *         | typeof TransactionCategory.Taxes
  *         | typeof TransactionCategory.Spend
  *         | typeof TransactionCategory.Savings
@@ -358,10 +377,8 @@ class Transaction {
     if (!TransactionCategory.values().includes(category)) {
       throw new Error("Invalid TransactionCategory");
     }
-    if (amount <= 0) {
-      throw new Error(
-        "Transaction amounts must always be positive and non-zero."
-      );
+    if (amount < 0) {
+      throw new Error("Transaction amounts must always be positive.");
     }
     this.#amount = amount;
     this.#transactionType = transactionType;

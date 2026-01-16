@@ -13,7 +13,13 @@ import {
 import { DateFunctions } from "./utils.js";
 
 class ACCOUNT_TYPES {}
+ACCOUNT_TYPES.DISBURSEMENT = "Disbursements";
+
+ACCOUNT_TYPES.CASH = "Cash";
 ACCOUNT_TYPES.SAVINGS = "Savings";
+
+ACCOUNT_TYPES.INCOME = "Income";
+ACCOUNT_TYPES.WITHHOLDINGS = "Withholdings";
 
 ACCOUNT_TYPES.SUBJECT_401K = "SubjectTrad401k";
 ACCOUNT_TYPES.PARTNER_401K = "SubjectTrad401k";
@@ -22,17 +28,18 @@ ACCOUNT_TYPES.SUBJECT_ROTH_IRA = "SubjectRothIra";
 ACCOUNT_TYPES.PARTNER_ROTH_IRA = "PartnerRothIra";
 
 ACCOUNT_TYPES.SUBJECT_PENSION = "SubjectPension";
-ACCOUNT_TYPES.SPOUSE_PENSION = "PartnerPension";
+ACCOUNT_TYPES.PARTNER_PENSION = "PartnerPension";
 
 ACCOUNT_TYPES.SUBJECT_SOCIAL_SECURITY = "SubjectSocialSecurity";
-ACCOUNT_TYPES.SPOUSE_SOCIAL_SECURITY = "SpouseSocialSecurity";
+ACCOUNT_TYPES.PARTNER_SOCIAL_SECURITY = "PartnerSocialSecurity";
+
+ACCOUNT_TYPES.SUBJECT_WAGES = "SubjectWages";
+ACCOUNT_TYPES.PARTNER_WAGES = "PartnerWages";
+
+ACCOUNT_TYPES.OTHER_INCOME = "OtherIncome";
 
 ACCOUNT_TYPES.INTEREST_ON_SAVINGS = "InterestOnSavings";
 
-ACCOUNT_TYPES.LIVINGEXPENSESFUND = "Cash";
-ACCOUNT_TYPES.DISBURSEMENT_TRACKING = "Disbursement";
-
-ACCOUNT_TYPES.WITHHOLDINGS = "Withholdings";
 ACCOUNT_TYPES.TAXES = "Taxes";
 
 // Create a class for the account
@@ -130,7 +137,7 @@ class Account {
    * @param {string} [memo] - Optional memo for the opening transaction
    */
   setOpeningBalance(amount, openingDate, memo = "Account opening balance") {
-    if (amount <= 0) {
+    if (amount < 0) {
       throw new Error("Opening balance must be positive");
     }
 
@@ -293,7 +300,10 @@ class Account {
    */
   #deposit(amount, category, date, memo) {
     if (amount < 0) {
-      throw new Error("Deposit amount must be positive.");
+      const catName = TransactionCategory.toName(category);
+      throw new Error(
+        `Deposit amount must be positive. Found: ${amount} Date: ${date.toISOString()} Category: ${catName}  Memo: ${memo}`
+      );
     }
 
     if (amount === 0) return amount.asCurrency();
@@ -311,7 +321,7 @@ class Account {
    * @param {number} yyyy
    * @param {number} [month]
    * @param {number} [day]
-   * @param {string} [memo]
+   * @param {string | null} [memo]
    */
   deposit(amount, category, yyyy, month = 1, day = 1, memo = "") {
     if (amount < 0) {
@@ -466,22 +476,38 @@ class Account {
    */
   #calculateRollingInterestForYear(yyyy, recordInterestEarned = false) {
     let interestEarned = 0;
-    let balance = this.#startingBalanceForYear(yyyy);
+    let monthlyBalance = this.#startingBalanceForYear(yyyy);
 
     for (let month = 0; month < 12; month++) {
       // Process transactions for the month
-      for (const tx of this.#transactions) {
-        if (tx.date.getFullYear() === yyyy && tx.date.getMonth() === month) {
-          if (tx.transactionType === TransactionType.Deposit) {
-            balance += tx.amount;
-          } else if (tx.transactionType === TransactionType.Withdrawal) {
-            balance -= tx.amount;
-          }
-        }
-      }
+      this.#transactions
+        .filter(
+          (tx) => tx.date.getFullYear() === yyyy && tx.date.getMonth() === month
+        )
+        .reduce(
+          (bal, tx) =>
+            tx.transactionType === TransactionType.Deposit
+              ? bal + tx.amount
+              : bal - tx.amount,
+          monthlyBalance
+        );
+      // for (const tx of this.#transactions) {
+      //   if (tx.date.getFullYear() === yyyy) {
+      //     if (tx.date.getMonth() === month) {
+      //       if (tx.transactionType === TransactionType.Deposit) {
+      //         startingBalanceForYear += tx.amount;
+      //       } else if (tx.transactionType === TransactionType.Withdrawal) {
+      //         startingBalanceForYear -= tx.amount;
+      //       }
+      //     }
+      //   }
+      // }
 
       // Calculate interest for the month
-      const monthlyInterest = (balance * (this.interestRate / 12)).asCurrency();
+      const monthlyInterest = (
+        monthlyBalance *
+        (this.interestRate / 12)
+      ).asCurrency();
       if (recordInterestEarned) {
         this.#deposit(
           monthlyInterest,
@@ -493,7 +519,7 @@ class Account {
       interestEarned += monthlyInterest;
 
       // Update balance with interest
-      balance += monthlyInterest;
+      monthlyBalance += monthlyInterest;
     }
 
     return interestEarned.asCurrency();
@@ -674,7 +700,7 @@ class Account {
    */
   #processAsDailyTransactions(yyyy, amount, category, transactionType, memo) {
     const daysInYear = new Date(yyyy, 1, 29).getMonth() === 1 ? 366 : 365;
-    const dailyAmount = (amount / daysInYear).asCurrency();
+    const dailyAmount = Math.trunc(amount / daysInYear);
 
     switch (transactionType) {
       case TransactionType.Withdrawal:
@@ -738,7 +764,21 @@ class Account {
    * @param {string | null} memo
    */
   #processAsMonthlyTransactions(yyyy, amount, category, transactionType, memo) {
-    const monthlyAmount = (amount / 12).asCurrency();
+    if (amount < 0) return;
+    if (amount <= 12) {
+      let month = 0;
+      while (amount > 0) {
+        if (transactionType === TransactionType.Withdrawal) {
+          this.#withdrawal(1, category, new Date(yyyy, month, 1), memo);
+        } else if (transactionType === TransactionType.Deposit) {
+          this.#deposit(1, category, new Date(yyyy, month, 1), memo);
+        }
+        amount--;
+      }
+      return amount.asCurrency();
+    }
+
+    const monthlyAmount = Math.trunc(amount / 12);
 
     switch (transactionType) {
       case TransactionType.Withdrawal:
@@ -813,7 +853,7 @@ class Account {
     transactionType,
     memo
   ) {
-    const quarterlyAmount = (amount / 4).asCurrency();
+    const quarterlyAmount = Math.trunc(amount / 4);
 
     switch (transactionType) {
       case TransactionType.Withdrawal:
@@ -885,7 +925,7 @@ class Account {
     transactionType,
     memo = ""
   ) {
-    const semiAnnualAmount = (amount / 2).asCurrency();
+    const semiAnnualAmount = Math.trunc(amount / 2);
 
     switch (transactionType) {
       case TransactionType.Withdrawal:

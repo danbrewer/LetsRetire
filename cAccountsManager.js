@@ -11,52 +11,6 @@ class AccountsManager {
   constructor(accountsMap) {
     this.#accountsByType = new Map(accountsMap);
   }
-  // /**
-  //  * @param {Account} subjectSocialSecurity - Subject Social Security account instance
-  //  * @param {Account} spouseSocialSecurity - Spouse Social Security account instance
-  //  * @param {Account} subject401k - Traditional 401k account instance
-  //  * @param {Account} spouse401k - Spouse Traditional 401k account instance
-  //  * @param {Account} subjectPension - Subject Pension account instance
-  //  * @param {Account} spousePension - Spouse Pension account instance
-  //  * @param {Account} subjectRothIra - Roth IRA account instance
-  //  * @param {Account} spouseRothIra - Spouse Roth IRA account instance
-  //  * @param {Account} savings - Savings account instance
-  //  * @param {Account} income - Income account instance
-  //  * @param {Account} disbursement - Disbursement account instance
-  //  * @param {Account} taxes - Taxes account instance
-  //  * @param {Account} withholdings - Withholdings account instance
-  //  */
-  // constructor(
-  //   subjectSocialSecurity,
-  //   spouseSocialSecurity,
-  //   subject401k,
-  //   spouse401k,
-  //   subjectPension,
-  //   spousePension,
-  //   subjectRothIra,
-  //   spouseRothIra,
-  //   savings,
-  //   income,
-  //   disbursement,
-  //   taxes,
-  //   withholdings
-  // ) {
-  //   this.#accountsByType = new Map([
-  //     [ACCOUNT_TYPES.SUBJECT_SOCIAL_SECURITY, subjectSocialSecurity],
-  //     [ACCOUNT_TYPES.SPOUSE_SOCIAL_SECURITY, spouseSocialSecurity],
-  //     [ACCOUNT_TYPES.SUBJECT_401K, subject401k],
-  //     [ACCOUNT_TYPES.PARTNER_401K, spouse401k],
-  //     [ACCOUNT_TYPES.SUBJECT_PENSION, subjectPension],
-  //     [ACCOUNT_TYPES.SPOUSE_PENSION, spousePension],
-  //     [ACCOUNT_TYPES.SUBJECT_ROTH_IRA, subjectRothIra],
-  //     [ACCOUNT_TYPES.PARTNER_ROTH_IRA, spouseRothIra],
-  //     [ACCOUNT_TYPES.SAVINGS, savings],
-  //     [ACCOUNT_TYPES.LIVINGEXPENSESFUND, income],
-  //     [ACCOUNT_TYPES.DISBURSEMENT_TRACKING, disbursement],
-  //     [ACCOUNT_TYPES.TAXES, taxes],
-  //     [ACCOUNT_TYPES.WITHHOLDINGS, withholdings],
-  //   ]);
-  // }
 
   /**
    * Factory method to create AccountGroup from input data
@@ -117,68 +71,6 @@ class AccountsManager {
     }
 
     return new AccountsManager(accountsMap);
-
-    // const subjectSocialSecurity = new Account(
-    //   ACCOUNT_TYPES.SUBJECT_SOCIAL_SECURITY,
-    //   0,
-    //   0
-    // );
-
-    // const spouseSocialSecurity = new Account(
-    //   ACCOUNT_TYPES.SPOUSE_SOCIAL_SECURITY,
-    //   0,
-    //   0
-    // );
-
-    // const subject401k = new Account(
-    //   ACCOUNT_TYPES.SUBJECT_401K,
-    //   inputs.subject401kStartingBalance,
-    //   inputs.trad401kInterestRate
-    // );
-    // const spouse401k = new Account(
-    //   ACCOUNT_TYPES.PARTNER_401K,
-    //   inputs.spouse401kStartingBalance,
-    //   inputs.spouseTrad401kInterestRate
-    // );
-
-    // const subjectPension = new Account(ACCOUNT_TYPES.SUBJECT_PENSION, 0, 0);
-    // const spousePension = new Account(ACCOUNT_TYPES.SPOUSE_PENSION, 0, 0);
-
-    // const subjectRothIra = new Account(
-    //   ACCOUNT_TYPES.SUBJECT_ROTH_IRA,
-    //   inputs.subjectRothStartingBalance,
-    //   inputs.tradRothInterestRate
-    // );
-    // const spouseRothIra = new Account(
-    //   ACCOUNT_TYPES.PARTNER_ROTH_IRA,
-    //   inputs.spouseRothStartingBalance,
-    //   inputs.spouseRothInterestRate
-    // );
-    // const savings = new Account(
-    //   ACCOUNT_TYPES.SAVINGS,
-    //   inputs.savingsStartingBalance,
-    //   inputs.savingsInterestRate
-    // );
-
-    // const revenue = new Account(ACCOUNT_TYPES.LIVINGEXPENSESFUND, 0, 0);
-    // const disbursement = new Account(ACCOUNT_TYPES.DISBURSEMENT_TRACKING, 0, 0);
-    // const taxes = new Account(ACCOUNT_TYPES.TAXES, 0, 0);
-    // const withholdings = new Account(ACCOUNT_TYPES.WITHHOLDINGS, 0, 0);
-    // return new AccountsManager(
-    //   subjectSocialSecurity,
-    //   spouseSocialSecurity,
-    //   subject401k,
-    //   spouse401k,
-    //   subjectPension,
-    //   spousePension,
-    //   subjectRothIra,
-    //   spouseRothIra,
-    //   savings,
-    //   revenue,
-    //   disbursement,
-    //   taxes,
-    //   withholdings
-    // );
   }
 
   /**
@@ -210,11 +102,11 @@ class AccountsManager {
   }
 
   get income() {
-    return this.#getAccountByType(ACCOUNT_TYPES.LIVINGEXPENSESFUND);
+    return this.#getAccountByType(ACCOUNT_TYPES.CASH);
   }
 
   get disbursement() {
-    return this.#getAccountByType(ACCOUNT_TYPES.DISBURSEMENT_TRACKING);
+    return this.#getAccountByType(ACCOUNT_TYPES.DISBURSEMENT);
   }
 
   /**
@@ -246,22 +138,6 @@ class AccountsManager {
     }
 
     return new AccountsManager(accountsMap);
-    // const obj = typeof json === "string" ? JSON.parse(json) : json;
-    // return new AccountsManager(
-    //   Account.fromJSON(obj.subjectSocialSecurity),
-    //   Account.fromJSON(obj.spouseSocialSecurity),
-    //   Account.fromJSON(obj.trad401k),
-    //   Account.fromJSON(obj.spouseTrad401k),
-    //   Account.fromJSON(obj.subjectPension),
-    //   Account.fromJSON(obj.spousePension),
-    //   Account.fromJSON(obj.rothIra),
-    //   Account.fromJSON(obj.spouseRothIra),
-    //   Account.fromJSON(obj.savings),
-    //   Account.fromJSON(obj.income),
-    //   Account.fromJSON(obj.disbursement),
-    //   Account.fromJSON(obj.taxes),
-    //   Account.fromJSON(obj.withholdings)
-    // );
   }
 
   // Utility methods for account group analysis

@@ -1,4 +1,5 @@
 import { ACCOUNT_TYPES } from "./cAccount.js";
+import { AccountAnalyzer } from "./cAccountAnalyzer.js";
 import { AccountsManager } from "./cAccountsManager.js";
 import { INTEREST_CALCULATION_EPOCH } from "./consts.js";
 import { TransactionCategory } from "./cTransaction.js";
@@ -10,6 +11,12 @@ import { TransactionCategory } from "./cTransaction.js";
 class AccountingYear {
   #accountsManager;
 
+  /** @type {Map<string, AccountAnalyzer>} */
+  #accountAnalyzers;
+
+  /** @type {Object.<string, AccountAnalyzer>} */
+  #analyzerProxy;
+
   /**
    * @param {AccountsManager} accountsManager
    * @param {number} taxYear
@@ -17,6 +24,70 @@ class AccountingYear {
   constructor(accountsManager, taxYear) {
     this.#accountsManager = accountsManager;
     this.taxYear = taxYear;
+
+    this.#accountAnalyzers = new Map();
+    // Initialize AccountAnalyzers for all account types
+    this.#accountAnalyzers = new Map();
+    for (const [typeName, accountType] of Object.entries(ACCOUNT_TYPES)) {
+      this.#accountAnalyzers.set(
+        accountType,
+        new AccountAnalyzer(this, accountType)
+      );
+    }
+
+    // Create a proxy object for elegant access
+    this.#analyzerProxy = new Proxy(
+      {},
+      {
+        get: (_, prop) => {
+          if (typeof prop === "string") {
+            if (!this.#accountAnalyzers.has(prop)) {
+              throw new Error(
+                `AccountAnalyzer for type "${prop}" does not exist.`
+              );
+            }
+            return this.#accountAnalyzers.get(prop);
+          }
+          return undefined;
+        },
+        has: (_, prop) => {
+          if (typeof prop === "string") {
+            return this.#accountAnalyzers.has(prop);
+          }
+          return false;
+        },
+        ownKeys: (_) => {
+          return Array.from(this.#accountAnalyzers.keys());
+        },
+        getOwnPropertyDescriptor: (_, prop) => {
+          if (typeof prop === "string" && this.#accountAnalyzers.has(prop)) {
+            return {
+              enumerable: true,
+              configurable: true,
+              value: this.#accountAnalyzers.get(prop),
+            };
+          }
+          return undefined;
+        },
+      }
+    );
+  }
+
+  /**
+   * Get AccountAnalyzer for a specific account type
+   * @param {string} accountType - The account type from ACCOUNT_TYPES
+   * @returns {AccountAnalyzer | undefined}
+   */
+  getAccountAnalyzer(accountType) {
+    return this.#accountAnalyzers.get(accountType);
+  }
+
+  /**
+   * Get AccountAnalyzers with elegant indexer-style access
+   * @returns {Object.<string, AccountAnalyzer>}
+   */
+  get analyzers() {
+    return this.#analyzerProxy;
   }
 
   toJSON() {
@@ -32,7 +103,7 @@ class AccountingYear {
    * @param {number} amount
    * @param {number} [month]
    * @param {number} [day]
-   * @param {string} [party]
+   * @param {string | null} [party]
    */
   deposit(accountName, category, amount, month = 1, day = 1, party = "") {
     const account = this.#accountsManager.getAccountByType(accountName);
