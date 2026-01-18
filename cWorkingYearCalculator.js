@@ -5,6 +5,8 @@ import { FiscalData } from "./cFiscalData.js";
 import { FixedIncomeStreams } from "./cFixedIncomeStreams.js";
 import { Inputs } from "./cInputs.js";
 import { TAX_BASE_YEAR, PERIODIC_FREQUENCY } from "./consts.js";
+import { Taxes } from "./cTaxes.js";
+import { TransactionCategory } from "./cTransaction.js";
 import { WorkingYearData } from "./cWorkingYearData.js";
 import { WorkingYearIncome } from "./cWorkingYearIncome.js";
 
@@ -23,6 +25,8 @@ class WorkingYearCalculator {
   #demographics;
   /** @type {FixedIncomeStreams} */
   #fixedIncomeStreams;
+  /** @type {WorkingYearIncome} */
+  #workingYearIncome;
 
   /**
    * Create working year income calculator with input configuration
@@ -40,38 +44,42 @@ class WorkingYearCalculator {
       accountYear,
       this.#inputs
     );
-  }
 
-  calculateWorkingYearData() {
-    const workingYearIncome = WorkingYearIncome.CreateUsing(
-      this.#inputs,
+    this.#workingYearIncome = WorkingYearIncome.CreateUsing(
+      this.#fixedIncomeStreams,
       this.#demographics,
       this.#fiscalData,
       this.#accountYear
     );
+  }
 
+  processWorkingYearData() {
     // **************
     // Calculations
     // **************
-    workingYearIncome.process401kContributions();
-    workingYearIncome.calculateWithholdings();
-    workingYearIncome.processRothIraContributions();
+    this.#processWagesAndCompensation();
 
-    workingYearIncome.processMonthlySpending();
+    this.#processRothIraContributions();
+    this.#processSavingsContributions();
+
+    this.#processMonthlySpending();
 
     // Now calculate interest earned on accounts
-    workingYearIncome.applySavingsInterest();
-    workingYearIncome.apply401kInterest();
+    this.#applySavingsInterest();
+    this.#apply401kInterest();
+    this.#applyRothInterest();
 
-    workingYearIncome.reconcileIncomeTaxes();
+    this.#processIncomeTaxes();
 
     // Declare and initialize the result object at the top
     const result = WorkingYearData.CreateFrom(
       this.#demographics,
       this.#fiscalData,
       this.#accountYear,
-      workingYearIncome
+      this.#workingYearIncome
     );
+
+    this.#accountYear.analyzers[ACCOUNT_TYPES.SAVINGS].dumpCategorySummaries();
 
     // const standardDeduction = TaxCalculator.getStandardDeduction(
     //   this.#fiscalData,
@@ -209,6 +217,215 @@ class WorkingYearCalculator {
     // };
 
     return result;
+  }
+
+  #processSavingsContributions() {
+    const desiredTransferAmount =
+      this.#fixedIncomeStreams.subjectWorkingYearSavingsContributionFixed +
+      this.#fixedIncomeStreams.subjectWorkingYearSavingsContributionVariable +
+      this.#fixedIncomeStreams.partnerWorkingYearSavingsContributionFixed +
+      this.#fixedIncomeStreams.partnerWorkingYearSavingsContributionVariable;
+
+    const availableCash = this.#accountYear.getEndingBalance(
+      ACCOUNT_TYPES.INCOME
+    );
+
+    if (availableCash <= 0) return;
+
+    const actualTransferAmount = Math.min(availableCash, desiredTransferAmount);
+
+    this.#accountYear.processAsPeriodicTransfers(
+      ACCOUNT_TYPES.INCOME,
+      ACCOUNT_TYPES.SAVINGS,
+      actualTransferAmount,
+      PERIODIC_FREQUENCY.MONTHLY
+    );
+  }
+
+  #processWagesAndCompensation() {
+
+    this.#accountYear.processAsPeriodicDeposits(
+      ACCOUNT_TYPES.PARTNER_WAGES,
+      TransactionCategory.IncomeGross,
+      this.#fixedIncomeStreams.partnerWagesAndCompensationGross,
+      PERIODIC_FREQUENCY.MONTHLY
+    );
+
+    this.#accountYear.processAsPeriodicTransfers(
+      ACCOUNT_TYPES.PARTNER_WAGES,
+      ACCOUNT_TYPES.WITHHOLDINGS,
+      this.#fixedIncomeStreams
+        .partnerWagesAndCompensationEstimatedWithholdings,
+      PERIODIC_FREQUENCY.MONTHLY
+    );
+
+    this.#accountYear.processAsPeriodicTransfers(
+      ACCOUNT_TYPES.PARTNER_WAGES,
+      ACCOUNT_TYPES.CASH,
+      this.#fixedIncomeStreams.partnerWagesAndCompensationActualIncome,
+      PERIODIC_FREQUENCY.MONTHLY
+    );
+
+    this.#accountYear.processAsPeriodicDeposits(
+      ACCOUNT_TYPES.SUBJECT_WAGES,
+      TransactionCategory.IncomeGross,
+      this.#fixedIncomeStreams.subjectWagesAndCompensationGross,
+      PERIODIC_FREQUENCY.MONTHLY
+    );
+
+    this.#accountYear.processAsPeriodicTransfers(
+      ACCOUNT_TYPES.SUBJECT_WAGES,
+      ACCOUNT_TYPES.WITHHOLDINGS,
+      this.#fixedIncomeStreams.subjectWagesAndCompensationEstimatedWithholdings,
+      PERIODIC_FREQUENCY.MONTHLY
+    );
+
+    this.#accountYear.processAsPeriodicTransfers(
+      ACCOUNT_TYPES.SUBJECT_WAGES,
+      ACCOUNT_TYPES.CASH,
+      this.#fixedIncomeStreams.subjectWagesAndCompensationActualIncome,
+      PERIODIC_FREQUENCY.MONTHLY
+    );
+
+    this.#accountYear.analyzers[ACCOUNT_TYPES.SUBJECT_WAGES].dumpAccountActivity("", TransactionCategory.IncomeGross);
+    debugger;
+
+    this.#process401kContributions();
+    this.#processWithholdings();
+  }
+
+  #processWithholdings() {
+    const withholdings =
+      this.#fixedIncomeStreams
+        .combinedWagesAndCompensationEstimatedWithholdings;
+
+    // Estimate tax withholdings
+    this.#accountYear.processAsPeriodicDeposits(
+      ACCOUNT_TYPES.WITHHOLDINGS,
+      TransactionCategory.Wages,
+      withholdings,
+      PERIODIC_FREQUENCY.MONTHLY,
+      "Combined"
+    );
+  }
+
+  #process401kContributions() {
+    // Dump any 401k contributions into the Traditional 401k account
+    this.#accountYear.processAsPeriodicDeposits(
+      ACCOUNT_TYPES.SUBJECT_401K,
+      TransactionCategory.Contribution,
+      this.#fixedIncomeStreams.subjectAllowed401kContribution,
+      PERIODIC_FREQUENCY.MONTHLY
+    );
+  }
+
+  #processRothIraContributions() {
+    if (this.#fixedIncomeStreams.subjectAllowedRothContribution <= 0) return;
+
+    this.#accountYear.processAsPeriodicTransfers(
+      ACCOUNT_TYPES.INCOME,
+      ACCOUNT_TYPES.SUBJECT_ROTH_IRA,
+      this.#fixedIncomeStreams.subjectAllowedRothContribution,
+      PERIODIC_FREQUENCY.MONTHLY
+    );
+  }
+
+  #processMonthlySpending() {
+    // Any income left after spending goes into savings
+
+    this.surplusSpend =
+      this.#fixedIncomeStreams.totalActualFixedIncome - this.#fiscalData.spend;
+
+    if (this.surplusSpend == 0) return;
+
+    if (this.surplusSpend > 0) {
+      // Deposit surplus income into savings account
+      this.#accountYear.processAsPeriodicDeposits(
+        ACCOUNT_TYPES.SAVINGS,
+        TransactionCategory.Spend,
+        this.surplusSpend,
+        PERIODIC_FREQUENCY.MONTHLY,
+        "spending surplus"
+      );
+    }
+
+    if (this.surplusSpend < 0) {
+      // Withdraw from savings to cover spending shortfall
+      this.#accountYear.processAsPeriodicWithdrawals(
+        ACCOUNT_TYPES.SAVINGS,
+        TransactionCategory.Spend,
+        -this.surplusSpend,
+        PERIODIC_FREQUENCY.MONTHLY,
+        "spending shortfall"
+      );
+    }
+  }
+
+  #applySavingsInterest() {
+    this.#accountYear.recordInterestEarnedForYear(ACCOUNT_TYPES.SAVINGS);
+  }
+
+  #apply401kInterest() {
+    this.#accountYear.recordInterestEarnedForYear(ACCOUNT_TYPES.SUBJECT_401K);
+    this.#accountYear.recordInterestEarnedForYear(ACCOUNT_TYPES.PARTNER_401K);
+  }
+
+  #applyRothInterest() {
+    this.#accountYear.recordInterestEarnedForYear(
+      ACCOUNT_TYPES.SUBJECT_ROTH_IRA
+    );
+    this.#accountYear.recordInterestEarnedForYear(
+      ACCOUNT_TYPES.PARTNER_ROTH_IRA
+    );
+  }
+
+  #processIncomeTaxes() {
+    const actualTaxes = Taxes.CreateFromTaxableIncome(
+      this.#fixedIncomeStreams.grossTaxableIncome,
+      this.#fixedIncomeStreams.taxableIncome,
+      this.#fiscalData,
+      this.#demographics
+    );
+
+    const federalIncomeTaxOwed = actualTaxes.federalTaxesOwed.asCurrency();
+
+    const withholdings = Math.max(
+      this.#accountYear.getEndingBalance(ACCOUNT_TYPES.WITHHOLDINGS) -
+        this.#accountYear.getStartingBalance(ACCOUNT_TYPES.WITHHOLDINGS),
+      0
+    );
+
+    const taxesOwed = federalIncomeTaxOwed - withholdings;
+
+    if (taxesOwed < 0)
+      this.#accountYear.deposit(
+        ACCOUNT_TYPES.SAVINGS,
+        TransactionCategory.TaxRefund,
+        -taxesOwed,
+        12,
+        31
+      );
+
+    if (taxesOwed > 0) {
+      if (
+        taxesOwed > this.#accountYear.getEndingBalance(ACCOUNT_TYPES.SAVINGS)
+      ) {
+        console.warn(
+          "Warning: Taxes due exceed available savings. Partial payment will be made."
+        );
+      }
+      const withdrawalAmount = Math.min(
+        taxesOwed,
+        this.#accountYear.getEndingBalance(ACCOUNT_TYPES.SAVINGS)
+      );
+      this.#accountYear.withdrawal(
+        ACCOUNT_TYPES.SAVINGS,
+        TransactionCategory.TaxPayment,
+        withdrawalAmount,
+        12,
+        31
+      );
+    }
   }
 }
 

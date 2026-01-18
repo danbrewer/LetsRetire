@@ -9,26 +9,28 @@ class Inputs {
   #taxFreeIncomeAdjustment = 0;
 
   /**
-   * @param {number} initialAge - Current age of the person
-   * @param {number} initialAgeSpouse - Current age of spouse (0 if no spouse)
-   * @param {number} retireAge - Age at retirement
-   * @param {number} ssStartAge - Age when Social Security benefits start
-   * @param {number} penStartAge - Age when pension benefits start
-   * @param {number} endAge - Age at end of planning period
+   * @param {number} initialAgeSubject - Current age of the person
+   * @param {number} initialAgePartner - Current age of partner (0 if no partner)
+   * @param {number} subjectRetireAge - Age at retirement
+   * @param {number} subjectSsStartAge - Age when Social Security benefits start
+   * @param {number} subjectPensionStartAge - Age when pension benefits start
+   * @param {number} endSubjectAge - Age at end of planning period
    * @param {number} inflation - Annual inflation rate as decimal
    * @param {number} spendingToday - Current annual spending amount
    * @param {number} spendingDecline - Spending decline rate in retirement as decimal
-   * @param {number} spouseRetireAge - Spouse retirement age
-   * @param {number} spouseSsMonthly - Monthly spouse Social Security benefits
-   * @param {number} spouseSsStartAge - Age when spouse SS benefits start
-   * @param {number} spouseSsCola - Spouse SS cost of living adjustment as decimal
-   * @param {number} spousePenMonthly - Monthly spouse pension benefits
-   * @param {number} spousePenStartAge - Age when spouse pension benefits start
-   * @param {number} spousePenCola - Spouse pension cost of living adjustment as decimal
-   * @param {number} spouseTaxSS - Spouse Social Security tax rate as decimal
-   * @param {number} spouseTaxPension - Spouse pension tax rate as decimal
+   * @param {number} partnerRetireAge - Partner retirement age
+   * @param {number} partnerSsMonthly - Monthly partner Social Security benefits
+   * @param {number} partnerSsStartAge - Age when partner SS benefits start
+   * @param {number} partnerSsCola - Partner SS cost of living adjustment as decimal
+   * @param {number} partnerPenMonthly - Monthly partner pension benefits
+   * @param {number} partnerPenStartAge - Age when partner pension benefits start
+   * @param {number} partnerPenCola - Partner pension cost of living adjustment as decimal
+   * @param {number} partnerTaxSS - Partner Social Security tax rate as decimal
+   * @param {number} partnerTaxPension - Partner pension tax rate as decimal
    * @param {number} subjectStartingSalary - Starting annual salary
+   * @param {number} partnerStartingSalary - Partner starting annual salary
    * @param {number} subjectSalaryGrowthRate - Annual salary growth rate as decimal
+   * @param {number} partnerSalaryGrowthRate - Partner annual salary growth rate as decimal
    * @param {number} subject401kContributionRate - Pre-tax 401k contribution percentage as decimal
    * @param {number} subjectRothContributionRate - Roth IRA contribution percentage as decimal
    * @param {number} taxablePct - Taxable savings percentage as decimal
@@ -36,14 +38,14 @@ class Inputs {
    * @param {number} subject401kMatchRate - Employer match rate as decimal
    * @param {number} subject401kStartingBalance - Current traditional 401k balance
    * @param {number} subjectRothStartingBalance - Current Roth IRA balance
-   * @param {number} spouse401kStartingBalance - Current spouse traditional 401k balance
-   * @param {number} spouseRothStartingBalance - Current spouse Roth IRA balance
+   * @param {number} partner401kStartingBalance - Current partner traditional 401k balance
+   * @param {number} partnerRothStartingBalance - Current partner Roth IRA balance
    * @param {number} savingsStartingBalance - Current savings balance
-   * @param {number} ret401k - 401k rate of return as decimal
-   * @param {number} retRoth - Roth IRA rate of return as decimal
-   * @param {number} retSpouse401k - Spouse 401k rate of return as decimal
-   * @param {number} retSpouseRoth - Spouse Roth IRA rate of return as decimal
-   * @param {number} retSavings - Savings rate of return as decimal
+   * @param {number} trad401kInterestRate - 401k rate of return as decimal
+   * @param {number} tradRothInterestRate - Roth IRA rate of return as decimal
+   * @param {number} partnerTrad401kInterestRate - Partner 401k rate of return as decimal
+   * @param {number} partnerRothInterestRate - Partner Roth IRA rate of return as decimal
+   * @param {number} savingsInterestRate - Savings rate of return as decimal
    * @param {number} ssMonthly - Monthly Social Security benefits
    * @param {number} ssCola - Social Security cost of living adjustment as decimal
    * @param {number} penMonthly - Monthly pension benefits
@@ -55,29 +57,46 @@ class Inputs {
    * @param {number} flatPensionWithholdingRate - Flat withholding rate for pension as decimal
    * @param {number} flatWageWithholdingRate - Flat withholding rate for wages as decimal
    * @param {string[]} order - Withdrawal order for accounts
+   * @param {number} subjectWorkingYearSavingsContributionFixed
+   * @param {number} subjectWorkingYearSavingsContributionVariable
+   * @param {number} partnerWorkingYearSavingsContributionFixed
+   * @param {number} partnerWorkingYearSavingsContributionVariable
+   * @param {number} subjectRetirementYearSavingsContributionFixed
+   * @param {number} subjectRetirementYearSavingsContributionVariable
+   * @param {number} partnerRetirementYearSavingsContributionFixed
+   * @param {number} partnerRetirementYearSavingsContributionVariable
+   * @param {number} partner401kContributionRate - Partner pre-tax 401k contribution percentage as decimal
+   * @param {number} partnerRothContributionRate - Partner Roth IRA contribution percentage as decimal
+   * @param {number} subjectNonTaxableSalaryReductions - Subject non-taxable salary reductions (e.g., health/dental/HSA)
+   * @param {number} partnerNonTaxableSalaryReductions - Partner non-taxable salary reductions (e.g., health/dental/HSA)
    */
   constructor(
-    initialAge = 0,
-    initialAgeSpouse = 0,
-    retireAge = 0,
-    ssStartAge = 0,
-    penStartAge = 0,
-    endAge = 0,
+    initialAgeSubject = 0,
+    initialAgePartner = 0,
+    subjectRetireAge = 0,
+    subjectSsStartAge = 0,
+    subjectPensionStartAge = 0,
+    endSubjectAge = 0,
+
     inflation = 0,
     spendingToday = 0,
     spendingDecline = 0,
-    spouseRetireAge = 0,
-    spouseSsMonthly = 0,
-    spouseSsStartAge = 0,
-    spouseSsCola = 0,
-    spousePenMonthly = 0,
-    spousePenStartAge = 0,
-    spouse401kStartAge = 0,
-    spousePenCola = 0,
-    spouseTaxSS = 0,
-    spouseTaxPension = 0,
+
+    partnerRetireAge = 0,
+    partnerSsMonthly = 0,
+    partnerSsStartAge = 0,
+    partnerSsCola = 0,
+    partnerPenMonthly = 0,
+    partnerPenStartAge = 0,
+    partner401kStartAge = 0,
+    partnerPenCola = 0,
+    partnerTaxSS = 0,
+    partnerTaxPension = 0,
+
     subjectStartingSalary = 0,
+    partnerStartingSalary = 0,
     subjectSalaryGrowthRate = 0,
+    partnerSalaryGrowthRate = 0,
     subject401kContributionRate = 0,
     subjectRothContributionRate = 0,
     taxablePct = 0,
@@ -85,14 +104,14 @@ class Inputs {
     subject401kMatchRate = 0,
     subject401kStartingBalance = 0,
     subjectRothStartingBalance = 0,
-    spouse401kStartingBalance = 0,
-    spouseRothStartingBalance = 0,
+    partner401kStartingBalance = 0,
+    partnerRothStartingBalance = 0,
     savingsStartingBalance = 0,
-    ret401k = 0,
-    retRoth = 0,
-    retSpouse401k = 0,
-    retSpouseRoth = 0,
-    retSavings = 0,
+    trad401kInterestRate = 0,
+    tradRothInterestRate = 0,
+    partnerTrad401kInterestRate = 0,
+    partnerRothInterestRate = 0,
+    savingsInterestRate = 0,
     ssMonthly = 0,
     ssCola = 0,
     penMonthly = 0,
@@ -107,26 +126,38 @@ class Inputs {
       ACCOUNT_TYPES.SAVINGS,
       ACCOUNT_TYPES.SUBJECT_401K,
       ACCOUNT_TYPES.SUBJECT_ROTH_IRA,
-    ]
+    ],
+    subjectWorkingYearSavingsContributionFixed = 0,
+    subjectWorkingYearSavingsContributionVariable = 0,
+    partnerWorkingYearSavingsContributionFixed = 0,
+    partnerWorkingYearSavingsContributionVariable = 0,
+    subjectRetirementYearSavingsContributionFixed = 0,
+    subjectRetirementYearSavingsContributionVariable = 0,
+    partnerRetirementYearSavingsContributionFixed = 0,
+    partnerRetirementYearSavingsContributionVariable = 0,
+    partner401kContributionRate = 0,
+    partnerRothContributionRate = 0,
+    subjectNonTaxableSalaryReductions = 500 * 26,
+    partnerNonTaxableSalaryReductions = 0
   ) {
     // Personal information
     /** @type {number} */
-    this.initialAge = initialAge;
+    this.initialAgeSubject = initialAgeSubject;
 
     /** @type {number} */
-    this.initialSpouseAge = initialAgeSpouse;
+    this.initialAgePartner = initialAgePartner;
 
     /** @type {number} */
-    this.retireAge = retireAge;
+    this.subjectRetireAge = subjectRetireAge;
 
     /** @type {number} */
-    this.ssStartAge = ssStartAge;
+    this.subjectSsStartAge = subjectSsStartAge;
 
     /** @type {number} */
-    this.penStartAge = penStartAge;
+    this.subjectPensionStartAge = subjectPensionStartAge;
 
     /** @type {number} */
-    this.endAge = endAge;
+    this.endSubjectAge = endSubjectAge;
 
     /** @type {number} */
     this.inflation = inflation;
@@ -137,43 +168,47 @@ class Inputs {
     /** @type {number} */
     this.spendingDecline = spendingDecline;
 
-    // Spouse information
+    // Partner information
     /** @type {number} */
-    this.spouseRetireAge = spouseRetireAge;
+    this.partnerRetireAge = partnerRetireAge;
 
     /** @type {number} */
-    this.spouseSsMonthly = spouseSsMonthly;
+    this.partnerSsMonthly = partnerSsMonthly;
 
     /** @type {number} */
-    this.spouseSsStartAge = spouseSsStartAge;
+    this.partnerSsStartAge = partnerSsStartAge;
 
     /** @type {number} */
-    this.spouseSsCola = spouseSsCola;
+    this.partnerSsCola = partnerSsCola;
 
     /** @type {number} */
-    this.spousePenMonthly = spousePenMonthly;
+    this.partnerPenMonthly = partnerPenMonthly;
 
     /** @type {number} */
-    this.spousePenStartAge = spousePenStartAge;
+    this.partnerPenStartAge = partnerPenStartAge;
 
     /** @type {number} */
-    this.spouse401kStartAge = spouse401kStartAge;
+    this.partner401kStartAge = partner401kStartAge;
 
     /** @type {number} */
-    this.spousePenCola = spousePenCola;
+    this.partnerPenCola = partnerPenCola;
 
     /** @type {number} */
-    this.spouseTaxSS = spouseTaxSS;
+    this.partnerTaxSS = partnerTaxSS;
 
     /** @type {number} */
-    this.spouseTaxPension = spouseTaxPension;
+    this.partnerTaxPension = partnerTaxPension;
 
     // Employment and contributions
     /** @type {number} */
     this.subjectStartingSalary = subjectStartingSalary;
 
+    this.partnerStartingSalary = partnerStartingSalary;
+
     /** @type {number} */
     this.subjectSalaryGrowthRate = subjectSalaryGrowthRate;
+    /** @type {number} */
+    this.partnerSalaryGrowthRate = partnerSalaryGrowthRate;
 
     /** @type {number} */
     this.subject401kContributionRate = subject401kContributionRate;
@@ -198,28 +233,28 @@ class Inputs {
     this.subjectRothStartingBalance = subjectRothStartingBalance;
 
     /** @type {number} */
-    this.spouse401kStartingBalance = spouse401kStartingBalance;
+    this.partner401kStartingBalance = partner401kStartingBalance;
 
     /** @type {number} */
-    this.spouseRothStartingBalance = spouseRothStartingBalance;
+    this.partnerRothStartingBalance = partnerRothStartingBalance;
 
     /** @type {number} */
     this.savingsStartingBalance = savingsStartingBalance;
 
     /** @type {number} */
-    this.trad401kInterestRate = ret401k;
+    this.trad401kInterestRate = trad401kInterestRate;
 
     /** @type {number} */
-    this.tradRothInterestRate = retRoth;
+    this.tradRothInterestRate = tradRothInterestRate;
 
     /** @type {number} */
-    this.spouseTrad401kInterestRate = retSpouse401k;
+    this.partnerTrad401kInterestRate = partnerTrad401kInterestRate;
 
     /** @type {number} */
-    this.spouseRothInterestRate = retSpouseRoth;
+    this.partnerRothInterestRate = partnerRothInterestRate;
 
     /** @type {number} */
-    this.savingsInterestRate = retSavings;
+    this.savingsInterestRate = savingsInterestRate;
 
     // Income sources
     /** @type {number} */
@@ -260,7 +295,7 @@ class Inputs {
     /** @type {number} */
     this.totalLivingYears = 0;
     /** @type {boolean} */
-    this.hasSpouse = false;
+    this.hasPartner = false;
     // /** @type {number} */
     // this.spendAtRetire = 0;
     /** @type {number} */
@@ -271,29 +306,62 @@ class Inputs {
     // this.otherTaxableIncomeAdjustments = 0;
 
     /** @type {number} */
-    this.savingsUseAge = this.retireAge;
+    this.savingsUseAge = this.subjectRetireAge;
     /** @type {number} */
-    this.trad401kUseAge = this.retireAge;
+    this.trad401kUseAge = this.subjectRetireAge;
     /** @type {number} */
-    this.rothUseAge = this.retireAge;
+    this.rothUseAge = this.subjectRetireAge;
 
     /** @type {number} */
     this.yearIndex = 0;
 
     /** @type {number} */
-    this.benefitsNonTaxable = 500 * 26; // e.g., health/dental/HSA
+    this.subjectNonTaxableSalaryReductions = subjectNonTaxableSalaryReductions; // e.g., health/dental/HSA
+
+    /** @type {number} */
+    this.partnerNonTaxableSalaryReductions = partnerNonTaxableSalaryReductions; // For now. This can include health/dental/HSA contributions, etc. later on
 
     /** @type {number} */
     this.spendAtRetire = 0;
 
     /** @type {boolean} */
-    this.hasSpouse = false;
+    this.hasPartner = false;
 
     /** @type {number} */
     this.totalWorkingYears = 0;
 
     /** @type {number} */
     this.totalLivingYears = 0;
+
+    /** @type {number} */
+    this.subjectWorkingYearSavingsContributionFixed =
+      subjectWorkingYearSavingsContributionFixed;
+    /** @type {number} */
+    this.subjectWorkingYearSavingsContributionVariable =
+      subjectWorkingYearSavingsContributionVariable;
+    /** @type {number} */
+    this.partnerWorkingYearSavingsContributionFixed =
+      partnerWorkingYearSavingsContributionFixed;
+    /** @type {number} */
+    this.partnerWorkingYearSavingsContributionVariable =
+      partnerWorkingYearSavingsContributionVariable;
+    /** @type {number} */
+    this.subjectRetirementYearSavingsContributionFixed =
+      subjectRetirementYearSavingsContributionFixed;
+    /** @type {number} */
+    this.subjectRetirementYearSavingsContributionVariable =
+      subjectRetirementYearSavingsContributionVariable;
+    /** @type {number} */
+    this.partnerRetirementYearSavingsContributionFixed =
+      partnerRetirementYearSavingsContributionFixed;
+    /** @type {number} */
+    this.partnerRetirementYearSavingsContributionVariable =
+      partnerRetirementYearSavingsContributionVariable;
+
+    /** @type {number} */
+    this.partner401kContributionRate = partner401kContributionRate;
+    /** @type {number} */
+    this.partnerRothContributionRate = partnerRothContributionRate;
 
     // Calculate derived values
     this.#calculateDerivedValues();
@@ -303,11 +371,11 @@ class Inputs {
    * Private method to calculate derived values
    */
   #calculateDerivedValues() {
-    this.hasSpouse = this.initialSpouseAge > 0;
+    this.hasPartner = this.initialAgePartner > 0;
 
-    this.totalWorkingYears = this.retireAge - this.initialAge;
+    this.totalWorkingYears = this.subjectRetireAge - this.initialAgeSubject;
 
-    this.totalLivingYears = this.endAge - this.initialAge;
+    this.totalLivingYears = this.endSubjectAge - this.initialAgeSubject;
 
     this.spendAtRetire =
       this.spendingToday *
@@ -316,14 +384,17 @@ class Inputs {
 
   // Utility methods for input validation and analysis
   isValid() {
-    return this.retireAge <= this.initialAge || this.endAge <= this.retireAge;
+    return (
+      this.subjectRetireAge <= this.initialAgeSubject ||
+      this.endSubjectAge <= this.subjectRetireAge
+    );
   }
 
   hasValidAges() {
     return (
-      this.initialAge > 0 &&
-      this.retireAge > this.initialAge &&
-      this.endAge > this.retireAge
+      this.initialAgeSubject > 0 &&
+      this.subjectRetireAge > this.initialAgeSubject &&
+      this.endSubjectAge > this.subjectRetireAge
     );
   }
 
@@ -342,7 +413,7 @@ class Inputs {
   }
 
   getRetirementYearsRemaining() {
-    return Math.max(0, this.endAge - this.retireAge);
+    return Math.max(0, this.endSubjectAge - this.subjectRetireAge);
   }
 
   getTotalAccountBalance() {
@@ -357,8 +428,8 @@ class Inputs {
     return (
       this.ssMonthly +
       this.penMonthly +
-      this.spouseSsMonthly +
-      this.spousePenMonthly
+      this.partnerSsMonthly +
+      this.partnerPenMonthly
     );
   }
 
@@ -369,10 +440,10 @@ class Inputs {
   getInputSummary() {
     return {
       personal: {
-        currentAge: this.initialAge,
-        retireAge: this.retireAge,
-        endAge: this.endAge,
-        hasSpouse: this.hasSpouse,
+        currentAge: this.initialAgeSubject,
+        retireAge: this.subjectRetireAge,
+        endAge: this.endSubjectAge,
+        hasPartner: this.hasPartner,
       },
       financial: {
         spendingToday: this.spendingToday,
@@ -389,48 +460,48 @@ class Inputs {
   }
 
   get totalSsIncome() {
-    return (this.subjectSs + this.spouseSs).asCurrency() ?? 0;
+    return (this.subjectSs + this.partnerSs).asCurrency() ?? 0;
   }
 
   get totalPensionIncome() {
-    return (this.subjectPension + this.spousePension).asCurrency() ?? 0;
+    return (this.subjectPension + this.partnerPension).asCurrency() ?? 0;
   }
 
   get subjectSs() {
-    if (this.currentAge >= this.ssStartAge) {
+    if (this.subjectAge >= this.subjectSsStartAge) {
       return (this.ssMonthly * 12).adjustedForInflation(
         this.ssCola,
-        this.currentAge - this.ssStartAge
+        this.subjectAge - this.subjectSsStartAge
       );
     }
     return 0;
   }
 
   get subjectPension() {
-    if (this.currentAge >= this.penStartAge) {
+    if (this.subjectAge >= this.subjectPensionStartAge) {
       return (this.penMonthly * 12).adjustedForInflation(
         this.penCola,
-        this.currentAge - this.penStartAge
+        this.subjectAge - this.subjectPensionStartAge
       );
     }
     return 0;
   }
 
-  get spouseSs() {
-    if (this.spouseAge >= this.spouseSsStartAge) {
-      return (this.spouseSsMonthly * 12).adjustedForInflation(
-        this.spouseSsCola,
-        this.spouseAge - this.spouseSsStartAge
+  get partnerSs() {
+    if (this.partnerAge >= this.partnerSsStartAge) {
+      return (this.partnerSsMonthly * 12).adjustedForInflation(
+        this.partnerSsCola,
+        this.partnerAge - this.partnerSsStartAge
       );
     }
     return 0;
   }
 
-  get spousePension() {
-    if (this.spouseAge >= this.spousePenStartAge) {
-      return (this.spousePenMonthly * 12).adjustedForInflation(
-        this.spousePenCola,
-        this.spouseAge - this.spousePenStartAge
+  get partnerPension() {
+    if (this.partnerAge >= this.partnerPenStartAge) {
+      return (this.partnerPenMonthly * 12).adjustedForInflation(
+        this.partnerPenCola,
+        this.partnerAge - this.partnerPenStartAge
       );
     }
     return 0;
@@ -457,56 +528,58 @@ class Inputs {
   //   return result;
   // }
 
-  get subjectSalary(){
+  get subjectSalary() {
     return this.subjectStartingSalary.adjustedForInflation(
       this.subjectSalaryGrowthRate,
       this.yearIndex
     );
   }
 
-  // get subjectGrossTaxableCompensation() {
-  //   let result = this.#taxableIncomeAdjustment.asCurrency();
-  //   if (!this.#isRetired) {
-  //     result += this.subjectSalary;
-  //   }
-
-  //   return result;
-  // }
-
-  get subjectGrossSalaryReductions() {
-    return 0; // For now. This can include health/dental/HSA contributions, etc. later on
+  get partnerSalary() {
+    return this.partnerStartingSalary.adjustedForInflation(
+      this.partnerSalaryGrowthRate,
+      this.yearIndex
+    );
   }
 
-  get spouseAge() {
-    return this.hasSpouse ? this.initialSpouseAge + this.yearIndex : 0;
+  get partnerAge() {
+    return this.hasPartner ? this.initialAgePartner + this.yearIndex : 0;
   }
 
   get currentYear() {
     return new Date().getFullYear() + this.yearIndex;
   }
 
-  get currentAge() {
-    return this.initialAge + this.yearIndex;
+  get subjectAge() {
+    return this.initialAgeSubject + this.yearIndex;
   }
 
   get useSavings() {
-    return this.currentAge >= this.savingsUseAge;
+    return this.subjectAge >= this.savingsUseAge;
   }
 
-  get useTrad401k() {
-    return this.currentAge >= this.trad401kUseAge;
+  get subjectUseTrad401k() {
+    return this.subjectAge >= this.trad401kUseAge;
   }
 
-  get useRoth() {
-    return this.currentAge >= this.rothUseAge;
+  get partnerUseTrad401k() {
+    return this.partnerAge >= this.trad401kUseAge;
+  }
+
+  get subjectUseRoth() {
+    return this.subjectAge >= this.rothUseAge;
+  }
+
+  get partnerUseRoth() {
+    return this.partnerAge >= this.rothUseAge;
   }
 
   get #isRetired() {
-    return this.currentAge >= this.retireAge;
+    return this.subjectAge >= this.subjectRetireAge;
   }
 
   get #retirementYearIndex() {
-    return this.currentAge - this.retireAge;
+    return this.subjectAge - this.subjectRetireAge;
   }
 
   /**
@@ -533,27 +606,32 @@ class Inputs {
 
   clone() {
     return new Inputs(
-      this.initialAge,
-      this.initialSpouseAge,
-      this.retireAge,
-      this.ssStartAge,
-      this.penStartAge,
-      this.endAge,
+      this.initialAgeSubject,
+      this.initialAgePartner,
+      this.subjectRetireAge,
+      this.subjectSsStartAge,
+      this.subjectPensionStartAge,
+      this.endSubjectAge,
+
       this.inflation,
       this.spendingToday,
       this.spendingDecline,
-      this.spouseRetireAge,
-      this.spouseSsMonthly,
-      this.spouseSsStartAge,
-      this.spouseSsCola,
-      this.spousePenMonthly,
-      this.spousePenStartAge,
-      this.spouse401kStartAge,
-      this.spousePenCola,
-      this.spouseTaxSS,
-      this.spouseTaxPension,
+
+      this.partnerRetireAge,
+      this.partnerSsMonthly,
+      this.partnerSsStartAge,
+      this.partnerSsCola,
+      this.partnerPenMonthly,
+      this.partnerPenStartAge,
+      this.partner401kStartAge,
+      this.partnerPenCola,
+      this.partnerTaxSS,
+      this.partnerTaxPension,
+
       this.subjectStartingSalary,
+      this.partnerStartingSalary,
       this.subjectSalaryGrowthRate,
+      this.partnerSalaryGrowthRate,
       this.subject401kContributionRate,
       this.subjectRothContributionRate,
       this.taxablePct,
@@ -561,13 +639,13 @@ class Inputs {
       this.subject401kMatchRate,
       this.subject401kStartingBalance,
       this.subjectRothStartingBalance,
-      this.spouse401kStartingBalance,
-      this.spouseRothStartingBalance,
+      this.partner401kStartingBalance,
+      this.partnerRothStartingBalance,
       this.savingsStartingBalance,
       this.trad401kInterestRate,
       this.tradRothInterestRate,
-      this.spouseTrad401kInterestRate,
-      this.spouseRothInterestRate,
+      this.partnerTrad401kInterestRate,
+      this.partnerRothInterestRate,
       this.savingsInterestRate,
       this.ssMonthly,
       this.ssCola,
@@ -579,7 +657,19 @@ class Inputs {
       this.flatTrad401kWithholdingRate,
       this.flatPensionWithholdingRate,
       this.flatWageWithholdingRate,
-      this.order
+      this.order,
+      this.subjectWorkingYearSavingsContributionFixed,
+      this.subjectWorkingYearSavingsContributionVariable,
+      this.partnerWorkingYearSavingsContributionFixed,
+      this.partnerWorkingYearSavingsContributionVariable,
+      this.subjectRetirementYearSavingsContributionFixed,
+      this.subjectRetirementYearSavingsContributionVariable,
+      this.partnerRetirementYearSavingsContributionFixed,
+      this.partnerRetirementYearSavingsContributionVariable,
+      this.partner401kContributionRate,
+      this.partnerRothContributionRate,
+      this.subjectNonTaxableSalaryReductions,
+      this.partnerNonTaxableSalaryReductions
     );
   }
 }

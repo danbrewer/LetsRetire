@@ -58,11 +58,9 @@ class AdjustableIncomeStreams {
   }
 
   get subjectActual401kGrossWithdrawal() {
-    return this.#subject401kWithdrawalGross.asCurrency();
-  }
-
-  set subjectActual401kGrossWithdrawal(value) {
-    this.#subject401kWithdrawalGross = value;
+    return this.#accountYear
+      .getEndingBalance(ACCOUNT_TYPES.SUBJECT_401K)
+      .asCurrency();
   }
 
   get subject401kWithholdings() {
@@ -79,11 +77,9 @@ class AdjustableIncomeStreams {
   }
 
   get spouseActual401kGrossWithdrawal() {
-    return this.#spouse401kWithdrawalGross.asCurrency();
-  }
-
-  set spouseActual401kGrossWithdrawal(value) {
-    this.#spouse401kWithdrawalGross = value;
+    return this.#accountYear
+      .getEndingBalance(ACCOUNT_TYPES.PARTNER_401K)
+      .asCurrency();
   }
 
   get spouse401kWithholdings() {

@@ -24,8 +24,6 @@ import { TransactionCategory } from "./cTransaction.js";
 class WorkingYearIncome {
   /** @type {AccountingYear} */
   #accountYear;
-  /** @type {Inputs} */
-  #inputs;
   /** @type {Demographics} */
   #demographics;
   /** @type {FiscalData} */
@@ -47,7 +45,7 @@ class WorkingYearIncome {
 
   /**
    *
-   * @param {Inputs} inputs - Input configuration object containing salary, contribution rates, etc.
+   * @param {FixedIncomeStreams} fixedIncomeStreams - Input configuration object containing salary, contribution rates, etc.
    * @param {Demographics} demographics - Demographic information for the individual
    * @param {FiscalData} fiscalData - Fiscal data including tax year and inflation rate
    * @param {AccountingYear} accountYear - Account group with savings and retirement accounts
@@ -55,7 +53,7 @@ class WorkingYearIncome {
    */
 
   constructor(
-    inputs,
+    fixedIncomeStreams,
     demographics,
     fiscalData,
     accountYear,
@@ -67,33 +65,13 @@ class WorkingYearIncome {
     this.#demographics = /** @type {Demographics} */ (
       Object.freeze(demographics)
     );
-    this.#inputs = /** @type {Inputs} */ (Object.freeze(inputs));
     this.#fiscalData = /** @type {FiscalData} */ (Object.freeze(fiscalData));
 
-    this.#fixedIncomeStreams = FixedIncomeStreams.CreateUsing(
-      this.#demographics,
-      accountYear,
-      this.#inputs
-    );
+    this.#fixedIncomeStreams = fixedIncomeStreams;
 
     this._description = description;
   }
-  /* ********* DI'd properties start ********* */
-  get accountYear() {
-    return this.#accountYear;
-  }
-
-  get demographics() {
-    return this.#demographics;
-  }
-
-  get inputs() {
-    return this.#inputs;
-  }
-
-  get fiscalData() {
-    return this.#fiscalData;
-  }
+  
   /* ********* DI'd properties end ********* */
 
   /**
@@ -106,7 +84,7 @@ class WorkingYearIncome {
   #validate() {
     const errors = [];
 
-    if (this.grossWagesTipsAndCompensation < 0) {
+    if (this.combinedGrossWagesTipsAndCompensation < 0) {
       errors.push("Wages, tips and compensation cannot be negative");
     }
 
@@ -114,7 +92,7 @@ class WorkingYearIncome {
       errors.push("Taxable interest income cannot be negative");
     }
 
-    if (this.nonTaxableWagesAndCompensation < 0) {
+    if (this.combinedNonTaxableWagesAndCompensation < 0) {
       errors.push("Retirement account contributions cannot be negative");
     }
 
@@ -125,18 +103,20 @@ class WorkingYearIncome {
     return result;
   }
 
-  get grossWagesTipsAndCompensation() {
-    const result = this.#inputs.subjectSalary;
+  get combinedGrossWagesTipsAndCompensation() {
+    const result = this.#fixedIncomeStreams.combinedWagesAndCompensationGross;
     return result;
   }
 
-  get nonTaxableWagesAndCompensation() {
-    const result = this.#fixedIncomeStreams.wagesAndCompensationNonTaxable;
+  get combinedNonTaxableWagesAndCompensation() {
+    const result =
+      this.#fixedIncomeStreams.subjectWagesAndCompensationNonTaxable +
+      this.#fixedIncomeStreams.partnerWagesAndCompensationNonTaxable;
     return result;
   }
 
   get taxableWagesAndCompensation() {
-    const result = this.#fixedIncomeStreams.wagesAndCompensationGross;
+    const result = this.#fixedIncomeStreams.combinedWagesAndCompensationGross;
     return result;
   }
 
@@ -149,36 +129,36 @@ class WorkingYearIncome {
     return this.#fixedIncomeStreams.taxableIncome; // this.taxableWagesAndCompensation + this.taxableIncomeAdjustment;
   }
 
-  get withholdings() {
-    if (this.#withholdings === null) {
-      this.calculateWithholdings();
-    }
-    const result = this.#withholdings ?? 0;
-    return result;
-  }
+  // get withholdings() {
+  //   if (this.#withholdings === null) {
+  //     this.calculateWithholdings();
+  //   }
+  //   const result = this.#withholdings ?? 0;
+  //   return result;
+  // }
 
-  get netIncomeAfterWithholdings() {
-    return this.taxableIncome - this.withholdings;
-  }
+  // get netIncomeAfterWithholdings() {
+  //   return this.taxableIncome - this.withholdings;
+  // }
 
   get totalPreSpendingReductions() {
     return this.annualRothContributions;
   }
 
-  get spendableIncome() {
-    return Math.max(
-      this.netIncomeAfterWithholdings - this.totalPreSpendingReductions,
-      0
-    );
-  }
+  // get spendableIncome() {
+  //   return Math.max(
+  //     this.netIncomeAfterWithholdings - this.totalPreSpendingReductions,
+  //     0
+  //   );
+  // }
 
   get annualSpend() {
     return this.#fiscalData.spend;
   }
 
-  get surplusSpend() {
-    return Math.max(this.spendableIncome - this.annualSpend);
-  }
+  // get surplusSpend() {
+  //   return Math.max(this.spendableIncome - this.annualSpend);
+  // }
 
   get taxableInterestOnSavings() {
     const interestAmount = this.#accountYear.getDeposits(
@@ -217,7 +197,7 @@ class WorkingYearIncome {
   }
 
   get taxFreeIncome() {
-    const result = this.#inputs.taxFreeIncomeAdjustment;
+    const result = this.#fixedIncomeStreams.taxFreeIncomeAdjustment;
     return result;
   }
 
@@ -235,76 +215,9 @@ class WorkingYearIncome {
     this._description = newDescription;
   }
 
-  calculateWithholdings() {
-
-    if (this.#withholdings !== null) {
-      return; // Already estimated
-    }
-
-    const incomeTaxes = Taxes.CreateFromTaxableIncome(
-      this.taxableIncome,
-      this.taxableIncome,
-      this.#fiscalData,
-      this.#demographics
-    );
-
-    this.#withholdings = incomeTaxes.federalTaxesOwed.asCurrency();
-
-    // Estimate tax withholdings
-    this.#accountYear.processAsPeriodicDeposits(
-      ACCOUNT_TYPES.WITHHOLDINGS,
-      TransactionCategory.Wages,
-      this.#withholdings,
-      PERIODIC_FREQUENCY.MONTHLY,
-      "Combined"
-    );
-  }
-
-  reconcileIncomeTaxes() {
-    const actualTaxes = Taxes.CreateFromTaxableIncome(
-      this.totalTaxableIncome,
-      this.totalTaxableIncome,
-      this.#fiscalData,
-      this.#demographics
-    );
-
-    this.#taxesDue = actualTaxes.federalTaxesOwed.asCurrency();
-
-    this.#taxOverpayment = Math.max(
-      this.#accountYear.getEndingBalance(ACCOUNT_TYPES.WITHHOLDINGS),
-      0
-    );
-
-    this.#taxUnderpayment = Math.max(
-      this.#taxesDue -
-        this.#accountYear.getEndingBalance(ACCOUNT_TYPES.WITHHOLDINGS),
-      0
-    );
-
-    if (this.#taxOverpayment > 0)
-      this.#accountYear.deposit(
-        ACCOUNT_TYPES.SAVINGS,
-        TransactionCategory.TaxRefund,
-        this.#taxOverpayment,
-        12,
-        31
-      );
-
-    if (this.#taxUnderpayment > 0)
-      this.#accountYear.withdrawal(
-        ACCOUNT_TYPES.SAVINGS,
-        TransactionCategory.TaxPayment,
-        this.#taxUnderpayment,
-        12,
-        31
-      );
-
-    this.#netIncome = Math.max(this.totalTaxableIncome - this.#taxesDue, 0);
-  }
-
   #processTakeHomeIncome() {
     // Deposit take-home pay into the savings account
-    this.accountYear.processAsPeriodicDeposits(
+    this.#accountYear.processAsPeriodicDeposits(
       ACCOUNT_TYPES.CASH,
       TransactionCategory.Wages,
       this.netIncome,
@@ -312,63 +225,14 @@ class WorkingYearIncome {
       "take-home pay"
     );
   }
+  // processRothIraContributions() {
 
-  process401kContributions() {
-    // Dump any 401k contributions into the Traditional 401k account
-    this.accountYear.processAsPeriodicDeposits(
-      ACCOUNT_TYPES.SUBJECT_401K,
-      TransactionCategory.Contribution,
-      this.#fixedIncomeStreams.allowed401kContribution,
-      PERIODIC_FREQUENCY.MONTHLY
-    );
-  }
-
-  apply401kInterest() {
-    this.accountYear.recordInterestEarnedForYear(ACCOUNT_TYPES.SUBJECT_401K);
-  }
-
-  applyRothInterest() {
-    this.accountYear.recordInterestEarnedForYear(
-      ACCOUNT_TYPES.SUBJECT_ROTH_IRA
-    );
-    this.accountYear.recordInterestEarnedForYear(
-      ACCOUNT_TYPES.PARTNER_ROTH_IRA
-    );
-  }
-
-  applySavingsInterest() {
-    this.accountYear.recordInterestEarnedForYear(ACCOUNT_TYPES.SAVINGS);
-  }
-
-  processRothIraContributions() {
-    // Any Roth IRA contributions go into the Roth account
-    this.accountYear.processAsPeriodicDeposits(
-      ACCOUNT_TYPES.SUBJECT_ROTH_IRA,
-      TransactionCategory.Contribution,
-      this.annualRothContributions,
-      PERIODIC_FREQUENCY.MONTHLY
-    );
-  }
+  // }
 
   get annualRothContributions() {
     return Math.min(
-      this.#fixedIncomeStreams.allowedRothContribution,
+      this.#fixedIncomeStreams.subjectAllowedRothContribution,
       this.netIncome
-    );
-  }
-
-  processMonthlySpending() {
-    // Any income left after spending goes into savings
-
-    if (this.surplusSpend == 0) return;
-
-    // Deposit surplus income into savings account
-    this.accountYear.processAsPeriodicDeposits(
-      ACCOUNT_TYPES.SAVINGS,
-      TransactionCategory.IncomeNet,
-      this.surplusSpend,
-      PERIODIC_FREQUENCY.MONTHLY,
-      "spending surplus"
     );
   }
 
@@ -378,7 +242,7 @@ class WorkingYearIncome {
    * This method provides a convenient way to construct WorkingYearIncome objects
    * by extracting data from account groups, fiscal data, and demographic information.
    *
-   * @param {Inputs} inputs - Annual salary amount
+   * @param {FixedIncomeStreams} fixedIncomeStreams - Annual salary amount
    * @param {Demographics} demographics - Demographic information for the individual
    * @param {FiscalData} fiscalData - Fiscal data including tax year and inflation rate
    * @param {AccountingYear} accountYear - Account group with savings and retirement accounts
@@ -403,14 +267,14 @@ class WorkingYearIncome {
    * @since 1.0.0
    */
   static CreateUsing(
-    inputs,
+    fixedIncomeStreams,
     demographics,
     fiscalData,
     accountYear,
     description = "Income"
   ) {
     return new WorkingYearIncome(
-      inputs,
+      fixedIncomeStreams,
       demographics,
       fiscalData,
       accountYear,

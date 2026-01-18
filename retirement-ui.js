@@ -293,13 +293,13 @@ function showHelpToast(event, fieldId) {
       title: "Annual Spending Decline",
       body: "The percentage by which your spending decreases each year in retirement. Many retirees spend less as they age due to reduced activity and travel.",
     },
-    spouseAge: {
+    partnerAge: {
       title: "Spouse Current Age",
-      body: "Your spouse's current age in years. Set to 0 if you don't have a spouse. This affects Social Security and pension benefit calculations.",
+      body: "Your partner's current age in years. Set to 0 if you don't have a partner. This affects Social Security and pension benefit calculations.",
     },
-    spouseRetireAge: {
+    partnerRetireAge: {
       title: "Spouse Retirement Age",
-      body: "The age at which your spouse plans to retire. This determines when spouse income sources will begin or end.",
+      body: "The age at which your partner plans to retire. This determines when partner income sources will begin or end.",
     },
     salary: {
       title: "Current Salary",
@@ -1257,15 +1257,15 @@ function exportCSV() {
   //         r.spend,
   //         r.ss,
   //         r.pen,
-  //         r.spouseSs || 0,
-  //         r.spousePen || 0,
+  //         r.partnerSs || 0,
+  //         r.partnerPen || 0,
   //         r.withdrawals.retirementAccountNet || 0,
   //         r.withdrawals.savingsRothNet || 0,
   //         r.wNet || 0,
   //         r.ssGross || 0,
   //         r.penGross || 0,
-  //         r.spouseSsGross || 0,
-  //         r.spousePenGross || 0,
+  //         r.partnerSsGross || 0,
+  //         r.partnerPenGross || 0,
   //         r.withdrawals.retirementAccountGross || 0,
   //         r.withdrawals.savingsGross || 0,
   //         r.withdrawals.rothGross || 0,
@@ -2018,16 +2018,16 @@ function generatePDFReport() {
   //     doc.setFontSize(10);
   //     doc.setFont(undefined, "normal");
   //     yPos += 12;
-  //     yPos = addKeyValuePair("Spouse Age:", `${inputs.spouseAge}`, yPos, 5);
+  //     yPos = addKeyValuePair("Spouse Age:", `${inputs.partnerAge}`, yPos, 5);
   //     yPos = addKeyValuePair(
   //       "Spouse SS (Annual):",
-  //       fmt(inputs.spouseSsMonthly * 12),
+  //       fmt(inputs.partnerSsMonthly * 12),
   //       yPos,
   //       5
   //     );
   //     yPos = addKeyValuePair(
   //       "Spouse Pension (Annual):",
-  //       fmt(inputs.spousePenMonthly * 12),
+  //       fmt(inputs.partnerPenMonthly * 12),
   //       yPos,
   //       5
   //     );
@@ -2479,28 +2479,30 @@ function parseInputParameters() {
   }
 
   const currentAge = num("currentAge");
-  const currentSpouseAge = num("spouseAge");
-  const retireAge = num("retireAge");
+  const currentSpouseAge = num("partnerAge");
+  const subjectRetireAge = num("retireAge");
   const ssStartAge = num("ssStart");
   const penStartAge = num("penStart");
   const endAge = num("endAge");
   const inflation = pct(num("inflation"));
   const spendingToday = num("spendingToday");
   const spendingDecline = pct(num("spendingDecline"));
-  const spouseRetireAge = num("spouseRetireAge");
-  const spouseSsMonthly = num("spouseSsMonthly");
-  const spouseSsStartAge = num("spouseSsStartAge");
-  const spouseSsCola = pct(num("spouseSsCola"));
-  const spousePenMonthly = num("spousePenMonthly");
-  const spousePenStartAge = num("spousePenStartAge");
-  const spouse401kStartAge = num("spouse401kStartAge");
-  const spousePenCola = pct(num("spousePenCola"));
-  const spouseTaxSS = pct(num("spouseTaxSS"));
-  const spouseTaxPension = pct(num("spouseTaxPension"));
-  const startingSalary = num("salary");
-  const salaryGrowth = pct(num("salaryGrowth"));
-  const pretaxPct = pct(num("pretaxPct"));
-  const rothPct = pct(num("rothPct"));
+  const partnerRetireAge = num("partnerRetireAge");
+  const partnerSsMonthly = num("partnerSsMonthly");
+  const partnerSsStartAge = num("partnerSsStartAge");
+  const partnerSsCola = pct(num("partnerSsCola"));
+  const partnerPenMonthly = num("partnerPenMonthly");
+  const partnerPenStartAge = num("partnerPenStartAge");
+  const partner401kStartAge = num("partner401kStartAge");
+  const partnerPenCola = pct(num("partnerPenCola"));
+  const partnerTaxSS = pct(num("partnerTaxSS"));
+  const partnerTaxPension = pct(num("partnerTaxPension"));
+  const subjectStartingSalary = num("salary");
+  const partnerStartingSalary = num("partnerSalary");
+  const subjectSalaryGrowthRate = pct(num("salaryGrowth"));
+  const partnerSalaryGrowthRate = pct(num("partnerSalaryGrowth"));
+  const subject401kContributionRate = pct(num("pretaxPct"));
+  const subjectRothContributionRate = pct(num("rothPct"));
   const taxablePct = pct(num("taxablePct"));
   const matchCap = pct(num("matchCap"));
   const matchRate = pct(num("matchRate"));
@@ -2521,53 +2523,57 @@ function parseInputParameters() {
   const flatTrad401kWithholdingRate = 0.2; // pct(num("flatTrad401kWithholdingRate"));
   const flatPensionWithholdingRate = 0.2; // pct(num("flatPensionWithholdingRate"));
   const flatWageWithholdingRate = 0.22; // pct(num("flatWageWithholdingRate"));
-  const spouse401kStartingBalance = 100000;
-  const spouseRothStartingBalance = 50000;
+  const partner401kStartingBalance = 100000;
+  const partnerRothStartingBalance = 50000;
 
-  const spouseSavingsStartingBalance = 0;
-  const spouse401kReturnRate = 0.03;
-  const spouseRothReturnRate = 0.03;
-  const spouseSavingsReturnRate = 0.03;
+  const partnerSavingsStartingBalance = 0;
+  const partner401kReturnRate = 0.03;
+  const partnerRothReturnRate = 0.03;
+  const partnerSavingsReturnRate = 0.03;
 
   const inputs = new Inputs(
     currentAge,
     currentSpouseAge,
-    retireAge,
+    subjectRetireAge,
     ssStartAge,
     penStartAge,
     endAge,
+
     inflation,
     spendingToday,
     spendingDecline,
-    // Spouse information
-    spouseRetireAge,
-    spouseSsMonthly,
-    spouseSsStartAge,
-    spouseSsCola,
-    spousePenMonthly,
-    spousePenStartAge,
-    spouse401kStartAge,
-    spousePenCola,
-    spouseTaxSS,
-    spouseTaxPension,
+
+    // Partner information
+    partnerRetireAge,
+    partnerSsMonthly,
+    partnerSsStartAge,
+    partnerSsCola,
+    partnerPenMonthly,
+    partnerPenStartAge,
+    partner401kStartAge,
+    partnerPenCola,
+    partnerTaxSS,
+    partnerTaxPension,
     // Employment and contributions
-    startingSalary,
-    salaryGrowth,
-    pretaxPct,
-    rothPct,
+    subjectStartingSalary,
+    partnerStartingSalary,
+    subjectSalaryGrowthRate,
+    partnerSalaryGrowthRate,
+    subject401kContributionRate,
+    subjectRothContributionRate,
     taxablePct,
     matchCap,
     matchRate,
     // Account balances and returns
     subject401kStartingBalance,
     subjectRothStartingBalance,
-    spouse401kStartingBalance,
-    spouseRothStartingBalance,
+    partner401kStartingBalance,
+    partnerRothStartingBalance,
     savings,
     subject401kReturnRate,
     subjectRothReturnRate,
-    spouse401kReturnRate,
-    spouseRothReturnRate,
+    partner401kReturnRate,
+    partnerRothReturnRate,
     retSavings,
     // Income sources
     subjectSsMonthly,
@@ -2585,7 +2591,7 @@ function parseInputParameters() {
   );
   // Basic parameters
   // (currentAge = num("currentAge")),
-  // (currentSpouseAge = num("spouseAge")),
+  // (currentSpouseAge = num("partnerAge")),
   // (retireAge = num("retireAge")),
   // (ssStartAge = num("ssStart")),
   // (penStartAge = num("penStart")),
@@ -2594,15 +2600,15 @@ function parseInputParameters() {
   // (spendingToday = num("spendingToday")),
   // (spendingDecline = pct(num("spendingDecline"))),
   // // Spouse information
-  // (spouseRetireAge = num("spouseRetireAge")),
-  // (spouseSsMonthly = num("spouseSsMonthly")),
-  // (spouseSsStartAge = num("spouseSsStart")),
-  // (spouseSsCola = pct(num("spouseSsCola"))),
-  // (spousePenMonthly = num("spousePenMonthly")),
-  // (spousePenStartAge = num("spousePenStart")),
-  // (spousePenCola = pct(num("spousePenCola"))),
-  // (spouseTaxSS = pct(num("spouseTaxSS"))),
-  // (spouseTaxPension = pct(num("spouseTaxPension"))),
+  // (partnerRetireAge = num("partnerRetireAge")),
+  // (partnerSsMonthly = num("partnerSsMonthly")),
+  // (partnerSsStartAge = num("partnerSsStart")),
+  // (partnerSsCola = pct(num("partnerSsCola"))),
+  // (partnerPenMonthly = num("partnerPenMonthly")),
+  // (partnerPenStartAge = num("partnerPenStart")),
+  // (partnerPenCola = pct(num("partnerPenCola"))),
+  // (partnerTaxSS = pct(num("partnerTaxSS"))),
+  // (partnerTaxPension = pct(num("partnerTaxPension"))),
   // // Employment and contributions
   // (startingSalary = num("salary")),
   // (salaryGrowth = pct(num("salaryGrowth"))),
@@ -2631,7 +2637,7 @@ function parseInputParameters() {
 
   // const inputs = {
   //   currentAge: num("currentAge"),
-  //   currentSpouseAge: num("spouseAge"),
+  //   currentSpouseAge: num("partnerAge"),
   //   retireAge: num("retireAge"),
   //   ssStartAge: num("ssStart"),
   //   penStartAge: num("penStart"),
@@ -2641,15 +2647,15 @@ function parseInputParameters() {
   //   spendingDecline: pct(num("spendingDecline")),
 
   //   // Spouse information
-  //   spouseRetireAge: num("spouseRetireAge"),
-  //   spouseSsMonthly: num("spouseSsMonthly"),
-  //   spouseSsStartAge: num("spouseSsStart"),
-  //   spouseSsCola: pct(num("spouseSsCola")),
-  //   spousePenMonthly: num("spousePenMonthly"),
-  //   spousePenStartAge: num("spousePenStart"),
-  //   spousePenCola: pct(num("spousePenCola")),
-  //   spouseTaxSS: pct(num("spouseTaxSS")),
-  //   spouseTaxPension: pct(num("spouseTaxPension")),
+  //   partnerRetireAge: num("partnerRetireAge"),
+  //   partnerSsMonthly: num("partnerSsMonthly"),
+  //   partnerSsStartAge: num("partnerSsStart"),
+  //   partnerSsCola: pct(num("partnerSsCola")),
+  //   partnerPenMonthly: num("partnerPenMonthly"),
+  //   partnerPenStartAge: num("partnerPenStart"),
+  //   partnerPenCola: pct(num("partnerPenCola")),
+  //   partnerTaxSS: pct(num("partnerTaxSS")),
+  //   partnerTaxPension: pct(num("partnerTaxPension")),
 
   //   // Employment and contributions
   //   startingSalary: num("salary"),
@@ -2802,12 +2808,16 @@ function generateOutputAndSummary(inputs, calculations, rows) {
         }</td>
         <td class="income">${calculation.subjectPension ? fmt(calculation.subjectPension) : ""}</td>
         <td class="income">${
-          calculation.spouseSocialSecurity
-            ? fmt(calculation.spouseSocialSecurity)
-            : ""
+          // TODO: FIX
+          ""
+          // calculation.partnerSocialSecurity
+          //   ? fmt(calculation.partnerSocialSecurity)
+          //   : ""
         }</td>
         <td class="income">${
-          calculation.spousePension ? fmt(calculation.spousePension) : ""
+          // TODO: FIX
+          ""
+          //  calculation.partnerPension ? fmt(calculation.partnerPension) : ""
         }</td>
         <td class="income">${
           calculation.trad401kNet
@@ -2843,10 +2853,12 @@ function generateOutputAndSummary(inputs, calculations, rows) {
           calculation.subjectGrossPen ? fmt(calculation.subjectGrossPen) : ""
         }</td>
         <td class="income">${
-          calculation.spouseGrossSs ? fmt(calculation.spouseGrossSs) : ""
+          ""
+          // calculation.partnerGrossSs ? fmt(calculation.partnerGrossSs) : ""
         }</td>
         <td class="income">${
-          calculation.spouseGrossPen ? fmt(calculation.spouseGrossPen) : ""
+          ""
+          // calculation.partnerGrossPen ? fmt(calculation.partnerGrossPen) : ""
         }</td>
         <td class="income">${
           calculation.trad401kGross ? fmt(calculation.trad401kGross) : ""
@@ -3036,17 +3048,17 @@ function loadExample() {
     inflation: 0.0, //2.5,
     spendingToday: 100000,
     spendingDecline: 0.0,
-    spouseAge: 56,
-    spouseRetireAge: 62,
-    spouseSsMonthly: 1000,
-    spouseSsStartAge: 62,
-    spouseSsCola: 0.0,
-    spousePenMonthly: 500,
-    spousePenStartAge: 65,
-    spouse401kStartAge: 62,
-    spousePenCola: 0,
-    spouseTaxSS: 10,
-    spouseTaxPension: 20,
+    partnerAge: 56,
+    partnerRetireAge: 62,
+    partnerSsMonthly: 1000,
+    partnerSsStartAge: 62,
+    partnerSsCola: 0.0,
+    partnerPenMonthly: 500,
+    partnerPenStartAge: 65,
+    partner401kStartAge: 62,
+    partnerPenCola: 0,
+    partnerTaxSS: 10,
+    partnerTaxPension: 20,
     salary: 174500,
     salaryGrowth: 2.0,
     pretaxPct: 0,
@@ -3080,16 +3092,16 @@ function loadExample() {
   //   inflation: 2.5,
   //   spendingToday: 95000,
   //   spendingDecline: 1.0,
-  //   spouseAge: 56,
-  //   spouseRetireAge: 62,
-  //   spouseSsMonthly: 1000,
-  //   spouseSsStart: 62,
-  //   spouseSsCola: 0.0,
-  //   spousePenMonthly: 500,
-  //   spousePenStart: 65,
-  //   spousePenCola: 0,
-  //   spouseTaxSS: 10,
-  //   spouseTaxPension: 20,
+  //   partnerAge: 56,
+  //   partnerRetireAge: 62,
+  //   partnerSsMonthly: 1000,
+  //   partnerSsStart: 62,
+  //   partnerSsCola: 0.0,
+  //   partnerPenMonthly: 500,
+  //   partnerPenStart: 65,
+  //   partnerPenCola: 0,
+  //   partnerTaxSS: 10,
+  //   partnerTaxPension: 20,
   //   salary: 174500,
   //   salaryGrowth: 2.0,
   //   pretaxPct: 0,

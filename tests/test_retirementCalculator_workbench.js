@@ -17,12 +17,13 @@ const testTracker = new TestTracker("Retirement Calculator Workbench");
 //------------------------------------------------------------
 function createInputs() {
   return new Inputs(
-    /* initialAge */ 60,
+    /* initialAgeSubject */ 60,
     /* initialAgeSpouse */ 56,
-    /* retireAge */ 62,
-    /* ssStartAge */ 62,
-    /* penStartAge */ 65,
+    /* subjectRetireAge */ 62,
+    /* subjectSsStartAge */ 62,
+    /* subjectPensionStartAge */ 65,
     /* endAge */ 120,
+
     /* inflation */ 0.03,
     /* spendingToday */ 100000,
     /* spendingDecline */ 0.01,
@@ -39,7 +40,9 @@ function createInputs() {
     /* spouseTaxPension */ 0.2,
 
     /* startingSalary */ 174500,
-    /* salaryGrowth */ 0.02,
+    /* spouseStartingSalary */ 0,
+    /* subjectSalaryGrowthRate */ 0.02,
+    /* partnerSalaryGrowthRate */ 0.02,
     /* pretaxPct */ 0,
     /* rothPct */ 0,
     /* taxablePct */ 0.35,
@@ -73,7 +76,15 @@ function createInputs() {
       ACCOUNT_TYPES.SAVINGS,
       ACCOUNT_TYPES.SUBJECT_401K,
       ACCOUNT_TYPES.SUBJECT_ROTH_IRA,
-    ]
+    ],
+    /** subjectWorkingYearSavingsContributionFixed */ 0,
+    /** subjectWorkingYearSavingsContributionVariable */ 0,
+    /** partnerWorkingYearSavingsContributionFixed */ 0,
+    /** partnerWorkingYearSavingsContributionVariable */ 0,
+    /** subjectRetirementYearSavingsContributionFixed */ 100,
+    /** subjectRetirementYearSavingsContributionVariable */ 0.01,
+    /** partnerRetirementYearSavingsContributionFixed */ 0,
+    /** partnerRetirementYearSavingsContributionVariable */ 0
   );
 }
 

@@ -23,7 +23,7 @@ class WorkingYearData extends YearDataBase {
   // /** @type {FiscalData} */
   // #fiscalData;
   /** @type {WorkingYearIncome} */
-  #income;
+  #workingYearIncome;
   /** @type {Taxes | null} */
   #taxes = null;
   /** @type {Balances | null} */
@@ -41,12 +41,12 @@ class WorkingYearData extends YearDataBase {
    * @param {Demographics} demographics - Demographic information including age,
    * @param {FiscalData} fiscalData - Fiscal data for the working year
    * @param {AccountingYear} accountYear - View of accounts for fiscal year
-   * @param {WorkingYearIncome} income - Working year income details
+   * @param {WorkingYearIncome} workingYearIncome - Working year income details
    */
-  constructor(demographics, fiscalData, accountYear, income) {
+  constructor(demographics, fiscalData, accountYear, workingYearIncome) {
     super(demographics, fiscalData, accountYear);
     /** @type {WorkingYearIncome} */
-    this.#income = /** @type {WorkingYearIncome} */ (Object.freeze(income));
+    this.#workingYearIncome = /** @type {WorkingYearIncome} */ (Object.freeze(workingYearIncome));
   }
 
   //   /**
@@ -61,9 +61,9 @@ class WorkingYearData extends YearDataBase {
 -----------------------------------------------`;
   }
 
-  get income() {
-    return this.#income;
-  }
+  // get income() {
+  //   return this.#workingYearIncome;
+  // }
 
   //   /**
   //    * Gets the total annual contributions if available.

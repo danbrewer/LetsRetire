@@ -67,10 +67,14 @@ const TransactionCategoryNames = /** @type {const} */ ({
   Overage: "Overage",
   Shortage: "Shortage",
   Transfer: "Transfer",
+  OpeningBalance: "Opening Bal",
   Contribution: "Contribution",
-  IncomeNet: "Income",
-  IncomeGross: "Income Gross",
-  IncomeDeductions: "Income Deductions",
+
+  IncomeNet: "TakeHome",
+  IncomeGross: "Gross",
+  IncomeDeductions: "Deductions",
+  Withholdings: "Withholdings",
+
   Taxes: "Taxes",
   Wages: "Wages",
   Spend: "Spend",
@@ -83,7 +87,6 @@ const TransactionCategoryNames = /** @type {const} */ ({
   Pension: "Pension",
   TaxRefund: "Tax Refund",
   TaxPayment: "Tax Payment",
-  Withholdings: "Withholdings",
 });
 
 /**
@@ -119,6 +122,10 @@ class TransactionCategoryEnum extends EnumBase {
     return this.map[TransactionCategoryNames.Transfer];
   }
 
+  get OpeningBalance() {
+    return this.map[TransactionCategoryNames.OpeningBalance];
+  }
+
   get Contribution() {
     return this.map[TransactionCategoryNames.Contribution];
   }
@@ -128,10 +135,10 @@ class TransactionCategoryEnum extends EnumBase {
   }
 
   get IncomeGross() {
-    return this.map[TransactionCategoryNames.IncomeNet];
+    return this.map[TransactionCategoryNames.IncomeGross];
   }
   get IncomeDeductions() {
-    return this.map[TransactionCategoryNames.IncomeNet];
+    return this.map[TransactionCategoryNames.IncomeDeductions];
   }
 
   get Taxes() {
@@ -224,6 +231,7 @@ const TransactionCategory = new TransactionCategoryEnum();
  *         | typeof TransactionCategory.Overage
  *         | typeof TransactionCategory.Shortage
  *         | typeof TransactionCategory.Transfer
+ *         | typeof TransactionCategory.OpeningBalance
  *         | typeof TransactionCategory.Contribution
  *         | typeof TransactionCategory.IncomeNet
  *         | typeof TransactionCategory.Taxes

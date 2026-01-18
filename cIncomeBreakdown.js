@@ -45,15 +45,16 @@ class IncomeBreakdown {
   }
 
   get combinedEarnedIncomeGross() {
-    return this.#fixedIncomeStreams.wagesAndCompensationTaxable; // for now; later only if we add earned income streams
+    return this.#fixedIncomeStreams.combinedWagesAndCompensationTaxable; // for now; later only if we add earned income streams
   }
 
   get combinedEarnedIncomeWithholdings() {
-    return this.#fixedIncomeStreams.wagesAndCompensationEstimatedWithholdings; // for now; later only if we add earned income streams
+    return this.#fixedIncomeStreams
+      .combinedWagesAndCompensationEstimatedWithholdings; // for now; later only if we add earned income streams
   }
 
   get combinedEarnedIncomeTakehome() {
-    return this.#fixedIncomeStreams.wagesAndCompensationActualIncome; // for now; later only if we add earned income streams
+    return this.#fixedIncomeStreams.combinedWagesAndCompensationActualIncome; // for now; later only if we add earned income streams
   }
 
   get combinedSocialSecGross() {

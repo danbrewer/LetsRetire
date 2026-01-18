@@ -317,28 +317,10 @@ class AccountPortioner {
       : 0;
   }
 
-  // #actual401kAvailable() {
-  //   const gross401kAvailable = this.#fiscalData.useTrad401k
-  //     ? this.#accountYear.getEndingBalance(ACCOUNT_TYPES.SUBJECT_401K)
-  //     : 0;
-
-  //   const flatRate = this.#fiscalData.flatTrad401kWithholdingRate ?? 0;
-  //   const taxWithheld = gross401kAvailable * flatRate;
-  //   const net401kAvailable = gross401kAvailable - taxWithheld;
-
-  //   return net401kAvailable;
-  // }
-
-  // #actual401kPortion() {
-  //   const net401kPortion =
-  //     this.#totalAvailable() > 0
-  //       ? this.#actual401kAvailable() / this.#totalAvailable()
-  //       : 0;
-
-  //   return net401kPortion;
-  // }
 
   #tradRothAvailable() {
+    if (!this.#fiscalData.useRoth) return 0;
+
     return this.#fiscalData.useRoth
       ? this.#accountYear.getEndingBalance(ACCOUNT_TYPES.SUBJECT_ROTH_IRA)
       : 0;

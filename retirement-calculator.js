@@ -36,24 +36,26 @@ function calc(calculations, UI) {
 
   // Auto-regenerate spending override fields only if ages have changed
   if (
-    inputs.retireAge > 0 &&
-    inputs.endAge > inputs.retireAge &&
-    (lastRetireAge !== inputs.retireAge || lastEndAge !== inputs.endAge)
+    inputs.subjectRetireAge > 0 &&
+    inputs.endSubjectAge > inputs.subjectRetireAge &&
+    (lastRetireAge !== inputs.subjectRetireAge ||
+      lastEndAge !== inputs.endSubjectAge)
   ) {
     UI.regenerateSpendingFields();
-    lastRetireAge = inputs.retireAge;
-    lastEndAge = inputs.endAge;
+    lastRetireAge = inputs.subjectRetireAge;
+    lastEndAge = inputs.endSubjectAge;
   }
 
   // Auto-regenerate income adjustment fields only if ages have changed
   if (
-    inputs.initialAge > 0 &&
-    inputs.endAge > inputs.initialAge &&
-    (lastCurrentAge !== inputs.initialAge || lastEndAge !== inputs.endAge)
+    inputs.initialAgeSubject > 0 &&
+    inputs.endSubjectAge > inputs.initialAgeSubject &&
+    (lastCurrentAge !== inputs.initialAgeSubject ||
+      lastEndAge !== inputs.endSubjectAge)
   ) {
     UI.regenerateTaxableIncomeFields();
     UI.regenerateTaxFreeIncomeFields();
-    lastCurrentAge = inputs.initialAge;
+    lastCurrentAge = inputs.initialAgeSubject;
   }
 
   // Initialize balances object for tracking
@@ -76,15 +78,16 @@ function calc(calculations, UI) {
       workingYearInputs,
       accountYear
     );
+    console.log(
+      `------ START OF WORKING YEAR ` + (TAX_BASE_YEAR + yearIndex) + ` ------`
+    );
 
     const workingYearData =
-      workingYearIncomeCalculator.calculateWorkingYearData();
+      workingYearIncomeCalculator.processWorkingYearData();
 
-    // workingYearData.dump("working year");
-    // console.log(
-    //   `------ END OF WORKING YEAR ` + (TAX_BASE_YEAR + yearIndex) + ` ------`
-    // );
-    // debugger;
+    console.log(
+      `------ END OF WORKING YEAR ` + (TAX_BASE_YEAR + yearIndex) + ` ------`
+    );
 
     calculations.addCalculation(
       new Calculation(accountYear.taxYear, workingYearData)
@@ -114,8 +117,16 @@ function calc(calculations, UI) {
     );
 
     try {
-      const retirementYearData = calculator.calculateRetirementYearData();
+      console.log(
+        `------ START OF RETIREMENT YEAR ` +
+          (TAX_BASE_YEAR + yearIndex) +
+          ` ------`
+      );
+
+      const retirementYearData = calculator.processRetirementYearData();
+
       retirementYearData.dump("retirement year");
+
       console.log(
         `------ END OF RETIREMENT YEAR ` +
           (TAX_BASE_YEAR + yearIndex) +
@@ -153,12 +164,12 @@ function initializeInputsForWorkingYear(inputs, yearIndex, UI) {
   const result = inputs.clone();
 
   result.yearIndex = yearIndex;
-  result.additionalSpending = UI.getSpendingOverride(result.currentAge);
+  result.additionalSpending = UI.getSpendingOverride(result.subjectAge);
   result.taxableIncomeAdjustment = UI.getTaxableIncomeOverride(
-    result.currentAge
+    result.subjectAge
   );
   result.taxFreeIncomeAdjustment = UI.getTaxFreeIncomeOverride(
-    result.currentAge
+    result.subjectAge
   );
 
   return result;
@@ -174,12 +185,12 @@ function initializeInputsForRetirementYear(inputs, yearIndex, UI) {
   const result = inputs.clone();
 
   result.yearIndex = yearIndex;
-  result.additionalSpending = UI.getSpendingOverride(result.currentAge);
+  result.additionalSpending = UI.getSpendingOverride(result.subjectAge);
   result.taxableIncomeAdjustment = UI.getTaxableIncomeOverride(
-    result.currentAge
+    result.subjectAge
   );
   result.taxFreeIncomeAdjustment = UI.getTaxFreeIncomeOverride(
-    result.currentAge
+    result.subjectAge
   );
   return result;
 }

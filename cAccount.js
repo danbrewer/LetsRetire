@@ -35,10 +35,9 @@ ACCOUNT_TYPES.PARTNER_SOCIAL_SECURITY = "PartnerSocialSecurity";
 
 ACCOUNT_TYPES.SUBJECT_WAGES = "SubjectWages";
 ACCOUNT_TYPES.PARTNER_WAGES = "PartnerWages";
+ACCOUNT_TYPES.COMBINED_WAGES = "CombinedWages";
 
 ACCOUNT_TYPES.OTHER_INCOME = "OtherIncome";
-
-ACCOUNT_TYPES.INTEREST_ON_SAVINGS = "InterestOnSavings";
 
 ACCOUNT_TYPES.TAXES = "Taxes";
 
@@ -55,10 +54,12 @@ class Account {
 
   /**
    * @param {number} yyyy
+   * @param {TransactionCategorySymbol | undefined} [category]
    */
-  #startingBalanceForYear(yyyy) {
-    let startingBalance = this.initialBalance;
-    for (const tx of this.#transactions.sort(
+  #startingBalanceForYear(yyyy, category) {
+    let startingBalance = 0;
+    const transactions = this.#transactions.filter(tx => !category || tx.category === category);
+    for (const tx of transactions.sort(
       (a, b) => a.date.getTime() - b.date.getTime()
     )) {
       if (tx.date.getFullYear() < yyyy) {
@@ -74,10 +75,12 @@ class Account {
 
   /**
    * @param {number} yyyy
+   * @param {TransactionCategorySymbol | undefined} [category]
    */
-  #endingBalanceForYear(yyyy) {
-    let endingBalance = this.#startingBalanceForYear(yyyy);
-    for (const tx of this.#transactions.sort(
+  #endingBalanceForYear(yyyy, category) {
+    let endingBalance = this.#startingBalanceForYear(yyyy, category);
+    const transactions = this.#transactions.filter(tx => !category || tx.category === category);
+    for (const tx of transactions.sort(
       (a, b) => a.date.getTime() - b.date.getTime()
     )) {
       if (tx.date.getFullYear() === yyyy) {
@@ -91,6 +94,17 @@ class Account {
       }
     }
     return endingBalance;
+  }
+
+  /**
+   * Calculate the annual revenue for a given year
+   * @param {number} yyyy - The year for which to calculate the revenue
+   * @returns {number} - The annual revenue
+   */
+  #annualRevenues(yyyy) {
+    return (
+      this.#endingBalanceForYear(yyyy) - this.#startingBalanceForYear(yyyy)
+    );
   }
 
   /**
@@ -152,7 +166,7 @@ class Account {
       new Transaction(
         amount,
         TransactionType.Deposit,
-        TransactionCategory.Transfer,
+        TransactionCategory.OpeningBalance,
         new Date(openingDate),
         memo
       )
@@ -262,9 +276,14 @@ class Account {
 
   /**
    * @param {number} yyyy
+   * @param {TransactionCategorySymbol | undefined} [category]
    */
-  getTransactionsForYear(yyyy) {
-    return this.#transactions.filter((tx) => tx.date.getFullYear() === yyyy);
+  getTransactionsForYear(yyyy, category) {
+    return this.#transactions.filter(
+      (tx) =>
+        tx.date.getFullYear() === yyyy &&
+        (category ? tx.category === category : true)
+    );
   }
 
   /**
@@ -578,9 +597,17 @@ class Account {
 
   /**
    * @param {number} yyyy
+   * @param {TransactionCategorySymbol | undefined} [category]
    */
-  endingBalanceForYear(yyyy) {
-    return this.#endingBalanceForYear(yyyy).asCurrency();
+  endingBalanceForYear(yyyy, category) {
+    return this.#endingBalanceForYear(yyyy, category).asCurrency();
+  }
+
+  /**
+   * @param {number} yyyy
+   */
+  annualRevenuesForYear(yyyy) {
+    return this.#annualRevenues(yyyy).asCurrency();
   }
 
   /**

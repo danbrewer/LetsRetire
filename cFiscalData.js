@@ -9,7 +9,12 @@ class FiscalData {
    * @param {number} yearIndex
    * @param {number} spend
    * @param {number} taxYearBase
-   * 
+   * @param {boolean} useRmd
+   * @param {boolean} useSavings
+   * @param {boolean} useTrad401k
+   * @param {boolean} useRoth
+   * @param {number} flatSsWithholdingRate
+   * @param {number} flatTrad401kWithholdingRate
    */
   constructor(
     inflationRate,
@@ -19,12 +24,12 @@ class FiscalData {
     yearIndex,
     spend,
     taxYearBase,
-    useRmd = false,
-    useSavings = true,
-    useTrad401k = true,
-    useRoth = true,
-    flatSsWithholdingRate = 0.07,
-    flatTrad401kWithholdingRate = 0.20
+    useRmd,
+    useSavings,
+    useTrad401k,
+    useRoth,
+    flatSsWithholdingRate,
+    flatTrad401kWithholdingRate
   ) {
     this._description = "Fiscal Year Data";
     this.inflationRate = inflationRate;
@@ -181,15 +186,11 @@ class FiscalData {
       taxYearBase,
       inputs.useRMD,
       inputs.useSavings,
-      inputs.useTrad401k,
-      inputs.useRoth,
+      inputs.subjectUseTrad401k,
+      inputs.subjectUseRoth,
       inputs.flatSsWithholdingRate,
       inputs.flatTrad401kWithholdingRate
     );
-  }
-
-  static Empty() {
-    return new FiscalData(0, 0, 0, 0, 0, 0, 0);
   }
 }
 

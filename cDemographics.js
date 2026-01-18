@@ -85,7 +85,7 @@ class Demographics {
   //   updateAge(newAge, yearIndex) {
   //     this.age = newAge;
   //     if (this.hasSpouse) {
-  //       this.ageOfSpouse = this.ageOfSpouse + 1; // Assuming spouse ages at same rate
+  //       this.ageOfSpouse = this.ageOfSpouse + 1; // Assuming partner ages at same rate
   //     }
   //     this._description = `Retirement Year ${yearIndex + 1} (Age ${this.age}) (Year ${this.retirementYear + yearIndex})`;
   //   }
@@ -105,7 +105,7 @@ class Demographics {
    *
    * This method provides a convenient way to construct Demographics objects by extracting
    * the relevant demographic information from a comprehensive inputs object. It handles
-   * both single and married filing scenarios, automatically setting spouse-related
+   * both single and married filing scenarios, automatically setting partner-related
    * properties based on the hasSpouse flag.
    *
    * @param {Inputs} inputs - Retirement calculation inputs object containing:
@@ -115,9 +115,9 @@ class Demographics {
    *   - retirementYear: Calendar year of retirement
    *   - yearIndex: Index of the current retirement year (0-based)
    *   - hasSpouse: Boolean indicating if married filing jointly
-   *   - spouseAge: Spouse's current age (required if hasSpouse is true)
-   *   - spouseSsStartAge: Age when spouse starts Social Security (required if hasSpouse)
-   *   - spousePenStartAge: Age when spouse starts pension (required if hasSpouse)
+   *   - partnerAge: Spouse's current age (required if hasSpouse is true)
+   *   - partnerSsStartAge: Age when partner starts Social Security (required if hasSpouse)
+   *   - partnerPenStartAge: Age when partner starts pension (required if hasSpouse)
    *   - filingStatus: Tax filing status ("single", "married_filing_jointly", etc.)
    *
    * @param {boolean} isRetired - Whether the primary person is currently retired.
@@ -127,12 +127,12 @@ class Demographics {
    *   Used for earned income calculations and Social Security benefit adjustments.
    *
    * @returns {Demographics} A fully configured Demographics instance with:
-   *   - All age and eligibility information for primary and spouse
+   *   - All age and eligibility information for primary and partner
    *   - Retirement status and working status flags
    *   - Calculated eligibility methods for benefits
    *   - Descriptive information for reporting
    *
-   * @throws {Error} When required spouse information is missing but hasSpouse is true
+   * @throws {Error} When required partner information is missing but hasSpouse is true
    * @throws {Error} When age values are invalid or inconsistent
    *
    * @example
@@ -150,12 +150,12 @@ class Demographics {
    * const marriedInputs = {
    *   age: 65, ssStartAge: 67, penStartAge: 65,
    *   retirementYear: 2024, yearIndex: 0,
-   *   hasSpouse: true, spouseAge: 63,
-   *   spouseSsStartAge: 67, spousePenStartAge: 65,
+   *   hasSpouse: true, partnerAge: 63,
+   *   partnerSsStartAge: 67, partnerPenStartAge: 65,
    *   filingStatus: "married_filing_jointly"
    * };
    * const demographics = Demographics.CreateUsing(marriedInputs, true, false);
-   * console.log(demographics.spouseEligibleForSs()); // false (63 < 67)
+   * console.log(demographics.partnerEligibleForSs()); // false (63 < 67)
    *
    * @see {@link Demographics#constructor} For detailed parameter descriptions
    * @see {@link Demographics#getEligibilityStatuses} For checking all benefit eligibilities
@@ -166,18 +166,18 @@ class Demographics {
    */
   static CreateUsing(inputs, isRetired, isWorking) {
     return new Demographics(
-      inputs.currentAge,
-      inputs.ssStartAge,
-      inputs.penStartAge,
+      inputs.subjectAge,
+      inputs.subjectSsStartAge,
+      inputs.subjectPensionStartAge,
       inputs.currentYear,
       inputs.yearIndex,
       isRetired,
       isWorking,
-      inputs.hasSpouse,
-      inputs.spouseAge,
-      inputs.spouseSsStartAge,
-      inputs.spousePenStartAge,
-      inputs.spouse401kStartAge,
+      inputs.hasPartner,
+      inputs.partnerAge,
+      inputs.partnerSsStartAge,
+      inputs.partnerPenStartAge,
+      inputs.partner401kStartAge,
       inputs.filingStatus
     );
   }

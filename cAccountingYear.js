@@ -1,7 +1,7 @@
 import { ACCOUNT_TYPES } from "./cAccount.js";
 import { AccountAnalyzer } from "./cAccountAnalyzer.js";
 import { AccountsManager } from "./cAccountsManager.js";
-import { INTEREST_CALCULATION_EPOCH } from "./consts.js";
+import { INTEREST_CALCULATION_EPOCH, PERIODIC_FREQUENCY } from "./consts.js";
 import { TransactionCategory } from "./cTransaction.js";
 
 /**
@@ -9,6 +9,41 @@ import { TransactionCategory } from "./cTransaction.js";
  * @typedef {import("./cTransaction.js").TransactionTypeSymbol} TransactionTypeSymbol
  */
 class AccountingYear {
+  /**
+   * @param {string} sourceAccount
+   * @param {string} targetAccount
+   * @param {number} amountToTransfer
+   * @param {string} frequency
+   * @param {TransactionCategorySymbol} [category]
+   * @param {string} [sourceMemo]
+   * @param {string} [targetMemo]
+   */
+  processAsPeriodicTransfers(
+    sourceAccount,
+    targetAccount,
+    amountToTransfer,
+    frequency,
+    category,
+    sourceMemo = "To " + targetAccount,
+    targetMemo = "From " + sourceAccount
+  ) {
+    category = category || TransactionCategory.Transfer;
+    this.processAsPeriodicWithdrawals(
+      sourceAccount,
+      category,
+      amountToTransfer,
+      frequency,
+      sourceMemo
+    );
+    this.processAsPeriodicDeposits(
+      targetAccount,
+      category,
+      amountToTransfer,
+      frequency,
+      targetMemo
+    );
+  }
+
   #accountsManager;
 
   /** @type {Map<string, AccountAnalyzer>} */
@@ -187,11 +222,24 @@ class AccountingYear {
 
   /**
    * @param {string} accountName
+   * @param {TransactionCategorySymbol | undefined} [category]
    */
-  getEndingBalance(accountName) {
+  getEndingBalance(accountName, category) {
     const account = this.#accountsManager.getAccountByType(accountName);
     if (account) {
-      return account.endingBalanceForYear(this.taxYear).asCurrency();
+      return account.endingBalanceForYear(this.taxYear, category).asCurrency();
+    } else {
+      throw new Error(`Account not found: ${accountName}`);
+    }
+  }
+
+  /**
+   * @param {string} accountName
+   */
+  getAnnualRevenues(accountName) {
+    const account = this.#accountsManager.getAccountByType(accountName);
+    if (account) {
+      return account.annualRevenuesForYear(this.taxYear).asCurrency();
     } else {
       throw new Error(`Account not found: ${accountName}`);
     }
@@ -325,11 +373,12 @@ class AccountingYear {
 
   /**
    * @param {string} accountType
+   * @param {TransactionCategorySymbol | undefined} [category]
    */
-  getAccountTransactions(accountType) {
+  getAccountTransactions(accountType, category) {
     const account = this.#getAccountByName(accountType);
     if (account) {
-      return account.getTransactionsForYear(this.taxYear);
+      return account.getTransactionsForYear(this.taxYear, category);
     } else {
       throw new Error(`Account not found: ${accountType}`);
     }

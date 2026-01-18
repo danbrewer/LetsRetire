@@ -110,26 +110,32 @@ class Common {
     const result = {
       ssAnnual: 0,
       penAnnual: 0,
-      spouseSsAnnual: 0,
-      spousePenAnnual: 0,
+      partnerSsAnnual: 0,
+      partnerPenAnnual: 0,
     };
 
     result.ssAnnual =
       inputs.ssMonthly *
       12 *
-      (inputs.retireAge >= inputs.ssStartAge
-        ? compoundedRate(inputs.ssCola, inputs.retireAge - inputs.ssStartAge)
+      (inputs.subjectRetireAge >= inputs.subjectSsStartAge
+        ? compoundedRate(
+            inputs.ssCola,
+            inputs.subjectRetireAge - inputs.subjectSsStartAge
+          )
         : 1);
     result.penAnnual =
       inputs.penMonthly *
       12 *
-      (inputs.retireAge >= inputs.penStartAge
-        ? compoundedRate(inputs.penCola, inputs.retireAge - inputs.penStartAge)
+      (inputs.subjectRetireAge >= inputs.subjectPensionStartAge
+        ? compoundedRate(
+            inputs.penCola,
+            inputs.subjectRetireAge - inputs.subjectPensionStartAge
+          )
         : 1);
 
-    if (inputs.hasSpouse) {
-      result.spouseSsAnnual = inputs.spouseSsMonthly * 12;
-      result.spousePenAnnual = inputs.spousePenMonthly * 12;
+    if (inputs.hasPartner) {
+      result.partnerSsAnnual = inputs.partnerSsMonthly * 12;
+      result.partnerPenAnnual = inputs.partnerPenMonthly * 12;
     }
 
     return result;

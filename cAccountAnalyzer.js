@@ -263,8 +263,17 @@ class AccountAnalyzer {
     Boxes.singleBorderBottom();
   }
 
-  /** @param {string} [reportTitle] */
-  dumpAccountActivity(reportTitle) {
+  /** @param {string} [reportTitle] 
+   * @param {TransactionCategorySymbol | undefined} [category]
+  */
+  dumpAccountActivity(reportTitle, category) {
+
+    const transactions = this.#accountYear
+      .getAccountTransactions(this.#accountType, category)
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+
+
     console.log();
     if (!reportTitle) {
       reportTitle = `${this.#accountType} Account Activity (${this.#accountYear.taxYear})`;
@@ -276,12 +285,8 @@ class AccountAnalyzer {
     const startingBalanceOutput = `Starting Balance: ${StringFunctions.padAndAlign(startingBalance, 8, "right")}`;
 
     const endingBalance = this.#accountYear
-      .getEndingBalance(this.#accountType)
+      .getEndingBalance(this.#accountType, category)
       .asCurrency();
-
-    const transactions = this.#accountYear
-      .getAccountTransactions(this.#accountType)
-      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
     const dateHeader = StringFunctions.padAndAlign("Date", 12);
     const categoryHeader = StringFunctions.padAndAlign("Category", 15);

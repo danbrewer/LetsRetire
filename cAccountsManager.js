@@ -34,8 +34,8 @@ class AccountsManager {
           break;
 
         case ACCOUNT_TYPES.PARTNER_401K:
-          startingBalance = inputs.spouse401kStartingBalance || 0;
-          interestRate = inputs.spouseTrad401kInterestRate || 0;
+          startingBalance = inputs.partner401kStartingBalance || 0;
+          interestRate = inputs.partnerTrad401kInterestRate || 0;
           break;
 
         case ACCOUNT_TYPES.SUBJECT_ROTH_IRA:
@@ -44,8 +44,8 @@ class AccountsManager {
           break;
 
         case ACCOUNT_TYPES.PARTNER_ROTH_IRA:
-          startingBalance = inputs.spouseRothStartingBalance || 0;
-          interestRate = inputs.spouseRothInterestRate || 0;
+          startingBalance = inputs.partnerRothStartingBalance || 0;
+          interestRate = inputs.partnerRothInterestRate || 0;
           break;
 
         case ACCOUNT_TYPES.SAVINGS:
@@ -89,7 +89,7 @@ class AccountsManager {
     return this.#getAccountByType(ACCOUNT_TYPES.SUBJECT_401K);
   }
 
-  get spouseTrad401k() {
+  get partnerTrad401k() {
     return this.#getAccountByType(ACCOUNT_TYPES.PARTNER_401K);
   }
 
