@@ -244,11 +244,65 @@ class WorkingYearCalculator {
   }
 
   #processWagesAndCompensation() {
+    // Subject wages and compensation
+    this.#accountYear.processAsPeriodicDeposits(
+      ACCOUNT_TYPES.SUBJECT_WAGES,
+      TransactionCategory.IncomeGross,
+      TransactionRoutes.External,
+      this.#fixedIncomeStreams.subjectWagesAndCompensationGross,
+      PERIODIC_FREQUENCY.MONTHLY
+    );
+
+    this.#accountYear.processAsPeriodicTransfers(
+      ACCOUNT_TYPES.SUBJECT_WAGES,
+      ACCOUNT_TYPES.SUBJECT_401K,
+      this.#fixedIncomeStreams.subjectAllowed401kContribution,
+      PERIODIC_FREQUENCY.MONTHLY
+    );
+
+    this.#accountYear.processAsPeriodicTransfers(
+      ACCOUNT_TYPES.SUBJECT_WAGES,
+      ACCOUNT_TYPES.TAXES,
+      this.#fixedIncomeStreams.subjectWagesAndCompensationEstimatedWithholdings,
+      PERIODIC_FREQUENCY.MONTHLY,
+      TransactionCategory.Withholdings
+    );
+
+    this.#accountYear.processAsPeriodicTransfers(
+      ACCOUNT_TYPES.SUBJECT_WAGES,
+      ACCOUNT_TYPES.SUBJECT_PAYROLL_REDUCTIONS,
+      this.#fixedIncomeStreams.subjectNonTaxableSalaryReductions,
+      PERIODIC_FREQUENCY.MONTHLY
+    );
+
+    this.#accountYear.processAsPeriodicTransfers(
+      ACCOUNT_TYPES.SUBJECT_WAGES,
+      ACCOUNT_TYPES.CASH,
+      this.#fixedIncomeStreams.subjectWagesAndCompensationActualIncome,
+      PERIODIC_FREQUENCY.MONTHLY
+    );
+
+    // Partner wages and compensation
+
     this.#accountYear.processAsPeriodicDeposits(
       ACCOUNT_TYPES.PARTNER_WAGES,
       TransactionCategory.IncomeGross,
       TransactionRoutes.External,
       this.#fixedIncomeStreams.partnerWagesAndCompensationGross,
+      PERIODIC_FREQUENCY.MONTHLY
+    );
+
+    this.#accountYear.processAsPeriodicTransfers(
+      ACCOUNT_TYPES.PARTNER_WAGES,
+      ACCOUNT_TYPES.PARTNER_401K,
+      this.#fixedIncomeStreams.partnerAllowed401kContribution,
+      PERIODIC_FREQUENCY.MONTHLY
+    );
+
+    this.#accountYear.processAsPeriodicTransfers(
+      ACCOUNT_TYPES.PARTNER_WAGES,
+      ACCOUNT_TYPES.PARTNER_PAYROLL_REDUCTIONS,
+      this.#fixedIncomeStreams.partnerNonTaxableSalaryReductions,
       PERIODIC_FREQUENCY.MONTHLY
     );
 
@@ -264,43 +318,6 @@ class WorkingYearCalculator {
       ACCOUNT_TYPES.PARTNER_WAGES,
       ACCOUNT_TYPES.CASH,
       this.#fixedIncomeStreams.partnerWagesAndCompensationActualIncome,
-      PERIODIC_FREQUENCY.MONTHLY
-    );
-
-    this.#accountYear.processAsPeriodicDeposits(
-      ACCOUNT_TYPES.SUBJECT_WAGES,
-      TransactionCategory.IncomeGross,
-      TransactionRoutes.External,
-      this.#fixedIncomeStreams.subjectWagesAndCompensationGross,
-      PERIODIC_FREQUENCY.MONTHLY
-    );
-
-    this.#accountYear.processAsPeriodicTransfers(
-      ACCOUNT_TYPES.SUBJECT_WAGES,
-      ACCOUNT_TYPES.TAXES,
-      this.#fixedIncomeStreams.subjectWagesAndCompensationEstimatedWithholdings,
-      PERIODIC_FREQUENCY.MONTHLY,
-      TransactionCategory.Withholdings
-    );
-
-    this.#accountYear.processAsPeriodicTransfers(
-      ACCOUNT_TYPES.SUBJECT_WAGES,
-      ACCOUNT_TYPES.CASH,
-      this.#fixedIncomeStreams.subjectWagesAndCompensationActualIncome,
-      PERIODIC_FREQUENCY.MONTHLY
-    );
-
-    this.#accountYear.processAsPeriodicTransfers(
-      ACCOUNT_TYPES.SUBJECT_WAGES,
-      ACCOUNT_TYPES.SUBJECT_401K,
-      this.#fixedIncomeStreams.subjectAllowed401kContribution,
-      PERIODIC_FREQUENCY.MONTHLY
-    );
-
-    this.#accountYear.processAsPeriodicTransfers(
-      ACCOUNT_TYPES.PARTNER_WAGES,
-      ACCOUNT_TYPES.PARTNER_401K,
-      this.#fixedIncomeStreams.partnerAllowed401kContribution,
       PERIODIC_FREQUENCY.MONTHLY
     );
 

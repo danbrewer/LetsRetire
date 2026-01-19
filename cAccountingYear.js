@@ -27,8 +27,8 @@ class AccountingYear {
     amountToTransfer,
     frequency,
     category,
-    sourceMemo = "To " + targetAccount,
-    targetMemo = "From " + sourceAccount
+    sourceMemo = "",
+    targetMemo = ""
   ) {
     const transferId = IdentifierGenerator.generateSixCharAlphaId();
     category = category || TransactionCategory.Transfer;
