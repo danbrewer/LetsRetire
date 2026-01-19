@@ -13,6 +13,8 @@ import {
   TransactionType,
 } from "./cTransaction.js";
 import { DateFunctions } from "./utils.js";
+import { TransactionRoutes } from "./tTransactionRoute.js";
+import { TransactionManager } from "./cTransactionManager.js";
 
 class ACCOUNT_TYPES {}
 ACCOUNT_TYPES.DISBURSEMENT = "Disbursements";
@@ -23,7 +25,7 @@ ACCOUNT_TYPES.SAVINGS = "Savings";
 ACCOUNT_TYPES.INCOME = "Income";
 
 ACCOUNT_TYPES.SUBJECT_401K = "SubjectTrad401k";
-ACCOUNT_TYPES.PARTNER_401K = "SubjectTrad401k";
+ACCOUNT_TYPES.PARTNER_401K = "PartnerTrad401k";
 
 ACCOUNT_TYPES.SUBJECT_ROTH_IRA = "SubjectRothIra";
 ACCOUNT_TYPES.PARTNER_ROTH_IRA = "PartnerRothIra";
@@ -31,8 +33,8 @@ ACCOUNT_TYPES.PARTNER_ROTH_IRA = "PartnerRothIra";
 ACCOUNT_TYPES.SUBJECT_PENSION = "SubjectPension";
 ACCOUNT_TYPES.PARTNER_PENSION = "PartnerPension";
 
-ACCOUNT_TYPES.SUBJECT_SOCIAL_SECURITY = "SubjectSocialSecurity";
-ACCOUNT_TYPES.PARTNER_SOCIAL_SECURITY = "PartnerSocialSecurity";
+ACCOUNT_TYPES.SUBJECT_SOCIAL_SECURITY = "SubjectSocSec";
+ACCOUNT_TYPES.PARTNER_SOCIAL_SECURITY = "PartnerSocSec";
 
 ACCOUNT_TYPES.SUBJECT_WAGES = "SubjectWages";
 ACCOUNT_TYPES.PARTNER_WAGES = "PartnerWages";
@@ -44,14 +46,18 @@ ACCOUNT_TYPES.TAXES = "Taxes";
 
 // Create a class for the account
 class Account {
-  /** @type {Transaction[]} */
-  #transactions = [];
+  /** @type {TransactionManager} */
+  #transactionManager;
 
   /** @type {string} */
   #name = "";
 
   /** @type {number} Annual interest rate as a decimal (e.g., 0.05 for 5%) */
   #interestRate = 0;
+
+  get #transactions() {
+    return this.#transactionManager.getTransactionsForAccount(this.#name);
+  }
 
   /**
    * @param {number} yyyy
@@ -135,9 +141,10 @@ class Account {
 
   /**
    * @param {string} name - Name of the account
+   * @param {TransactionManager} transactionManager
    * @param {number} [interestRate] - Annual interest rate as a decimal (e.g., 0.05 for 5%)
    */
-  constructor(name, interestRate = 0) {
+  constructor(name, transactionManager, interestRate = 0) {
     // Validate that name matches one of the ACCOUNT_TYPES values
     const validAccountTypes = Object.values(ACCOUNT_TYPES);
     if (!validAccountTypes.includes(name)) {
@@ -147,6 +154,7 @@ class Account {
     }
 
     this.#name = name;
+    this.#transactionManager = transactionManager;
     this.#interestRate = interestRate; // Annual interest rate as a decimal (e.g., 0.05 for 5%)
   }
 
@@ -175,8 +183,9 @@ class Account {
       );
     }
 
-    this.#transactions.push(
+    this.#transactionManager.addTransaction(
       new Transaction(
+        this.#name,
         amount,
         TransactionType.Deposit,
         TransactionCategory.OpeningBalance,
@@ -209,6 +218,7 @@ class Account {
   /**
    * Factory method to create account with opening balance
    * @param {string} name - Account name
+   * @param {TransactionManager} transactionManager
    * @param {number} openingBalance - Opening balance amount
    * @param {Date} openingDate - Date when account opened
    * @param {number} [interestRate] - Interest rate
@@ -217,12 +227,13 @@ class Account {
    */
   static createWithOpeningBalance(
     name,
+    transactionManager,
     openingBalance,
     openingDate,
     interestRate = 0,
     memo = "Account opening balance"
   ) {
-    const account = new Account(name, interestRate);
+    const account = new Account(name, transactionManager, interestRate);
     account.setOpeningBalance(openingBalance, openingDate, memo);
     return account;
   }
@@ -230,6 +241,7 @@ class Account {
   /**
    * Factory method to create account with opening balance by year
    * @param {string} name - Account name
+   * @param {TransactionManager} transactionManager
    * @param {number} openingBalance - Opening balance amount
    * @param {number} year - Opening year
    * @param {number} [interestRate] - Interest rate
@@ -240,6 +252,7 @@ class Account {
    */
   static createWithOpeningBalanceByYear(
     name,
+    transactionManager,
     openingBalance,
     year,
     interestRate = 0,
@@ -250,6 +263,7 @@ class Account {
     const openingDate = new Date(year, month - 1, day);
     return Account.createWithOpeningBalance(
       name,
+      transactionManager,
       openingBalance,
       openingDate,
       interestRate,
@@ -343,8 +357,9 @@ class Account {
 
     if (amount === 0) return amount.asCurrency();
 
-    this.#transactions.push(
+    this.#transactionManager.addTransaction(
       new Transaction(
+        this.#name,
         amount,
         TransactionType.Deposit,
         category,
@@ -422,8 +437,9 @@ class Account {
         `Requested withdrawal of ${amount} exceeds available balance. Withdrawing only ${withdrawalAmount}.`
       );
     }
-    this.#transactions.push(
+    this.#transactionManager.addTransaction(
       new Transaction(
+        this.#name,
         withdrawalAmount,
         TransactionType.Withdrawal,
         category,

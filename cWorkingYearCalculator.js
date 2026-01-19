@@ -9,6 +9,7 @@ import { Taxes } from "./cTaxes.js";
 import { TransactionCategory } from "./cTransaction.js";
 import { WorkingYearData } from "./cWorkingYearData.js";
 import { WorkingYearIncome } from "./cWorkingYearIncome.js";
+import { TransactionRoutes } from "./tTransactionRoute.js";
 
 /**
  * WorkingYearIncomeCalculator class - Handles working year income and accumulation calculations

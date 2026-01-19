@@ -11,14 +11,13 @@ const TransactionCategoryNames = /** @type {const} */ ({
   Overage: "Overage",
   Shortage: "Shortage",
   Transfer: "Transfer",
-  OpeningBalance: "Opening Bal",
+  OpeningBalance: "Opening Balance",
   Contribution: "Contribution",
 
-  IncomeNet: "TakeHome",
-  IncomeGross: "Gross",
+  IncomeNet: "Net Income",
+  IncomeGross: "Gross Income",
   IncomeDeductions: "Deductions",
   Withholdings: "Withholdings",
-
   Taxes: "Taxes",
   Wages: "Wages",
   Spend: "Spend",
@@ -27,8 +26,8 @@ const TransactionCategoryNames = /** @type {const} */ ({
   Savings: "Savings",
   Trad401k: "Trad 401k",
   TradRoth: "Trad Roth IRA",
-  OtherTaxableIncome: "Misc Taxable Income",
-  OtherNonTaxable: "Misc Tax-free Income",
+  OtherTaxableIncome: "Misc Taxable",
+  OtherNonTaxable: "Misc Tax-free",
   SocialSecurity: "Social Security",
   Pension: "Pension",
   TaxRefund: "Tax Refund",
@@ -150,14 +149,10 @@ class TransactionCategoryEnum extends EnumBase {
   // (others optional — same as GaapAccountType)
 
   /**
-   * @param {symbol | undefined | null} sym
-   * @returns {string | undefined}
+   * @param {symbol} sym
+   * @returns {string}
    */
   toName(sym) {
-    if (sym === undefined || sym === null) {
-      return undefined;
-    }
-
     const name = super.toName(sym);
     if (!name)
       throw new Error(`Invalid TransactionCategory symbol: ${String(sym)}`);

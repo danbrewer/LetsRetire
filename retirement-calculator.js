@@ -4,6 +4,8 @@ import { Calculation, Calculations } from "./cCalculation.js";
 import { Inputs } from "./cInputs.js";
 import { TAX_BASE_YEAR } from "./consts.js";
 import { RetirementYearCalculator } from "./cRetirementYearCalculator.js";
+import { Transaction } from "./cTransaction.js";
+import { TransactionManager } from "./cTransactionManager.js";
 import { WorkingYearCalculator } from "./cWorkingYearCalculator.js";
 
 /**
@@ -58,8 +60,10 @@ function calc(calculations, UI) {
     lastCurrentAge = inputs.initialAgeSubject;
   }
 
+  const transactionManager = new TransactionManager
+
   // Initialize balances object for tracking
-  const accountsManager = AccountsManager.CreateFromInputs(inputs);
+  const accountsManager = AccountsManager.CreateFromInputs(inputs, transactionManager);
 
   // Working years
   for (let yearIndex = 0; yearIndex < inputs.totalWorkingYears; yearIndex++) {

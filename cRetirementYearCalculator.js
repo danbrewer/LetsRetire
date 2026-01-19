@@ -15,6 +15,7 @@ import { SocialSecurityBreakdown } from "./cSsBreakdown.js";
 import { Taxes } from "./cTaxes.js";
 import { TransactionCategory } from "./cTransaction.js";
 import { withLabel } from "./debugUtils.js";
+import { TransactionRoutes } from "./tTransactionRoute.js";
 
 /**
  * @typedef {import("./cTransaction.js").TransactionCategorySymbol} TransactionCategorySymbol

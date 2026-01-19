@@ -1,14 +1,16 @@
 import { TransactionCategory } from "./tTransactionCategory.js";
 import { TransactionType } from "./tTransactionType.js";
 
-/** 
+/**
  * @typedef {import("./types.js").TransactionRoute} TransactionRoute
- * @typedef {import("./types.js").TransferId} TransferId 
+ * @typedef {import("./types.js").TransferId} TransferId
  * @typedef {import("./tTransactionCategory.js").TransactionCategorySymbol} TransactionCategorySymbol
  * @typedef {import("./tTransactionType.js").TransactionTypeSymbol} TransactionTypeSymbol
  */
 
 class Transaction {
+  /** @type {string} */
+  #accountName;
   /** @type {number} */
   #amount;
   /** @type {TransactionTypeSymbol} */
@@ -23,6 +25,10 @@ class Transaction {
   #memo;
   /** @type {TransferId | null} */
   #transferId;
+
+  get accountName() {
+    return this.#accountName;
+  }
 
   get amount() {
     return this.#amount;
@@ -44,6 +50,24 @@ class Transaction {
     return this.#date;
   }
 
+  get route() {
+    return this.#route;
+  }
+
+  get routeDescription() {
+    switch (this.#transactionType) {
+      case TransactionType.Deposit:
+        return `${this.#route} → ${this.#accountName}`;
+      case TransactionType.Withdrawal:
+        return `${this.#accountName} → ${this.#route}`;
+    }
+    return `Unsupported transaction type: ${String(this.#transactionType)}`;
+  }
+
+  get transferId() {
+    return this.#transferId;
+  }
+
   /**
    * Convert transaction to JSON-friendly format with readable enum values
    * Used for debugging and display purposes
@@ -51,6 +75,7 @@ class Transaction {
    */
   toJSON() {
     return {
+      accountName: this.#accountName,
       date: this.#date.toISOString().split("T")[0], // Just the date part
       transactionType: TransactionType.toName(this.#transactionType),
       category: TransactionCategory.toName(this.#category),
@@ -63,6 +88,7 @@ class Transaction {
 
   /**
    * @typedef {Object} SerializableTransactionData
+   * @property {string} accountName
    * @property {number} amount
    * @property {string} transactionType
    * @property {string} category
@@ -80,9 +106,10 @@ class Transaction {
    */
   toSerializable() {
     return {
+      accountName: this.#accountName,
       amount: this.#amount,
-      transactionType: this.#transactionType.toString(), // Preserve symbol identity
-      category: this.#category.toString(),
+      transactionType: TransactionType.toName(this.#transactionType), // Preserve symbol identity
+      category: TransactionCategory.toName(this.#category),
       route: this.#route,
       memo: this.#memo,
       date: this.#date.toISOString(),
@@ -106,6 +133,7 @@ class Transaction {
     const category = TransactionCategory.fromString(data.category);
 
     return new Transaction(
+      data.accountName,
       data.amount,
       transactionType,
       category,
@@ -136,6 +164,7 @@ class Transaction {
   }
 
   /**
+   * @param {string} accountName - The name of the account
    * @param {number} amount - The amount of the transaction
    * @param {TransactionTypeSymbol} transactionType - The type of transaction
    * @param {TransactionCategorySymbol} category - The category of the transaction
@@ -145,6 +174,7 @@ class Transaction {
    * @param {TransferId | null} [transferId] - Optional transfer ID for linked transactions
    */
   constructor(
+    accountName,
     amount,
     transactionType,
     category,
@@ -153,6 +183,9 @@ class Transaction {
     memo = null,
     transferId = null
   ) {
+    if (!accountName || typeof accountName !== "string") {
+      throw new Error("Account name must be a non-empty string.");
+    }
     if (!TransactionType.values().includes(transactionType)) {
       throw new Error("Invalid TransactionType");
     }
@@ -162,6 +195,7 @@ class Transaction {
     if (amount < 0) {
       throw new Error("Transaction amounts must always be positive.");
     }
+    this.#accountName = accountName;
     this.#amount = amount;
     this.#transactionType = transactionType;
     this.#category = category;

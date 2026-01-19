@@ -1,5 +1,6 @@
 import { Account, ACCOUNT_TYPES } from "./cAccount.js";
 import { Inputs } from "./cInputs.js";
+import { TransactionManager } from "./cTransactionManager.js";
 
 class AccountsManager {
   /** @type {Map<ACCOUNT_TYPES, Account>} */
@@ -15,9 +16,10 @@ class AccountsManager {
   /**
    * Factory method to create AccountGroup from input data
    * @param {Inputs} inputs - Input data containing account balances and rates
+   * @param {TransactionManager} transactionManager
    * @returns {AccountsManager} New AccountGroup instance
    */
-  static CreateFromInputs(inputs) {
+  static CreateFromInputs(inputs, transactionManager) {
     /** @type {Map<ACCOUNT_TYPES, Account>} */
     const accountsMap = new Map();
 
@@ -62,6 +64,7 @@ class AccountsManager {
 
       const account = Account.createWithOpeningBalance(
         accountType,
+        transactionManager,
         startingBalance,
         new Date(inputs.currentYear, 0, 1),
         interestRate

@@ -61,8 +61,8 @@ class AccountAnalyzer {
    * @param {Transaction[]} txns
    */
   #dumpTransactionCategoryDetails(category, txns) {
-    // console.log(`${StringFunctions.padAndAlign(StringFunctions.repeat("~", 90), 100, "center")}`);
-    Boxes.singleTopBorder(100);
+    // console.log(`${StringFunctions.padAndAlign(StringFunctions.repeat("~", 90), , "center")}`);
+    Boxes.singleTopBorder();
     Boxes.addDetailData(`Category: ${category}`, "left");
     Boxes.doubleDivider();
     if (txns.length === 0) {
@@ -77,7 +77,7 @@ class AccountAnalyzer {
     const withdrawHdr = StringFunctions.padAndAlign("Withdrawal", 15, "center");
     const headers = `${dateHdr}    ${memoHdr}    ${depositHdr}    ${withdrawHdr}`;
     Boxes.addDetailData(headers, "left");
-    Boxes.singleDivider(100);
+    Boxes.singleDivider();
 
     let balance = 0;
     for (const t of txns) {
@@ -124,10 +124,10 @@ class AccountAnalyzer {
       15,
       "right"
     );
-    Boxes.doubleDivider(100);
+    Boxes.doubleDivider();
     const footer = `${dateFooter}    ${memoFooter}    ${depositTotalField}    ${withdrawalTotalField}`;
     Boxes.addDetailData(footer, "left");
-    Boxes.singleBorderBottom(100);
+    Boxes.singleBorderBottom();
   }
 
   /** @param {string} [reportTitle] */
@@ -263,16 +263,23 @@ class AccountAnalyzer {
     Boxes.singleBorderBottom();
   }
 
-  /** @param {string} [reportTitle] 
+  /** @param {string} [reportTitle]
    * @param {TransactionCategorySymbol | undefined} [category]
-  */
+   */
   dumpAccountActivity(reportTitle, category) {
+    const fieldLayout = {
+      date: 12,
+      category: 15,
+      route: 31,
+      deposit: 8,
+      withdrawal: 8,
+      balance: 8,
+      memo: 15,
+    };
 
     const transactions = this.#accountYear
       .getAccountTransactions(this.#accountType, category)
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-
-
 
     console.log();
     if (!reportTitle) {
@@ -288,17 +295,29 @@ class AccountAnalyzer {
       .getEndingBalance(this.#accountType, category)
       .asCurrency();
 
-    const dateHeader = StringFunctions.padAndAlign("Date", 12);
-    const categoryHeader = StringFunctions.padAndAlign("Category", 15);
-    const memoHeader = StringFunctions.padAndAlign("Memo", 20);
-    const depositHeader = StringFunctions.padAndAlign("Deposit", 8, "center");
-    const withdrawalHeader = StringFunctions.padAndAlign(
-      "Withdrawal",
-      8,
+    const dateHeader = StringFunctions.padAndAlign("Date", fieldLayout.date);
+    const categoryHeader = StringFunctions.padAndAlign(
+      "Category",
+      fieldLayout.category
+    );
+    const routeHeader = StringFunctions.padAndAlign("Route", fieldLayout.route);
+    const depositHeader = StringFunctions.padAndAlign(
+      "Incoming",
+      fieldLayout.deposit,
       "center"
     );
-    const balanceHeader = StringFunctions.padAndAlign("Balance", 8, "center");
-    const headers = `${dateHeader}    ${categoryHeader}    ${memoHeader}    ${depositHeader}    ${withdrawalHeader}    ${balanceHeader}`;
+    const withdrawalHeader = StringFunctions.padAndAlign(
+      "Outgoing",
+      fieldLayout.withdrawal,
+      "center"
+    );
+    const balanceHeader = StringFunctions.padAndAlign(
+      "Balance",
+      fieldLayout.balance,
+      "center"
+    );
+    const memoHeader = StringFunctions.padAndAlign("Notes", fieldLayout.memo);
+    const headers = `${dateHeader}    ${categoryHeader}    ${routeHeader}    ${depositHeader}    ${withdrawalHeader}    ${balanceHeader}    ${memoHeader}`;
 
     Boxes.topBorderDouble();
     Boxes.addDetailData(reportTitle);
@@ -311,9 +330,12 @@ class AccountAnalyzer {
     let balance = startingBalance;
     for (const t of transactions) {
       const date = DateFunctions.formatDateYYYYMMDD(t.date);
-      const dateField = StringFunctions.padAndAlign(date, 12);
-      const categoryName = TransactionCategory.toName(t.category) || "Unknown";
-      const categoryField = StringFunctions.padAndAlign(categoryName, 15);
+      const dateField = StringFunctions.padAndAlign(date, fieldLayout.date);
+      const categoryName = TransactionCategory.toName(t.category);
+      const categoryField = StringFunctions.padAndAlign(
+        categoryName,
+        fieldLayout.category
+      );
       const deposit =
         t.transactionType === TransactionType.Deposit
           ? t.amount.asCurrency()
@@ -322,22 +344,33 @@ class AccountAnalyzer {
         t.transactionType === TransactionType.Withdrawal
           ? t.amount.asCurrency()
           : "";
-      const depositField = StringFunctions.padAndAlign(deposit, 8, "right");
-      const withdrawalField = StringFunctions.padAndAlign(
-        withdrawal,
-        8,
+      const depositField = StringFunctions.padAndAlign(
+        deposit,
+        fieldLayout.deposit,
         "right"
       );
-      const memoField = StringFunctions.padAndAlign(t.memo ?? "", 20);
+      const withdrawalField = StringFunctions.padAndAlign(
+        withdrawal,
+        fieldLayout.withdrawal,
+        "right"
+      );
+      const memoField = StringFunctions.padAndAlign(
+        t.memo ?? "",
+        fieldLayout.memo
+      );
       balance +=
         t.transactionType === TransactionType.Deposit ? t.amount : -t.amount;
       const balanceField = StringFunctions.padAndAlign(
         balance.asCurrency(),
-        8,
+        fieldLayout.balance,
         "right"
       );
+      const routeField = StringFunctions.padAndAlign(
+        t.routeDescription,
+        fieldLayout.route
+      );
 
-      const detailData = `${dateField}    ${categoryField}    ${memoField}    ${depositField}    ${withdrawalField}    ${balanceField}`;
+      const detailData = `${dateField}    ${categoryField}    ${routeField}    ${depositField}    ${withdrawalField}    ${balanceField}    ${memoField}`;
 
       Boxes.addDetailData(detailData, "left");
     }

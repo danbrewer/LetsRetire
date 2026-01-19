@@ -128,7 +128,13 @@ class StringFunctions {
   static padAndAlign(value, width, align = "left", padChar = " ") {
     const str = String(value);
 
-    if (str.length >= width) return str;
+    if (str.length > width) {
+      return `${str.substring(0, width - 3)}...`;
+    }
+
+    if (str.length === width) {
+      return str;
+    }
 
     if (align === "center") {
       const totalPadding = width - str.length;
@@ -153,12 +159,14 @@ class StringFunctions {
 }
 
 class Boxes {
+  static TTY_WIDTH = 130;
+
   /**
    * Creates a single-wall ASCII box around text with connectable edges.
    *
    * @param {string} text
    * @param {"left" | "center" | "right"} [align="center"]
-   * @param {number} [width=100]
+   * @param {number} [width=TTY_WIDTH]
    * @param {boolean} [topConnector=false] - Use T-junction on top edge
    * @param {boolean} [bottomConnector=false] - Use T-junction on bottom edge
    * @param {boolean} [returnString=false] - Return string instead of console.log
@@ -166,7 +174,7 @@ class Boxes {
   static singleBox(
     text,
     align = "center",
-    width = 100,
+    width = Boxes.TTY_WIDTH,
     topConnector = false,
     bottomConnector = false,
     returnString = false
@@ -205,7 +213,7 @@ class Boxes {
    *
    * @param {string} text
    * @param {"left" | "center" | "right"} [align="center"]
-   * @param {number} [width=100]
+   * @param {number} [width=TTY_WIDTH]
    * @param {boolean} [topConnector=false] - Use T-junction on top edge
    * @param {boolean} [bottomConnector=false] - Use T-junction on bottom edge
    * @param {boolean} [returnString=false] - Return string instead of console.log
@@ -213,7 +221,7 @@ class Boxes {
   static doubleBox(
     text,
     align = "center",
-    width = 100,
+    width = Boxes.TTY_WIDTH,
     topConnector = false,
     bottomConnector = false,
     returnString = false
@@ -251,7 +259,7 @@ class Boxes {
    *
    * @param {string} text
    * @param {"left" | "center" | "right"} [align="center"]
-   * @param {number} [width=100]
+   * @param {number} [width=TTY_WIDTH]
    * @param {"single" | "double"} [style="single"]
    * @param {boolean} [topConnector=false] - Use T-junction on top edge
    * @param {boolean} [bottomConnector=false] - Use T-junction on bottom edge
@@ -260,7 +268,7 @@ class Boxes {
   static box(
     text,
     align = "center",
-    width = 100,
+    width = Boxes.TTY_WIDTH,
     style = "single",
     topConnector = false,
     bottomConnector = false,
@@ -290,13 +298,13 @@ class Boxes {
    *
    * @param {string} text
    * @param {"left" | "center" | "right"} [align="center"]
-   * @param {number} [width=100]
+   * @param {number} [width=TTY_WIDTH]
    * @param {boolean} [returnString=false] - Return string instead of console.log
    */
   static addDetailData(
     text,
     align = "center",
-    width = 100,
+    width = Boxes.TTY_WIDTH,
     returnString = false
   ) {
     const lines = text.split("\n");
@@ -321,7 +329,7 @@ class Boxes {
     }
   }
 
-  static doubleDivider(width = 100, returnString = false) {
+  static doubleDivider(width = Boxes.TTY_WIDTH, returnString = false) {
     const result = "╞" + "═".repeat(width - 2) + "╡";
 
     if (returnString) {
@@ -332,7 +340,7 @@ class Boxes {
     }
   }
 
-  static singleDivider(width = 100, returnString = false) {
+  static singleDivider(width = Boxes.TTY_WIDTH, returnString = false) {
     const result = "├" + "─".repeat(width - 2) + "┤";
 
     if (returnString) {
@@ -343,7 +351,7 @@ class Boxes {
     }
   }
 
-  static singleTopBorder(width = 100, returnString = false) {
+  static singleTopBorder(width = Boxes.TTY_WIDTH, returnString = false) {
     const result = "┌" + "─".repeat(width - 2) + "┐";
 
     if (returnString) {
@@ -354,7 +362,7 @@ class Boxes {
     }
   }
 
-  static singleBorderBottom(width = 100, returnString = false) {
+  static singleBorderBottom(width = Boxes.TTY_WIDTH, returnString = false) {
     const result = "└" + "─".repeat(width - 2) + "┘";
 
     if (returnString) {
@@ -365,7 +373,7 @@ class Boxes {
     }
   }
 
-  static topBorderDouble(width = 100, returnString = false) {
+  static topBorderDouble(width = Boxes.TTY_WIDTH, returnString = false) {
     const result = "╒" + "═".repeat(width - 2) + "╕";
 
     if (returnString) {
@@ -376,7 +384,7 @@ class Boxes {
     }
   }
 
-  static bottomBorderDouble(width = 100, returnString = false) {
+  static bottomBorderDouble(width = Boxes.TTY_WIDTH, returnString = false) {
     const result = "╘" + "═".repeat(width - 2) + "╛";
 
     if (returnString) {
