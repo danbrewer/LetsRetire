@@ -3,10 +3,13 @@ import { AccountAnalyzer } from "./cAccountAnalyzer.js";
 import { AccountsManager } from "./cAccountsManager.js";
 import { INTEREST_CALCULATION_EPOCH, PERIODIC_FREQUENCY } from "./consts.js";
 import { TransactionCategory } from "./cTransaction.js";
+import { IdentifierGenerator } from "./services.js";
 
 /**
  * @typedef {import("./cTransaction.js").TransactionCategorySymbol} TransactionCategorySymbol
  * @typedef {import("./cTransaction.js").TransactionTypeSymbol} TransactionTypeSymbol
+ * @typedef {import("./types.js").TransactionRoute} TransactionRoute
+ * @typedef {import("./types.js").TransferId} TransferId
  */
 class AccountingYear {
   /**
@@ -27,20 +30,25 @@ class AccountingYear {
     sourceMemo = "To " + targetAccount,
     targetMemo = "From " + sourceAccount
   ) {
+    const transferId = IdentifierGenerator.generateSixCharAlphaId();
     category = category || TransactionCategory.Transfer;
     this.processAsPeriodicWithdrawals(
       sourceAccount,
       category,
+      targetAccount,
       amountToTransfer,
       frequency,
-      sourceMemo
+      sourceMemo,
+      transferId
     );
     this.processAsPeriodicDeposits(
       targetAccount,
       category,
+      sourceAccount,
       amountToTransfer,
       frequency,
-      targetMemo
+      targetMemo,
+      transferId
     );
   }
 
@@ -135,15 +143,35 @@ class AccountingYear {
   /**
    * @param {string} accountName
    * @param {TransactionCategorySymbol} category
+   * @param {TransactionRoute} route
    * @param {number} amount
    * @param {number} [month]
    * @param {number} [day]
    * @param {string | null} [party]
+   * @param {TransferId | null} [transferId]
    */
-  deposit(accountName, category, amount, month = 1, day = 1, party = "") {
+  deposit(
+    accountName,
+    category,
+    route,
+    amount,
+    month = 1,
+    day = 1,
+    party = "",
+    transferId = null
+  ) {
     const account = this.#accountsManager.getAccountByType(accountName);
     if (account) {
-      account.deposit(amount, category, this.taxYear, month, day, party);
+      account.deposit(
+        amount,
+        category,
+        route,
+        this.taxYear,
+        month,
+        day,
+        party,
+        transferId
+      );
     } else {
       throw new Error(`Account not found: ${accountName}`);
     }
@@ -161,15 +189,35 @@ class AccountingYear {
   /**
    * @param {string} accountName
    * @param {TransactionCategorySymbol} category
+   * @param {TransactionRoute} route
    * @param {number} amount
    * @param {number} [month]
    * @param {number} [day]
    * @param {string} [party]
+   * @param {TransferId | null} [transferId]
    */
-  withdrawal(accountName, category, amount, month = 1, day = 1, party = "") {
+  withdrawal(
+    accountName,
+    category,
+    route,
+    amount,
+    month = 1,
+    day = 1,
+    party = "",
+    transferId = null
+  ) {
     const account = this.#accountsManager.getAccountByType(accountName);
     if (account) {
-      account.withdrawal(amount, category, this.taxYear, month, day, party);
+      account.withdrawal(
+        amount,
+        category,
+        route,
+        this.taxYear,
+        month,
+        day,
+        party,
+        transferId
+      );
     } else {
       throw new Error(`Account not found: ${accountName}`);
     }
@@ -210,11 +258,12 @@ class AccountingYear {
 
   /**
    * @param {string} accountName
+   * @param {TransactionCategorySymbol | undefined} [category]
    */
-  getStartingBalance(accountName) {
+  getStartingBalance(accountName, category) {
     const account = this.#accountsManager.getAccountByType(accountName);
     if (account) {
-      return account.startingBalanceForYear(this.taxYear);
+      return account.startingBalanceForYear(this.taxYear, category);
     } else {
       throw new Error(`Account not found: ${accountName}`);
     }
@@ -235,11 +284,12 @@ class AccountingYear {
 
   /**
    * @param {string} accountName
+   * @param {TransactionCategorySymbol | undefined} [category]
    */
-  getAnnualRevenues(accountName) {
+  getAnnualRevenues(accountName, category) {
     const account = this.#accountsManager.getAccountByType(accountName);
     if (account) {
-      return account.annualRevenuesForYear(this.taxYear).asCurrency();
+      return account.annualRevenuesForYear(this.taxYear, category).asCurrency();
     } else {
       throw new Error(`Account not found: ${accountName}`);
     }
@@ -317,19 +367,31 @@ class AccountingYear {
   /**
    * @param {string} accountName
    * @param {TransactionCategorySymbol} category
+   * @param {TransactionRoute} route
    * @param {number} amount
    * @param {string} frequency
    * @param {string | null} memo
+   * @param {TransferId | null} [transferId]
    */
-  processAsPeriodicWithdrawals(accountName, category, amount, frequency, memo) {
+  processAsPeriodicWithdrawals(
+    accountName,
+    category,
+    route,
+    amount,
+    frequency,
+    memo,
+    transferId = null
+  ) {
     const account = this.#getAccountByName(accountName);
     if (account) {
       account.processAsPeriodicWithdrawals(
         this.taxYear,
         amount,
         category,
+        route,
         frequency,
-        memo
+        memo,
+        transferId
       );
     } else {
       throw new Error(`Account not found: ${accountName}`);
@@ -339,16 +401,20 @@ class AccountingYear {
   /**
    * @param {string} accountName
    * @param {TransactionCategorySymbol} category
+   * @param {TransactionRoute} route
    * @param {number} amount
    * @param {string} frequency
    * @param {string} memo
+   * @param {TransferId | null} [transferId]
    */
   processAsPeriodicDeposits(
     accountName,
     category,
+    route,
     amount,
     frequency,
-    memo = ""
+    memo = "",
+    transferId = null
   ) {
     const account = this.#getAccountByName(accountName);
     if (account) {
@@ -356,8 +422,10 @@ class AccountingYear {
         this.taxYear,
         amount,
         category,
+        route,
         frequency,
-        memo
+        memo,
+        transferId
       );
     } else {
       throw new Error(`Account not found: ${accountName}`);

@@ -243,20 +243,20 @@ class WorkingYearCalculator {
   }
 
   #processWagesAndCompensation() {
-
     this.#accountYear.processAsPeriodicDeposits(
       ACCOUNT_TYPES.PARTNER_WAGES,
       TransactionCategory.IncomeGross,
+      TransactionRoutes.External,
       this.#fixedIncomeStreams.partnerWagesAndCompensationGross,
       PERIODIC_FREQUENCY.MONTHLY
     );
 
     this.#accountYear.processAsPeriodicTransfers(
       ACCOUNT_TYPES.PARTNER_WAGES,
-      ACCOUNT_TYPES.WITHHOLDINGS,
-      this.#fixedIncomeStreams
-        .partnerWagesAndCompensationEstimatedWithholdings,
-      PERIODIC_FREQUENCY.MONTHLY
+      ACCOUNT_TYPES.TAXES,
+      this.#fixedIncomeStreams.partnerWagesAndCompensationEstimatedWithholdings,
+      PERIODIC_FREQUENCY.MONTHLY,
+      TransactionCategory.Withholdings
     );
 
     this.#accountYear.processAsPeriodicTransfers(
@@ -269,15 +269,17 @@ class WorkingYearCalculator {
     this.#accountYear.processAsPeriodicDeposits(
       ACCOUNT_TYPES.SUBJECT_WAGES,
       TransactionCategory.IncomeGross,
+      TransactionRoutes.External,
       this.#fixedIncomeStreams.subjectWagesAndCompensationGross,
       PERIODIC_FREQUENCY.MONTHLY
     );
 
     this.#accountYear.processAsPeriodicTransfers(
       ACCOUNT_TYPES.SUBJECT_WAGES,
-      ACCOUNT_TYPES.WITHHOLDINGS,
+      ACCOUNT_TYPES.TAXES,
       this.#fixedIncomeStreams.subjectWagesAndCompensationEstimatedWithholdings,
-      PERIODIC_FREQUENCY.MONTHLY
+      PERIODIC_FREQUENCY.MONTHLY,
+      TransactionCategory.Withholdings
     );
 
     this.#accountYear.processAsPeriodicTransfers(
@@ -287,36 +289,25 @@ class WorkingYearCalculator {
       PERIODIC_FREQUENCY.MONTHLY
     );
 
-    this.#accountYear.analyzers[ACCOUNT_TYPES.SUBJECT_WAGES].dumpAccountActivity("", TransactionCategory.IncomeGross);
-    debugger;
-
-    this.#process401kContributions();
-    this.#processWithholdings();
-  }
-
-  #processWithholdings() {
-    const withholdings =
-      this.#fixedIncomeStreams
-        .combinedWagesAndCompensationEstimatedWithholdings;
-
-    // Estimate tax withholdings
-    this.#accountYear.processAsPeriodicDeposits(
-      ACCOUNT_TYPES.WITHHOLDINGS,
-      TransactionCategory.Wages,
-      withholdings,
-      PERIODIC_FREQUENCY.MONTHLY,
-      "Combined"
-    );
-  }
-
-  #process401kContributions() {
-    // Dump any 401k contributions into the Traditional 401k account
-    this.#accountYear.processAsPeriodicDeposits(
+    this.#accountYear.processAsPeriodicTransfers(
+      ACCOUNT_TYPES.SUBJECT_WAGES,
       ACCOUNT_TYPES.SUBJECT_401K,
-      TransactionCategory.Contribution,
       this.#fixedIncomeStreams.subjectAllowed401kContribution,
       PERIODIC_FREQUENCY.MONTHLY
     );
+
+    this.#accountYear.processAsPeriodicTransfers(
+      ACCOUNT_TYPES.PARTNER_WAGES,
+      ACCOUNT_TYPES.PARTNER_401K,
+      this.#fixedIncomeStreams.partnerAllowed401kContribution,
+      PERIODIC_FREQUENCY.MONTHLY
+    );
+
+    this.#accountYear.analyzers[
+      ACCOUNT_TYPES.SUBJECT_WAGES
+    ].dumpAccountActivity("", TransactionCategory.IncomeGross);
+
+    debugger;
   }
 
   #processRothIraContributions() {
@@ -340,23 +331,36 @@ class WorkingYearCalculator {
 
     if (this.surplusSpend > 0) {
       // Deposit surplus income into savings account
-      this.#accountYear.processAsPeriodicDeposits(
+      this.#accountYear.processAsPeriodicTransfers(
+        ACCOUNT_TYPES.CASH,
         ACCOUNT_TYPES.SAVINGS,
-        TransactionCategory.Spend,
         this.surplusSpend,
         PERIODIC_FREQUENCY.MONTHLY,
-        "spending surplus"
+        TransactionCategory.SurplusIncome
       );
     }
 
     if (this.surplusSpend < 0) {
       // Withdraw from savings to cover spending shortfall
-      this.#accountYear.processAsPeriodicWithdrawals(
+      const availableSavings = this.#accountYear.getEndingBalance(
+        ACCOUNT_TYPES.SAVINGS
+      );
+
+      if (availableSavings <= 0) {
+        console.warn(
+          "Warning: No savings available to cover spending shortfall."
+        );
+        return;
+      }
+
+      const withdrawalAmount = Math.min(-this.surplusSpend, availableSavings);
+
+      this.#accountYear.processAsPeriodicTransfers(
         ACCOUNT_TYPES.SAVINGS,
-        TransactionCategory.Spend,
-        -this.surplusSpend,
+        ACCOUNT_TYPES.CASH,
+        withdrawalAmount,
         PERIODIC_FREQUENCY.MONTHLY,
-        "spending shortfall"
+        TransactionCategory.IncomeShortfall
       );
     }
   }
@@ -390,40 +394,43 @@ class WorkingYearCalculator {
     const federalIncomeTaxOwed = actualTaxes.federalTaxesOwed.asCurrency();
 
     const withholdings = Math.max(
-      this.#accountYear.getEndingBalance(ACCOUNT_TYPES.WITHHOLDINGS) -
-        this.#accountYear.getStartingBalance(ACCOUNT_TYPES.WITHHOLDINGS),
+      this.#accountYear.getAnnualRevenues(
+        ACCOUNT_TYPES.TAXES,
+        TransactionCategory.Withholdings
+      ),
       0
     );
 
     const taxesOwed = federalIncomeTaxOwed - withholdings;
 
-    if (taxesOwed < 0)
-      this.#accountYear.deposit(
+    if (taxesOwed < 0) {
+      const refundAmount = -taxesOwed;
+
+      this.#accountYear.processAsPeriodicTransfers(
+        ACCOUNT_TYPES.TAXES,
         ACCOUNT_TYPES.SAVINGS,
-        TransactionCategory.TaxRefund,
-        -taxesOwed,
-        12,
-        31
+        refundAmount,
+        PERIODIC_FREQUENCY.ANNUAL_TRAILING,
+        TransactionCategory.TaxRefund
       );
+    }
 
     if (taxesOwed > 0) {
-      if (
-        taxesOwed > this.#accountYear.getEndingBalance(ACCOUNT_TYPES.SAVINGS)
-      ) {
+      const savingsBalance = this.#accountYear.getEndingBalance(
+        ACCOUNT_TYPES.SAVINGS
+      );
+      if (taxesOwed > savingsBalance) {
         console.warn(
           "Warning: Taxes due exceed available savings. Partial payment will be made."
         );
       }
-      const withdrawalAmount = Math.min(
-        taxesOwed,
-        this.#accountYear.getEndingBalance(ACCOUNT_TYPES.SAVINGS)
-      );
-      this.#accountYear.withdrawal(
+      const withdrawalAmount = Math.min(taxesOwed, savingsBalance);
+      this.#accountYear.processAsPeriodicTransfers(
         ACCOUNT_TYPES.SAVINGS,
-        TransactionCategory.TaxPayment,
+        ACCOUNT_TYPES.TAXES,
         withdrawalAmount,
-        12,
-        31
+        PERIODIC_FREQUENCY.ANNUAL_TRAILING,
+        TransactionCategory.TaxPayment
       );
     }
   }

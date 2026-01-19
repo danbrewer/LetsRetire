@@ -23,8 +23,8 @@ class IncomeReport extends BaseReports {
   }
 
   get wagesAndCompensationEstimatedWithholdings() {
-    return this._accountYear.analyzers[ACCOUNT_TYPES.WITHHOLDINGS]
-      .getTotalDeposits(TransactionCategory.Wages)
+    return this._accountYear.analyzers[ACCOUNT_TYPES.TAXES]
+      .getTotalDeposits(TransactionCategory.Withholdings)
       .asCurrency();
   }
 }

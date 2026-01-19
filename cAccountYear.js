@@ -2,6 +2,7 @@ import { Account } from "./cAccount.js";
 /**
  * @typedef {import("./cTransaction.js").TransactionCategorySymbol} TransactionCategorySymbol
  * @typedef {import("./cTransaction.js").TransactionTypeSymbol} TransactionTypeSymbol
+ * @typedef {import("./types.js").TransactionRoute} TransactionRoute
  */
 class AccountYear {
   /** @type {Account} */
@@ -42,15 +43,17 @@ class AccountYear {
 
   /**
    * @param {TransactionCategorySymbol} category
+   * @param {string} route
    * @param {number} amount
    * @param {string} frequency
    * @param {string | null} memo
    */
-  processAsPeriodicWithdrawals(category, amount, frequency, memo) {
+  processAsPeriodicWithdrawals(category, route, amount, frequency, memo) {
     this.#account.processAsPeriodicWithdrawals(
       this.#taxYear,
       amount,
       category,
+      route,
       frequency,
       memo
     );
@@ -58,15 +61,17 @@ class AccountYear {
 
   /**
    * @param {TransactionCategorySymbol} category
+   * @param {TransactionRoute} route
    * @param {number} amount
    * @param {string} frequency
    * @param {string | null} memo
    */
-  processAsPeriodicDeposits(category, amount, frequency, memo) {
+  processAsPeriodicDeposits(category, route, amount, frequency, memo) {
     this.#account.processAsPeriodicDeposits(
       this.#taxYear,
       amount,
       category,
+      route,
       frequency,
       memo
     );

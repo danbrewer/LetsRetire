@@ -105,6 +105,14 @@ class FixedIncomeStreams {
     ).asCurrency();
   }
 
+  get subjectNonTaxableSalaryReductions() {
+    return this.#inputs.subjectNonTaxableSalaryReductions.asCurrency();
+  }
+
+  get partnerNonTaxableSalaryReductions() {
+    return this.#inputs.partnerNonTaxableSalaryReductions.asCurrency();
+  }
+
   get partnerAllowed401kContribution() {
     return (
       this.#partnerDesired401kContribution * this._getElectiveScale()
@@ -195,14 +203,18 @@ class FixedIncomeStreams {
   get subjectWagesAndCompensationActualIncome() {
     return (
       this.subjectWagesAndCompensationGross -
-      this.subjectWagesAndCompensationEstimatedWithholdings
+      this.subjectWagesAndCompensationEstimatedWithholdings -
+      this.subjectAllowed401kContribution -
+      this.subjectNonTaxableSalaryReductions
     ).asCurrency();
   }
 
   get partnerWagesAndCompensationActualIncome() {
     return (
       this.partnerWagesAndCompensationGross -
-      this.partnerWagesAndCompensationEstimatedWithholdings
+      this.partnerWagesAndCompensationEstimatedWithholdings -
+      this.partnerAllowed401kContribution -
+      this.partnerNonTaxableSalaryReductions
     ).asCurrency();
   }
 

@@ -66,7 +66,13 @@ class EnumBase {
    * @returns {string | undefined}
    */
   toString(sym) {
-    return this.toName(sym) ?? String(sym);
+    // search Object.values for matching symbol and return key
+    for (const [key, value] of Object.entries(this.map)) {
+      if (value === sym) {
+        return key;
+      }
+    }
+    throw new Error(`Invalid ${this.enumName} symbol: ${String(sym)}`);
   }
 }
 

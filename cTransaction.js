@@ -1,251 +1,11 @@
-import { EnumBase } from "./cEnum.js";
+import { TransactionCategory } from "./tTransactionCategory.js";
+import { TransactionType } from "./tTransactionType.js";
 
-// -------------------------------------------------------------
-// TRANSACTION TYPE ENUM
-// -------------------------------------------------------------
-
-const TransactionTypeNames = /** @type {const} */ ({
-  Deposit: "deposit",
-  Withdrawal: "withdrawal",
-});
-
-/**
- * @typedef {typeof TransactionTypeNames[keyof typeof TransactionTypeNames]} TransactionTypeName
- */
-
-class TransactionTypeEnum extends EnumBase {
-  constructor() {
-    super("TransactionType", Object.values(TransactionTypeNames));
-  }
-
-  get Deposit() {
-    return this.map.deposit;
-  }
-
-  get Withdrawal() {
-    return this.map.withdrawal;
-  }
-
-  /**
-   * @param {symbol} sym
-   * @returns {TransactionTypeName}
-   */
-  toName(sym) {
-    const name = super.toName(sym);
-    if (!name)
-      throw new Error(`Invalid TransactionType symbol: ${String(sym)}`);
-    return /** @type {TransactionTypeName} */ (name);
-  }
-
-  /**
-   * Convert string name back to symbol
-   * @param {string} name
-   * @returns {TransactionTypeSymbol}
-   */
-  fromString(name) {
-    const symbol = this.map[name];
-    if (!symbol) throw new Error(`Invalid TransactionType name: ${name}`);
-    return symbol;
-  }
-}
-
-const TransactionType = new TransactionTypeEnum();
-
-/**
- * @typedef {typeof TransactionType.Deposit
- *         | typeof TransactionType.Withdrawal} TransactionTypeSymbol
- */
-
-// -------------------------------------------------------------
-// TRANSACTION CATEGORY ENUM
-// -------------------------------------------------------------
-
-const TransactionCategoryNames = /** @type {const} */ ({
-  Interest: "Interest",
-  Disbursement: "Disbursement",
-  RMD: "Req Min Dist",
-  Overage: "Overage",
-  Shortage: "Shortage",
-  Transfer: "Transfer",
-  OpeningBalance: "Opening Bal",
-  Contribution: "Contribution",
-
-  IncomeNet: "TakeHome",
-  IncomeGross: "Gross",
-  IncomeDeductions: "Deductions",
-  Withholdings: "Withholdings",
-
-  Taxes: "Taxes",
-  Wages: "Wages",
-  Spend: "Spend",
-  Savings: "Savings",
-  Trad401k: "Trad 401k",
-  TradRoth: "Trad Roth IRA",
-  OtherTaxableIncome: "Misc Taxable Income",
-  OtherNonTaxable: "Misc Tax-free Income",
-  SocialSecurity: "Social Security",
-  Pension: "Pension",
-  TaxRefund: "Tax Refund",
-  TaxPayment: "Tax Payment",
-});
-
-/**
- * @typedef {typeof TransactionCategoryNames[keyof typeof TransactionCategoryNames]} TransactionCategoryName
- */
-
-class TransactionCategoryEnum extends EnumBase {
-  constructor() {
-    super("TransactionCategory", Object.values(TransactionCategoryNames));
-  }
-
-  get Interest() {
-    return this.map[TransactionCategoryNames.Interest];
-  }
-
-  get Disbursement() {
-    return this.map[TransactionCategoryNames.Disbursement];
-  }
-
-  get RMD() {
-    return this.map[TransactionCategoryNames.RMD];
-  }
-
-  get Overage() {
-    return this.map[TransactionCategoryNames.Overage];
-  }
-
-  get Shortage() {
-    return this.map[TransactionCategoryNames.Shortage];
-  }
-
-  get Transfer() {
-    return this.map[TransactionCategoryNames.Transfer];
-  }
-
-  get OpeningBalance() {
-    return this.map[TransactionCategoryNames.OpeningBalance];
-  }
-
-  get Contribution() {
-    return this.map[TransactionCategoryNames.Contribution];
-  }
-
-  get IncomeNet() {
-    return this.map[TransactionCategoryNames.IncomeNet];
-  }
-
-  get IncomeGross() {
-    return this.map[TransactionCategoryNames.IncomeGross];
-  }
-  get IncomeDeductions() {
-    return this.map[TransactionCategoryNames.IncomeDeductions];
-  }
-
-  get Taxes() {
-    return this.map[TransactionCategoryNames.Taxes];
-  }
-
-  get Wages() {
-    return this.map[TransactionCategoryNames.Wages];
-  }
-
-  get Spend() {
-    return this.map[TransactionCategoryNames.Spend];
-  }
-
-  get Savings() {
-    return this.map[TransactionCategoryNames.Savings];
-  }
-
-  get Trad401k() {
-    return this.map[TransactionCategoryNames.Trad401k];
-  }
-
-  get TradRoth() {
-    return this.map[TransactionCategoryNames.TradRoth];
-  }
-
-  get OtherTaxableIncome() {
-    return this.map[TransactionCategoryNames.OtherTaxableIncome];
-  }
-
-  get OtherNonTaxable() {
-    return this.map[TransactionCategoryNames.OtherNonTaxable];
-  }
-
-  get SocialSecurity() {
-    return this.map[TransactionCategoryNames.SocialSecurity];
-  }
-
-  get Pension() {
-    return this.map[TransactionCategoryNames.Pension];
-  }
-
-  get TaxRefund() {
-    return this.map[TransactionCategoryNames.TaxRefund];
-  }
-
-  get TaxPayment() {
-    return this.map[TransactionCategoryNames.TaxPayment];
-  }
-
-  get Withholdings() {
-    return this.map[TransactionCategoryNames.Withholdings];
-  }
-
-  // (others optional — same as GaapAccountType)
-
-  /**
-   * @param {symbol | undefined | null} sym
-   * @returns {string | undefined}
-   */
-  toName(sym) {
-    if (sym === undefined || sym === null) {
-      return undefined;
-    }
-
-    const name = super.toName(sym);
-    if (!name)
-      throw new Error(`Invalid TransactionCategory symbol: ${String(sym)}`);
-    return /** @type {TransactionCategoryName} */ (name);
-  }
-
-  /**
-   * Convert string name back to symbol
-   * @param {string} name
-   * @returns {TransactionCategorySymbol}
-   */
-  fromString(name) {
-    const symbol = this.map[name];
-    if (!symbol) throw new Error(`Invalid TransactionCategory name: ${name}`);
-    return symbol;
-  }
-}
-
-const TransactionCategory = new TransactionCategoryEnum();
-
-/**
- * @typedef {typeof TransactionCategory.Interest
- *         | typeof TransactionCategory.Disbursement
- *         | typeof TransactionCategory.RMD
- *         | typeof TransactionCategory.Overage
- *         | typeof TransactionCategory.Shortage
- *         | typeof TransactionCategory.Transfer
- *         | typeof TransactionCategory.OpeningBalance
- *         | typeof TransactionCategory.Contribution
- *         | typeof TransactionCategory.IncomeNet
- *         | typeof TransactionCategory.Taxes
- *         | typeof TransactionCategory.Spend
- *         | typeof TransactionCategory.Savings
- *         | typeof TransactionCategory.Trad401k
- *         | typeof TransactionCategory.TradRoth
- *         | typeof TransactionCategory.OtherTaxableIncome
- *         | typeof TransactionCategory.OtherNonTaxable
- *         | typeof TransactionCategory.SocialSecurity
- *         | typeof TransactionCategory.Pension
- *         | typeof TransactionCategory.TaxRefund
- *         | typeof TransactionCategory.TaxPayment
- *         } TransactionCategorySymbol
+/** 
+ * @typedef {import("./types.js").TransactionRoute} TransactionRoute
+ * @typedef {import("./types.js").TransferId} TransferId 
+ * @typedef {import("./tTransactionCategory.js").TransactionCategorySymbol} TransactionCategorySymbol
+ * @typedef {import("./tTransactionType.js").TransactionTypeSymbol} TransactionTypeSymbol
  */
 
 class Transaction {
@@ -255,10 +15,14 @@ class Transaction {
   #transactionType;
   /** @type {TransactionCategorySymbol} */
   #category;
-  /** @type {string | null} */
-  #memo;
+  /** @type {TransactionRoute} */
+  #route;
   /** @type {Date} */
   #date;
+  /** @type {string | null} */
+  #memo;
+  /** @type {TransferId | null} */
+  #transferId;
 
   get amount() {
     return this.#amount;
@@ -290,18 +54,22 @@ class Transaction {
       date: this.#date.toISOString().split("T")[0], // Just the date part
       transactionType: TransactionType.toName(this.#transactionType),
       category: TransactionCategory.toName(this.#category),
-      memo: this.#memo || "(no memo)",
+      memo: this.#memo,
       amount: this.#amount,
+      route: this.#route,
+      transferId: this.#transferId,
     };
   }
 
   /**
    * @typedef {Object} SerializableTransactionData
    * @property {number} amount
-   * @property {string | undefined} transactionType
-   * @property {string | undefined} category
-   * @property {string | null} memo
+   * @property {string} transactionType
+   * @property {string} category
+   * @property {TransactionRoute} route
    * @property {string} date
+   * @property {string | null} memo
+   * @property {TransferId | null} transferId
    * @property {string} _type
    */
 
@@ -313,10 +81,12 @@ class Transaction {
   toSerializable() {
     return {
       amount: this.#amount,
-      transactionType: this.#transactionType.description, // Preserve symbol identity
-      category: this.#category.description,
+      transactionType: this.#transactionType.toString(), // Preserve symbol identity
+      category: this.#category.toString(),
+      route: this.#route,
       memo: this.#memo,
       date: this.#date.toISOString(),
+      transferId: this.#transferId,
       _type: "Transaction", // Type marker for deserialization
     };
   }
@@ -332,17 +102,17 @@ class Transaction {
     }
 
     // Convert symbol descriptions back to enum symbols
-    const transactionType = TransactionType.fromString(
-      data.transactionType ?? ""
-    );
-    const category = TransactionCategory.fromString(data.category ?? "");
+    const transactionType = TransactionType.fromString(data.transactionType);
+    const category = TransactionCategory.fromString(data.category);
 
     return new Transaction(
       data.amount,
       transactionType,
       category,
+      data.route,
       new Date(data.date),
-      data.memo
+      data.memo,
+      data.transferId
     );
   }
 
@@ -369,15 +139,19 @@ class Transaction {
    * @param {number} amount - The amount of the transaction
    * @param {TransactionTypeSymbol} transactionType - The type of transaction
    * @param {TransactionCategorySymbol} category - The category of the transaction
-   * @param {Date} [date] - Transaction date, defaults to current date
+   * @param {TransactionRoute} route - The route of the transaction
+   * @param {Date} date - Transaction date, defaults to current date
    * @param {string | null} [memo] - The party associated with the transaction
+   * @param {TransferId | null} [transferId] - Optional transfer ID for linked transactions
    */
   constructor(
     amount,
     transactionType,
     category,
-    date = new Date(),
-    memo = null
+    route,
+    date,
+    memo = null,
+    transferId = null
   ) {
     if (!TransactionType.values().includes(transactionType)) {
       throw new Error("Invalid TransactionType");
@@ -391,10 +165,11 @@ class Transaction {
     this.#amount = amount;
     this.#transactionType = transactionType;
     this.#category = category;
+    this.#route = route;
     this.#memo = memo;
     this.#date = date;
+    this.#transferId = transferId;
   }
 }
 
 export { Transaction, TransactionType, TransactionCategory };
-// export { isValidTransactionType, isValidTransactionCategory };

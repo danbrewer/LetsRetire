@@ -17,3 +17,6 @@ declare global {
 }
 
 export {};
+
+export type TransferId = string;
+export type TransactionRoute = string;

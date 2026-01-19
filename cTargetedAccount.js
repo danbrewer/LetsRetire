@@ -1,6 +1,7 @@
 /**
  * @typedef {import("./cTransaction.js").TransactionCategorySymbol} TransactionCategorySymbol
  * @typedef {import("./cTransaction.js").TransactionTypeSymbol} TransactionTypeSymbol
+ * @typedef {import("./types.js").TransactionRoute} TransactionRoute
  */
 
 import { Account } from "./cAccount.js";
@@ -28,17 +29,19 @@ class TargetedAccount {
   /**
    * @param {any} v
    * @param {TransactionCategorySymbol} category
+   * @param {TransactionRoute} route
    */
-  deposit(v, category) {
-    return this.#account.deposit(v, category, this.#taxYear);
+  deposit(v, category, route) {
+    return this.#account.deposit(v, category, route, this.#taxYear);
   }
 
   /**
    * @param {number} v
    * @param {TransactionCategorySymbol} category
+   * @param {TransactionRoute} route
    */
-  withdraw(v, category) {
-    return this.#account.withdrawal(v, category, this.#taxYear);
+  withdraw(v, category, route) {
+    return this.#account.withdrawal(v, category, route, this.#taxYear);
   }
 
   get withdrawals() {

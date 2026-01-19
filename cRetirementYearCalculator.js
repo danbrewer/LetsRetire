@@ -321,6 +321,7 @@ class RetirementYearCalculator {
     this.#accountYear.deposit(
       ACCOUNT_TYPES.TAXES,
       TransactionCategory.Taxes,
+      TransactionRoutes.Taxes,
       this.#taxes.federalTaxesOwed.asCurrency(),
       12,
       31,
@@ -328,7 +329,8 @@ class RetirementYearCalculator {
     );
 
     const totalWithholdings = this.#accountYear.getAnnualRevenues(
-      ACCOUNT_TYPES.WITHHOLDINGS
+      ACCOUNT_TYPES.TAXES,
+      TransactionCategory.Withholdings
     );
 
     const taxesDue =
@@ -338,6 +340,7 @@ class RetirementYearCalculator {
       const availableSavings = this.#accountYear.getEndingBalance(
         ACCOUNT_TYPES.SAVINGS
       );
+
       if (taxesDue > availableSavings) {
         console.warn(
           "Warning: Taxes due exceed available savings. Partial payment will be made."
@@ -346,21 +349,22 @@ class RetirementYearCalculator {
 
       const withdrawalAmount = Math.min(taxesDue, availableSavings);
 
-      this.#accountYear.withdrawal(
+      this.#accountYear.processAsPeriodicTransfers(
         ACCOUNT_TYPES.SAVINGS,
-        TransactionCategory.TaxPayment,
+        ACCOUNT_TYPES.TAXES,
         withdrawalAmount,
-        12,
-        31
+        PERIODIC_FREQUENCY.ANNUAL_TRAILING,
+        TransactionCategory.TaxPayment
       );
     }
     if (taxesDue < 0) {
-      this.#accountYear.deposit(
+      const refundAmount = -taxesDue;
+      this.#accountYear.processAsPeriodicTransfers(
+        ACCOUNT_TYPES.TAXES,
         ACCOUNT_TYPES.SAVINGS,
-        TransactionCategory.TaxRefund,
-        -taxesDue,
-        12,
-        31
+        refundAmount,
+        PERIODIC_FREQUENCY.ANNUAL_TRAILING,
+        TransactionCategory.TaxRefund
       );
     }
   }
@@ -416,26 +420,28 @@ class RetirementYearCalculator {
   #processSubjectWagesIncome() {
     if (this.#fixedIncomeStreams?.subjectWagesAndCompensationGross ?? 0 > 0) {
       this.#accountYear.processAsPeriodicDeposits(
-        ACCOUNT_TYPES.CASH,
-        TransactionCategory.IncomeNet,
-        this.#fixedIncomeStreams?.subjectWagesAndCompensationActualIncome ?? 0,
-        PERIODIC_FREQUENCY.MONTHLY,
-        "Subject Wages"
+        ACCOUNT_TYPES.SUBJECT_WAGES,
+        TransactionCategory.IncomeGross,
+        TransactionRoutes.External,
+        this.#fixedIncomeStreams?.subjectWagesAndCompensationGross ?? 0,
+        PERIODIC_FREQUENCY.MONTHLY
       );
 
-      this.#accountYear.processAsPeriodicDeposits(
-        ACCOUNT_TYPES.WITHHOLDINGS,
-        TransactionCategory.Wages,
+      this.#accountYear.processAsPeriodicTransfers(
+        ACCOUNT_TYPES.SUBJECT_WAGES,
+        ACCOUNT_TYPES.TAXES,
         this.#fixedIncomeStreams
           ?.subjectWagesAndCompensationEstimatedWithholdings ?? 0,
         PERIODIC_FREQUENCY.MONTHLY,
+        TransactionCategory.Withholdings
       );
 
       this.#accountYear.processAsPeriodicTransfers(
         ACCOUNT_TYPES.SUBJECT_WAGES,
         ACCOUNT_TYPES.CASH,
         this.#fixedIncomeStreams?.subjectWagesAndCompensationActualIncome ?? 0,
-        PERIODIC_FREQUENCY.MONTHLY
+        PERIODIC_FREQUENCY.MONTHLY,
+        TransactionCategory.IncomeNet
       );
     }
   }
@@ -445,22 +451,26 @@ class RetirementYearCalculator {
       this.#accountYear.processAsPeriodicDeposits(
         ACCOUNT_TYPES.PARTNER_WAGES,
         TransactionCategory.IncomeGross,
+        TransactionRoutes.External,
         this.#fixedIncomeStreams?.partnerWagesAndCompensationGross ?? 0,
         PERIODIC_FREQUENCY.MONTHLY
       );
+
       this.#accountYear.processAsPeriodicTransfers(
         ACCOUNT_TYPES.PARTNER_WAGES,
-        ACCOUNT_TYPES.WITHHOLDINGS,
+        ACCOUNT_TYPES.TAXES,
         this.#fixedIncomeStreams
           ?.partnerWagesAndCompensationEstimatedWithholdings ?? 0,
-        PERIODIC_FREQUENCY.MONTHLY
+        PERIODIC_FREQUENCY.MONTHLY,
+        TransactionCategory.Withholdings
       );
 
       this.#accountYear.processAsPeriodicTransfers(
         ACCOUNT_TYPES.PARTNER_WAGES,
         ACCOUNT_TYPES.CASH,
         this.#fixedIncomeStreams?.partnerWagesAndCompensationActualIncome ?? 0,
-        PERIODIC_FREQUENCY.MONTHLY
+        PERIODIC_FREQUENCY.MONTHLY,
+        TransactionCategory.IncomeNet
       );
     }
   }
@@ -471,6 +481,7 @@ class RetirementYearCalculator {
       this.#accountYear.processAsPeriodicDeposits(
         ACCOUNT_TYPES.SUBJECT_SOCIAL_SECURITY,
         TransactionCategory.IncomeGross,
+        TransactionRoutes.External,
         this.#fixedIncomeStreams.subjectSsGross ?? 0,
         PERIODIC_FREQUENCY.MONTHLY
       );
@@ -484,9 +495,10 @@ class RetirementYearCalculator {
 
       this.#accountYear.processAsPeriodicTransfers(
         ACCOUNT_TYPES.SUBJECT_SOCIAL_SECURITY,
-        ACCOUNT_TYPES.WITHHOLDINGS,
+        ACCOUNT_TYPES.TAXES,
         this.#fixedIncomeStreams.subjectSsWithholdings ?? 0,
-        PERIODIC_FREQUENCY.MONTHLY
+        PERIODIC_FREQUENCY.MONTHLY,
+        TransactionCategory.Withholdings
       );
     }
 
@@ -495,6 +507,7 @@ class RetirementYearCalculator {
       this.#accountYear.processAsPeriodicDeposits(
         ACCOUNT_TYPES.PARTNER_SOCIAL_SECURITY,
         TransactionCategory.IncomeGross,
+        TransactionRoutes.External,
         this.#fixedIncomeStreams.partnerSsGross,
         PERIODIC_FREQUENCY.MONTHLY
       );
@@ -507,9 +520,10 @@ class RetirementYearCalculator {
 
       this.#accountYear.processAsPeriodicTransfers(
         ACCOUNT_TYPES.PARTNER_SOCIAL_SECURITY,
-        ACCOUNT_TYPES.WITHHOLDINGS,
+        ACCOUNT_TYPES.TAXES,
         this.#fixedIncomeStreams.partnerSsWithholdings ?? 0,
-        PERIODIC_FREQUENCY.MONTHLY
+        PERIODIC_FREQUENCY.MONTHLY,
+        TransactionCategory.Withholdings
       );
     }
   }
@@ -522,6 +536,7 @@ class RetirementYearCalculator {
     this.#accountYear.processAsPeriodicDeposits(
       ACCOUNT_TYPES.SUBJECT_PENSION,
       TransactionCategory.IncomeGross,
+      TransactionRoutes.External,
       this.#fixedIncomeStreams?.subjectPensionGross ?? 0,
       PERIODIC_FREQUENCY.MONTHLY
     );
@@ -530,19 +545,22 @@ class RetirementYearCalculator {
       ACCOUNT_TYPES.SUBJECT_PENSION,
       ACCOUNT_TYPES.CASH,
       this.#fixedIncomeStreams?.subjectPensionActualIncome ?? 0,
-      PERIODIC_FREQUENCY.MONTHLY
+      PERIODIC_FREQUENCY.MONTHLY,
+      TransactionCategory.IncomeNet
     );
 
     this.#accountYear.processAsPeriodicTransfers(
       ACCOUNT_TYPES.SUBJECT_PENSION,
-      ACCOUNT_TYPES.WITHHOLDINGS,
+      ACCOUNT_TYPES.TAXES,
       this.#fixedIncomeStreams?.subjectPensionWithholdings ?? 0,
-      PERIODIC_FREQUENCY.MONTHLY
+      PERIODIC_FREQUENCY.MONTHLY,
+      TransactionCategory.Withholdings
     );
 
     this.#accountYear.processAsPeriodicDeposits(
       ACCOUNT_TYPES.PARTNER_PENSION,
       TransactionCategory.IncomeGross,
+      TransactionRoutes.External,
       this.#fixedIncomeStreams?.partnerPensionGross ?? 0,
       PERIODIC_FREQUENCY.MONTHLY
     );
@@ -551,14 +569,16 @@ class RetirementYearCalculator {
       ACCOUNT_TYPES.PARTNER_PENSION,
       ACCOUNT_TYPES.CASH,
       this.#fixedIncomeStreams?.partnerPensionActualIncome ?? 0,
-      PERIODIC_FREQUENCY.MONTHLY
+      PERIODIC_FREQUENCY.MONTHLY,
+      TransactionCategory.IncomeNet
     );
 
     this.#accountYear.processAsPeriodicTransfers(
       ACCOUNT_TYPES.PARTNER_PENSION,
-      ACCOUNT_TYPES.WITHHOLDINGS,
+      ACCOUNT_TYPES.TAXES,
       this.#fixedIncomeStreams?.partnerPensionWithholdings ?? 0,
-      PERIODIC_FREQUENCY.MONTHLY
+      PERIODIC_FREQUENCY.MONTHLY,
+      TransactionCategory.Withholdings
     );
   }
 
@@ -571,6 +591,7 @@ class RetirementYearCalculator {
     this.#accountYear.processAsPeriodicDeposits(
       ACCOUNT_TYPES.CASH,
       TransactionCategory.OtherNonTaxable,
+      TransactionRoutes.External,
       this.#nonTaxableActualIncome,
       PERIODIC_FREQUENCY.MONTHLY,
       "Tax-free income"
@@ -651,45 +672,16 @@ class RetirementYearCalculator {
       ACCOUNT_TYPES.CASH,
       actualAmount,
       PERIODIC_FREQUENCY.MONTHLY,
-      TransactionCategory.Transfer, 
+      TransactionCategory.Transfer,
       memo
     );
 
     this.#accountYear.processAsPeriodicTransfers(
       sourceAccountType,
-      ACCOUNT_TYPES.WITHHOLDINGS,
+      ACCOUNT_TYPES.TAXES,
       withholdingAmount,
       PERIODIC_FREQUENCY.MONTHLY,
-      TransactionCategory.Transfer,
-      memo
-    );
-  }
-
-  /**
-   * @param {TransactionCategorySymbol} transactionCategory
-   * @param {number} amount
-   * @param {string} memo
-   */
-  #trackAsPeriodicDisbursements(transactionCategory, amount, memo) {
-    this.#accountYear.processAsPeriodicDeposits(
-      ACCOUNT_TYPES.DISBURSEMENT,
-      transactionCategory,
-      amount,
-      PERIODIC_FREQUENCY.MONTHLY,
-      memo
-    );
-  }
-  /**
-   * @param {TransactionCategorySymbol} transactionCategory
-   * @param {number} withholdingAmount
-   * @param {string} memo
-   */
-  #trackAsMonthlyWithholdings(transactionCategory, withholdingAmount, memo) {
-    this.#accountYear.processAsPeriodicDeposits(
-      ACCOUNT_TYPES.WITHHOLDINGS,
-      transactionCategory,
-      withholdingAmount,
-      PERIODIC_FREQUENCY.MONTHLY,
+      TransactionCategory.Withholdings,
       memo
     );
   }

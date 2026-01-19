@@ -71,7 +71,7 @@ class WorkingYearIncome {
 
     this._description = description;
   }
-  
+
   /* ********* DI'd properties end ********* */
 
   /**
@@ -214,20 +214,6 @@ class WorkingYearIncome {
   set description(newDescription) {
     this._description = newDescription;
   }
-
-  #processTakeHomeIncome() {
-    // Deposit take-home pay into the savings account
-    this.#accountYear.processAsPeriodicDeposits(
-      ACCOUNT_TYPES.CASH,
-      TransactionCategory.Wages,
-      this.netIncome,
-      PERIODIC_FREQUENCY.MONTHLY,
-      "take-home pay"
-    );
-  }
-  // processRothIraContributions() {
-
-  // }
 
   get annualRothContributions() {
     return Math.min(

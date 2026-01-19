@@ -1,6 +1,8 @@
 /**
  * @typedef {import("./cTransaction.js").TransactionCategorySymbol} TransactionCategorySymbol
  * @typedef {import("./cTransaction.js").TransactionTypeSymbol} TransactionTypeSymbol
+ * @typedef {import("./types.js").TransactionRoute} TransactionRoute
+ * @typedef {import("./types.js").TransferId} TransferId
  */
 
 import { INTEREST_CALCULATION_EPOCH, PERIODIC_FREQUENCY } from "./consts.js";
@@ -19,7 +21,6 @@ ACCOUNT_TYPES.CASH = "Cash";
 ACCOUNT_TYPES.SAVINGS = "Savings";
 
 ACCOUNT_TYPES.INCOME = "Income";
-ACCOUNT_TYPES.WITHHOLDINGS = "Withholdings";
 
 ACCOUNT_TYPES.SUBJECT_401K = "SubjectTrad401k";
 ACCOUNT_TYPES.PARTNER_401K = "SubjectTrad401k";
@@ -58,7 +59,9 @@ class Account {
    */
   #startingBalanceForYear(yyyy, category) {
     let startingBalance = 0;
-    const transactions = this.#transactions.filter(tx => !category || tx.category === category);
+    const transactions = this.#transactions.filter(
+      (tx) => !category || tx.category === category
+    );
     for (const tx of transactions.sort(
       (a, b) => a.date.getTime() - b.date.getTime()
     )) {
@@ -79,7 +82,9 @@ class Account {
    */
   #endingBalanceForYear(yyyy, category) {
     let endingBalance = this.#startingBalanceForYear(yyyy, category);
-    const transactions = this.#transactions.filter(tx => !category || tx.category === category);
+    const transactions = this.#transactions.filter(
+      (tx) => !category || tx.category === category
+    );
     for (const tx of transactions.sort(
       (a, b) => a.date.getTime() - b.date.getTime()
     )) {
@@ -99,11 +104,13 @@ class Account {
   /**
    * Calculate the annual revenue for a given year
    * @param {number} yyyy - The year for which to calculate the revenue
+   * @param {TransactionCategorySymbol | undefined} [category]
    * @returns {number} - The annual revenue
    */
-  #annualRevenues(yyyy) {
+  #annualRevenues(yyyy, category) {
     return (
-      this.#endingBalanceForYear(yyyy) - this.#startingBalanceForYear(yyyy)
+      this.#endingBalanceForYear(yyyy, category) -
+      this.#startingBalanceForYear(yyyy, category)
     );
   }
 
@@ -148,9 +155,15 @@ class Account {
    * This creates the first transaction that establishes when the account opened
    * @param {number} amount - Opening balance amount (must be positive)
    * @param {Date} openingDate - Date when account was opened
+   * @param {TransactionRoute} [route] - Optional transaction route
    * @param {string} [memo] - Optional memo for the opening transaction
    */
-  setOpeningBalance(amount, openingDate, memo = "Account opening balance") {
+  setOpeningBalance(
+    amount,
+    openingDate,
+    route = TransactionRoutes.External,
+    memo = "Account opening balance"
+  ) {
     if (amount < 0) {
       throw new Error("Opening balance must be positive");
     }
@@ -167,6 +180,7 @@ class Account {
         amount,
         TransactionType.Deposit,
         TransactionCategory.OpeningBalance,
+        route,
         new Date(openingDate),
         memo
       )
@@ -314,10 +328,12 @@ class Account {
   /**
    * @param {number} amount
    * @param {TransactionCategorySymbol} category
+   * @param {TransactionRoute} route
    * @param {Date} date
    * @param {string | null} memo
+   * @param {TransferId | null} [transferId]
    */
-  #deposit(amount, category, date, memo) {
+  #deposit(amount, category, route, date, memo, transferId) {
     if (amount < 0) {
       const catName = TransactionCategory.toName(category);
       throw new Error(
@@ -328,7 +344,15 @@ class Account {
     if (amount === 0) return amount.asCurrency();
 
     this.#transactions.push(
-      new Transaction(amount, TransactionType.Deposit, category, date, memo)
+      new Transaction(
+        amount,
+        TransactionType.Deposit,
+        category,
+        route,
+        date,
+        memo,
+        transferId
+      )
     );
 
     return amount.asCurrency();
@@ -337,12 +361,23 @@ class Account {
   /**
    * @param {number} amount
    * @param {TransactionCategorySymbol} category
+   * @param {TransactionRoute} route
    * @param {number} yyyy
    * @param {number} [month]
    * @param {number} [day]
    * @param {string | null} [memo]
+   * @param {TransferId | null} [transferId]
    */
-  deposit(amount, category, yyyy, month = 1, day = 1, memo = "") {
+  deposit(
+    amount,
+    category,
+    route,
+    yyyy,
+    month = 1,
+    day = 1,
+    memo = "",
+    transferId = null
+  ) {
     if (amount < 0) {
       throw new Error("Deposit amount must be positive.");
     }
@@ -354,8 +389,10 @@ class Account {
     this.#deposit(
       amount,
       category,
+      route,
       new Date(yyyy, month - 1, day), // Set to January 1st of the given year
-      memo
+      memo,
+      transferId
     );
 
     return amount.asCurrency();
@@ -364,10 +401,12 @@ class Account {
   /**
    * @param {number} amount
    * @param {TransactionCategorySymbol} category
+   * @param {TransactionRoute} route
    * @param {Date} date
    * @param {string | null} [memo]
+   * @param {TransferId | null} [transferId]
    */
-  #withdrawal(amount, category, date, memo) {
+  #withdrawal(amount, category, route, date, memo, transferId) {
     if (amount < 0) {
       throw new Error("Withdrawal amount must be positive.");
     }
@@ -388,8 +427,10 @@ class Account {
         withdrawalAmount,
         TransactionType.Withdrawal,
         category,
+        route,
         date,
-        memo
+        memo,
+        transferId
       )
     );
 
@@ -399,17 +440,30 @@ class Account {
   /**
    * @param {number} amount - Amount to withdraw
    * @param {TransactionCategorySymbol} category - Category of the withdrawal
+   * @param {TransactionRoute} route - Route of the withdrawal
    * @param {number} yyyy - Year of the withdrawal
    * @param {number} [month]
    * @param {number} [day]
    * @param {string} [memo] - Optional memo associated with the withdrawal
+   * @param {TransferId | null} [transferId] - Optional transfer ID for linked transactions
    */
-  withdrawal(amount, category, yyyy, month = 1, day = 1, memo = "") {
+  withdrawal(
+    amount,
+    category,
+    route,
+    yyyy,
+    month = 1,
+    day = 1,
+    memo = "",
+    transferId = null
+  ) {
     this.#withdrawal(
       amount,
       category,
+      route,
       new Date(yyyy, month - 1, day), // Set to January 1st of the given year
-      memo
+      memo,
+      transferId
     );
 
     return amount.asCurrency();
@@ -531,6 +585,7 @@ class Account {
         this.#deposit(
           monthlyInterest,
           TransactionCategory.Interest,
+          TransactionRoutes.External,
           new Date(yyyy, month, 1),
           "Interest dividend"
         );
@@ -590,9 +645,10 @@ class Account {
 
   /**
    * @param {number} yyyy
+   * @param {TransactionCategorySymbol | undefined} [category]
    */
-  startingBalanceForYear(yyyy) {
-    return this.#startingBalanceForYear(yyyy).asCurrency();
+  startingBalanceForYear(yyyy, category) {
+    return this.#startingBalanceForYear(yyyy, category).asCurrency();
   }
 
   /**
@@ -605,9 +661,10 @@ class Account {
 
   /**
    * @param {number} yyyy
+   * @param {TransactionCategorySymbol | undefined} [category]
    */
-  annualRevenuesForYear(yyyy) {
-    return this.#annualRevenues(yyyy).asCurrency();
+  annualRevenuesForYear(yyyy, category) {
+    return this.#annualRevenues(yyyy, category).asCurrency();
   }
 
   /**
@@ -624,44 +681,76 @@ class Account {
    * @param {number} yyyy
    * @param {number} amount
    * @param {TransactionCategorySymbol} category
+   * @param {TransactionRoute} targetRoute
    * @param {string} frequency
    * @param {string | null} memo
+   * @param {TransferId | null} [transferId]
    */
-  processAsPeriodicWithdrawals(yyyy, amount, category, frequency, memo) {
+  processAsPeriodicWithdrawals(
+    yyyy,
+    amount,
+    category,
+    targetRoute,
+    frequency,
+    memo,
+    transferId = null
+  ) {
     switch (frequency) {
-      case PERIODIC_FREQUENCY.ANNUAL:
-        return this.#withdrawal(amount, category, new Date(yyyy, 0, 1), memo);
-      case PERIODIC_FREQUENCY.SEMI_ANNUAL:
-        return this.#processAsSemiAnnualTransactions(
+      case PERIODIC_FREQUENCY.ANNUAL_LEADING:
+      case PERIODIC_FREQUENCY.ANNUAL_TRAILING:
+        return this.#processAsAnnualTransactions(
+          frequency,
           yyyy,
           amount,
           category,
+          targetRoute,
           TransactionType.Withdrawal,
-          memo
+          memo,
+          transferId
         );
-      case PERIODIC_FREQUENCY.QUARTERLY:
-        return this.#processAsQuarterlyTransactions(
+      case PERIODIC_FREQUENCY.SEMI_ANNUAL_LEADING:
+      case PERIODIC_FREQUENCY.SEMI_ANNUAL_TRAILING:
+        return this.#processAsSemiAnnualTransactions(
+          frequency,
           yyyy,
           amount,
           category,
+          targetRoute,
           TransactionType.Withdrawal,
-          memo
+          memo,
+          transferId
+        );
+      case PERIODIC_FREQUENCY.QUARTERLY_TRAILING:
+      case PERIODIC_FREQUENCY.QUARTERLY_TRAILING:
+        return this.#processAsQuarterlyTransactions(
+          frequency,
+          yyyy,
+          amount,
+          category,
+          targetRoute,
+          TransactionType.Withdrawal,
+          memo,
+          transferId
         );
       case PERIODIC_FREQUENCY.MONTHLY:
         return this.#processAsMonthlyTransactions(
           yyyy,
           amount,
           category,
+          targetRoute,
           TransactionType.Withdrawal,
-          memo
+          memo,
+          transferId
         );
       case PERIODIC_FREQUENCY.DAILY:
         return this.#processAsDailyTransactions(
           yyyy,
           amount,
           category,
+          targetRoute,
           TransactionType.Withdrawal,
-          memo
+          memo,
+          transferId
         );
       // Add more frequencies as needed
       default:
@@ -673,44 +762,76 @@ class Account {
    * @param {number} yyyy
    * @param {number} amount
    * @param {TransactionCategorySymbol} category
+   * @param {TransactionRoute} route
    * @param {string} frequency
    * @param {string | null} memo
+   * @param {TransferId | null} [transferId]
    */
-  processAsPeriodicDeposits(yyyy, amount, category, frequency, memo) {
+  processAsPeriodicDeposits(
+    yyyy,
+    amount,
+    category,
+    route,
+    frequency,
+    memo,
+    transferId = null
+  ) {
     switch (frequency) {
-      case PERIODIC_FREQUENCY.ANNUAL:
-        return this.#deposit(amount, category, new Date(yyyy, 0, 1), memo);
-      case PERIODIC_FREQUENCY.SEMI_ANNUAL:
-        return this.#processAsSemiAnnualTransactions(
+      case PERIODIC_FREQUENCY.ANNUAL_LEADING:
+      case PERIODIC_FREQUENCY.ANNUAL_TRAILING:
+        return this.#processAsAnnualTransactions(
+          frequency,
           yyyy,
           amount,
           category,
-          TransactionType.Withdrawal,
-          memo
-        );
-      case PERIODIC_FREQUENCY.QUARTERLY:
-        return this.#processAsQuarterlyTransactions(
-          yyyy,
-          amount,
-          category,
+          route,
           TransactionType.Deposit,
-          memo
+          memo,
+          transferId
+        );
+      case PERIODIC_FREQUENCY.SEMI_ANNUAL_LEADING:
+      case PERIODIC_FREQUENCY.SEMI_ANNUAL_TRAILING:
+        return this.#processAsSemiAnnualTransactions(
+          frequency,
+          yyyy,
+          amount,
+          category,
+          route,
+          TransactionType.Deposit,
+          memo,
+          transferId
+        );
+      case PERIODIC_FREQUENCY.QUARTERLY_LEADING:
+      case PERIODIC_FREQUENCY.QUARTERLY_TRAILING:
+        return this.#processAsQuarterlyTransactions(
+          frequency,
+          yyyy,
+          amount,
+          category,
+          route,
+          TransactionType.Deposit,
+          memo,
+          transferId
         );
       case PERIODIC_FREQUENCY.MONTHLY:
         return this.#processAsMonthlyTransactions(
           yyyy,
           amount,
           category,
+          route,
           TransactionType.Deposit,
-          memo
+          memo,
+          transferId
         );
       case PERIODIC_FREQUENCY.DAILY:
         return this.#processAsDailyTransactions(
           yyyy,
           amount,
           category,
+          route,
           TransactionType.Deposit,
-          memo
+          memo,
+          transferId
         );
       // Add more frequencies as needed
       default:
@@ -722,17 +843,34 @@ class Account {
    * @param {number} yyyy
    * @param {number} amount
    * @param {TransactionCategorySymbol} category
+   * @param {TransactionRoute} route
    * @param {TransactionTypeSymbol} transactionType
    * @param {string | null} memo
+   * @param {TransferId | null} [transferId]
    */
-  #processAsDailyTransactions(yyyy, amount, category, transactionType, memo) {
+  #processAsDailyTransactions(
+    yyyy,
+    amount,
+    category,
+    route,
+    transactionType,
+    memo,
+    transferId = null
+  ) {
     const daysInYear = new Date(yyyy, 1, 29).getMonth() === 1 ? 366 : 365;
     const dailyAmount = Math.trunc(amount / daysInYear);
 
     switch (transactionType) {
       case TransactionType.Withdrawal:
         for (let day = 0; day < daysInYear - 1; day++) {
-          this.#withdrawal(dailyAmount, category, new Date(yyyy, 0, day + 1));
+          this.#withdrawal(
+            dailyAmount,
+            category,
+            route,
+            new Date(yyyy, 0, day + 1),
+            memo,
+            transferId
+          );
         }
 
         // Adjust final day to account for rounding
@@ -741,8 +879,10 @@ class Account {
         this.#withdrawal(
           finalDayAmount,
           category,
+          route,
           new Date(yyyy, 11, 31),
-          memo
+          memo,
+          transferId
         );
         break;
       case TransactionType.Deposit:
@@ -750,8 +890,10 @@ class Account {
           this.#deposit(
             dailyAmount,
             category,
+            route,
             new Date(yyyy, 0, day + 1),
-            memo
+            memo,
+            transferId
           );
         }
 
@@ -761,8 +903,10 @@ class Account {
         this.#deposit(
           finalDepositAmount,
           category,
+          route,
           new Date(yyyy, 11, 31),
-          memo
+          memo,
+          transferId
         );
         break;
       default:
@@ -787,18 +931,42 @@ class Account {
    * @param {number} yyyy
    * @param {number} amount
    * @param {TransactionCategorySymbol} category
+   * @param {TransactionRoute} route
    * @param {TransactionTypeSymbol} transactionType
    * @param {string | null} memo
+   * @param {TransferId | null} [transferId]
    */
-  #processAsMonthlyTransactions(yyyy, amount, category, transactionType, memo) {
+  #processAsMonthlyTransactions(
+    yyyy,
+    amount,
+    category,
+    route,
+    transactionType,
+    memo,
+    transferId = null
+  ) {
     if (amount < 0) return;
     if (amount <= 12) {
       let month = 0;
       while (amount > 0) {
         if (transactionType === TransactionType.Withdrawal) {
-          this.#withdrawal(1, category, new Date(yyyy, month, 1), memo);
+          this.#withdrawal(
+            1,
+            category,
+            route,
+            new Date(yyyy, month, 1),
+            memo,
+            transferId
+          );
         } else if (transactionType === TransactionType.Deposit) {
-          this.#deposit(1, category, new Date(yyyy, month, 1), memo);
+          this.#deposit(
+            1,
+            category,
+            route,
+            new Date(yyyy, month, 1),
+            memo,
+            transferId
+          );
         }
         amount--;
       }
@@ -813,8 +981,10 @@ class Account {
           this.#withdrawal(
             monthlyAmount,
             category,
+            route,
             new Date(yyyy, month, 1),
-            memo
+            memo,
+            transferId
           );
         }
 
@@ -824,8 +994,10 @@ class Account {
         this.#withdrawal(
           finalMonthAmount,
           category,
+          route,
           new Date(yyyy, 11, 1),
-          memo
+          memo,
+          transferId
         );
         break;
       case TransactionType.Deposit:
@@ -833,8 +1005,10 @@ class Account {
           this.#deposit(
             monthlyAmount,
             category,
+            route,
             new Date(yyyy, month, 1),
-            memo
+            memo,
+            transferId
           );
         }
 
@@ -844,8 +1018,10 @@ class Account {
         this.#deposit(
           finalDepositAmount,
           category,
+          route,
           new Date(yyyy, 11, 1),
-          memo
+          memo,
+          transferId
         );
         break;
       default:
@@ -867,20 +1043,41 @@ class Account {
   }
 
   /**
+   * @param {PERIODIC_FREQUENCY} frequency
    * @param {number} yyyy
    * @param {number} amount
    * @param {TransactionCategorySymbol} category
+   * @param {TransactionRoute} route
    * @param {TransactionTypeSymbol} transactionType
    * @param {string | null} memo
+   * @param {TransferId | null} [transferId]
    */
   #processAsQuarterlyTransactions(
+    frequency,
     yyyy,
     amount,
     category,
+    route,
     transactionType,
-    memo
+    memo,
+    transferId = null
   ) {
     const quarterlyAmount = Math.trunc(amount / 4);
+
+    const dates =
+      frequency === PERIODIC_FREQUENCY.QUARTERLY_LEADING
+        ? [
+            new Date(yyyy, 0, 1),
+            new Date(yyyy, 3, 1),
+            new Date(yyyy, 6, 1),
+            new Date(yyyy, 9, 1),
+          ]
+        : [
+            new Date(yyyy, 2, 31),
+            new Date(yyyy, 5, 30),
+            new Date(yyyy, 8, 30),
+            new Date(yyyy, 11, 31),
+          ];
 
     switch (transactionType) {
       case TransactionType.Withdrawal:
@@ -889,15 +1086,24 @@ class Account {
           this.#withdrawal(
             quarterlyAmount,
             category,
-            new Date(yyyy, month, 1),
-            memo
+            route,
+            dates[quarter],
+            memo,
+            transferId
           );
         }
 
         // Adjust final quarter to account for rounding
         const totalWithdrawn = quarterlyAmount * 3;
         const finalQuarterAmount = (amount - totalWithdrawn).asCurrency();
-        this.#withdrawal(finalQuarterAmount, category, new Date(yyyy, 9, 1));
+        this.#withdrawal(
+          finalQuarterAmount,
+          category,
+          route,
+          dates[3],
+          memo,
+          transferId
+        );
         break;
       case TransactionType.Deposit:
         for (let quarter = 0; quarter < 3; quarter++) {
@@ -905,15 +1111,24 @@ class Account {
           this.#deposit(
             quarterlyAmount,
             category,
-            new Date(yyyy, month, 1),
-            memo
+            route,
+            dates[quarter],
+            memo,
+            transferId
           );
         }
 
         // Adjust final quarter to account for rounding
         const totalDeposited = quarterlyAmount * 3;
         const finalDepositAmount = (amount - totalDeposited).asCurrency();
-        this.#deposit(finalDepositAmount, category, new Date(yyyy, 9, 1), memo);
+        this.#deposit(
+          finalDepositAmount,
+          category,
+          route,
+          dates[3],
+          memo,
+          transferId
+        );
         break;
       default:
         throw new Error(
@@ -939,39 +1154,109 @@ class Account {
   }
 
   /**
+   * @param {PERIODIC_FREQUENCY} frequency
    * @param {number} yyyy
    * @param {number} amount
    * @param {TransactionCategorySymbol} category
+   * @param {TransactionRoute} route
    * @param {TransactionTypeSymbol} transactionType
    * @param {string | null} memo
+   * @param {TransferId | null} [transferId]
    */
   #processAsSemiAnnualTransactions(
+    frequency,
     yyyy,
     amount,
     category,
+    route,
     transactionType,
-    memo = ""
+    memo = "",
+    transferId = null
   ) {
     const semiAnnualAmount = Math.trunc(amount / 2);
 
+    const dates =
+      frequency === PERIODIC_FREQUENCY.SEMI_ANNUAL_LEADING
+        ? [new Date(yyyy, 0, 1), new Date(yyyy, 6, 1)]
+        : [new Date(yyyy, 5, 30), new Date(yyyy, 11, 31)];
+
     switch (transactionType) {
       case TransactionType.Withdrawal:
-        this.#withdrawal(semiAnnualAmount, category, new Date(yyyy, 5, 1));
+        this.#withdrawal(
+          semiAnnualAmount,
+          category,
+          route,
+          dates[0],
+          memo,
+          transferId
+        );
         this.#withdrawal(
           amount - semiAnnualAmount,
           category,
-          new Date(yyyy, 11, 1),
-          memo
+          route,
+          dates[1],
+          memo,
+          transferId
         );
         break;
       case TransactionType.Deposit:
-        this.#deposit(semiAnnualAmount, category, new Date(yyyy, 5, 1), memo);
+        this.#deposit(
+          semiAnnualAmount,
+          category,
+          route,
+          new Date(yyyy, 5, 1),
+          memo,
+          transferId
+        );
         this.#deposit(
           amount - semiAnnualAmount,
           category,
+          route,
           new Date(yyyy, 11, 1),
-          memo
+          memo,
+          transferId
         );
+        break;
+      default:
+        throw new Error(
+          `Unknown transaction type: ${transactionType.toString}`
+        );
+    }
+
+    return amount.asCurrency();
+  }
+
+  /**
+   * @param {PERIODIC_FREQUENCY} frequency
+   * @param {number} yyyy
+   * @param {number} amount
+   * @param {TransactionCategorySymbol} category
+   * @param {TransactionRoute} route
+   * @param {TransactionTypeSymbol} transactionType
+   * @param {string | null} memo
+   * @param {TransferId | null} [transferId]
+   */
+  #processAsAnnualTransactions(
+    frequency,
+    yyyy,
+    amount,
+    category,
+    route,
+    transactionType,
+    memo = "",
+    transferId = null
+  ) {
+    const date =
+      frequency === PERIODIC_FREQUENCY.ANNUAL_LEADING
+        ? new Date(yyyy, 0, 1)
+        : new Date(yyyy, 11, 31);
+
+    switch (transactionType) {
+      case TransactionType.Withdrawal:
+        this.#withdrawal(amount, category, route, date, memo, transferId);
+        break;
+      case TransactionType.Deposit:
+        this.#deposit(amount, category, route, date, memo, transferId);
         break;
       default:
         throw new Error(
