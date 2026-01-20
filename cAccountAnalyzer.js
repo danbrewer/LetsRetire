@@ -434,6 +434,9 @@ class AccountAnalyzer {
     if (!reportTitle) {
       reportTitle = `${this.#accountType} Account Activity (${this.#accountYear.taxYear})`;
     }
+    else{
+      reportTitle = `${reportTitle} (${this.#accountYear.taxYear})`;
+    }
 
     const startingBalance = this.#accountYear
       .getStartingBalance(this.#accountType)
@@ -444,7 +447,7 @@ class AccountAnalyzer {
       headerTitle = `Category: ${TransactionCategory.toName(category)}`;
     }
     const endingBalance = this.#accountYear
-      .getEndingBalance(this.#accountType, category) // getAnnualRevenues(this.#accountType, category)
+      .getEndingBalance(this.#accountType, category)
       .asCurrency();
 
     const dateHeader = StringFunctions.padAndAlign("Date", fieldLayout.date);
