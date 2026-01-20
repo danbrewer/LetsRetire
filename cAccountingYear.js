@@ -18,8 +18,7 @@ class AccountingYear {
    * @param {number} amountToTransfer
    * @param {string} frequency
    * @param {TransactionCategorySymbol} [category]
-   * @param {string} [sourceMemo]
-   * @param {string} [targetMemo]
+   * @param {string} [notes]
    */
   processAsPeriodicTransfers(
     sourceAccount,
@@ -27,8 +26,7 @@ class AccountingYear {
     amountToTransfer,
     frequency,
     category,
-    sourceMemo = "",
-    targetMemo = ""
+    notes = ""
   ) {
     const transferId = IdentifierGenerator.generateSixCharAlphaId();
     category = category || TransactionCategory.Transfer;
@@ -38,7 +36,7 @@ class AccountingYear {
       targetAccount,
       amountToTransfer,
       frequency,
-      sourceMemo,
+      notes,
       transferId
     );
     this.processAsPeriodicDeposits(
@@ -47,7 +45,7 @@ class AccountingYear {
       sourceAccount,
       amountToTransfer,
       frequency,
-      targetMemo,
+      notes,
       transferId
     );
   }
@@ -348,12 +346,11 @@ class AccountingYear {
 
   /**
    * @param {string} accountName
-   * @returns {number}
    */
   recordInterestEarnedForYear(accountName) {
-    return this.#getAccountByName(accountName)
-      .recordInterestEarnedForYear(this.taxYear)
-      .asCurrency();
+    this.#getAccountByName(accountName)
+      .recordInterestEarnedForYear(this.taxYear);
+      
   }
 
   /** @param {string} accountName */
@@ -379,7 +376,7 @@ class AccountingYear {
     route,
     amount,
     frequency,
-    memo,
+    memo = null,
     transferId = null
   ) {
     const account = this.#getAccountByName(accountName);

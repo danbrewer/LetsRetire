@@ -36,7 +36,7 @@ class AccountRegister {
   /**
    * @param {Date} startDate
    * @param {Date} endDate
-   * @param {TransactionCategorySymbol | null  } category
+   * @param {TransactionCategorySymbol} category
    */
   constructor(startDate, endDate, category) {
     this.startDate = startDate;

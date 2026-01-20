@@ -73,8 +73,8 @@ class AccountAnalyzer {
 
     const dateHdr = StringFunctions.padAndAlign("Date", 12);
     const memoHdr = StringFunctions.padAndAlign("Memo", 20);
-    const depositHdr = StringFunctions.padAndAlign("Deposit", 15, "center");
-    const withdrawHdr = StringFunctions.padAndAlign("Withdrawal", 15, "center");
+    const depositHdr = StringFunctions.padAndAlign("Inflows", 15, "center");
+    const withdrawHdr = StringFunctions.padAndAlign("Outflows", 15, "center");
     const headers = `${dateHdr}    ${memoHdr}    ${depositHdr}    ${withdrawHdr}`;
     Boxes.addDetailData(headers, "left");
     Boxes.singleDivider();
@@ -147,50 +147,196 @@ class AccountAnalyzer {
     }
   }
 
-  dumpCategorySummaries(accountName = "") {
-    console.log();
-    if (!accountName) {
-      accountName = `Transaction Summary for Account: ${this.#accountType} (${this.#accountYear.taxYear})`;
-    }
-    if (accountName) {
-      console.log("");
-      Boxes.doubleBox(accountName);
-    }
-
+  dumpCategorySummaries(reportTitle = "") {
     const transactions = this.getTransactionsGroupedByCategory();
 
-    const headers = `${StringFunctions.padAndAlign("Category", 30)}${StringFunctions.padAndAlign(
-      "Total Amount",
-      20,
-      "right"
-    )}${StringFunctions.padAndAlign("Transaction Count", 20, "right")}`;
-
-    Boxes.singleTopBorder();
-    Boxes.addDetailData(headers, "left");
-    Boxes.singleDivider();
-
-    let grandTotal = 0;
-    for (const [category, txns] of transactions) {
-      const total = txns.reduce((sum, tx) => sum + tx.amount, 0);
-      const count = txns.length;
-      grandTotal += total;
-
-      const data = `${StringFunctions.padAndAlign(category, 30)}${StringFunctions.padAndAlign(
-        total.asCurrency(),
-        20,
-        "right"
-      )}${StringFunctions.padAndAlign(count.toString(), 20, "right")}`;
-
-      Boxes.addDetailData(data, "left");
+    console.log();
+    if (!reportTitle) {
+      reportTitle = `Annual Transaction Summary for Account: ${this.#accountType} (${this.#accountYear.taxYear})`;
     }
-    const grandTotalField = StringFunctions.padAndAlign(
-      grandTotal.asCurrency(),
-      20,
+    if (reportTitle) {
+      console.log("");
+      Boxes.doubleBox(reportTitle);
+    }
+
+    const fieldLayout = {
+      category: 15,
+      inflows: 10,
+      outflows: 10,
+      balance: 10,
+      tranCount: 18,
+      grandTotalLabel: 15,
+      grandTotal: 10,
+      spacer: 3,
+    };
+
+    const spacer = " ".repeat(fieldLayout.spacer);
+
+    const categoryHeader = StringFunctions.padAndAlign(
+      "Category",
+      fieldLayout.category
+    );
+    const inflowsHeader = StringFunctions.padAndAlign(
+      "Inflows",
+      fieldLayout.inflows,
       "right"
     );
+    const outflowsHeader = StringFunctions.padAndAlign(
+      "Outflows",
+      fieldLayout.outflows,
+      "right"
+    );
+    const balanceHeader = StringFunctions.padAndAlign(
+      "Balance",
+      fieldLayout.balance,
+      "right"
+    );
+    const transactionCountHeader = StringFunctions.padAndAlign(
+      "Transaction Count",
+      fieldLayout.tranCount,
+      "right"
+    );
+
+    const headers = `${categoryHeader}${spacer}${inflowsHeader}${spacer}${outflowsHeader}${spacer}${balanceHeader}${spacer}${transactionCountHeader}`;
+
+    Boxes.singleTopBorder();
+    Boxes.addDetailData(headers);
+    Boxes.singleDivider();
+
+    const sortedTransactions = [...transactions].sort((a, b) => {
+      const [catA, txnsA] = a;
+      const [catB, txnsB] = b;
+
+      const inflowsA = txnsA
+        .filter(
+          (t) =>
+            t.transactionType === TransactionType.Deposit &&
+            t.date.getFullYear() === this.#accountYear.taxYear
+        )
+        .reduce((sum, t) => sum + t.amount, 0);
+
+      const outflowsA = txnsA
+        .filter(
+          (t) =>
+            t.transactionType === TransactionType.Withdrawal &&
+            t.date.getFullYear() === this.#accountYear.taxYear
+        )
+        .reduce((sum, t) => sum + t.amount, 0);
+
+      const inflowsB = txnsB
+        .filter(
+          (t) =>
+            t.transactionType === TransactionType.Deposit &&
+            t.date.getFullYear() === this.#accountYear.taxYear
+        )
+        .reduce((sum, t) => sum + t.amount, 0);
+
+      const outflowsB = txnsB
+        .filter(
+          (t) =>
+            t.transactionType === TransactionType.Withdrawal &&
+            t.date.getFullYear() === this.#accountYear.taxYear
+        )
+        .reduce((sum, t) => sum + t.amount, 0);
+
+      const aHasInflows = inflowsA > 0;
+      const bHasInflows = inflowsB > 0;
+
+      // inflow categories always come first
+      if (aHasInflows && !bHasInflows) return -1;
+      if (!aHasInflows && bHasInflows) return 1;
+
+      // both have inflows -> sort by inflows desc
+      if (aHasInflows && bHasInflows) return inflowsB - inflowsA;
+
+      // both have 0 inflows -> sort by outflows desc
+      return outflowsB - outflowsA;
+    });
+
+
+    let categoryBalance = 0;
+    let categoryInflows = 0;
+    let categoryOutflows = 0;
+    let transactionCountTotal = 0;
+    let grandTotal = 0;
+    for (const [category, txns] of sortedTransactions) {
+      const inflows = txns
+        .filter(
+          (t) =>
+            t.transactionType === TransactionType.Deposit &&
+            t.date.getFullYear() === this.#accountYear.taxYear
+        )
+        .reduce((sum, t) => sum + t.amount, 0);
+      categoryInflows += inflows.asCurrency();
+      const outflows = txns
+        .filter(
+          (t) =>
+            t.transactionType === TransactionType.Withdrawal &&
+            t.date.getFullYear() === this.#accountYear.taxYear
+        )
+        .reduce((sum, t) => sum + t.amount, 0);
+      categoryOutflows += outflows.asCurrency();
+      categoryBalance = inflows - outflows;
+      grandTotal += categoryBalance.asCurrency();
+      const count = txns.length;
+      transactionCountTotal += count;
+
+      const categoryField = StringFunctions.padAndAlign(
+        category,
+        fieldLayout.category
+      );
+      const inflowsField = StringFunctions.padAndAlign(
+        inflows.asCurrency(),
+        fieldLayout.inflows,
+        "right"
+      );
+      const outflowsField = StringFunctions.padAndAlign(
+        outflows.asCurrency(),
+        fieldLayout.outflows,
+        "right"
+      );
+      const balanceField = StringFunctions.padAndAlign(
+        categoryBalance.asCurrency(),
+        fieldLayout.balance,
+        "right"
+      );
+      const transactionCountField = StringFunctions.padAndAlign(
+        count.toString(),
+        fieldLayout.tranCount,
+        "right"
+      );
+
+      const detailData = `${categoryField}${spacer}${inflowsField}${spacer}${outflowsField}${spacer}${balanceField}${spacer}${transactionCountField}`;
+
+      Boxes.addDetailData(detailData);
+    }
+
     Boxes.doubleDivider();
-    const totalLabel = StringFunctions.padAndAlign("Grand Total:", 30);
-    Boxes.addDetailData(`${totalLabel}${grandTotalField}`, "left");
+    const grandTotalLabel = StringFunctions.padAndAlign(
+      "Grand Total:",
+      fieldLayout.grandTotalLabel
+    );
+    const categoryInflowsField = StringFunctions.padAndAlign(
+      categoryInflows.asCurrency(),
+      fieldLayout.inflows,
+      "right"
+    );
+    const categoryOutflowsField = StringFunctions.padAndAlign(
+      categoryOutflows.asCurrency(),
+      fieldLayout.outflows,
+      "right"
+    );
+    const grandTotalField = StringFunctions.padAndAlign(
+      grandTotal.asCurrency(),
+      fieldLayout.grandTotal,
+      "right"
+    );
+    const transactionCountTotalField = StringFunctions.padAndAlign(
+      transactionCountTotal.toString(),
+      fieldLayout.tranCount,
+      "right"
+    );
+    Boxes.addDetailData(`${grandTotalLabel}${spacer}${categoryInflowsField}${spacer}${categoryOutflowsField}${spacer}${grandTotalField}${spacer}${transactionCountTotalField}`);
     Boxes.singleBorderBottom();
   }
 
@@ -274,8 +420,11 @@ class AccountAnalyzer {
       deposit: 8,
       withdrawal: 8,
       balance: 8,
-      memo: 15,
+      memo: 20,
+      spacer: 3,
     };
+
+    const spacer = " ".repeat(fieldLayout.spacer);
 
     const transactions = this.#accountYear
       .getAccountTransactions(this.#accountType, category)
@@ -289,10 +438,13 @@ class AccountAnalyzer {
     const startingBalance = this.#accountYear
       .getStartingBalance(this.#accountType)
       .asCurrency();
-    const startingBalanceOutput = `Starting Balance: ${StringFunctions.padAndAlign(startingBalance, 8, "right")}`;
 
+    let headerTitle = `Starting Balance: ${StringFunctions.padAndAlign(startingBalance, 8, "right")}`;
+    if (category) {
+      headerTitle = `Category: ${TransactionCategory.toName(category)}`;
+    }
     const endingBalance = this.#accountYear
-      .getEndingBalance(this.#accountType, category)
+      .getEndingBalance(this.#accountType, category) // getAnnualRevenues(this.#accountType, category)
       .asCurrency();
 
     const dateHeader = StringFunctions.padAndAlign("Date", fieldLayout.date);
@@ -316,13 +468,14 @@ class AccountAnalyzer {
       fieldLayout.balance,
       "center"
     );
+
     const memoHeader = StringFunctions.padAndAlign("Notes", fieldLayout.memo);
-    const headers = `${dateHeader}    ${categoryHeader}    ${routeHeader}    ${depositHeader}    ${withdrawalHeader}    ${balanceHeader}    ${memoHeader}`;
+    const headers = `${dateHeader}${spacer}${categoryHeader}${spacer}${routeHeader}${spacer}${depositHeader}${spacer}${withdrawalHeader}${spacer}${balanceHeader}${spacer}${memoHeader}`;
 
     Boxes.topBorderDouble();
     Boxes.addDetailData(reportTitle);
     Boxes.doubleDivider();
-    Boxes.addDetailData(startingBalanceOutput);
+    Boxes.addDetailData(headerTitle);
 
     Boxes.singleDivider();
     Boxes.addDetailData(headers, "left");
@@ -370,19 +523,24 @@ class AccountAnalyzer {
         fieldLayout.route
       );
 
-      const detailData = `${dateField}    ${categoryField}    ${routeField}    ${depositField}    ${withdrawalField}    ${balanceField}    ${memoField}`;
+      const detailData = `${dateField}${spacer}${categoryField}${spacer}${routeField}${spacer}${depositField}${spacer}${withdrawalField}${spacer}${balanceField}${spacer}${memoField}`;
 
       Boxes.addDetailData(detailData, "left");
     }
-    if (endingBalance !== balance) {
-      console.warn(
-        `Warning: Calculated ending balance ${balance.asCurrency()} does not match reported ending balance ${endingBalance.asCurrency()}`
+
+    if (!category) {
+      if (endingBalance !== balance) {
+        console.warn(
+          `Warning: Calculated ending balance ${balance.asCurrency()} does not match reported ending balance ${endingBalance.asCurrency()}`
+        );
+      }
+    }
+    if (!category) {
+      Boxes.doubleDivider();
+      Boxes.addDetailData(
+        `Ending Balance: ${StringFunctions.padAndAlign(endingBalance, 8, "right")}`
       );
     }
-    Boxes.doubleDivider();
-    Boxes.addDetailData(
-      `Ending Balance: ${StringFunctions.padAndAlign(endingBalance, 8, "right")}`
-    );
     Boxes.singleBorderBottom();
   }
 

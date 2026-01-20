@@ -9,6 +9,7 @@ class Inputs {
   #taxFreeIncomeAdjustment = 0;
 
   /**
+   * @param {number} startingYear - The starting year of the simulation
    * @param {number} initialAgeSubject - Current age of the person
    * @param {number} initialAgePartner - Current age of partner (0 if no partner)
    * @param {number} subjectRetireAge - Age at retirement
@@ -71,6 +72,7 @@ class Inputs {
    * @param {number} partnerNonTaxableSalaryReductions - Partner non-taxable salary reductions (e.g., health/dental/HSA)
    */
   constructor(
+    startingYear = 2025,
     initialAgeSubject = 0,
     initialAgePartner = 0,
     subjectRetireAge = 0,
@@ -140,6 +142,7 @@ class Inputs {
     subjectNonTaxableSalaryReductions = 500 * 26,
     partnerNonTaxableSalaryReductions = 0
   ) {
+    this.startingYear = startingYear;
     // Personal information
     /** @type {number} */
     this.initialAgeSubject = initialAgeSubject;
@@ -547,7 +550,7 @@ class Inputs {
   }
 
   get currentYear() {
-    return new Date().getFullYear() + this.yearIndex;
+    return this.startingYear + this.yearIndex;
   }
 
   get subjectAge() {
@@ -606,6 +609,7 @@ class Inputs {
 
   clone() {
     return new Inputs(
+      this.startingYear,
       this.initialAgeSubject,
       this.initialAgePartner,
       this.subjectRetireAge,

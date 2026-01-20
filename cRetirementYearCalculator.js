@@ -179,33 +179,6 @@ class RetirementYearCalculator {
       this.#taxes
     );
 
-    // result.analyzers[ACCOUNT_TYPES.INTEREST_ON_SAVINGS].dumpAnnualTransactions();
-    // result.analyzers[ACCOUNT_TYPES.SAVINGS].dumpCategorySummaries();
-    // result.analyzers[ACCOUNT_TYPES.SUBJECT_401K].dumpCategorySummaries();
-    // result.analyzers[ACCOUNT_TYPES.SUBJECT_401K].dumpCategorySummaries();
-    // result.analyzers[ACCOUNT_TYPES.SUBJECT_ROTH_IRA].dumpCategorySummaries();
-
-    this.#accountYear.analyzers[
-      ACCOUNT_TYPES.DISBURSEMENT
-    ].dumpCategorySummaries();
-    this.#accountYear.analyzers[ACCOUNT_TYPES.CASH].dumpCategorySummaries();
-
-    // result.analyzers[ACCOUNT_TYPES.SUBJECT_PENSION].dumpCategorySummaries();
-    // result.analyzers[ACCOUNT_TYPES.PARTNER_PENSION].dumpCategorySummaries();
-
-    // result.analyzers[
-    //   ACCOUNT_TYPES.SUBJECT_SOCIAL_SECURITY
-    // ].dumpCategorySummaries();
-    // result.analyzers[
-    //   ACCOUNT_TYPES.PARTNER_SOCIAL_SECURITY
-    // ].dumpCategorySummaries();
-
-    // result.analyzers[ACCOUNT_TYPES.WITHHOLDINGS].dumpCategorySummaries();
-    // result.analyzers[ACCOUNT_TYPES.TAXES].dumpCategorySummaries();
-    // result.analyzers[ACCOUNT_TYPES.SAVINGS].dumpAccountActivity();
-
-    // result.analyzers[ACCOUNT_TYPES.LIVINGEXPENSESFUND].dumpAnnualTransactions();
-
     debugger;
     // result.income.dump();
     // result.balances.dump();

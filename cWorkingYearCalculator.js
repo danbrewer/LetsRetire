@@ -227,8 +227,10 @@ class WorkingYearCalculator {
       this.#fixedIncomeStreams.partnerWorkingYearSavingsContributionFixed +
       this.#fixedIncomeStreams.partnerWorkingYearSavingsContributionVariable;
 
+    if (desiredTransferAmount <= 0) return;
+
     const availableCash = this.#accountYear.getEndingBalance(
-      ACCOUNT_TYPES.INCOME
+      ACCOUNT_TYPES.CASH
     );
 
     if (availableCash <= 0) return;
@@ -236,11 +238,17 @@ class WorkingYearCalculator {
     const actualTransferAmount = Math.min(availableCash, desiredTransferAmount);
 
     this.#accountYear.processAsPeriodicTransfers(
-      ACCOUNT_TYPES.INCOME,
+      ACCOUNT_TYPES.CASH,
       ACCOUNT_TYPES.SAVINGS,
       actualTransferAmount,
-      PERIODIC_FREQUENCY.MONTHLY
+      PERIODIC_FREQUENCY.MONTHLY,
+      TransactionCategory.Transfer,
+      "Subj auto-savings"
     );
+
+    this.#accountYear.analyzers[ACCOUNT_TYPES.CASH].dumpAccountActivity("");
+
+    // debugger;
   }
 
   #processWagesAndCompensation() {
@@ -270,7 +278,7 @@ class WorkingYearCalculator {
 
     this.#accountYear.processAsPeriodicTransfers(
       ACCOUNT_TYPES.SUBJECT_WAGES,
-      ACCOUNT_TYPES.SUBJECT_PAYROLL_REDUCTIONS,
+      ACCOUNT_TYPES.SUBJECT_PAYROLL_DEDUCTIONS,
       this.#fixedIncomeStreams.subjectNonTaxableSalaryReductions,
       PERIODIC_FREQUENCY.MONTHLY
     );
@@ -301,7 +309,7 @@ class WorkingYearCalculator {
 
     this.#accountYear.processAsPeriodicTransfers(
       ACCOUNT_TYPES.PARTNER_WAGES,
-      ACCOUNT_TYPES.PARTNER_PAYROLL_REDUCTIONS,
+      ACCOUNT_TYPES.PARTNER_PAYROLL_DEDUCTIONS,
       this.#fixedIncomeStreams.partnerNonTaxableSalaryReductions,
       PERIODIC_FREQUENCY.MONTHLY
     );
@@ -325,16 +333,23 @@ class WorkingYearCalculator {
       ACCOUNT_TYPES.SUBJECT_WAGES
     ].dumpAccountActivity("", TransactionCategory.IncomeGross);
 
-    debugger;
+    // debugger;
   }
 
   #processRothIraContributions() {
     if (this.#fixedIncomeStreams.subjectAllowedRothContribution <= 0) return;
 
     this.#accountYear.processAsPeriodicTransfers(
-      ACCOUNT_TYPES.INCOME,
+      ACCOUNT_TYPES.CASH,
       ACCOUNT_TYPES.SUBJECT_ROTH_IRA,
       this.#fixedIncomeStreams.subjectAllowedRothContribution,
+      PERIODIC_FREQUENCY.MONTHLY
+    );
+
+    this.#accountYear.processAsPeriodicTransfers(
+      ACCOUNT_TYPES.CASH,
+      ACCOUNT_TYPES.PARTNER_ROTH_IRA,
+      this.#fixedIncomeStreams.partnerAllowedRothContribution,
       PERIODIC_FREQUENCY.MONTHLY
     );
   }
@@ -342,8 +357,24 @@ class WorkingYearCalculator {
   #processMonthlySpending() {
     // Any income left after spending goes into savings
 
-    this.surplusSpend =
-      this.#fixedIncomeStreams.totalActualFixedIncome - this.#fiscalData.spend;
+    const cash = this.#accountYear.getEndingBalance(ACCOUNT_TYPES.CASH);
+
+    if (cash <= 0) {
+      console.warn("Warning: No cash available to cover spending.");
+      return;
+    }
+
+    const actualSpend = Math.min(cash, this.#fiscalData.spend);
+
+    this.#accountYear.processAsPeriodicWithdrawals(
+      ACCOUNT_TYPES.CASH,
+      TransactionCategory.Spend,
+      TransactionRoutes.External,
+      actualSpend,
+      PERIODIC_FREQUENCY.MONTHLY
+    );
+
+    this.surplusSpend = cash - this.#fiscalData.spend;
 
     if (this.surplusSpend == 0) return;
 
@@ -380,16 +411,39 @@ class WorkingYearCalculator {
         PERIODIC_FREQUENCY.MONTHLY,
         TransactionCategory.IncomeShortfall
       );
+
+      this.#accountYear.processAsPeriodicWithdrawals(
+        ACCOUNT_TYPES.CASH,
+        TransactionCategory.Spend,
+        TransactionRoutes.External,
+        withdrawalAmount,
+        PERIODIC_FREQUENCY.MONTHLY
+      );
     }
+
+    this.#accountYear.analyzers[ACCOUNT_TYPES.CASH].dumpAccountActivity();
+    // debugger;
   }
 
   #applySavingsInterest() {
     this.#accountYear.recordInterestEarnedForYear(ACCOUNT_TYPES.SAVINGS);
+
+    this.#accountYear.analyzers[ACCOUNT_TYPES.SAVINGS].dumpAccountActivity();
+    // debugger;
   }
 
   #apply401kInterest() {
     this.#accountYear.recordInterestEarnedForYear(ACCOUNT_TYPES.SUBJECT_401K);
+    this.#accountYear.analyzers[
+      ACCOUNT_TYPES.SUBJECT_401K
+    ].dumpAccountActivity();
+    // debugger;
+
     this.#accountYear.recordInterestEarnedForYear(ACCOUNT_TYPES.PARTNER_401K);
+    this.#accountYear.analyzers[
+      ACCOUNT_TYPES.SUBJECT_401K
+    ].dumpAccountActivity();
+    // debugger;
   }
 
   #applyRothInterest() {
@@ -399,6 +453,16 @@ class WorkingYearCalculator {
     this.#accountYear.recordInterestEarnedForYear(
       ACCOUNT_TYPES.PARTNER_ROTH_IRA
     );
+
+    this.#accountYear.analyzers[
+      ACCOUNT_TYPES.SUBJECT_ROTH_IRA
+    ].dumpAccountActivity();
+    // debugger;
+
+    this.#accountYear.analyzers[
+      ACCOUNT_TYPES.PARTNER_ROTH_IRA
+    ].dumpAccountActivity();
+    // debugger;
   }
 
   #processIncomeTaxes() {
@@ -420,6 +484,14 @@ class WorkingYearCalculator {
     );
 
     const taxesOwed = federalIncomeTaxOwed - withholdings;
+
+    this.#accountYear.processAsPeriodicWithdrawals(
+      ACCOUNT_TYPES.TAXES,
+      TransactionCategory.TaxPayment,
+      TransactionRoutes.External,
+      federalIncomeTaxOwed,
+      PERIODIC_FREQUENCY.ANNUAL_TRAILING
+    );
 
     if (taxesOwed < 0) {
       const refundAmount = -taxesOwed;
@@ -451,6 +523,8 @@ class WorkingYearCalculator {
         TransactionCategory.TaxPayment
       );
     }
+    this.#accountYear.analyzers[ACCOUNT_TYPES.TAXES].dumpAccountActivity();
+    // debugger;
   }
 }
 

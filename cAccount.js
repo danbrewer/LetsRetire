@@ -17,12 +17,9 @@ import { TransactionRoutes } from "./tTransactionRoute.js";
 import { TransactionManager } from "./cTransactionManager.js";
 
 class ACCOUNT_TYPES {}
-ACCOUNT_TYPES.DISBURSEMENT = "Disbursements";
 
 ACCOUNT_TYPES.CASH = "Cash";
 ACCOUNT_TYPES.SAVINGS = "Savings";
-
-ACCOUNT_TYPES.INCOME = "Income";
 
 ACCOUNT_TYPES.SUBJECT_401K = "SubjectTrad401k";
 ACCOUNT_TYPES.PARTNER_401K = "PartnerTrad401k";
@@ -38,14 +35,13 @@ ACCOUNT_TYPES.PARTNER_SOCIAL_SECURITY = "PartnerSocSec";
 
 ACCOUNT_TYPES.SUBJECT_WAGES = "SubjectWages";
 ACCOUNT_TYPES.PARTNER_WAGES = "PartnerWages";
-ACCOUNT_TYPES.COMBINED_WAGES = "CombinedWages";
 
 ACCOUNT_TYPES.OTHER_INCOME = "OtherIncome";
 
 ACCOUNT_TYPES.TAXES = "Taxes";
 
-ACCOUNT_TYPES.SUBJECT_PAYROLL_REDUCTIONS = "SubjPayrlDeduc";
-ACCOUNT_TYPES.PARTNER_PAYROLL_REDUCTIONS = "PrtnrPayrlDeduc";
+ACCOUNT_TYPES.SUBJECT_PAYROLL_DEDUCTIONS = "SubjPayrlDeduc";
+ACCOUNT_TYPES.PARTNER_PAYROLL_DEDUCTIONS = "PrtnrPayrlDeduc";
 
 // Create a class for the account
 class Account {
@@ -173,7 +169,7 @@ class Account {
     amount,
     openingDate,
     route = TransactionRoutes.External,
-    memo = "Account opening balance"
+    memo = "Opening balance"
   ) {
     if (amount < 0) {
       throw new Error("Opening balance must be positive");
@@ -212,7 +208,7 @@ class Account {
     year,
     month = 1,
     day = 1,
-    memo = "Account opening balance"
+    memo = "Opening balance"
   ) {
     const openingDate = new Date(year, month - 1, day);
     this.setOpeningBalance(amount, openingDate, memo);
@@ -234,7 +230,7 @@ class Account {
     openingBalance,
     openingDate,
     interestRate = 0,
-    memo = "Account opening balance"
+    memo = "Opening balance"
   ) {
     const account = new Account(name, transactionManager, interestRate);
     account.setOpeningBalance(openingBalance, openingDate, memo);
@@ -261,7 +257,7 @@ class Account {
     interestRate = 0,
     month = 1,
     day = 1,
-    memo = "Account opening balance"
+    memo = "Opening balance"
   ) {
     const openingDate = new Date(year, month - 1, day);
     return Account.createWithOpeningBalance(
@@ -1304,7 +1300,7 @@ class Account {
   /**
    * @param {Date} startDate
    * @param {Date} endDate
-   * @param {TransactionCategorySymbol | null} category
+   * @param {TransactionCategorySymbol} category
    * @returns {AccountRegister}
    */
   buildAccountRegister(startDate, endDate, category) {

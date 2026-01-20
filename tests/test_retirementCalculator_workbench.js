@@ -17,6 +17,7 @@ const testTracker = new TestTracker("Retirement Calculator Workbench");
 //------------------------------------------------------------
 function createInputs() {
   return new Inputs(
+    /* startingYear */ 2025,
     /* initialAgeSubject */ 60,
     /* initialAgeSpouse */ 56,
     /* subjectRetireAge */ 62,
@@ -69,16 +70,16 @@ function createInputs() {
     /* filingStatus */ "married",
     /* useRMD */ true,
     /* flatSsWithholdingRate */ 0.07,
-    /* flatTrad401kWithholdingRate */ 0.2,
+    /* flatTrad401kWithholdingRate */ 0.15,
     /* flatPensionWithholdingRate */ 0.2,
-    /* flatWageWithholdingRate */ 0.22,
+    /* flatWageWithholdingRate */ 0.15,
     /* order */ [
       ACCOUNT_TYPES.SAVINGS,
       ACCOUNT_TYPES.SUBJECT_401K,
       ACCOUNT_TYPES.SUBJECT_ROTH_IRA,
     ],
-    /** subjectWorkingYearSavingsContributionFixed */ 0,
-    /** subjectWorkingYearSavingsContributionVariable */ 0,
+    /** subjectWorkingYearSavingsContributionFixed */ 50,
+    /** subjectWorkingYearSavingsContributionVariable */ 0.05,
     /** partnerWorkingYearSavingsContributionFixed */ 0,
     /** partnerWorkingYearSavingsContributionVariable */ 0,
     /** subjectRetirementYearSavingsContributionFixed */ 100,
@@ -117,7 +118,7 @@ function createMockUI(inputs) {
      * @param {number} age
      */
     getSpendingOverride(age) {
-      console.log(`UI.getSpendingOverride(age=${age})`);
+      if (age < 0) return 0;
       return 0;
     },
 

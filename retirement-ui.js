@@ -2477,7 +2477,7 @@ function parseInputParameters() {
       ACCOUNT_TYPES.SUBJECT_ROTH_IRA,
     ];
   }
-
+  const startingYear = num("startingYear");
   const currentAge = num("currentAge");
   const currentSpouseAge = num("partnerAge");
   const subjectRetireAge = num("retireAge");
@@ -2532,6 +2532,7 @@ function parseInputParameters() {
   const partnerSavingsReturnRate = 0.03;
 
   const inputs = new Inputs(
+    startingYear,
     currentAge,
     currentSpouseAge,
     subjectRetireAge,

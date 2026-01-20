@@ -194,6 +194,7 @@ const TransactionCategory = new TransactionCategoryEnum();
  *         | typeof TransactionCategory.Pension
  *         | typeof TransactionCategory.TaxRefund
  *         | typeof TransactionCategory.TaxPayment
+ *         | typeof TransactionCategory.Withholdings
  *         } TransactionCategorySymbol
  */
 

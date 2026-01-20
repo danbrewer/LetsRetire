@@ -1,6 +1,7 @@
 import { Account, ACCOUNT_TYPES } from "./cAccount.js";
 import { Inputs } from "./cInputs.js";
 import { TransactionManager } from "./cTransactionManager.js";
+import { DateFunctions } from "./utils.js";
 
 class AccountsManager {
   /** @type {Map<ACCOUNT_TYPES, Account>} */
@@ -66,7 +67,7 @@ class AccountsManager {
         accountType,
         transactionManager,
         startingBalance,
-        new Date(inputs.currentYear, 0, 1),
+        DateFunctions.addDays(new Date(inputs.currentYear, 0, 1), -1),
         interestRate
       );
 
@@ -108,10 +109,6 @@ class AccountsManager {
     return this.#getAccountByType(ACCOUNT_TYPES.CASH);
   }
 
-  get disbursement() {
-    return this.#getAccountByType(ACCOUNT_TYPES.DISBURSEMENT);
-  }
-
   /**
    * @param {number | null} yyyy
    */
@@ -121,7 +118,6 @@ class AccountsManager {
       rothIra: this.subjectRothIra?.toJSON(yyyy),
       savings: this.savings?.toJSON(yyyy),
       income: this.income?.toJSON(yyyy),
-      disbursement: this.disbursement?.toJSON(yyyy),
     };
   }
 
