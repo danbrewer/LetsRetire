@@ -350,7 +350,6 @@ class AccountingYear {
   recordInterestEarnedForYear(accountName) {
     this.#getAccountByName(accountName)
       .recordInterestEarnedForYear(this.taxYear);
-      
   }
 
   /** @param {string} accountName */

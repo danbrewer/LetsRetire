@@ -65,7 +65,7 @@ class AdjustableIncomeStreams {
 
   get subject401kWithholdings() {
     return (
-      this.#inputs.flatTrad401kWithholdingRate *
+      this.#inputs.flatCareerTrad401kWithholdingRate *
       this.#subject401kWithdrawalGross
     ).asCurrency();
   }
@@ -84,7 +84,8 @@ class AdjustableIncomeStreams {
 
   get spouse401kWithholdings() {
     return (
-      this.#inputs.flatTrad401kWithholdingRate * this.#spouse401kWithdrawalGross
+      this.#inputs.flatCareerTrad401kWithholdingRate *
+      this.#spouse401kWithdrawalGross
     ).asCurrency();
   }
 

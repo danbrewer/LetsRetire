@@ -11,6 +11,7 @@ const TransactionCategoryNames = /** @type {const} */ ({
   Overage: "Overage",
   Shortage: "Shortage",
   Transfer: "Transfer",
+  AutoTransfer: "Auto-Transfer",
   OpeningBalance: "Opening Balance",
   Contribution: "Contribution",
 
@@ -65,6 +66,10 @@ class TransactionCategoryEnum extends EnumBase {
 
   get Transfer() {
     return this.map[TransactionCategoryNames.Transfer];
+  }
+
+  get AutoTransfer() {
+    return this.map[TransactionCategoryNames.AutoTransfer];
   }
 
   get OpeningBalance() {

@@ -104,19 +104,21 @@ class WorkingYearIncome {
   }
 
   get combinedGrossWagesTipsAndCompensation() {
-    const result = this.#fixedIncomeStreams.combinedWagesAndCompensationGross;
+    const result =
+      this.#fixedIncomeStreams.combinedCareerWagesAndCompensationGross;
     return result;
   }
 
   get combinedNonTaxableWagesAndCompensation() {
     const result =
-      this.#fixedIncomeStreams.subjectWagesAndCompensationNonTaxable +
-      this.#fixedIncomeStreams.partnerWagesAndCompensationNonTaxable;
+      this.#fixedIncomeStreams.subjectCareerWagesAndCompensationNonTaxable +
+      this.#fixedIncomeStreams.partnerCareerWagesAndCompensationNonTaxable;
     return result;
   }
 
   get taxableWagesAndCompensation() {
-    const result = this.#fixedIncomeStreams.combinedWagesAndCompensationGross;
+    const result =
+      this.#fixedIncomeStreams.combinedCareerWagesAndCompensationGross;
     return result;
   }
 

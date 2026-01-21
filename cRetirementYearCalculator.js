@@ -211,7 +211,9 @@ class RetirementYearCalculator {
       ACCOUNT_TYPES.CASH,
       ACCOUNT_TYPES.SAVINGS,
       subjectActualSavingsContribution,
-      PERIODIC_FREQUENCY.MONTHLY
+      PERIODIC_FREQUENCY.MONTHLY,
+      TransactionCategory.AutoTransfer,
+      "Subject contrib."
     );
 
     if (this.#cashRemaining <= 0) return;
@@ -225,36 +227,32 @@ class RetirementYearCalculator {
       ACCOUNT_TYPES.CASH,
       ACCOUNT_TYPES.SAVINGS,
       partnerActualSavingsContribution,
-      PERIODIC_FREQUENCY.MONTHLY
+      PERIODIC_FREQUENCY.MONTHLY,
+      TransactionCategory.AutoTransfer,
+      "Partner contrib."
+    );
+
+    this.#accountYear.analyzers[ACCOUNT_TYPES.SAVINGS].dumpAccountActivity(
+      "Savings contributions processed"
     );
   }
+
   get #cashRemaining() {
     return this.#accountYear.getEndingBalance(ACCOUNT_TYPES.CASH);
   }
 
-  /** @return {Number}  */
   #drawSavingsPortion() {
     const amount = this.#accountPortioner?.savingsWithdrawal ?? 0;
-    if (amount <= 0) return amount;
+    if (amount <= 0) return;
 
     const avaiableFunds = this.#accountYear.getAvailableFunds([
       ACCOUNT_TYPES.SAVINGS,
     ]);
 
-    if (avaiableFunds <= 0) return 0;
+    if (avaiableFunds <= 0) return;
 
     const withdrawalAmount = Math.min(amount, avaiableFunds);
 
-    this.#processPeriodicSavingsWithdrawals(withdrawalAmount);
-
-    return withdrawalAmount;
-  }
-
-  /**
-   * Process Savings account transactions
-   * @param {number} withdrawalAmount - Amount to withdraw
-   */
-  #processPeriodicSavingsWithdrawals(withdrawalAmount) {
     this.#accountYear.processAsPeriodicTransfers(
       ACCOUNT_TYPES.SAVINGS,
       ACCOUNT_TYPES.CASH,
@@ -263,10 +261,26 @@ class RetirementYearCalculator {
     );
 
     this.#adjustableIncomeStreams.savingsWithdrawal += withdrawalAmount;
+
+    this.#accountYear.analyzers[ACCOUNT_TYPES.SAVINGS].dumpAccountActivity(
+      "Savings withdrawals processed"
+    );
   }
+
+  // /**
+  //  * Process Savings account transactions
+  //  * @param {number} withdrawalAmount - Amount to withdraw
+  //  */
+  // #processPeriodicSavingsWithdrawals(withdrawalAmount) {
+
+  //   this.#adjustableIncomeStreams.savingsWithdrawal += withdrawalAmount;
+  // }
 
   #applyPeriodicSavingsInterest() {
     this.#accountYear.recordInterestEarnedForYear(ACCOUNT_TYPES.SAVINGS);
+    this.#accountYear.analyzers[ACCOUNT_TYPES.SAVINGS].dumpAccountActivity(
+      "Savings interest processed"
+    );
   }
 
   #determineSocialSecurityBreakdown() {
@@ -341,6 +355,9 @@ class RetirementYearCalculator {
         TransactionCategory.TaxRefund
       );
     }
+    this.#accountYear.analyzers[ACCOUNT_TYPES.TAXES].dumpAccountActivity(
+      "Taxes processed"
+    );
   }
 
   #processMonthlySpending() {
@@ -358,7 +375,8 @@ class RetirementYearCalculator {
         ACCOUNT_TYPES.CASH,
         ACCOUNT_TYPES.SAVINGS,
         surplusAmount,
-        PERIODIC_FREQUENCY.MONTHLY
+        PERIODIC_FREQUENCY.MONTHLY,
+        TransactionCategory.SurplusIncome
       );
     } else {
       // Any money needed to cover the spend budget deficit is withdrawn from savings
@@ -373,10 +391,15 @@ class RetirementYearCalculator {
           ACCOUNT_TYPES.SAVINGS,
           ACCOUNT_TYPES.CASH,
           catchupAmount,
-          PERIODIC_FREQUENCY.MONTHLY
+          PERIODIC_FREQUENCY.MONTHLY,
+          TransactionCategory.IncomeShortfall
         );
+        this.#adjustableIncomeStreams.savingsWithdrawal += catchupAmount;
       }
     }
+    this.#accountYear.analyzers[ACCOUNT_TYPES.SAVINGS].dumpAccountActivity(
+      "Surplus cash processed"
+    );
   }
 
   /**
@@ -392,12 +415,15 @@ class RetirementYearCalculator {
   }
 
   #processSubjectWagesIncome() {
-    if (this.#fixedIncomeStreams?.subjectWagesAndCompensationGross ?? 0 > 0) {
+    if (
+      this.#fixedIncomeStreams?.subjectCareerWagesAndCompensationGross ??
+      0 > 0
+    ) {
       this.#accountYear.processAsPeriodicDeposits(
         ACCOUNT_TYPES.SUBJECT_WAGES,
         TransactionCategory.IncomeGross,
         TransactionRoutes.External,
-        this.#fixedIncomeStreams?.subjectWagesAndCompensationGross ?? 0,
+        this.#fixedIncomeStreams?.subjectCareerWagesAndCompensationGross ?? 0,
         PERIODIC_FREQUENCY.MONTHLY
       );
 
@@ -405,28 +431,43 @@ class RetirementYearCalculator {
         ACCOUNT_TYPES.SUBJECT_WAGES,
         ACCOUNT_TYPES.TAXES,
         this.#fixedIncomeStreams
-          ?.subjectWagesAndCompensationEstimatedWithholdings ?? 0,
+          ?.subjectCareerWagesAndCompensationEstimatedWithholdings ?? 0,
         PERIODIC_FREQUENCY.MONTHLY,
         TransactionCategory.Withholdings
       );
 
       this.#accountYear.processAsPeriodicTransfers(
         ACCOUNT_TYPES.SUBJECT_WAGES,
+        ACCOUNT_TYPES.SUBJECT_PAYROLL_DEDUCTIONS,
+        this.#fixedIncomeStreams.subjectCareerNonTaxableSalaryReductions,
+        PERIODIC_FREQUENCY.MONTHLY
+      );
+
+      this.#accountYear.processAsPeriodicTransfers(
+        ACCOUNT_TYPES.SUBJECT_WAGES,
         ACCOUNT_TYPES.CASH,
-        this.#fixedIncomeStreams?.subjectWagesAndCompensationActualIncome ?? 0,
+        this.#fixedIncomeStreams
+          ?.subjectCareerWagesAndCompensationActualIncome ?? 0,
         PERIODIC_FREQUENCY.MONTHLY,
         TransactionCategory.IncomeNet
       );
     }
+
+    this.#accountYear.analyzers[
+      ACCOUNT_TYPES.SUBJECT_WAGES
+    ].dumpAccountActivity("Subject wages processed");
   }
 
   #processPartnerWagesIncome() {
-    if (this.#fixedIncomeStreams?.partnerWagesAndCompensationGross ?? 0 > 0) {
+    if (
+      this.#fixedIncomeStreams?.partnerCareerWagesAndCompensationGross ??
+      0 > 0
+    ) {
       this.#accountYear.processAsPeriodicDeposits(
         ACCOUNT_TYPES.PARTNER_WAGES,
         TransactionCategory.IncomeGross,
         TransactionRoutes.External,
-        this.#fixedIncomeStreams?.partnerWagesAndCompensationGross ?? 0,
+        this.#fixedIncomeStreams?.partnerCareerWagesAndCompensationGross ?? 0,
         PERIODIC_FREQUENCY.MONTHLY
       );
 
@@ -434,18 +475,30 @@ class RetirementYearCalculator {
         ACCOUNT_TYPES.PARTNER_WAGES,
         ACCOUNT_TYPES.TAXES,
         this.#fixedIncomeStreams
-          ?.partnerWagesAndCompensationEstimatedWithholdings ?? 0,
+          ?.partnerCareerWagesAndCompensationEstimatedWithholdings ?? 0,
         PERIODIC_FREQUENCY.MONTHLY,
         TransactionCategory.Withholdings
       );
 
       this.#accountYear.processAsPeriodicTransfers(
         ACCOUNT_TYPES.PARTNER_WAGES,
+        ACCOUNT_TYPES.PARTNER_PAYROLL_DEDUCTIONS,
+        this.#fixedIncomeStreams.partnerCareerNonTaxableSalaryReductions,
+        PERIODIC_FREQUENCY.MONTHLY
+      );
+
+      this.#accountYear.processAsPeriodicTransfers(
+        ACCOUNT_TYPES.PARTNER_WAGES,
         ACCOUNT_TYPES.CASH,
-        this.#fixedIncomeStreams?.partnerWagesAndCompensationActualIncome ?? 0,
+        this.#fixedIncomeStreams
+          ?.partnerCareerWagesAndCompensationActualIncome ?? 0,
         PERIODIC_FREQUENCY.MONTHLY,
         TransactionCategory.IncomeNet
       );
+
+      this.#accountYear.analyzers[
+        ACCOUNT_TYPES.PARTNER_WAGES
+      ].dumpAccountActivity("Partner wages processed");
     }
   }
 
@@ -474,6 +527,10 @@ class RetirementYearCalculator {
         PERIODIC_FREQUENCY.MONTHLY,
         TransactionCategory.Withholdings
       );
+
+      this.#accountYear.analyzers[
+        ACCOUNT_TYPES.SUBJECT_SOCIAL_SECURITY
+      ].dumpAccountActivity("Subject social security processed");
     }
 
     // Spouse SS income goes into living expenses fund
@@ -499,6 +556,10 @@ class RetirementYearCalculator {
         PERIODIC_FREQUENCY.MONTHLY,
         TransactionCategory.Withholdings
       );
+
+      this.#accountYear.analyzers[
+        ACCOUNT_TYPES.PARTNER_SOCIAL_SECURITY
+      ].dumpAccountActivity("Partner social security processed");
     }
   }
 
@@ -554,6 +615,14 @@ class RetirementYearCalculator {
       PERIODIC_FREQUENCY.MONTHLY,
       TransactionCategory.Withholdings
     );
+
+    this.#accountYear.analyzers[
+      ACCOUNT_TYPES.SUBJECT_PENSION
+    ].dumpAccountActivity("Subject pension processed");
+
+    this.#accountYear.analyzers[
+      ACCOUNT_TYPES.PARTNER_PENSION
+    ].dumpAccountActivity("Partner pension processed");
   }
 
   #processNonTaxableIncome() {
@@ -570,6 +639,10 @@ class RetirementYearCalculator {
       PERIODIC_FREQUENCY.MONTHLY,
       "Tax-free income"
     );
+
+    this.#accountYear.analyzers[ACCOUNT_TYPES.CASH].dumpAccountActivity(
+      "Non-taxable income processed"
+    );
   }
 
   get totalFixedIncome() {
@@ -583,7 +656,14 @@ class RetirementYearCalculator {
 
   #applyPeriodic401kInterestEarned() {
     this.#accountYear.recordInterestEarnedForYear(ACCOUNT_TYPES.SUBJECT_401K);
+    this.#accountYear.analyzers[ACCOUNT_TYPES.SUBJECT_401K].dumpAccountActivity(
+      "Subject 401k interest processed"
+    );
+
     this.#accountYear.recordInterestEarnedForYear(ACCOUNT_TYPES.PARTNER_401K);
+    this.#accountYear.analyzers[ACCOUNT_TYPES.PARTNER_401K].dumpAccountActivity(
+      "Partner 401k interest processed"
+    );
   }
 
   #draw401kPortions() {
@@ -658,15 +738,26 @@ class RetirementYearCalculator {
       TransactionCategory.Withholdings,
       memo
     );
+
+    this.#accountYear.analyzers[sourceAccountType].dumpAccountActivity(
+      `${sourceAccountType} 401k withdrawal processed`
+    );
   }
 
   #applyPeriodicRothInterest() {
     this.#accountYear.recordInterestEarnedForYear(
       ACCOUNT_TYPES.SUBJECT_ROTH_IRA
     );
+    this.#accountYear.analyzers[
+      ACCOUNT_TYPES.SUBJECT_ROTH_IRA
+    ].dumpAccountActivity("Subject Roth IRA interest processed");
+
     this.#accountYear.recordInterestEarnedForYear(
       ACCOUNT_TYPES.PARTNER_ROTH_IRA
     );
+    this.#accountYear.analyzers[
+      ACCOUNT_TYPES.PARTNER_ROTH_IRA
+    ].dumpAccountActivity("Partner Roth IRA interest processed");
   }
 
   #drawRothPortions() {
@@ -705,6 +796,10 @@ class RetirementYearCalculator {
         subjectShareAmount,
         PERIODIC_FREQUENCY.MONTHLY
       );
+
+      this.#accountYear.analyzers[
+        ACCOUNT_TYPES.SUBJECT_ROTH_IRA
+      ].dumpAccountActivity("Subject Roth IRA processed");
     }
 
     const partnerShareAmount = Math.max(
@@ -720,6 +815,9 @@ class RetirementYearCalculator {
         partnerShareAmount,
         PERIODIC_FREQUENCY.MONTHLY
       );
+      this.#accountYear.analyzers[
+        ACCOUNT_TYPES.PARTNER_ROTH_IRA
+      ].dumpAccountActivity("Partner Roth IRA processed");
     }
   }
 

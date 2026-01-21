@@ -253,7 +253,6 @@ class AccountAnalyzer {
       return outflowsB - outflowsA;
     });
 
-
     let categoryBalance = 0;
     let categoryInflows = 0;
     let categoryOutflows = 0;
@@ -336,7 +335,9 @@ class AccountAnalyzer {
       fieldLayout.tranCount,
       "right"
     );
-    Boxes.addDetailData(`${grandTotalLabel}${spacer}${categoryInflowsField}${spacer}${categoryOutflowsField}${spacer}${grandTotalField}${spacer}${transactionCountTotalField}`);
+    Boxes.addDetailData(
+      `${grandTotalLabel}${spacer}${categoryInflowsField}${spacer}${categoryOutflowsField}${spacer}${grandTotalField}${spacer}${transactionCountTotalField}`
+    );
     Boxes.singleBorderBottom();
   }
 
@@ -433,8 +434,7 @@ class AccountAnalyzer {
     console.log();
     if (!reportTitle) {
       reportTitle = `${this.#accountType} Account Activity (${this.#accountYear.taxYear})`;
-    }
-    else{
+    } else {
       reportTitle = `${reportTitle} (${this.#accountYear.taxYear})`;
     }
 
@@ -446,10 +446,6 @@ class AccountAnalyzer {
     if (category) {
       headerTitle = `Category: ${TransactionCategory.toName(category)}`;
     }
-    const endingBalance = this.#accountYear
-      .getEndingBalance(this.#accountType, category)
-      .asCurrency();
-
     const dateHeader = StringFunctions.padAndAlign("Date", fieldLayout.date);
     const categoryHeader = StringFunctions.padAndAlign(
       "Category",
@@ -498,7 +494,7 @@ class AccountAnalyzer {
           : "";
       const withdrawal =
         t.transactionType === TransactionType.Withdrawal
-          ? t.amount.asCurrency()
+          ? (-t.amount).asCurrency()
           : "";
       const depositField = StringFunctions.padAndAlign(
         deposit,
@@ -532,16 +528,53 @@ class AccountAnalyzer {
     }
 
     if (!category) {
+      const endingBalance = this.#accountYear
+        .getEndingBalance(this.#accountType, category)
+        .asCurrency();
       if (endingBalance !== balance) {
         console.warn(
           `Warning: Calculated ending balance ${balance.asCurrency()} does not match reported ending balance ${endingBalance.asCurrency()}`
         );
       }
-    }
-    if (!category) {
+
+      let incomingBalance = transactions.reduce((sum, t) => {
+        return t.transactionType === TransactionType.Deposit
+          ? sum + t.amount
+          : sum;
+      }, 0);
+      let outgoingBalance = transactions.reduce((sum, t) => {
+        return t.transactionType === TransactionType.Withdrawal
+          ? sum + t.amount
+          : sum;
+      }, 0);
+
+      const startingBalanceField = StringFunctions.padAndAlign(
+        `Starting balance: ${startingBalance.asCurrency()}`,
+        fieldLayout.date + fieldLayout.category + fieldLayout.route + spacer.length * 2,
+        "center"
+      );
+
+      const incomingTotalField = StringFunctions.padAndAlign(
+        incomingBalance.asCurrency(),
+        fieldLayout.deposit,
+        "right"
+      );
+      const outgoingTotalField = StringFunctions.padAndAlign(
+        (-outgoingBalance).asCurrency(),
+        fieldLayout.withdrawal,
+        "right"
+      );
+      const balanceTotalField = StringFunctions.padAndAlign(
+        endingBalance.asCurrency(),
+        fieldLayout.balance,
+        "right"
+      );
+
       Boxes.doubleDivider();
+
       Boxes.addDetailData(
-        `Ending Balance: ${StringFunctions.padAndAlign(endingBalance, 8, "right")}`
+        `${startingBalanceField}${spacer}${incomingTotalField}${spacer}${outgoingTotalField}${spacer}${balanceTotalField}`,
+        "left"
       );
     }
     Boxes.singleBorderBottom();

@@ -214,7 +214,7 @@ class Inputs {
     this.partnerSalaryGrowthRate = partnerSalaryGrowthRate;
 
     /** @type {number} */
-    this.subject401kContributionRate = subject401kContributionRate;
+    this.subjectCareer401kContributionRate = subject401kContributionRate;
 
     /** @type {number} */
     this.subjectRothContributionRate = subjectRothContributionRate;
@@ -282,13 +282,13 @@ class Inputs {
     /** @type {number} */
     this.flatSsWithholdingRate = flatSsWithholdingRate;
     /** @type {number} */
-    this.flatTrad401kWithholdingRate = flatTrad401kWithholdingRate;
+    this.flatCareerTrad401kWithholdingRate = flatTrad401kWithholdingRate;
     /** @type {number} */
     this.flatPensionWithholdingRate = flatPensionWithholdingRate;
     /** @type {number} */
-    this.flatWageWithholdingRate = flatWageWithholdingRate;
+    this.flatCareerWageWithholdingRate = flatWageWithholdingRate;
     /** @type {number} */
-    this.flatWageWithholdingRate = flatWageWithholdingRate;
+    this.flatCareerWageWithholdingRate = flatWageWithholdingRate;
 
     /** @type {string[]} */
     this.order = order;
@@ -319,10 +319,12 @@ class Inputs {
     this.yearIndex = 0;
 
     /** @type {number} */
-    this.subjectNonTaxableSalaryReductions = subjectNonTaxableSalaryReductions; // e.g., health/dental/HSA
+    this.subjectCareerNonTaxableSalaryReductions =
+      subjectNonTaxableSalaryReductions; // e.g., health/dental/HSA
 
     /** @type {number} */
-    this.partnerNonTaxableSalaryReductions = partnerNonTaxableSalaryReductions; // For now. This can include health/dental/HSA contributions, etc. later on
+    this.partnerCareerNonTaxableSalaryReductions =
+      partnerNonTaxableSalaryReductions; // For now. This can include health/dental/HSA contributions, etc. later on
 
     /** @type {number} */
     this.spendAtRetire = 0;
@@ -362,7 +364,7 @@ class Inputs {
       partnerRetirementYearSavingsContributionVariable;
 
     /** @type {number} */
-    this.partner401kContributionRate = partner401kContributionRate;
+    this.partnerCareer401kContributionRate = partner401kContributionRate;
     /** @type {number} */
     this.partnerRothContributionRate = partnerRothContributionRate;
 
@@ -531,14 +533,14 @@ class Inputs {
   //   return result;
   // }
 
-  get subjectSalary() {
+  get subjectCareerSalary() {
     return this.subjectStartingSalary.adjustedForInflation(
       this.subjectSalaryGrowthRate,
       this.yearIndex
     );
   }
 
-  get partnerSalary() {
+  get partnerCareerSalary() {
     return this.partnerStartingSalary.adjustedForInflation(
       this.partnerSalaryGrowthRate,
       this.yearIndex
@@ -636,7 +638,7 @@ class Inputs {
       this.partnerStartingSalary,
       this.subjectSalaryGrowthRate,
       this.partnerSalaryGrowthRate,
-      this.subject401kContributionRate,
+      this.subjectCareer401kContributionRate,
       this.subjectRothContributionRate,
       this.taxablePct,
       this.matchCap,
@@ -658,9 +660,9 @@ class Inputs {
       this.filingStatus,
       this.useRMD,
       this.flatSsWithholdingRate,
-      this.flatTrad401kWithholdingRate,
+      this.flatCareerTrad401kWithholdingRate,
       this.flatPensionWithholdingRate,
-      this.flatWageWithholdingRate,
+      this.flatCareerWageWithholdingRate,
       this.order,
       this.subjectWorkingYearSavingsContributionFixed,
       this.subjectWorkingYearSavingsContributionVariable,
@@ -670,10 +672,10 @@ class Inputs {
       this.subjectRetirementYearSavingsContributionVariable,
       this.partnerRetirementYearSavingsContributionFixed,
       this.partnerRetirementYearSavingsContributionVariable,
-      this.partner401kContributionRate,
+      this.partnerCareer401kContributionRate,
       this.partnerRothContributionRate,
-      this.subjectNonTaxableSalaryReductions,
-      this.partnerNonTaxableSalaryReductions
+      this.subjectCareerNonTaxableSalaryReductions,
+      this.partnerCareerNonTaxableSalaryReductions
     );
   }
 }
