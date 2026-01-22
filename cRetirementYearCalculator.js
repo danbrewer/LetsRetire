@@ -39,25 +39,12 @@ class RetirementYearCalculator {
   #fixedIncomeStreams;
   /** @type {AdjustableIncomeStreams} */
   #adjustableIncomeStreams;
-
   /** @type {AccountPortioner} */
   #accountPortioner;
-  /** @type {number} */
-  #ssCombinedTakeHome = 0;
-
-  /** @type {number} */
-  #combinedPensionActualIncome = 0;
-  /** @type {number} */
-  #combinedActualWorkingIncome = 0;
-  /** @type {number} */
-  #nonTaxableActualIncome = 0;
-
   /** @type {SocialSecurityBreakdown} */
   #ssBreakdown = new SocialSecurityBreakdown(0, 0, 0, false);
-
   /** @type {Taxes} */
   #taxes = new Taxes(0, 0, 0, 0, 0, 0);
-
   /** @type {IncomeBreakdown} */
   #incomeBreakdown;
 
@@ -558,9 +545,7 @@ class RetirementYearCalculator {
   }
 
   #processPensionIncome() {
-    this.#combinedPensionActualIncome =
-      this.#incomeBreakdown?.combinedPensionTakeHome ?? 0;
-    if (this.#combinedPensionActualIncome == 0) return;
+    if (this.#incomeBreakdown?.combinedPensionTakeHome ?? 0 == 0) return;
 
     this.#accountYear.processAsPeriodicDeposits(
       ACCOUNT_TYPES.SUBJECT_PENSION,
@@ -620,31 +605,22 @@ class RetirementYearCalculator {
   }
 
   #processNonTaxableIncome() {
-    this.#nonTaxableActualIncome =
+    const nonTaxableActualIncome =
       this.#incomeBreakdown?.miscNonTaxableActualIncome ?? 0;
 
-    if (this.#nonTaxableActualIncome == 0) return;
+    if (nonTaxableActualIncome <= 0) return;
 
     this.#accountYear.processAsPeriodicDeposits(
       ACCOUNT_TYPES.CASH,
       TransactionCategory.OtherNonTaxable,
       TransactionRoutes.External,
-      this.#nonTaxableActualIncome,
+      nonTaxableActualIncome,
       PERIODIC_FREQUENCY.MONTHLY,
       "Tax-free income"
     );
 
     this.#accountYear.analyzers[ACCOUNT_TYPES.CASH].dumpAccountActivity(
       "Non-taxable income processed"
-    );
-  }
-
-  get totalFixedIncome() {
-    return (
-      this.#combinedActualWorkingIncome +
-      this.#ssCombinedTakeHome +
-      this.#combinedPensionActualIncome +
-      this.#nonTaxableActualIncome
     );
   }
 
