@@ -285,37 +285,43 @@ class RetirementYearCalculator {
       this.#demographics
     );
 
-    this.#accountYear.deposit(
-      ACCOUNT_TYPES.TAXES,
-      TransactionCategory.Taxes,
-      TransactionRoutes.Taxes,
-      this.#taxes.federalTaxesOwed.asCurrency(),
-      12,
-      31,
-      "Federal Income Taxes Owed"
-    );
-
     const totalWithholdings = this.#accountYear.getAnnualRevenues(
       ACCOUNT_TYPES.TAXES,
       TransactionCategory.Withholdings
     );
 
-    const taxesDue =
-      this.#taxes.federalTaxesOwed.asCurrency() - totalWithholdings;
+    const taxesDue = this.#taxes.federalTaxesOwed.asCurrency();
 
-    if (taxesDue > 0) {
+    const taxUnderpayment = taxesDue - totalWithholdings;
+    const taxOverpayment = -taxUnderpayment;
+
+    if (taxesDue === totalWithholdings) {
+      this.#accountYear.withdrawal(
+        ACCOUNT_TYPES.TAXES,
+        TransactionCategory.TaxPayment,
+        TransactionRoutes.External,
+        totalWithholdings.asCurrency(),
+        12,
+        31,
+        "Federal Income Taxes Owed"
+      );
+    }
+
+    if (taxUnderpayment > 0) {
+      // Need to withdraw from savings to cover tax underpayment
       const availableSavings = this.#accountYear.getEndingBalance(
         ACCOUNT_TYPES.SAVINGS
       );
 
-      if (taxesDue > availableSavings) {
+      if (taxUnderpayment > availableSavings) {
         console.warn(
           "Warning: Taxes due exceed available savings. Partial payment will be made."
         );
       }
 
-      const withdrawalAmount = Math.min(taxesDue, availableSavings);
+      const withdrawalAmount = Math.min(taxUnderpayment, availableSavings);
 
+      // Transfer withdrawal amount from savings to tax account
       this.#accountYear.processAsPeriodicTransfers(
         ACCOUNT_TYPES.SAVINGS,
         ACCOUNT_TYPES.TAXES,
@@ -323,13 +329,39 @@ class RetirementYearCalculator {
         PERIODIC_FREQUENCY.ANNUAL_TRAILING,
         TransactionCategory.TaxPayment
       );
+
+      // Requery the tax account balance after transfer from savings
+      const taxAccountDeposits = this.#accountYear.getDeposits(
+        ACCOUNT_TYPES.TAXES
+      );
+
+      this.#accountYear.withdrawal(
+        ACCOUNT_TYPES.TAXES,
+        TransactionCategory.TaxPayment,
+        TransactionRoutes.External,
+        taxAccountDeposits.asCurrency(),
+        12,
+        31,
+        "Federal Income Taxes Owed"
+      );
     }
-    if (taxesDue < 0) {
-      const refundAmount = -taxesDue;
+
+    if (taxOverpayment > 0) {
+      // Pay the Feds the actual taxes due
+      this.#accountYear.withdrawal(
+        ACCOUNT_TYPES.TAXES,
+        TransactionCategory.TaxPayment,
+        TransactionRoutes.External,
+        taxesDue.asCurrency(),
+        12,
+        31,
+        "Federal Income Taxes Owed"
+      );
+      // Refund the overpayment to savings
       this.#accountYear.processAsPeriodicTransfers(
         ACCOUNT_TYPES.TAXES,
         ACCOUNT_TYPES.SAVINGS,
-        refundAmount,
+        taxOverpayment,
         PERIODIC_FREQUENCY.ANNUAL_TRAILING,
         TransactionCategory.TaxRefund
       );
@@ -511,6 +543,10 @@ class RetirementYearCalculator {
       this.#accountYear.analyzers[
         ACCOUNT_TYPES.SUBJECT_SOCIAL_SECURITY
       ].dumpAccountActivity("Subject social security processed");
+
+      this.#accountYear.analyzers[
+        ACCOUNT_TYPES.SUBJECT_SOCIAL_SECURITY
+      ].dumpCategorySummaries();
     }
 
     // Spouse SS income goes into living expenses fund
@@ -541,6 +577,10 @@ class RetirementYearCalculator {
       this.#accountYear.analyzers[
         ACCOUNT_TYPES.PARTNER_SOCIAL_SECURITY
       ].dumpAccountActivity("Partner social security processed");
+
+      this.#accountYear.analyzers[
+        ACCOUNT_TYPES.PARTNER_SOCIAL_SECURITY
+      ].dumpCategorySummaries();
     }
   }
 
@@ -627,12 +667,14 @@ class RetirementYearCalculator {
   #applyPeriodic401kInterestEarned() {
     this.#accountYear.recordInterestEarnedForYear(ACCOUNT_TYPES.SUBJECT_401K);
     this.#accountYear.analyzers[ACCOUNT_TYPES.SUBJECT_401K].dumpAccountActivity(
-      "Subject 401k interest processed"
+      "Subject 401k interest processed",
+      TransactionCategory.Interest
     );
 
     this.#accountYear.recordInterestEarnedForYear(ACCOUNT_TYPES.PARTNER_401K);
     this.#accountYear.analyzers[ACCOUNT_TYPES.PARTNER_401K].dumpAccountActivity(
-      "Partner 401k interest processed"
+      "Partner 401k interest processed",
+      TransactionCategory.Interest
     );
   }
 
