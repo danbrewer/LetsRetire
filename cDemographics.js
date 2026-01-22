@@ -5,6 +5,7 @@ class Demographics {
    * @param {number} currentAge
    * @param {number} ssStartAge
    * @param {number} penStartAge
+   * @param {number} subject401kStartAge
    * @param {number} partner401kStartAge
    * @param {number} retirementYear
    * @param {number} yearIndex
@@ -13,6 +14,7 @@ class Demographics {
     currentAge,
     ssStartAge,
     penStartAge,
+    subject401kStartAge,
     retirementYear,
     yearIndex,
     isRetired = true,
@@ -27,6 +29,7 @@ class Demographics {
     this.currentAge = currentAge;
     this.ssStartAge = ssStartAge;
     this.penStartAge = penStartAge;
+    this.subject401kStartAge = subject401kStartAge;
     this.retirementYear = retirementYear;
     this.isRetired = isRetired;
     this.isWorking = isWorking;
@@ -70,6 +73,10 @@ class Demographics {
       this.hasPartner &&
       this.currentAgeOfPartner >= this.trad401kStartAgeOfPartner
     );
+  }
+
+  get isSubjectEligibleFor401k() {
+    return this.currentAge >= this.subject401kStartAge;
   }
 
   //   // Getter for description to maintain compatibility
@@ -169,6 +176,7 @@ class Demographics {
       inputs.subjectAge,
       inputs.subjectSsStartAge,
       inputs.subjectPensionStartAge,
+      inputs.subject401kStartAge,
       inputs.currentYear,
       inputs.yearIndex,
       isRetired,

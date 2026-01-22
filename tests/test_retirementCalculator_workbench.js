@@ -23,6 +23,7 @@ function createInputs() {
     /* subjectRetireAge */ 62,
     /* subjectSsStartAge */ 62,
     /* subjectPensionStartAge */ 65,
+    /* subject401kStartAge */ 62,
     /* endAge */ 120,
 
     /* inflation */ 0.03,

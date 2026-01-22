@@ -17,7 +17,7 @@ class AccountingYear {
    * @param {string} targetAccount
    * @param {number} amountToTransfer
    * @param {string} frequency
-   * @param {TransactionCategorySymbol} [category]
+   * @param {TransactionCategorySymbol} category
    * @param {string} [notes]
    */
   processAsPeriodicTransfers(
@@ -29,7 +29,6 @@ class AccountingYear {
     notes = ""
   ) {
     const transferId = IdentifierGenerator.generateSixCharAlphaId();
-    category = category || TransactionCategory.Transfer;
     this.processAsPeriodicWithdrawals(
       sourceAccount,
       category,

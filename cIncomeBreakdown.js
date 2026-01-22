@@ -1,3 +1,5 @@
+import { Account } from "./cAccount.js";
+import { AccountPortioner } from "./cAccountPortioner.js";
 import { AdjustableIncomeStreams } from "./cAdjustableIncomeStreams.js";
 import { Demographics } from "./cDemographics.js";
 import { FiscalData } from "./cFiscalData.js";
@@ -15,11 +17,6 @@ class IncomeBreakdown {
 
   /** @type {AdjustableIncomeStreams} */
   #adjustableIncomeStreams;
-
-  /** @type {Demographics} */
-  #demographics;
-  /** @type {FiscalData} */
-  #fiscalData;
 
   /**
    * @param {FixedIncomeStreams} fixedIncomeStreams
@@ -40,20 +37,23 @@ class IncomeBreakdown {
       fiscalData,
       demographics
     );
-    this.#demographics = demographics;
-    this.#fiscalData = fiscalData;
   }
 
-  get combinedEarnedIncomeGross() {
+  get combinedEarnedIncomeGrossCareer() {
     return this.#fixedIncomeStreams.combinedCareerWagesAndCompensationTaxable; // for now; later only if we add earned income streams
   }
 
-  get combinedEarnedIncomeWithholdings() {
+  get combinedEarnedIncomeWithholdingsCareer() {
     return this.#fixedIncomeStreams
       .combinedCareerWagesAndCompensationEstimatedWithholdings; // for now; later only if we add earned income streams
   }
 
-  get combinedEarnedIncomeTakehome() {
+  get combinedEarnedIncomeWithholdingsRetirement() {
+    return this.#fixedIncomeStreams
+      .combinedRetirementWagesAndCompensationEstimatedWithholdings; // for now; later only if we add earned income streams
+  }
+
+  get combinedEarnedIncomeTakehomeCareer() {
     return this.#fixedIncomeStreams
       .combinedCareerWagesAndCompensationActualIncome; // for now; later only if we add earned income streams
   }
@@ -105,14 +105,16 @@ class IncomeBreakdown {
 
   get #grossRevenue() {
     return (
-      this.combinedEarnedIncomeGross +
-      this.combinedSocialSecGross +
-      this.combinedPensionGross +
-      this.miscIncome +
-      this.#adjustableIncomeStreams.combined401kGrossWithdrawal +
-      this.combinedPensionGross +
-      this.interestEarnedOnSavings
-    ).asCurrency();
+      // this.combinedEarnedIncomeGrossRetirement +
+      (
+        this.combinedSocialSecGross +
+        this.combinedPensionGross +
+        this.miscIncome +
+        this.#adjustableIncomeStreams.combined401kGrossWithdrawals +
+        this.combinedPensionGross +
+        this.interestEarnedOnSavings
+      ).asCurrency()
+    );
   }
 
   get #actualIncome() {
@@ -238,7 +240,7 @@ class IncomeBreakdown {
   // }
 
   get combined401kWithdrawalsGross() {
-    return this.#adjustableIncomeStreams.combined401kGrossWithdrawal;
+    return this.#adjustableIncomeStreams.combined401kGrossWithdrawals;
   }
 
   get combinedSavingWithdrawals() {

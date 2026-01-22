@@ -27,6 +27,16 @@ class FixedIncomeStreams {
     this.#accountYear = accountYear;
     this.#inputs = inputs;
     this._description = "FixedIncomeStreams";
+
+    // stub these in for now; later we can implement retirement income streams
+    this.subjectRetirementWagesAndCompensationGross = 0;
+    this.subjectRetirementWagesAndCompensationEstimatedWithholdings = 0;
+    this.subjectRetirementWagesAndCompensationActualIncome = 0;
+    this.partnerRetirementWagesAndCompensationGross = 0;
+    this.partnerRetirementWagesAndCompensationEstimatedWithholdings = 0;
+    this.partnerRetirementWagesAndCompensationActualIncome = 0;
+    this.subjectRetirementNonTaxableSalaryReductions = 0;
+    this.partnerRetirementNonTaxableSalaryReductions = 0;
   }
 
   /**
@@ -98,14 +108,15 @@ class FixedIncomeStreams {
     ).asCurrency();
   }
 
-  /**
-   * Calculates the actual pretax 401k contribution after applying IRS limits.
-   *
-   * @returns {number} Capped pretax contribution amount as currency
-   */
-  get subjectCareerAllowed401kContribution() {
+  get subjectAllowedRothContribution() {
     return (
-      this.#subjectCareerDesired401kContribution * this._getElectiveScale()
+      this.#subjectDesiredRothContribution * this._getElectiveScale()
+    ).asCurrency();
+  }
+
+  get partnerAllowedRothContribution() {
+    return (
+      this.#partnerDesiredRothContribution * this._getElectiveScale()
     ).asCurrency();
   }
 
@@ -120,18 +131,6 @@ class FixedIncomeStreams {
   get partnerCareerAllowed401kContribution() {
     return (
       this.#partnerCareerDesired401kContribution * this._getElectiveScale()
-    ).asCurrency();
-  }
-
-  get subjectAllowedRothContribution() {
-    return (
-      this.#subjectDesiredRothContribution * this._getElectiveScale()
-    ).asCurrency();
-  }
-
-  get partnerAllowedRothContribution() {
-    return (
-      this.#partnerDesiredRothContribution * this._getElectiveScale()
     ).asCurrency();
   }
 
@@ -159,6 +158,17 @@ class FixedIncomeStreams {
     return (
       this.subjectCareerAllowed401kContribution +
       this.#inputs.subjectCareerNonTaxableSalaryReductions
+    ).asCurrency();
+  }
+
+  /**
+   * Calculates the actual pretax 401k contribution after applying IRS limits.
+   *
+   * @returns {number} Capped pretax contribution amount as currency
+   */
+  get subjectCareerAllowed401kContribution() {
+    return (
+      this.#subjectCareerDesired401kContribution * this._getElectiveScale()
     ).asCurrency();
   }
 
@@ -201,6 +211,13 @@ class FixedIncomeStreams {
     return (
       this.subjectCareerWagesAndCompensationEstimatedWithholdings +
       this.partnerCareerWagesAndCompensationEstimatedWithholdings
+    ).asCurrency();
+  }
+
+  get combinedRetirementWagesAndCompensationEstimatedWithholdings() {
+    return (
+      this.subjectRetirementWagesAndCompensationEstimatedWithholdings +
+      this.partnerRetirementWagesAndCompensationEstimatedWithholdings
     ).asCurrency();
   }
 

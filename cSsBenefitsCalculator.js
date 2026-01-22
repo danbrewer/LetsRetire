@@ -80,7 +80,7 @@ class SsBenefitsCalculator {
     adjustableIncomeStreams
   ) {
     const taxableNonSsIncome =
-      adjustableIncomeStreams.combined401kGrossWithdrawal +
+      adjustableIncomeStreams.combined401kGrossWithdrawals +
       fixedIncomeStreams.combinedPensionGross +
       fixedIncomeStreams.interestEarnedOnSavings;
 

@@ -70,6 +70,7 @@ class Inputs {
    * @param {number} partnerRothContributionRate - Partner Roth IRA contribution percentage as decimal
    * @param {number} subjectNonTaxableSalaryReductions - Subject non-taxable salary reductions (e.g., health/dental/HSA)
    * @param {number} partnerNonTaxableSalaryReductions - Partner non-taxable salary reductions (e.g., health/dental/HSA)
+   * @param {number} subject401kStartAge - Age when subject starts 401k contributions
    */
   constructor(
     startingYear = 2025,
@@ -78,6 +79,7 @@ class Inputs {
     subjectRetireAge = 0,
     subjectSsStartAge = 0,
     subjectPensionStartAge = 0,
+    subject401kStartAge = 0,
     endSubjectAge = 0,
 
     inflation = 0,
@@ -158,6 +160,9 @@ class Inputs {
 
     /** @type {number} */
     this.subjectPensionStartAge = subjectPensionStartAge;
+
+    /** @type {number} */
+    this.subject401kStartAge = subject401kStartAge;
 
     /** @type {number} */
     this.endSubjectAge = endSubjectAge;
@@ -617,6 +622,7 @@ class Inputs {
       this.subjectRetireAge,
       this.subjectSsStartAge,
       this.subjectPensionStartAge,
+      this.subject401kStartAge,
       this.endSubjectAge,
 
       this.inflation,

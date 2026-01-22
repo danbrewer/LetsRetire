@@ -2483,6 +2483,7 @@ function parseInputParameters() {
   const subjectRetireAge = num("retireAge");
   const ssStartAge = num("ssStart");
   const penStartAge = num("penStart");
+  const subject401kStartAge = num("subject401kStartAge");
   const endAge = num("endAge");
   const inflation = pct(num("inflation"));
   const spendingToday = num("spendingToday");
@@ -2538,6 +2539,7 @@ function parseInputParameters() {
     subjectRetireAge,
     ssStartAge,
     penStartAge,
+    subject401kStartAge,
     endAge,
 
     inflation,

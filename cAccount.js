@@ -43,6 +43,8 @@ ACCOUNT_TYPES.TAXES = "Taxes";
 ACCOUNT_TYPES.SUBJECT_PAYROLL_DEDUCTIONS = "SubjPayrlDeduc";
 ACCOUNT_TYPES.PARTNER_PAYROLL_DEDUCTIONS = "PrtnrPayrlDeduc";
 
+ACCOUNT_TYPES.ADJUSTABLE_INCOME = "AdjustableIncome";
+
 // Create a class for the account
 class Account {
   /** @type {TransactionManager} */

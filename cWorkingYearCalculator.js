@@ -272,7 +272,8 @@ class WorkingYearCalculator {
       ACCOUNT_TYPES.SUBJECT_WAGES,
       ACCOUNT_TYPES.SUBJECT_401K,
       this.#fixedIncomeStreams.subjectCareerAllowed401kContribution,
-      PERIODIC_FREQUENCY.MONTHLY
+      PERIODIC_FREQUENCY.MONTHLY,
+      TransactionCategory.Contribution
     );
 
     this.#accountYear.processAsPeriodicTransfers(
@@ -288,14 +289,16 @@ class WorkingYearCalculator {
       ACCOUNT_TYPES.SUBJECT_WAGES,
       ACCOUNT_TYPES.SUBJECT_PAYROLL_DEDUCTIONS,
       this.#fixedIncomeStreams.subjectCareerNonTaxableSalaryReductions,
-      PERIODIC_FREQUENCY.MONTHLY
+      PERIODIC_FREQUENCY.MONTHLY,
+      TransactionCategory.PayrollDeductions
     );
 
     this.#accountYear.processAsPeriodicTransfers(
       ACCOUNT_TYPES.SUBJECT_WAGES,
       ACCOUNT_TYPES.CASH,
       this.#fixedIncomeStreams.subjectCareerWagesAndCompensationActualIncome,
-      PERIODIC_FREQUENCY.MONTHLY
+      PERIODIC_FREQUENCY.MONTHLY,
+      TransactionCategory.IncomeNet
     );
 
     // Partner wages and compensation
@@ -312,14 +315,16 @@ class WorkingYearCalculator {
       ACCOUNT_TYPES.PARTNER_WAGES,
       ACCOUNT_TYPES.PARTNER_401K,
       this.#fixedIncomeStreams.partnerCareerAllowed401kContribution,
-      PERIODIC_FREQUENCY.MONTHLY
+      PERIODIC_FREQUENCY.MONTHLY,
+      TransactionCategory.Contribution
     );
 
     this.#accountYear.processAsPeriodicTransfers(
       ACCOUNT_TYPES.PARTNER_WAGES,
       ACCOUNT_TYPES.PARTNER_PAYROLL_DEDUCTIONS,
       this.#fixedIncomeStreams.partnerCareerNonTaxableSalaryReductions,
-      PERIODIC_FREQUENCY.MONTHLY
+      PERIODIC_FREQUENCY.MONTHLY,
+      TransactionCategory.PayrollDeductions
     );
 
     this.#accountYear.processAsPeriodicTransfers(
@@ -335,7 +340,8 @@ class WorkingYearCalculator {
       ACCOUNT_TYPES.PARTNER_WAGES,
       ACCOUNT_TYPES.CASH,
       this.#fixedIncomeStreams.partnerCareerWagesAndCompensationActualIncome,
-      PERIODIC_FREQUENCY.MONTHLY
+      PERIODIC_FREQUENCY.MONTHLY,
+      TransactionCategory.IncomeNet
     );
 
     this.#accountYear.analyzers[
@@ -352,14 +358,16 @@ class WorkingYearCalculator {
       ACCOUNT_TYPES.CASH,
       ACCOUNT_TYPES.SUBJECT_ROTH_IRA,
       this.#fixedIncomeStreams.subjectAllowedRothContribution,
-      PERIODIC_FREQUENCY.MONTHLY
+      PERIODIC_FREQUENCY.MONTHLY,
+      TransactionCategory.Contribution
     );
 
     this.#accountYear.processAsPeriodicTransfers(
       ACCOUNT_TYPES.CASH,
       ACCOUNT_TYPES.PARTNER_ROTH_IRA,
       this.#fixedIncomeStreams.partnerAllowedRothContribution,
-      PERIODIC_FREQUENCY.MONTHLY
+      PERIODIC_FREQUENCY.MONTHLY,
+      TransactionCategory.Contribution
     );
   }
 

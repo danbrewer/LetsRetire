@@ -10,7 +10,7 @@ const TransactionCategoryNames = /** @type {const} */ ({
   RMD: "Req Min Dist",
   Overage: "Overage",
   Shortage: "Shortage",
-  Transfer: "Transfer",
+  // Transfer: "Transfer",
   AutoTransfer: "Auto-Transfer",
   OpeningBalance: "Opening Balance",
   Contribution: "Contribution",
@@ -18,6 +18,7 @@ const TransactionCategoryNames = /** @type {const} */ ({
   IncomeNet: "Net Income",
   IncomeGross: "Gross Income",
   IncomeDeductions: "Deductions",
+  CashTransfer: "Cash Transfer",
   Withholdings: "Withholdings",
   Taxes: "Taxes",
   Wages: "Wages",
@@ -64,9 +65,9 @@ class TransactionCategoryEnum extends EnumBase {
     return this.map[TransactionCategoryNames.Shortage];
   }
 
-  get Transfer() {
-    return this.map[TransactionCategoryNames.Transfer];
-  }
+  // get Transfer() {
+  //   return this.map[TransactionCategoryNames.Transfer];
+  // }
 
   get AutoTransfer() {
     return this.map[TransactionCategoryNames.AutoTransfer];
@@ -87,8 +88,12 @@ class TransactionCategoryEnum extends EnumBase {
   get IncomeGross() {
     return this.map[TransactionCategoryNames.IncomeGross];
   }
-  get IncomeDeductions() {
+  get PayrollDeductions() {
     return this.map[TransactionCategoryNames.IncomeDeductions];
+  }
+
+  get CashTransfer() {
+    return this.map[TransactionCategoryNames.CashTransfer];
   }
 
   get Taxes() {
@@ -184,7 +189,6 @@ const TransactionCategory = new TransactionCategoryEnum();
  *         | typeof TransactionCategory.RMD
  *         | typeof TransactionCategory.Overage
  *         | typeof TransactionCategory.Shortage
- *         | typeof TransactionCategory.Transfer
  *         | typeof TransactionCategory.OpeningBalance
  *         | typeof TransactionCategory.Contribution
  *         | typeof TransactionCategory.IncomeNet
@@ -200,6 +204,7 @@ const TransactionCategory = new TransactionCategoryEnum();
  *         | typeof TransactionCategory.TaxRefund
  *         | typeof TransactionCategory.TaxPayment
  *         | typeof TransactionCategory.Withholdings
+ *         | typeof TransactionCategory.CashTransfer
  *         } TransactionCategorySymbol
  */
 
