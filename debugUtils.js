@@ -201,7 +201,7 @@ Object.defineProperty(Object.prototype, "dump", {
   configurable: true,
   writable: true,
   value: function (/** @type {any} */ title, mode = "deep", depth = 0) {
-    const indent = "  ".repeat(depth);
+    const indent = "  ".repeat(depth + 1);
     const keyWidth = 70; // Reserve 70 characters for keys
     const valueWidth = 30; // Reserve 30 characters for values
     const isShallow = mode === "shallow";

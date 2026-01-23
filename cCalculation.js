@@ -1,13 +1,13 @@
-import { RetirementYearResults } from "./cRetirementYearData.js";
+import { RetirementYearData } from "./cRetirementYearData.js";
 import { WorkingYearData } from "./cWorkingYearData.js";
 
 class Calculation {
-  /** @type {WorkingYearData | RetirementYearResults} */
+  /** @type {WorkingYearData | RetirementYearData} */
   #yearData;
 
   /**
    * @param {number} taxYear
-   * @param {WorkingYearData | RetirementYearResults} yearData
+   * @param {WorkingYearData | RetirementYearData} yearData
    */
   constructor(taxYear, yearData) {
     if (yearData === null) {
@@ -39,13 +39,13 @@ class Calculation {
   }
 
   get subjectSocialSecurity() {
-    return this.#yearData instanceof RetirementYearResults
+    return this.#yearData instanceof RetirementYearData
       ? 0 //this.#yearData.incomeStreams.subjectSocialSecurity
       : 0;
   }
 
   get subjectPension() {
-    return this.#yearData instanceof RetirementYearResults
+    return this.#yearData instanceof RetirementYearData
       ? 0 // TODO: add pension to RetirementYearData
       : 0;
   }

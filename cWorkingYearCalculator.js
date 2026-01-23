@@ -26,8 +26,8 @@ class WorkingYearCalculator {
   #demographics;
   /** @type {FixedIncomeStreams} */
   #fixedIncomeStreams;
-  /** @type {WorkingYearIncome} */
-  #workingYearIncome;
+  // /** @type {WorkingYearIncome} */
+  // #workingYearIncome;
 
   /**
    * Create working year income calculator with input configuration
@@ -46,12 +46,12 @@ class WorkingYearCalculator {
       this.#inputs
     );
 
-    this.#workingYearIncome = WorkingYearIncome.CreateUsing(
-      this.#fixedIncomeStreams,
-      this.#demographics,
-      this.#fiscalData,
-      this.#accountYear
-    );
+    // this.#workingYearIncome = WorkingYearIncome.CreateUsing(
+    //   this.#fixedIncomeStreams,
+    //   this.#demographics,
+    //   this.#fiscalData,
+    //   this.#accountYear
+    // );
   }
 
   processWorkingYearData() {
@@ -73,11 +73,10 @@ class WorkingYearCalculator {
     this.#processIncomeTaxes();
 
     // Declare and initialize the result object at the top
-    const result = WorkingYearData.CreateFrom(
+    const workingYearData = WorkingYearData.CreateUsing(
       this.#demographics,
       this.#fiscalData,
-      this.#accountYear,
-      this.#workingYearIncome
+      this.#accountYear
     );
 
     this.#accountYear.analyzers[ACCOUNT_TYPES.SAVINGS].dumpCategorySummaries();
@@ -217,7 +216,8 @@ class WorkingYearCalculator {
     //   ],
     // };
 
-    return result;
+    workingYearData.dump("working year data");
+    return workingYearData;
   }
 
   #processSavingsContributions() {

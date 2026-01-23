@@ -22,8 +22,8 @@ import { YearDataBase } from "./cYearDataBase.js";
 class WorkingYearData extends YearDataBase {
   // /** @type {FiscalData} */
   // #fiscalData;
-  /** @type {WorkingYearIncome} */
-  #workingYearIncome;
+  // /** @type {WorkingYearIncome} */
+  // #workingYearIncome;
   /** @type {Taxes | null} */
   #taxes = null;
   /** @type {Balances | null} */
@@ -41,12 +41,10 @@ class WorkingYearData extends YearDataBase {
    * @param {Demographics} demographics - Demographic information including age,
    * @param {FiscalData} fiscalData - Fiscal data for the working year
    * @param {AccountingYear} accountYear - View of accounts for fiscal year
-   * @param {WorkingYearIncome} workingYearIncome - Working year income details
    */
-  constructor(demographics, fiscalData, accountYear, workingYearIncome) {
+  constructor(demographics, fiscalData, accountYear) {
     super(demographics, fiscalData, accountYear);
-    /** @type {WorkingYearIncome} */
-    this.#workingYearIncome = /** @type {WorkingYearIncome} */ (Object.freeze(workingYearIncome));
+    // this.#workingYearIncome = /** @type {WorkingYearIncome} */ (Object.freeze(workingYearIncome));
   }
 
   //   /**
@@ -55,10 +53,7 @@ class WorkingYearData extends YearDataBase {
   //    * @returns {string} Description of the working year data
   //    */
   get description() {
-    return `
------------------------------------------------
---- Working Year ${this.accountYear.taxYear} (Age ${this.demographics.currentAge}) ---
------------------------------------------------`;
+    return `Working Year ${this.accountYear.taxYear} (Age ${this.demographics.currentAge})`;
   }
 
   // get income() {
@@ -118,10 +113,9 @@ class WorkingYearData extends YearDataBase {
    * @param {Demographics} demographics
    * @param {FiscalData} fiscalData
    * @param {AccountingYear} accountYear
-   * @param {WorkingYearIncome} income
    */
-  static CreateFrom(demographics, fiscalData, accountYear, income) {
-    return new WorkingYearData(demographics, fiscalData, accountYear, income);
+  static CreateUsing(demographics, fiscalData, accountYear) {
+    return new WorkingYearData(demographics, fiscalData, accountYear);
   }
 
   /**

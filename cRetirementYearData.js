@@ -38,7 +38,7 @@ import { Taxes } from "./cTaxes.js";
 import { YearDataBase } from "./cYearDataBase.js";
 
 //    */
-class RetirementYearResults extends YearDataBase {
+class RetirementYearData extends YearDataBase {
   /** @type {FiscalData} */
   #fiscalData;
   /** @type {SocialSecurityBreakdown} */
@@ -51,13 +51,7 @@ class RetirementYearResults extends YearDataBase {
    * @param {SocialSecurityBreakdown} ssBreakdown
    * @param {Taxes} taxes
    */
-  constructor(
-    demographics,
-    fiscalData,
-    accountYear,
-    ssBreakdown,
-    taxes
-  ) {
+  constructor(demographics, fiscalData, accountYear, ssBreakdown, taxes) {
     super(demographics, fiscalData, accountYear);
     this.#fiscalData = Object.freeze(fiscalData);
     this.#ssBreakdown = ssBreakdown;
@@ -93,7 +87,7 @@ class RetirementYearResults extends YearDataBase {
    * @param {AccountingYear} accountYear
    * @param {SocialSecurityBreakdown} ssBreakdown
    * @param {Taxes} taxes
-   * @returns {RetirementYearResults}
+   * @returns {RetirementYearData}
    */
   static CreateUsing(
     demographics,
@@ -102,7 +96,7 @@ class RetirementYearResults extends YearDataBase {
     ssBreakdown,
     taxes
   ) {
-    const result = new RetirementYearResults(
+    const result = new RetirementYearData(
       demographics,
       fiscalData,
       accountYear,
@@ -199,4 +193,4 @@ class RetirementYearResults extends YearDataBase {
 // Create instance using the factory method for backward compatibility
 // const result = RetirementYearData.Empty();
 
-export { RetirementYearResults };
+export { RetirementYearData};

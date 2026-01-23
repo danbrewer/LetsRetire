@@ -8,7 +8,7 @@ import { FiscalData } from "./cFiscalData.js";
 import { FixedIncomeStreams } from "./cFixedIncomeStreams.js";
 import { Inputs } from "./cInputs.js";
 import { PERIODIC_FREQUENCY, TAX_BASE_YEAR } from "./consts.js";
-import { RetirementYearResults } from "./cRetirementYearData.js";
+import { RetirementYearData } from "./cRetirementYearData.js";
 import { SsBenefitsCalculator } from "./cSsBenefitsCalculator.js";
 import { SocialSecurityBreakdown } from "./cSsBreakdown.js";
 import { Taxes } from "./cTaxes.js";
@@ -149,11 +149,10 @@ class RetirementYearCalculator {
     //   calculationDetails: [withLabel("incomeResults", this.#incomeBreakdown)],
     // };
 
-    const retirementYearResults = RetirementYearResults.CreateUsing(
+    const retirementYearData = RetirementYearData.CreateUsing(
       this.#demographics,
       this.#fiscalData,
       this.#accountYear,
-      // this.#incomeBreakdown,
       this.#ssBreakdown,
       this.#taxes
     );
@@ -161,7 +160,7 @@ class RetirementYearCalculator {
     debugger;
     // result.income.dump();
     // result.balances.dump();
-    return retirementYearResults;
+    return retirementYearData;
   }
 
   #processSavingsContributions() {

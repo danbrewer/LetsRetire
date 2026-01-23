@@ -43,7 +43,6 @@ class BaseYearData {
       this.#accountYear
     );
 
-    this.#wagesAndCompensationReport.dump("wagesAndCompensationReport");
   }
 
   /** @returns {Demographics} */
