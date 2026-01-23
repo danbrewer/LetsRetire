@@ -4,6 +4,7 @@
 import { AccountingYear } from "./cAccountingYear.js";
 import { Demographics } from "./cDemographics.js";
 import { FiscalData } from "./cFiscalData.js";
+import { WagesAndCompensationReport } from "./rWagesAndCompensation.js";
 
 /**
  * Abstract base class for year-based financial data.
@@ -22,6 +23,9 @@ class BaseYearData {
   /** @type {AccountingYear} */
   #accountYear;
 
+  /** @type {WagesAndCompensationReport} */
+  #wagesAndCompensationReport;
+
   /**
    * @param {Demographics} demographics
    * @param {FiscalData} fiscalData
@@ -33,6 +37,10 @@ class BaseYearData {
     this.#fiscalData = Object.freeze(fiscalData);
     this.#accountYear = /** @type {AccountingYear} */ (
       Object.freeze(accountYear)
+    );
+
+    this.#wagesAndCompensationReport = new WagesAndCompensationReport(
+      this.#accountYear
     );
   }
 
@@ -49,6 +57,10 @@ class BaseYearData {
   /** @returns {AccountingYear} */
   get accountYear() {
     return this.#accountYear;
+  }
+
+  get wagesAndCompensation() {
+    return this.#wagesAndCompensationReport;
   }
 
   /**

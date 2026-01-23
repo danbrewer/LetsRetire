@@ -31,7 +31,7 @@ import { Balance } from "./cBalance.js";
 import { Balances } from "./cBalances.js";
 import { Demographics } from "./cDemographics.js";
 import { FiscalData } from "./cFiscalData.js";
-import { IncomeBreakdown } from "./cIncomeBreakdown.js";
+// import { IncomeBreakdown } from "./cIncomeBreakdown.js";
 import { AccountAnalyzer } from "./cAccountAnalyzer.js";
 import { SocialSecurityBreakdown } from "./cSsBreakdown.js";
 import { Taxes } from "./cTaxes.js";
@@ -41,8 +41,6 @@ import { YearDataBase } from "./cYearDataBase.js";
 class RetirementYearResults extends YearDataBase {
   /** @type {FiscalData} */
   #fiscalData;
-  /** @type {IncomeBreakdown} */
-  #incomeBreakdown;
   /** @type {SocialSecurityBreakdown} */
   #ssBreakdown;
 
@@ -50,7 +48,6 @@ class RetirementYearResults extends YearDataBase {
    * @param {Demographics} demographics
    * @param {FiscalData} fiscalData
    * @param {AccountingYear} accountYear
-   * @param {IncomeBreakdown} incomeBreakdown
    * @param {SocialSecurityBreakdown} ssBreakdown
    * @param {Taxes} taxes
    */
@@ -58,13 +55,11 @@ class RetirementYearResults extends YearDataBase {
     demographics,
     fiscalData,
     accountYear,
-    incomeBreakdown,
     ssBreakdown,
     taxes
   ) {
     super(demographics, fiscalData, accountYear);
     this.#fiscalData = Object.freeze(fiscalData);
-    this.#incomeBreakdown = incomeBreakdown;
     this.#ssBreakdown = ssBreakdown;
 
     this.balances = Balances.CreateUsing(accountYear);
@@ -96,7 +91,6 @@ class RetirementYearResults extends YearDataBase {
    * @param {Demographics} demographics
    * @param {FiscalData} fiscalData
    * @param {AccountingYear} accountYear
-   * @param {IncomeBreakdown} incomeBreakdown
    * @param {SocialSecurityBreakdown} ssBreakdown
    * @param {Taxes} taxes
    * @returns {RetirementYearResults}
@@ -105,7 +99,6 @@ class RetirementYearResults extends YearDataBase {
     demographics,
     fiscalData,
     accountYear,
-    incomeBreakdown,
     ssBreakdown,
     taxes
   ) {
@@ -113,7 +106,6 @@ class RetirementYearResults extends YearDataBase {
       demographics,
       fiscalData,
       accountYear,
-      incomeBreakdown,
       ssBreakdown,
       taxes
     );

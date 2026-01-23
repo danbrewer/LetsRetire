@@ -1,8 +1,5 @@
 import { Demographics } from "./cDemographics.js";
 import { FiscalData } from "./cFiscalData.js";
-import { IncomeBreakdown } from "./cIncomeBreakdown.js";
-// import { IncomeEstimatorResults } from "./cIncomeEstimatorResults.js";
-import { IncomeRs } from "./cIncomeRs.js";
 import { FixedIncomeStreams } from "./cFixedIncomeStreams.js";
 import { SsBenefitsCalculator } from "./cSsBenefitsCalculator.js";
 import { SocialSecurityBreakdown } from "./cSsBreakdown.js";
@@ -75,28 +72,28 @@ class RetirementIncomeCalculator {
    * @since 1.0.0
    * @author Retirement Calculator System
    */
-  calculateIncomeBreakdown(
-    fixedIncomeStreams,
-    adjustableIncomeStreams,
-    nonSsIncomeSources
-  ) {
-    const ssBreakdown = this.calculateSocialSecurityBreakdown(
-      fixedIncomeStreams,
-      adjustableIncomeStreams,
-      nonSsIncomeSources
-    );
+  // calculateIncomeBreakdown(
+  //   fixedIncomeStreams,
+  //   adjustableIncomeStreams,
+  //   nonSsIncomeSources
+  // ) {
+  //   const ssBreakdown = this.calculateSocialSecurityBreakdown(
+  //     fixedIncomeStreams,
+  //     adjustableIncomeStreams,
+  //     nonSsIncomeSources
+  //   );
 
-    const incomeBreakdown = IncomeBreakdown.CreateFrom(
-      fixedIncomeStreams,
-      adjustableIncomeStreams,
-      this.#demographics,
-      this.#fiscalData
-    );
+  //   // const incomeBreakdown = IncomeBreakdown.CreateFrom(
+  //   //   fixedIncomeStreams,
+  //   //   adjustableIncomeStreams,
+  //   //   this.#demographics,
+  //   //   this.#fiscalData
+  //   // );
 
-    // const result = IncomeRs.CreateUsing(incomeBreakdown);
+  //   // const result = IncomeRs.CreateUsing(incomeBreakdown);
 
-    return incomeBreakdown;
-  }
+  //   return incomeBreakdown;
+  // }
 
   /**
    * @param {FixedIncomeStreams} fixedIncomeStreams
@@ -114,7 +111,7 @@ class RetirementIncomeCalculator {
         fixedIncomeStreams.combinedPensionGross,
         fixedIncomeStreams.interestEarnedOnSavings,
         fixedIncomeStreams.miscTaxableIncomeWithNoWithholdings,
-        adjustableIncomeStreams?.grossIncomeSubjectToTaxation ?? 0,
+        adjustableIncomeStreams?.grossTaxableIncome ?? 0,
       ];
     }
 
@@ -259,18 +256,18 @@ class RetirementIncomeCalculator {
  * @param {Demographics} demographics
  * @param {FiscalData} fiscalData
  */
-function calculateIncomeWhenAdjustableIncomeIs(
-  fixedIncomeStreams,
-  adjustableIncomeStreams,
-  demographics,
-  fiscalData
-) {
-  const calculator = new RetirementIncomeCalculator(demographics, fiscalData);
-  return calculator.calculateIncomeBreakdown(
-    fixedIncomeStreams,
-    adjustableIncomeStreams
-  );
-}
+// function calculateIncomeWhenAdjustableIncomeIs(
+//   fixedIncomeStreams,
+//   adjustableIncomeStreams,
+//   demographics,
+//   fiscalData
+// ) {
+//   const calculator = new RetirementIncomeCalculator(demographics, fiscalData);
+//   return calculator.calculateIncomeBreakdown(
+//     fixedIncomeStreams,
+//     adjustableIncomeStreams
+//   );
+// }
 
 /**
  * @param {number} i

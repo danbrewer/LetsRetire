@@ -1,6 +1,5 @@
 import { Demographics } from "./cDemographics.js";
 import { FiscalData } from "./cFiscalData.js";
-import { IncomeBreakdown } from "./cIncomeBreakdown.js";
 import { TaxCalculations } from "./cTaxCalculations.js";
 
 /**
@@ -135,37 +134,7 @@ class Taxes {
    * @param {string} [description="Taxes"] - Descriptive label
    *
    * @returns {Taxes} A new Taxes instance with calculated taxable income
-   *
-   * @example
-   * // Create taxes from basic income data
-   * const grossIncome = 85000;
-   * const standardDeduction = 27700; // 2024 MFJ standard deduction
-   *
-   * const taxes = Taxes.CreateUsing(grossIncome, standardDeduction);
-   * console.log(taxes.taxableIncome); // 57300 (85000 - 27700)
-   *
-   * // Later, set federal taxes after bracket calculation
-   * taxes.updateCalculation({ federalTaxesOwed: 8750 });
-   * console.log(taxes.getEffectiveTaxRate()); // ~0.103 (10.3%)
-   *
-   * @static
-   * @since 1.0.0
    */
-
-  /**
-   * @param {IncomeBreakdown} incomeBreakdown
-   */
-  // static CreateUsing(incomeBreakdown) {
-  //   return new Taxes(
-  //     incomeBreakdown.actualIncome,
-  //     incomeBreakdown.grossIncome,
-  //     incomeBreakdown.standardDeduction,
-  //     incomeBreakdown.adjustedGrossIncome,
-  //     incomeBreakdown.federalIncomeTax,
-  //     0, // otherTaxes - to be calculated later
-  //     "Taxes"
-  //   );
-  // }
 
   /**
    * @param {Number} grossIncome

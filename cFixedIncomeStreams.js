@@ -377,11 +377,12 @@ class FixedIncomeStreams {
 
   get grossTaxableIncome() {
     return (
-      this.combinedCareerWagesAndCompensationTaxable +
+      this.combinedSsGross +
       this.combinedPensionGross +
-      this.interestEarnedOnSavings +
       this.miscTaxableIncomeWithNoWithholdings +
-      this.combinedSsGross
+      this.combinedCareerWagesAndCompensationTaxable +
+      this.interestEarnedOnSavings +
+      0
     );
   }
 

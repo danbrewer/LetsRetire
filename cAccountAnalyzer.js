@@ -420,7 +420,7 @@ class AccountAnalyzer {
       route: 31,
       deposit: 8,
       withdrawal: 8,
-      balance: 8,
+      balance: category ? 0 : 8,
       memo: 20,
       spacer: 3,
     };
@@ -463,7 +463,7 @@ class AccountAnalyzer {
       "center"
     );
     const balanceHeader = StringFunctions.padAndAlign(
-      "Balance",
+      category ? "" : "Balance",
       fieldLayout.balance,
       "center"
     );
@@ -480,6 +480,7 @@ class AccountAnalyzer {
     Boxes.addDetailData(headers, "left");
     Boxes.doubleDivider();
     let balance = startingBalance;
+
     for (const t of transactions) {
       const date = DateFunctions.formatDateYYYYMMDD(t.date);
       const dateField = StringFunctions.padAndAlign(date, fieldLayout.date);
@@ -512,8 +513,9 @@ class AccountAnalyzer {
       );
       balance +=
         t.transactionType === TransactionType.Deposit ? t.amount : -t.amount;
+
       const balanceField = StringFunctions.padAndAlign(
-        balance.asCurrency(),
+        category ? "" : balance.asCurrency(),
         fieldLayout.balance,
         "right"
       );
@@ -527,56 +529,66 @@ class AccountAnalyzer {
       Boxes.addDetailData(detailData, "left");
     }
 
-    if (!category) {
-      const endingBalance = this.#accountYear
-        .getEndingBalance(this.#accountType, category)
-        .asCurrency();
-      if (endingBalance !== balance) {
-        console.warn(
-          `Warning: Calculated ending balance ${balance.asCurrency()} does not match reported ending balance ${endingBalance.asCurrency()}`
-        );
-      }
+    const endingBalance = this.#accountYear
+      .getEndingBalance(this.#accountType, category)
+      .asCurrency();
 
-      let incomingBalance = transactions.reduce((sum, t) => {
+    if (!category && endingBalance !== balance) {
+      console.warn(
+        `Warning: Calculated ending balance ${balance.asCurrency()} does not match reported ending balance ${endingBalance.asCurrency()}`
+      );
+    }
+
+    let incomingSum = transactions
+      .reduce((sum, t) => {
         return t.transactionType === TransactionType.Deposit
           ? sum + t.amount
           : sum;
-      }, 0);
-      let outgoingBalance = transactions.reduce((sum, t) => {
+      }, 0)
+      .asCurrency();
+
+    let outgoingSum = transactions
+      .reduce((sum, t) => {
         return t.transactionType === TransactionType.Withdrawal
           ? sum + t.amount
           : sum;
-      }, 0);
+      }, 0)
+      .asCurrency();
 
-      const startingBalanceField = StringFunctions.padAndAlign(
-        `Starting balance: ${startingBalance.asCurrency()}`,
-        fieldLayout.date + fieldLayout.category + fieldLayout.route + spacer.length * 2,
-        "center"
-      );
+    const startingBalanceField = StringFunctions.padAndAlign(
+      category
+        ? "Totals:"
+        : `Starting balance: ${startingBalance.asCurrency()}`,
+      fieldLayout.date +
+        fieldLayout.category +
+        fieldLayout.route +
+        spacer.length * 2,
+      "center"
+    );
 
-      const incomingTotalField = StringFunctions.padAndAlign(
-        incomingBalance.asCurrency(),
-        fieldLayout.deposit,
-        "right"
-      );
-      const outgoingTotalField = StringFunctions.padAndAlign(
-        (-outgoingBalance).asCurrency(),
-        fieldLayout.withdrawal,
-        "right"
-      );
-      const balanceTotalField = StringFunctions.padAndAlign(
-        endingBalance.asCurrency(),
-        fieldLayout.balance,
-        "right"
-      );
+    const incomingSumField = StringFunctions.padAndAlign(
+      incomingSum == 0 ? "" : incomingSum,
+      fieldLayout.deposit,
+      "right"
+    );
+    const outgoingSumField = StringFunctions.padAndAlign(
+      outgoingSum == 0 ? "" : -outgoingSum,
+      fieldLayout.withdrawal,
+      "right"
+    );
+    const endingBalanceField = StringFunctions.padAndAlign(
+      category ? "" : endingBalance.asCurrency(),
+      fieldLayout.balance,
+      "right"
+    );
 
-      Boxes.doubleDivider();
+    Boxes.doubleDivider();
 
-      Boxes.addDetailData(
-        `${startingBalanceField}${spacer}${incomingTotalField}${spacer}${outgoingTotalField}${spacer}${balanceTotalField}`,
-        "left"
-      );
-    }
+    Boxes.addDetailData(
+      `${startingBalanceField}${spacer}${incomingSumField}${spacer}${outgoingSumField}${spacer}${endingBalanceField}`,
+      "left"
+    );
+
     Boxes.singleBorderBottom();
   }
 

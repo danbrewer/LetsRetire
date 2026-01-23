@@ -1,10 +1,5 @@
 import { ACCOUNT_TYPES } from "./cAccount.js";
 import { AccountingYear } from "./cAccountingYear.js";
-import { AccountPortioner } from "./cAccountPortioner.js";
-import { Common } from "./cCommon.js";
-import { Demographics } from "./cDemographics.js";
-import { FiscalData } from "./cFiscalData.js";
-import { Inputs } from "./cInputs.js";
 import { TransactionCategory } from "./tTransactionCategory.js";
 
 class AdjustableIncomeStreams {
@@ -106,7 +101,7 @@ class AdjustableIncomeStreams {
     ).asCurrency();
   }
 
-  get grossIncomeSubjectToTaxation() {
+  get grossTaxableIncome() {
     return this.combined401kGrossWithdrawals;
   }
 }

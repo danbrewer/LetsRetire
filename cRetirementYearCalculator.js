@@ -6,7 +6,6 @@ import { Common } from "./cCommon.js";
 import { Demographics } from "./cDemographics.js";
 import { FiscalData } from "./cFiscalData.js";
 import { FixedIncomeStreams } from "./cFixedIncomeStreams.js";
-import { IncomeBreakdown } from "./cIncomeBreakdown.js";
 import { Inputs } from "./cInputs.js";
 import { PERIODIC_FREQUENCY, TAX_BASE_YEAR } from "./consts.js";
 import { RetirementYearResults } from "./cRetirementYearData.js";
@@ -45,8 +44,8 @@ class RetirementYearCalculator {
   #ssBreakdown = new SocialSecurityBreakdown(0, 0, 0, false);
   /** @type {Taxes} */
   #taxes = new Taxes(0, 0, 0, 0, 0, 0);
-  /** @type {IncomeBreakdown} */
-  #incomeBreakdown;
+  // /** @type {IncomeBreakdown} */
+  // #incomeBreakdown;
 
   /**
    * Create retirement year calculator with input configuration
@@ -75,12 +74,12 @@ class RetirementYearCalculator {
       this.#accountYear
     );
 
-    this.#incomeBreakdown = IncomeBreakdown.CreateFrom(
-      this.#fixedIncomeStreams,
-      this.#adjustableIncomeStreams,
-      this.#demographics,
-      this.#fiscalData
-    );
+    // this.#incomeBreakdown = IncomeBreakdown.CreateFrom(
+    //   this.#fixedIncomeStreams,
+    //   this.#adjustableIncomeStreams,
+    //   this.#demographics,
+    //   this.#fiscalData
+    // );
   }
 
   processRetirementYearData() {
@@ -142,19 +141,19 @@ class RetirementYearCalculator {
     //   incomeResults.ssBreakdown
     // );
 
-    const totals = {
-      _description: "Totals Breakdown",
-      reportableIncome: this.#incomeBreakdown.grossIncome,
-      taxableIncome: this.#incomeBreakdown.adjustedGrossIncome,
-      netIncome: this.#incomeBreakdown.actualIncome, // getNetIncomeMinusReportedEarnedInterest,
-      calculationDetails: [withLabel("incomeResults", this.#incomeBreakdown)],
-    };
+    // const totals = {
+    //   _description: "Totals Breakdown",
+    //   reportableIncome: this.#incomeBreakdown.grossIncome,
+    //   taxableIncome: this.#incomeBreakdown.adjustedGrossIncome,
+    //   netIncome: this.#incomeBreakdown.actualIncome, // getNetIncomeMinusReportedEarnedInterest,
+    //   calculationDetails: [withLabel("incomeResults", this.#incomeBreakdown)],
+    // };
 
     const retirementYearResults = RetirementYearResults.CreateUsing(
       this.#demographics,
       this.#fiscalData,
       this.#accountYear,
-      this.#incomeBreakdown,
+      // this.#incomeBreakdown,
       this.#ssBreakdown,
       this.#taxes
     );
@@ -275,7 +274,9 @@ class RetirementYearCalculator {
   #processIncomeTaxes() {
     this.#ssBreakdown = this.#determineSocialSecurityBreakdown();
 
-    const grossIncome = this.#incomeBreakdown?.grossIncome ?? 0;
+    const grossIncome =
+      this.#fixedIncomeStreams.grossTaxableIncome +
+      this.#adjustableIncomeStreams.grossTaxableIncome;
     const taxableIncome = grossIncome - this.#ssBreakdown.nonTaxableAmount;
 
     this.#taxes = Taxes.CreateFromTaxableIncome(
@@ -295,15 +296,15 @@ class RetirementYearCalculator {
     const taxUnderpayment = taxesDue - totalWithholdings;
     const taxOverpayment = -taxUnderpayment;
 
-    if (taxesDue === totalWithholdings) {
+    if (taxesDue < totalWithholdings) {
       this.#accountYear.withdrawal(
         ACCOUNT_TYPES.TAXES,
         TransactionCategory.TaxPayment,
         TransactionRoutes.External,
-        totalWithholdings.asCurrency(),
+        taxesDue.asCurrency(),
         12,
         31,
-        "Federal Income Taxes Owed"
+        "Pay the Feds"
       );
     }
 
@@ -327,7 +328,8 @@ class RetirementYearCalculator {
         ACCOUNT_TYPES.TAXES,
         withdrawalAmount,
         PERIODIC_FREQUENCY.ANNUAL_TRAILING,
-        TransactionCategory.TaxPayment
+        TransactionCategory.TaxPayment,
+        "Cover taxes shortfall"
       );
 
       // Requery the tax account balance after transfer from savings
@@ -342,28 +344,19 @@ class RetirementYearCalculator {
         taxAccountDeposits.asCurrency(),
         12,
         31,
-        "Federal Income Taxes Owed"
+        "Pay the Feds"
       );
     }
 
     if (taxOverpayment > 0) {
-      // Pay the Feds the actual taxes due
-      this.#accountYear.withdrawal(
-        ACCOUNT_TYPES.TAXES,
-        TransactionCategory.TaxPayment,
-        TransactionRoutes.External,
-        taxesDue.asCurrency(),
-        12,
-        31,
-        "Federal Income Taxes Owed"
-      );
       // Refund the overpayment to savings
       this.#accountYear.processAsPeriodicTransfers(
         ACCOUNT_TYPES.TAXES,
         ACCOUNT_TYPES.SAVINGS,
         taxOverpayment,
         PERIODIC_FREQUENCY.ANNUAL_TRAILING,
-        TransactionCategory.TaxRefund
+        TransactionCategory.TaxRefund,
+        "Overpayment refund"
       );
     }
     this.#accountYear.analyzers[ACCOUNT_TYPES.TAXES].dumpAccountActivity(
@@ -385,6 +378,10 @@ class RetirementYearCalculator {
         PERIODIC_FREQUENCY.MONTHLY,
         TransactionCategory.SurplusIncome
       );
+      this.#accountYear.analyzers[ACCOUNT_TYPES.SAVINGS].dumpAccountActivity(
+        "Monthly spend surplus",
+        TransactionCategory.SurplusIncome
+      );
     }
     if (actualIncome < spend) {
       // Any money needed to cover the spend budget deficit is withdrawn from savings
@@ -403,10 +400,11 @@ class RetirementYearCalculator {
           TransactionCategory.IncomeShortfall
         );
       }
+      this.#accountYear.analyzers[ACCOUNT_TYPES.SAVINGS].dumpAccountActivity(
+        "Monthly spend deficit",
+        TransactionCategory.IncomeShortfall
+      );
     }
-    this.#accountYear.analyzers[ACCOUNT_TYPES.SAVINGS].dumpAccountActivity(
-      "Surplus cash processed"
-    );
   }
 
   /**
@@ -585,7 +583,7 @@ class RetirementYearCalculator {
   }
 
   #processPensionIncome() {
-    if (this.#incomeBreakdown?.combinedPensionTakeHome ?? 0 == 0) return;
+    if (this.#fixedIncomeStreams.combinedPensionActualIncome == 0) return;
 
     this.#accountYear.processAsPeriodicDeposits(
       ACCOUNT_TYPES.SUBJECT_PENSION,
@@ -646,7 +644,7 @@ class RetirementYearCalculator {
 
   #processNonTaxableIncome() {
     const nonTaxableActualIncome =
-      this.#incomeBreakdown?.miscNonTaxableActualIncome ?? 0;
+      this.#fixedIncomeStreams.taxFreeIncomeAdjustment;
 
     if (nonTaxableActualIncome <= 0) return;
 

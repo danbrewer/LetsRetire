@@ -2,7 +2,6 @@ import { AccountingYear } from "./cAccountingYear.js";
 import { Demographics } from "./cDemographics.js";
 import { Deposits } from "./cDeposits.js";
 import { FiscalData } from "./cFiscalData.js";
-import { IncomeBreakdown } from "./cIncomeBreakdown.js";
 import { Taxes } from "./cTaxes.js";
 import { Withdrawals } from "./cWithdrawals.js";
 
@@ -23,9 +22,7 @@ class DebugData {
    *
    * @param {Demographics} demographics - Demographic information
    * @param {FiscalData} fiscalData - Fiscal information
-   * @param {IncomeBreakdown} incomeBreakdown - Income breakdown data
    * @param {Taxes} taxes - Federal tax liability
-   * @param {number} netIncome - Net income after taxes
    * @param {Deposits} deposits - Deposits object containing deposit data
    * @param {Withdrawals} withdrawals - Withdrawals object containing withdrawal data
    * @param {AccountingYear} [accountYear] - Account group data
@@ -34,9 +31,7 @@ class DebugData {
   constructor(
     demographics,
     fiscalData,
-    incomeBreakdown,
     taxes,
-    netIncome,
     deposits,
     withdrawals,
     accountYear,
@@ -45,9 +40,7 @@ class DebugData {
     this._demographics = demographics;
     this._description = description;
     this._fiscalData = fiscalData;
-    this._incomeBreakdown = incomeBreakdown;
     this._taxes = taxes;
-    this._netIncome = netIncome;
     this._deposits = deposits;
     this._withdrawals = withdrawals;
     this.accounts = accountYear;
@@ -136,13 +129,13 @@ class DebugData {
    *
    * @returns {number} Ratio of net income to spending
    */
-  getSpendableIncomeRatio() {
-    if (this.spend <= 0) return 0;
-    return (
-      this._incomeBreakdown.actualIncome / //getNetIncomeMinusReportedEarnedInterest() /
-      this.spend
-    );
-  }
+  // getSpendableIncomeRatio() {
+  //   if (this.spend <= 0) return 0;
+  //   return (
+  //     this._incomeBreakdown.actualIncome / //getNetIncomeMinusReportedEarnedInterest() /
+  //     this.spend
+  //   );
+  // }
 
   //   /**
   //    * Gets the income breakdown by source as percentages.
@@ -268,46 +261,46 @@ class DebugData {
    *
    * @returns {Object} Summary containing all debug information and analysis
    */
-  getSummary() {
-    // const incomeBreakdown = this.getIncomeBreakdownPercentages();
-    const depositsBreakdown = this.depositsBreakdownPercentages;
-    const withdrawalsBreakdown = this.withdrawalsBreakdownPercentages;
-    const validation = this.validate();
+  // getSummary() {
+  //   // const incomeBreakdown = this.getIncomeBreakdownPercentages();
+  //   const depositsBreakdown = this.depositsBreakdownPercentages;
+  //   const withdrawalsBreakdown = this.withdrawalsBreakdownPercentages;
+  //   const validation = this.validate();
 
-    return {
-      // Basic demographics and spending
-      age: this._demographics.currentAge,
-      spend: this.spend,
+  //   return {
+  //     // Basic demographics and spending
+  //     age: this._demographics.currentAge,
+  //     spend: this.spend,
 
-      // Income analysis
-      totalIncome: this._incomeBreakdown.grossIncome,
-      incomeBreakdown: {
-        raw: this._incomeBreakdown,
-        // percentages: incomeBreakdown,
-      },
+  //     // Income analysis
+  //     totalIncome: this._incomeBreakdown.grossIncome,
+  //     incomeBreakdown: {
+  //       raw: this._incomeBreakdown,
+  //       // percentages: incomeBreakdown,
+  //     },
 
-      // Tax analysis
-      federalTaxes: 0, //this._taxes.federalTaxesOwed,
-      netIncome: this._incomeBreakdown.actualIncome,
-      effectiveTaxRate: (this.getEffectiveTaxRate() * 100).toFixed(2) + "%",
+  //     // Tax analysis
+  //     federalTaxes: 0, //this._taxes.federalTaxesOwed,
+  //     netIncome: this._incomeBreakdown.actualIncome,
+  //     effectiveTaxRate: (this.getEffectiveTaxRate() * 100).toFixed(2) + "%",
 
-      // Cash flow analysis
-      totalDeposits: this.totalDeposits,
-      totalWithdrawals: this.totalWithdrawals,
-      netCashFlow: this.netCashFlow,
-      depositsBreakdown: depositsBreakdown,
-      withdrawalsBreakdown: withdrawalsBreakdown,
+  //     // Cash flow analysis
+  //     totalDeposits: this.totalDeposits,
+  //     totalWithdrawals: this.totalWithdrawals,
+  //     netCashFlow: this.netCashFlow,
+  //     depositsBreakdown: depositsBreakdown,
+  //     withdrawalsBreakdown: withdrawalsBreakdown,
 
-      // Financial ratios
-      spendableIncomeRatio: this.getSpendableIncomeRatio().toFixed(2),
+  //     // Financial ratios
+  //     spendableIncomeRatio: this.getSpendableIncomeRatio().toFixed(2),
 
-      //   // Account information
-      //   accountsCount: Object.keys(this.accounts).length,
+  //     //   // Account information
+  //     //   accountsCount: Object.keys(this.accounts).length,
 
-      // Validation results
-      validation: validation,
-    };
-  }
+  //     // Validation results
+  //     validation: validation,
+  //   };
+  // }
 
   /**
    * Factory method to create a DebugData from calculation results and account data.
@@ -318,7 +311,6 @@ class DebugData {
    *
    * @param {Demographics} demographics - Demographic information
    * @param {FiscalData} fiscalData - Fiscal data for the calculation year
-   * @param {IncomeBreakdown} incomeBreakdown - Income streams object with calculation methods
    * @param {Deposits} deposits - Deposits information
    * @param {Withdrawals} withdrawals - Withdrawals information
    * @param {AccountingYear} accountYear - Account group with all account types
@@ -346,7 +338,6 @@ class DebugData {
   static CreateUsing(
     demographics,
     fiscalData,
-    incomeBreakdown,
     deposits,
     withdrawals,
     accountYear,
@@ -449,9 +440,7 @@ class DebugData {
     return new DebugData(
       demographics,
       fiscalData,
-      incomeBreakdown,
       taxes,
-      incomeBreakdown.actualIncome, //getNetIncomeMinusReportedEarnedInterest(),
       deposits,
       withdrawals,
       accountYear,
