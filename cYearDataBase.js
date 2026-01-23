@@ -42,6 +42,8 @@ class BaseYearData {
     this.#wagesAndCompensationReport = new WagesAndCompensationReport(
       this.#accountYear
     );
+
+    this.#wagesAndCompensationReport.dump("wagesAndCompensationReport");
   }
 
   /** @returns {Demographics} */

@@ -81,11 +81,11 @@ class AccountingYear {
       {
         get: (_, prop) => {
           if (typeof prop === "string") {
-            if (!this.#accountAnalyzers.has(prop)) {
-              throw new Error(
-                `AccountAnalyzer for type "${prop}" does not exist.`
-              );
-            }
+            // if (!this.#accountAnalyzers.has(prop)) {
+            //   throw new Error(
+            //     `AccountAnalyzer for type "${prop}" does not exist.`
+            //   );
+            // }
             return this.#accountAnalyzers.get(prop);
           }
           return undefined;
@@ -347,8 +347,9 @@ class AccountingYear {
    * @param {string} accountName
    */
   recordInterestEarnedForYear(accountName) {
-    this.#getAccountByName(accountName)
-      .recordInterestEarnedForYear(this.taxYear);
+    this.#getAccountByName(accountName).recordInterestEarnedForYear(
+      this.taxYear
+    );
   }
 
   /** @param {string} accountName */

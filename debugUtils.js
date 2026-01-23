@@ -1,4 +1,4 @@
-import { DateFunctions } from "./utils.js";
+import { DateFunctions, StringFunctions } from "./utils.js";
 
 const DUMP_CALCULATION_DETAILS = true; // set to false to disable detailed calc dumps
 
@@ -23,8 +23,36 @@ function getParamText(fn) {
   const ident = src.match(/^(?:async\s+)?([A-Za-z_$][\w$]*)\s*=>/);
   if (ident) return ident[1];
 
-  // Fallback: unknown/edge case—don’t assume zero args
+  // Fallback: unknown/edge case—don't assume zero args
   return null;
+}
+
+/**
+ * Check if a value is a Proxy object
+ * @param {any} value
+ * @returns {boolean}
+ */
+function isProxy(value) {
+  if (!value || typeof value !== "object") return false;
+
+  // Check for undefined constructor or missing dump method (classic proxy symptoms)
+  if (value.constructor === undefined || typeof value.dump === "undefined") {
+    return true;
+  }
+
+  // Check for empty object with Object constructor
+  if (value.constructor === Object) {
+    try {
+      const ownKeys = Object.getOwnPropertyNames(value);
+      if (ownKeys.length === 0) {
+        return true;
+      }
+    } catch {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 // Safe formatting of values for logging/dumping
@@ -44,27 +72,6 @@ function safeFormat(value) {
     return "[unserializable result]";
   }
 }
-
-// =====================
-// String helpers
-// =====================
-
-// /**
-//  * @param {any} strings
-//  * @param {any[]} values
-//  */
-// function dedent(strings, ...values) {
-//   const raw = String.raw({ raw: strings }, ...values);
-//   const lines = raw.split("\n");
-//   const nonEmpty = lines.filter((line) => line.trim().length > 0);
-//   const indent = Math.min(
-//     ...nonEmpty.map((line) => line.match(/^(\s*)/)[0].length)
-//   );
-//   return lines
-//     .map((line) => line.slice(indent))
-//     .join("\n")
-//     .trim();
-// }
 
 // =====================
 // Logging
@@ -188,203 +195,58 @@ function _labelFor(value, fallback) {
   return fallback || "Unknown";
 }
 
-// /**
-// @param {any} obj
-// @param {string} [title]
-// */
-// function dumpObject(obj, title) {
-//   makeDumpable(obj).dump(title);
-// }
-
-// /**
-//  * @param {any} obj
-//  */
-// function makeDumpable(obj) {
-//   Object.defineProperty(obj, "dump", {
-//     enumerable: false,
-//     configurable: true,
-//     writable: false,
-//     value(/** @type {string} */ title) {
-//       dump(obj, title);
-//     },
-//   });
-//   return obj;
-// }
-
-// /**
-//  * @param {any} obj
-//  * @param {string} [title]
-//  */
-// function dump(obj, title, depth = 0) {
-//   const indent = "  ".repeat(depth);
-//   const colWidth = 30; // adjust for alignment width
-
-//   if (depth === 0) {
-//     const header = title || obj._description || "Object Dump";
-//     console.log(`${header}:`);
-//   }
-
-//   // Arrays
-//   if (Array.isArray(obj)) {
-//     obj.forEach((val, i) => {
-//       if (val && typeof val === "object") {
-//         console.log(`${indent}- [${i}]`);
-//         val.dump(null, depth + 1);
-//       } else {
-//         console.log(`${indent}- [${i}] ${safeFormat(val)}`);
-//       }
-//     });
-//     return;
-//   }
-
-//   for (const [key, value] of Object.entries(obj)) {
-//     if (key === "_description") continue; // skip
-
-//     // ------- SPECIAL CASE: calculationDetails -------
-//     if (key === "calculationDetails") {
-//       if (!DUMP_CALCULATION_DETAILS) {
-//         continue; // skip entirely when disabled
-//       }
-
-//       const contributors = Array.isArray(value) ? value : [value];
-//       console.log(`${indent}- calculationDetails:`);
-
-//       contributors.forEach((contrib, idx) => {
-//         const heading = _labelFor(contrib, `Contributor #${idx + 1}`);
-//         console.log(`${indent}  - ${heading}:`);
-
-//         if (typeof contrib === "function") {
-//           const params = getParamText(contrib);
-//           const zeroParams = params !== null && params === "";
-
-//           if (zeroParams) {
-//             try {
-//               const result = contrib.call(obj);
-//               if (result && typeof result === "object") {
-//                 result.dump(null, depth + 2);
-//               } else {
-//                 console.log(`${indent}    - result() ${safeFormat(result)}`);
-//               }
-//             } catch (e) {
-//               console.log(
-//                 // @ts-ignore
-//                 `${indent}    - [function threw: ${e?.message ?? e}]`
-//               );
-//             }
-//           } else {
-//             const sig = params === null ? "[unknown signature]" : params;
-//             console.log(`${indent}    - (${sig}) [function]`);
-//           }
-//         } else if (contrib && typeof contrib === "object") {
-//           contrib.dump(null, depth + 2);
-//         } else {
-//           console.log(`${indent}    - ${safeFormat(contrib)}`);
-//         }
-//       });
-//       continue;
-//     }
-//     // ------- END SPECIAL CASE -------
-
-//     if (typeof value === "function") {
-//       const paramText = getParamText(value);
-//       const hasZeroParams = paramText !== null && paramText === "";
-
-//       if (hasZeroParams) {
-//         try {
-//           const result = value.call(obj);
-//           console.log(
-//             `${indent}- ${(key + "()").padEnd(colWidth)} ${alignValue(result, colWidth)}`
-//           );
-//         } catch (e) {
-//           console.log(
-//             // @ts-ignore
-//             `${indent}- ${(key + "()").padEnd(colWidth)} [function threw: ${e?.message ?? e}]`
-//           );
-//         }
-//       } else {
-//         const sig = paramText === null ? "[unknown signature]" : paramText;
-//         console.log(`${indent}- ${key}(${sig}) [function]`);
-//       }
-//     } else if (value instanceof Date) {
-//       console.log(
-//         `${indent}- ${key.padEnd(colWidth)} ${alignValue(formatDateYYYYMMDD(value), colWidth)}`
-//       );
-//     } else if (value && typeof value === "object") {
-//       console.log(`${indent}- ${key}:`);
-//       value.dump(null, depth + 1);
-//     } else {
-//       if (
-//         value &&
-//         typeof value === "object" &&
-//         "value" in value &&
-//         value[DUMP_LABEL]
-//       ) {
-//         // labeled primitive wrapper
-//         console.log(
-//           `${indent}- ${value[DUMP_LABEL]}: ${alignValue(value.value, colWidth)}`
-//         );
-//       } else {
-//         console.log(
-//           `${indent}- ${key.padEnd(colWidth)} ${alignValue(value, colWidth)}`
-//         );
-//       }
-//     }
-//   }
-
-//   // ===================================================
-//   // 🔍 NEW SECTION: Include getters from prototype
-//   // ===================================================
-//   const proto = Object.getPrototypeOf(obj);
-//   if (proto && proto !== Object.prototype) {
-//     const props = Object.getOwnPropertyDescriptors(proto);
-
-//     for (const [key, desc] of Object.entries(props)) {
-//       if (key === "constructor") continue;
-//       if (typeof desc.get === "function") {
-//         try {
-//           const value = obj[key];
-//           if (value && typeof value === "object") {
-//             console.log(`${indent}- ${key}:`);
-//             value.dump(null, depth + 1);
-//           } else {
-//             console.log(
-//               `${indent}- ${key.padEnd(colWidth)} ${alignValue(value, colWidth)}`
-//             );
-//           }
-//         } catch (e) {
-//           console.log(
-//             // @ts-ignore
-//             `${indent}- ${key.padEnd(colWidth)} [getter threw: ${e?.message ?? e}]`
-//           );
-//         }
-//       }
-//     }
-//   }
-// }
-
 // Define the dump method as non-enumerable so it won't appear in Object.entries
 Object.defineProperty(Object.prototype, "dump", {
   enumerable: false,
   configurable: true,
   writable: true,
-  value: function (/** @type {any} */ title, depth = 0) {
+  value: function (/** @type {any} */ title, mode = "deep", depth = 0) {
     const indent = "  ".repeat(depth);
-    const colWidth = 30; // adjust for alignment width
+    const keyWidth = 70; // Reserve 70 characters for keys
+    const valueWidth = 30; // Reserve 30 characters for values
+    const isShallow = mode === "shallow";
 
     if (depth === 0) {
       const header = title || this._description || "Object Dump";
-      console.log(`${header}:`);
+      const modeIndicator = isShallow ? " (shallow)" : "";
+      console.log(`${header}${modeIndicator}:`);
     }
 
     // Arrays
     if (Array.isArray(this)) {
       this.forEach((val, i) => {
         if (val && typeof val === "object") {
-          console.log(`${indent}- [${i}]`);
-          val.dump(null, depth + 1);
+          if (isShallow && depth === 0) {
+            const typeInfo = val.constructor ? val.constructor.name : "Object";
+            const size = Array.isArray(val) ? `[${val.length}]` : "";
+            console.log(`${indent}[${i}] [${typeInfo}${size}]`);
+          } else {
+            console.log(`${indent}[${i}]`);
+            val.dump(null, mode, depth + 1);
+          }
         } else {
-          console.log(`${indent}- [${i}] ${safeFormat(val)}`);
+          const keyValue = StringFunctions.padAndAlign(
+            `${indent}[${i}]`,
+            keyWidth
+          );
+          const formattedValue = StringFunctions.padAndAlign(
+            safeFormat(val),
+            valueWidth,
+            "right"
+          );
+          console.log(`${keyValue}${formattedValue}`);
         }
+        // if (val && typeof val === "object") {
+        //   console.log(`${indent}[${i}]`);
+        //   val.dump(null, mode, depth + 1);
+        // } else {
+        //   // const indexKey = `[${i}]`;
+        //   // const formattedValue = safeFormat(val);
+        //   // console.log(
+        //   //   `${indent}${StringFunctions.padAndAlign(indexKey, formattedValue, keyWidth, valueWidth, "left", "right")}`
+        //   // );
+        //   console.log(`${indent}[${i}] ${safeFormat(val)}`);
+        // }
       });
       return;
     }
@@ -392,14 +254,48 @@ Object.defineProperty(Object.prototype, "dump", {
     for (const [key, value] of Object.entries(this)) {
       if (key === "_description") continue; // skip
 
+      // // Skip AccountAnalyzer objects to avoid proxy issues
+      // if (
+      //   value &&
+      //   value.constructor &&
+      //   value.constructor.name === "AccountAnalyzer"
+      // ) {
+      //   const outputKey = StringFunctions.padAndAlign(
+      //     `${indent}- ${key}`,
+      //     keyWidth
+      //   );
+      //   const outputValue = StringFunctions.padAndAlign(
+      //     "[AccountAnalyzer]",
+      //     valueWidth,
+      //     "right"
+      //   );
+      //   console.log(`${outputKey}${outputValue}`);
+      //   continue;
+      // }
+
       // ------- SPECIAL CASE: calculationDetails -------
       if (key === "calculationDetails") {
         if (!DUMP_CALCULATION_DETAILS) {
           continue; // skip entirely when disabled
         }
 
+        if (isShallow && depth === 0) {
+          // In shallow mode, just show that calculationDetails exists
+          const outputKey = StringFunctions.padAndAlign(
+            `${indent}calculationDetails`,
+            keyWidth
+          );
+          const outputValue = StringFunctions.padAndAlign(
+            "[details]",
+            valueWidth,
+            "right"
+          );
+          console.log(`${outputKey}${outputValue}`);
+          continue;
+        }
+
         const contributors = Array.isArray(value) ? value : [value];
-        console.log(`${indent}- calculationDetails:`);
+        console.log(`${indent}calculationDetails:`);
 
         contributors.forEach((contrib, idx) => {
           const heading = _labelFor(contrib, `Contributor #${idx + 1}`);
@@ -413,7 +309,7 @@ Object.defineProperty(Object.prototype, "dump", {
               try {
                 const result = contrib.call(this);
                 if (result && typeof result === "object") {
-                  result.dump(null, depth + 2);
+                  result.dump(null, mode, depth + 2);
                 } else {
                   console.log(`${indent}    - result() ${safeFormat(result)}`);
                 }
@@ -428,7 +324,7 @@ Object.defineProperty(Object.prototype, "dump", {
               console.log(`${indent}    - (${sig}) [function]`);
             }
           } else if (contrib && typeof contrib === "object") {
-            contrib.dump(null, depth + 2);
+            contrib.dump(null, mode, depth + 2);
           } else {
             console.log(`${indent}    - ${safeFormat(contrib)}`);
           }
@@ -442,28 +338,99 @@ Object.defineProperty(Object.prototype, "dump", {
         const hasZeroParams = paramText !== null && paramText === "";
 
         if (hasZeroParams) {
+          const displayKey = StringFunctions.padAndAlign(
+            `${indent}${key}()`,
+            keyWidth
+          );
           try {
             const result = value.call(this);
-            console.log(
-              `${indent}- ${(key + "()").padEnd(colWidth)} ${alignValue(result, colWidth)}`
+            const formattedValue = StringFunctions.padAndAlign(
+              result,
+              valueWidth,
+              "right"
             );
+            console.log(`${displayKey}${formattedValue}`);
           } catch (e) {
-            console.log(
-              // @ts-ignore
-              `${indent}- ${(key + "()").padEnd(colWidth)} [function threw: ${e?.message ?? e}]`
+            const outputKey = StringFunctions.padAndAlign(
+              `${indent}${key}()`,
+              keyWidth
             );
+            // @ts-ignore
+            const errorMessage = e?.message ?? e;
+            const outputValue = StringFunctions.padAndAlign(
+              "???",
+              valueWidth,
+              "right"
+            );
+            console.log(`${outputKey}${outputValue}`);
+            console.log(`${indent}    [function threw: ${errorMessage}]`);
           }
         } else {
           const sig = paramText === null ? "[unknown signature]" : paramText;
-          console.log(`${indent}- ${key}(${sig}) [function]`);
+          const outputKey = StringFunctions.padAndAlign(
+            `${indent}${key}(${sig})`,
+            keyWidth
+          );
+          const outputValue = StringFunctions.padAndAlign(
+            "[function]",
+            valueWidth,
+            "right"
+          );
+          console.log(`${outputKey}${outputValue}`);
         }
       } else if (value instanceof Date) {
-        console.log(
-          `${indent}- ${key.padEnd(colWidth)} ${alignValue(DateFunctions.formatDateYYYYMMDD(value), colWidth)}`
+        const formattedDate = DateFunctions.formatDateYYYYMMDD(value);
+        const outputKey = StringFunctions.padAndAlign(
+          `${indent}${key}`,
+          keyWidth
         );
+        const outputValue = StringFunctions.padAndAlign(
+          formattedDate,
+          valueWidth,
+          "right"
+        );
+        console.log(`${outputKey}${outputValue}`);
       } else if (value && typeof value === "object") {
-        console.log(`${indent}- ${key}:`);
-        value.dump(null, depth + 1);
+        // Generic proxy detection
+        if (isProxy(value)) {
+          const outputKey = StringFunctions.padAndAlign(
+            `${indent}${key}`,
+            keyWidth
+          );
+          const outputValue = StringFunctions.padAndAlign(
+            "[Proxy]",
+            valueWidth,
+            "right"
+          );
+          console.log(`${outputKey}${outputValue}`);
+        } else if (isShallow && depth === 0) {
+          const typeInfo = value.constructor
+            ? value.constructor.name
+            : "Object";
+          const size = Array.isArray(value)
+            ? `[${value.length}]`
+            : value instanceof Map
+              ? `Map(${value.size})`
+              : value instanceof Set
+                ? `Set(${value.size})`
+                : "";
+          const outputKey = StringFunctions.padAndAlign(
+            `${indent}${key}`,
+            keyWidth
+          );
+          const outputValue = StringFunctions.padAndAlign(
+            `[${typeInfo}${size}]`,
+            valueWidth,
+            "right"
+          );
+          console.log(`${outputKey}${outputValue}`);
+        } else {
+          console.log(`${indent}${key}:`);
+          value.dump(null, mode, depth + 1);
+        }
+
+        // console.log(`${indent}${key}:`);
+        // value.dump(null, mode, depth + 1);
       } else {
         if (
           value &&
@@ -472,13 +439,32 @@ Object.defineProperty(Object.prototype, "dump", {
           value[DUMP_LABEL]
         ) {
           // labeled primitive wrapper
-          console.log(
-            `${indent}- ${value[DUMP_LABEL]}: ${alignValue(value.value, colWidth)}`
+          const outputKey = StringFunctions.padAndAlign(
+            `${indent}${key}`,
+            keyWidth
           );
+          const outputValue = StringFunctions.padAndAlign(
+            String(value.value),
+            valueWidth,
+            "right"
+          );
+          console.log(`${outputKey}${outputValue}`);
         } else {
-          console.log(
-            `${indent}- ${key.padEnd(colWidth)} ${alignValue(value, colWidth)}`
+          const outputKey = StringFunctions.padAndAlign(
+            `${indent}${key}`,
+            keyWidth
           );
+          const outputValue = StringFunctions.padAndAlign(
+            String(value),
+            valueWidth,
+            "right"
+          );
+          console.log(`${outputKey}${outputValue}`);
+          //
+          // const formattedValue = String(value);
+          // console.log(
+          //   `${indent}${StringFunctions.padAndAlign(key, formattedValue, keyWidth, valueWidth, "left", "right")}`
+          // );
         }
       }
     }
@@ -495,36 +481,95 @@ Object.defineProperty(Object.prototype, "dump", {
         if (typeof desc.get === "function") {
           try {
             const value = this[key];
+            // // Skip AccountAnalyzer objects in getters too
+            // if (
+            //   value &&
+            //   value.constructor &&
+            //   value.constructor.name === "AccountAnalyzer"
+            // ) {
+            //   const outputKey = StringFunctions.padAndAlign(
+            //     `${indent}${key}`,
+            //     keyWidth
+            //   );
+            //   const outputValue = StringFunctions.padAndAlign(
+            //     "[AccountAnalyzer]",
+            //     valueWidth,
+            //     "right"
+            //   );
+            //   console.log(`${outputKey}${outputValue}`);
+            //   continue;
+            // }
+
             if (value && typeof value === "object") {
-              console.log(`${indent}- ${key}:`);
-              value.dump(null, depth + 1);
+              // Generic proxy detection for getters
+              if (isProxy(value)) {
+                const outputKey = StringFunctions.padAndAlign(
+                  `${indent}${key}`,
+                  keyWidth
+                );
+                const outputValue = StringFunctions.padAndAlign(
+                  "[Proxy]",
+                  valueWidth,
+                  "right"
+                );
+                console.log(`${outputKey}${outputValue}`);
+              } else if (isShallow && depth === 0) {
+                const typeInfo = value.constructor
+                  ? value.constructor.name
+                  : "Object";
+                const size = Array.isArray(value)
+                  ? `[${value.length}]`
+                  : value instanceof Map
+                    ? `Map(${value.size})`
+                    : value instanceof Set
+                      ? `Set(${value.size})`
+                      : "";
+                const outputKey = StringFunctions.padAndAlign(
+                  `${indent}${key}`,
+                  keyWidth
+                );
+                const outputValue = StringFunctions.padAndAlign(
+                  `[${typeInfo}${size}]`,
+                  valueWidth,
+                  "right"
+                );
+                console.log(`${outputKey}${outputValue}`);
+              } else {
+                console.log(`${indent}${key}:`);
+                value.dump(null, mode, depth + 1);
+              }
             } else {
-              console.log(
-                `${indent}- ${key.padEnd(colWidth)} ${alignValue(value, colWidth)}`
+              const outputKey = StringFunctions.padAndAlign(
+                `${indent}${key}`,
+                keyWidth
               );
+              const outputValue = StringFunctions.padAndAlign(
+                String(value),
+                valueWidth,
+                "right"
+              );
+              console.log(`${outputKey}${outputValue}`);
             }
           } catch (e) {
-            console.log(
-              // @ts-ignore
-              `${indent}- ${key.padEnd(colWidth)} [getter threw: ${e?.message ?? e}]`
+            const outputKey = StringFunctions.padAndAlign(
+              `${indent}${key}`,
+              keyWidth
             );
+            const outputValue = StringFunctions.padAndAlign(
+              "???",
+              valueWidth,
+              "right"
+            );
+            console.log(`${outputKey}${outputValue}`);
+
+            // @ts-ignore
+            const errorMsg = `${indent}    [getter threw: ${e?.message ?? e}]`;
+            console.log(errorMsg);
           }
         }
       }
     }
   },
 });
-
-// helper: align numbers right, strings left
-/**
- * @param {any} val
- * @param {number} width
- */
-function alignValue(val, width) {
-  if (typeof val === "number") {
-    return String(val).padStart(width);
-  }
-  return String(val).padEnd(width);
-}
 
 export { log, withLabel };
