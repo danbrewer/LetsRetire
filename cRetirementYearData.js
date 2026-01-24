@@ -35,10 +35,10 @@ import { FiscalData } from "./cFiscalData.js";
 import { AccountAnalyzer } from "./cAccountAnalyzer.js";
 import { SocialSecurityBreakdown } from "./cSsBreakdown.js";
 import { Taxes } from "./cTaxes.js";
-import { YearDataBase } from "./cYearDataBase.js";
+import { BaseYearData } from "./cYearDataBase.js";
 
 //    */
-class RetirementYearData extends YearDataBase {
+class RetirementYearData extends BaseYearData {
   /** @type {FiscalData} */
   #fiscalData;
   /** @type {SocialSecurityBreakdown} */
@@ -193,4 +193,4 @@ class RetirementYearData extends YearDataBase {
 // Create instance using the factory method for backward compatibility
 // const result = RetirementYearData.Empty();
 
-export { RetirementYearData};
+export { RetirementYearData };

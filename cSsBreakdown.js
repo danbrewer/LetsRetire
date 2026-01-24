@@ -83,6 +83,10 @@ class SocialSecurityBreakdown {
     this.#tier2Threshold = marriedFilingJointly ? 44000 : 34000;
   }
 
+  get otherTaxableIncome(){
+    return this.#otherTaxableIncome.asCurrency();
+  }
+
   get totalSsBenefits() {
     const totalBenefits = this.#subjectBenefits + this.#partnerBenefits;
     return totalBenefits.asCurrency();

@@ -8,6 +8,8 @@ import { FiscalData } from "./cFiscalData.js";
 import { FixedIncomeStreams } from "./cFixedIncomeStreams.js";
 import { Inputs } from "./cInputs.js";
 import { PERIODIC_FREQUENCY, TAX_BASE_YEAR } from "./consts.js";
+import { ReportingYear } from "./cReporting.js";
+import { ReportsManager } from "./cReportsManager.js";
 import { RetirementYearData } from "./cRetirementYearData.js";
 import { SsBenefitsCalculator } from "./cSsBenefitsCalculator.js";
 import { SocialSecurityBreakdown } from "./cSsBreakdown.js";
@@ -44,6 +46,8 @@ class RetirementYearCalculator {
   #ssBreakdown = new SocialSecurityBreakdown(0, 0, 0, false);
   /** @type {Taxes} */
   #taxes = new Taxes(0, 0, 0, 0, 0, 0);
+  /** @type {ReportingYear} */
+  #reportingYear;
   // /** @type {IncomeBreakdown} */
   // #incomeBreakdown;
 
@@ -51,10 +55,12 @@ class RetirementYearCalculator {
    * Create retirement year calculator with input configuration
    * @param {Inputs} inputs - Retirement calculation inputs containing demographics,
    * @param {AccountingYear} accountYear - Collection of retirement accounts for fiscal year
+   * @param {ReportingYear} reportingYear - Manager for report objects
    */
-  constructor(inputs, accountYear) {
+  constructor(inputs, accountYear, reportingYear) {
     this.#inputs = inputs;
     this.#accountYear = accountYear;
+    this.#reportingYear = reportingYear;
     this.#demographics = Demographics.CreateUsing(this.#inputs, true, false);
     this.#fiscalData = FiscalData.CreateUsing(this.#inputs, TAX_BASE_YEAR);
 
@@ -266,6 +272,110 @@ class RetirementYearCalculator {
       this.#fixedIncomeStreams,
       this.#adjustableIncomeStreams
     );
+
+    // this.#accountYear.processAsPeriodicDeposits(
+    //   ACCOUNT_TYPES.SOCIAL_SECURITY_BREAKDOWN,
+    //   TransactionCategory.SubjectSsBenefits,
+    //   TransactionRoutes.External,
+    //   ssBreakdown.subjectBenefits,
+    //   PERIODIC_FREQUENCY.MONTHLY
+    // );
+
+    // this.#accountYear.processAsPeriodicDeposits(
+    //   ACCOUNT_TYPES.SOCIAL_SECURITY_BREAKDOWN,
+    //   TransactionCategory.PartnerSsBenefits,
+    //   TransactionRoutes.External,
+    //   ssBreakdown.partnerBenefits,
+    //   PERIODIC_FREQUENCY.MONTHLY
+    // );
+
+    // this.#accountYear.processAsPeriodicDeposits(
+    //   ACCOUNT_TYPES.SOCIAL_SECURITY_BREAKDOWN,
+    //   TransactionCategory.NonSsIncome,
+    //   TransactionRoutes.External,
+    //   ssBreakdown.otherTaxableIncome,
+    //   PERIODIC_FREQUENCY.MONTHLY
+    // );
+
+    // this.#accountYear.processAsPeriodicDeposits(
+    //   ACCOUNT_TYPES.SOCIAL_SECURITY_BREAKDOWN,
+    //   TransactionCategory.Tier1Threshold,
+    //   TransactionRoutes.External,
+    //   ssBreakdown.tier1Threshold,
+    //   PERIODIC_FREQUENCY.MONTHLY
+    // );
+
+    // this.#accountYear.processAsPeriodicDeposits(
+    //   ACCOUNT_TYPES.SOCIAL_SECURITY_BREAKDOWN,
+    //   TransactionCategory.Tier2Threshold,
+    //   TransactionRoutes.External,
+    //   ssBreakdown.tier2Threshold,
+    //   PERIODIC_FREQUENCY.MONTHLY
+    // );
+
+    // this.#accountYear.processAsPeriodicDeposits(
+    //   ACCOUNT_TYPES.SOCIAL_SECURITY_BREAKDOWN,
+    //   TransactionCategory.IncomeExceedingTier1,
+    //   TransactionRoutes.External,
+    //   ssBreakdown.incomeExceedingTier1,
+    //   PERIODIC_FREQUENCY.MONTHLY
+    // );
+
+    // this.#accountYear.processAsPeriodicDeposits(
+    //   ACCOUNT_TYPES.SOCIAL_SECURITY_BREAKDOWN,
+    //   TransactionCategory.IncomeExceedingTier2,
+    //   TransactionRoutes.External,
+    //   ssBreakdown.incomeExceedingTier2,
+    //   PERIODIC_FREQUENCY.MONTHLY
+    // );
+
+    // this.#accountYear.processAsPeriodicDeposits(
+    //   ACCOUNT_TYPES.SOCIAL_SECURITY_BREAKDOWN,
+    //   TransactionCategory.Tier1TaxableAmount,
+    //   TransactionRoutes.External,
+    //   ssBreakdown.tier1TaxableAmount,
+    //   PERIODIC_FREQUENCY.MONTHLY
+    // );
+
+    // this.#accountYear.processAsPeriodicDeposits(
+    //   ACCOUNT_TYPES.SOCIAL_SECURITY_BREAKDOWN,
+    //   TransactionCategory.Tier2TaxableAmount,
+    //   TransactionRoutes.External,
+    //   ssBreakdown.tier2TaxableAmount,
+    //   PERIODIC_FREQUENCY.MONTHLY
+    // );
+
+    // this.#accountYear.processAsPeriodicDeposits(
+    //   ACCOUNT_TYPES.SOCIAL_SECURITY_BREAKDOWN,
+    //   TransactionCategory.SsTaxableAmount,
+    //   TransactionRoutes.External,
+    //   ssBreakdown.taxableAmount,
+    //   PERIODIC_FREQUENCY.MONTHLY
+    // );
+
+    // this.#accountYear.processAsPeriodicDeposits(
+    //   ACCOUNT_TYPES.SOCIAL_SECURITY_BREAKDOWN,
+    //   TransactionCategory.SsNonTaxableAmount,
+    //   TransactionRoutes.External,
+    //   ssBreakdown.nonTaxableAmount,
+    //   PERIODIC_FREQUENCY.MONTHLY
+    // );
+
+    // this.#accountYear.processAsPeriodicDeposits(
+    //   ACCOUNT_TYPES.SOCIAL_SECURITY_BREAKDOWN,
+    //   TransactionCategory.SsTaxablePercentage,
+    //   TransactionRoutes.External,
+    //   ssBreakdown.taxablePercentage,
+    //   PERIODIC_FREQUENCY.MONTHLY
+    // );
+
+    // this.#accountYear.processAsPeriodicDeposits(
+    //   ACCOUNT_TYPES.SOCIAL_SECURITY_BREAKDOWN,
+    //   TransactionCategory.SsMaxTaxableAMount,
+    //   TransactionRoutes.External,
+    //   ssBreakdown.maxTaxableSs,
+    //   PERIODIC_FREQUENCY.MONTHLY
+    // );
 
     return ssBreakdown;
   }

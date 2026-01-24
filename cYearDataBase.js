@@ -23,8 +23,8 @@ class BaseYearData {
   /** @type {AccountingYear} */
   #accountYear;
 
-  /** @type {WagesAndCompensationReport} */
-  #wagesAndCompensationReport;
+  // /** @type {WagesAndCompensationReport} */
+  // #wagesAndCompensationReport;
 
   /**
    * @param {Demographics} demographics
@@ -39,10 +39,9 @@ class BaseYearData {
       Object.freeze(accountYear)
     );
 
-    this.#wagesAndCompensationReport = new WagesAndCompensationReport(
-      this.#accountYear
-    );
-
+    // this.#wagesAndCompensationReport = new WagesAndCompensationReport(
+    //   this.#accountYear
+    // );
   }
 
   /** @returns {Demographics} */
@@ -60,9 +59,9 @@ class BaseYearData {
     return this.#accountYear;
   }
 
-  get wagesAndCompensation() {
-    return this.#wagesAndCompensationReport;
-  }
+  // get wagesAndCompensation() {
+  //   return this.#wagesAndCompensationReport;
+  // }
 
   /**
    * Subclasses must provide a description
@@ -75,4 +74,4 @@ class BaseYearData {
   }
 }
 
-export { BaseYearData as YearDataBase };
+export { BaseYearData };

@@ -5,10 +5,10 @@ import { FiscalData } from "./cFiscalData.js";
 import { FixedIncomeStreams } from "./cFixedIncomeStreams.js";
 import { Inputs } from "./cInputs.js";
 import { TAX_BASE_YEAR, PERIODIC_FREQUENCY } from "./consts.js";
+import { ReportingYear } from "./cReporting.js";
 import { Taxes } from "./cTaxes.js";
 import { TransactionCategory } from "./cTransaction.js";
 import { WorkingYearData } from "./cWorkingYearData.js";
-import { WorkingYearIncome } from "./cWorkingYearIncome.js";
 import { TransactionRoutes } from "./tTransactionRoute.js";
 
 /**
@@ -26,6 +26,8 @@ class WorkingYearCalculator {
   #demographics;
   /** @type {FixedIncomeStreams} */
   #fixedIncomeStreams;
+  /** @type {ReportingYear} */
+  #reportingYear;
   // /** @type {WorkingYearIncome} */
   // #workingYearIncome;
 
@@ -33,12 +35,14 @@ class WorkingYearCalculator {
    * Create working year income calculator with input configuration
    * @param {Inputs} inputs - Input configuration object containing salary, contribution rates, etc.
    * @param {AccountingYear} accountYear - AccountYear instance containing all accounts
+   * @param {ReportingYear} reportingYear - ReportingYear instance for the year
    */
-  constructor(inputs, accountYear) {
+  constructor(inputs, accountYear, reportingYear) {
     this.#inputs = inputs;
     this.#accountYear = accountYear;
     this.#demographics = Demographics.CreateUsing(inputs, false, true);
     this.#fiscalData = FiscalData.CreateUsing(inputs, TAX_BASE_YEAR);
+    this.#reportingYear = reportingYear;
 
     this.#fixedIncomeStreams = FixedIncomeStreams.CreateUsing(
       this.#demographics,
@@ -59,7 +63,7 @@ class WorkingYearCalculator {
     // Calculations
     // **************
     this.#processWagesAndCompensation();
-
+    this.#processNonTaxableIncome();
     this.#processRothIraContributions();
     this.#processSavingsContributions();
 
@@ -218,6 +222,46 @@ class WorkingYearCalculator {
 
     workingYearData.dump("working year data");
     return workingYearData;
+  }
+  #processNonTaxableIncome() {
+    const subjectNonTaxableIncome =
+      this.#fixedIncomeStreams.subjectCareerNonTaxableSalaryReductions;
+
+    if (subjectNonTaxableIncome > 0) {
+      this.#accountYear.processAsPeriodicDeposits(
+        ACCOUNT_TYPES.SUBJECT_WAGES,
+        TransactionCategory.OtherNonTaxable,
+        TransactionRoutes.External,
+        subjectNonTaxableIncome,
+        PERIODIC_FREQUENCY.MONTHLY
+      );
+      this.#accountYear.processAsPeriodicTransfers(
+        ACCOUNT_TYPES.SUBJECT_WAGES,
+        ACCOUNT_TYPES.CASH,
+        subjectNonTaxableIncome,
+        PERIODIC_FREQUENCY.MONTHLY,
+        TransactionCategory.OtherNonTaxable
+      );
+    }
+    const partnerNonTaxableIncome =
+      this.#fixedIncomeStreams.partnerCareerNonTaxableSalaryReductions;
+    if (partnerNonTaxableIncome > 0) {
+      this.#accountYear.processAsPeriodicDeposits(
+        ACCOUNT_TYPES.PARTNER_WAGES,
+        TransactionCategory.OtherNonTaxable,
+        TransactionRoutes.External,
+        partnerNonTaxableIncome,
+        PERIODIC_FREQUENCY.MONTHLY
+      );
+
+      this.#accountYear.processAsPeriodicTransfers(
+        ACCOUNT_TYPES.PARTNER_WAGES,
+        ACCOUNT_TYPES.CASH,
+        partnerNonTaxableIncome,
+        PERIODIC_FREQUENCY.MONTHLY,
+        TransactionCategory.OtherNonTaxable
+      );
+    }
   }
 
   #processSavingsContributions() {

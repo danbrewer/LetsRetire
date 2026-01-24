@@ -6,7 +6,7 @@ import { FiscalData } from "./cFiscalData.js";
 import { Taxes } from "./cTaxes.js";
 import { Withdrawals } from "./cWithdrawals.js";
 import { WorkingYearIncome } from "./cWorkingYearIncome.js";
-import { YearDataBase } from "./cYearDataBase.js";
+import { BaseYearData } from "./cYearDataBase.js";
 
 /**
  * Represents comprehensive working year calculation data including income, contributions,
@@ -19,7 +19,7 @@ import { YearDataBase } from "./cYearDataBase.js";
  * @class WorkingYearData
  * @since 1.0.0
  */
-class WorkingYearData extends YearDataBase {
+class WorkingYearData extends BaseYearData {
   // /** @type {FiscalData} */
   // #fiscalData;
   // /** @type {WorkingYearIncome} */
@@ -55,6 +55,25 @@ class WorkingYearData extends YearDataBase {
   get description() {
     return `Working Year ${this.accountYear.taxYear} (Age ${this.demographics.currentAge})`;
   }
+
+  /** @returns {Demographics} */
+  get demographics() {
+    return super.demographics;
+  }
+
+  /** @returns {FiscalData} */
+  get fiscalData() {
+    return super.fiscalData;
+  }
+
+  /** @returns {AccountingYear} */
+  get accountYear() {
+    return super.accountYear;
+  }
+
+  // get wagesAndCompensation() {
+  //   return super.wagesAndCompensation;
+  // }
 
   // get income() {
   //   return this.#workingYearIncome;

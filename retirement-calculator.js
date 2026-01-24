@@ -3,6 +3,7 @@ import { AccountsManager } from "./cAccountsManager.js";
 import { Calculation, Calculations } from "./cCalculation.js";
 import { Inputs } from "./cInputs.js";
 import { TAX_BASE_YEAR } from "./consts.js";
+import { ReportsManager } from "./cReportsManager.js";
 import { RetirementYearCalculator } from "./cRetirementYearCalculator.js";
 import { Transaction } from "./cTransaction.js";
 import { TransactionManager } from "./cTransactionManager.js";
@@ -60,10 +61,15 @@ function calc(calculations, UI) {
     lastCurrentAge = inputs.initialAgeSubject;
   }
 
-  const transactionManager = new TransactionManager
+  const transactionManager = new TransactionManager();
 
   // Initialize balances object for tracking
-  const accountsManager = AccountsManager.CreateFromInputs(inputs, transactionManager);
+  const accountsManager = AccountsManager.CreateFromInputs(
+    inputs,
+    transactionManager
+  );
+
+  const reportingManager = new ReportsManager();
 
   // Working years
   for (let yearIndex = 0; yearIndex < inputs.totalWorkingYears; yearIndex++) {
@@ -73,14 +79,19 @@ function calc(calculations, UI) {
       UI
     );
 
-    const accountYear = AccountingYear.FromAccountsManager(
+    const accountYear = AccountingYear.Create(
       accountsManager,
+      TAX_BASE_YEAR + yearIndex
+    );
+
+    const reportingYear = reportingManager.addReportingYear(
       TAX_BASE_YEAR + yearIndex
     );
 
     const workingYearIncomeCalculator = new WorkingYearCalculator(
       workingYearInputs,
-      accountYear
+      accountYear,
+      reportingYear
     );
     console.log(
       `------ START OF WORKING YEAR ` + (TAX_BASE_YEAR + yearIndex) + ` ------`
@@ -110,14 +121,19 @@ function calc(calculations, UI) {
       UI
     );
 
-    const accountYear = AccountingYear.FromAccountsManager(
+    const accountYear = AccountingYear.Create(
       accountsManager,
+      TAX_BASE_YEAR + yearIndex
+    );
+
+    const reportingYear = reportingManager.addReportingYear(
       TAX_BASE_YEAR + yearIndex
     );
 
     const calculator = new RetirementYearCalculator(
       retirementYearInputs,
-      accountYear
+      accountYear,
+      reportingYear
     );
 
     try {

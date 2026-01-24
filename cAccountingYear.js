@@ -49,6 +49,7 @@ class AccountingYear {
     );
   }
 
+  /** @type {AccountsManager} */
   #accountsManager;
 
   /** @type {Map<string, AccountAnalyzer>} */
@@ -505,7 +506,7 @@ class AccountingYear {
    * @param {AccountsManager} accountsManager
    * @param {number} taxYear
    */
-  static FromAccountsManager(accountsManager, taxYear) {
+  static Create(accountsManager, taxYear) {
     return new AccountingYear(accountsManager, taxYear);
   }
 }
