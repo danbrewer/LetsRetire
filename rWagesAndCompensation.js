@@ -5,7 +5,18 @@
 import { ReportingYear } from "./cReporting.js";
 
 class WagesAndCompensationReport {
-  constructor() {}
+  constructor() {
+    this.subjectGrossIncome = 0;
+    this.subject401kContribution = 0;
+    this.subjectEstimatedWithholdings = 0;
+    this.subjectNonTaxableSalaryReductions = 0;
+    this.subjectActualIncome = 0;
+    this.partnerGrossIncome = 0;
+    this.partner401kContribution = 0;
+    this.partnerNonTaxableSalaryReductions = 0;
+    this.partnerEstimatedWithholdings = 0;
+    this.partnerActualIncome = 0;
+  }
 
   // get subjectWagesAndCompensationGross() {
   //   return this._accountYear

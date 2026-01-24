@@ -312,6 +312,9 @@ class WorkingYearCalculator {
       PERIODIC_FREQUENCY.MONTHLY
     );
 
+    this.#reportingYear.WagesAndCompensation.subjectGrossIncome =
+      this.#fixedIncomeStreams.subjectCareerWagesAndCompensationGross;
+
     this.#accountYear.processAsPeriodicTransfers(
       ACCOUNT_TYPES.SUBJECT_WAGES,
       ACCOUNT_TYPES.SUBJECT_401K,
@@ -319,6 +322,9 @@ class WorkingYearCalculator {
       PERIODIC_FREQUENCY.MONTHLY,
       TransactionCategory.Contribution
     );
+
+    this.#reportingYear.WagesAndCompensation.subject401kContribution =
+      this.#fixedIncomeStreams.subjectCareerAllowed401kContribution;
 
     this.#accountYear.processAsPeriodicTransfers(
       ACCOUNT_TYPES.SUBJECT_WAGES,
@@ -329,6 +335,9 @@ class WorkingYearCalculator {
       TransactionCategory.Withholdings
     );
 
+    this.#reportingYear.WagesAndCompensation.subjectEstimatedWithholdings =
+      this.#fixedIncomeStreams.subjectCareerWagesAndCompensationEstimatedWithholdings;
+
     this.#accountYear.processAsPeriodicTransfers(
       ACCOUNT_TYPES.SUBJECT_WAGES,
       ACCOUNT_TYPES.SUBJECT_PAYROLL_DEDUCTIONS,
@@ -337,6 +346,9 @@ class WorkingYearCalculator {
       TransactionCategory.PayrollDeductions
     );
 
+    this.#reportingYear.WagesAndCompensation.subjectNonTaxableSalaryReductions =
+      this.#fixedIncomeStreams.subjectCareerNonTaxableSalaryReductions;
+
     this.#accountYear.processAsPeriodicTransfers(
       ACCOUNT_TYPES.SUBJECT_WAGES,
       ACCOUNT_TYPES.CASH,
@@ -344,6 +356,9 @@ class WorkingYearCalculator {
       PERIODIC_FREQUENCY.MONTHLY,
       TransactionCategory.IncomeNet
     );
+
+    this.#reportingYear.WagesAndCompensation.subjectActualIncome =
+      this.#fixedIncomeStreams.subjectCareerWagesAndCompensationActualIncome;
 
     // Partner wages and compensation
 
@@ -355,6 +370,9 @@ class WorkingYearCalculator {
       PERIODIC_FREQUENCY.MONTHLY
     );
 
+    this.#reportingYear.WagesAndCompensation.partnerGrossIncome =
+      this.#fixedIncomeStreams.partnerCareerWagesAndCompensationGross;
+
     this.#accountYear.processAsPeriodicTransfers(
       ACCOUNT_TYPES.PARTNER_WAGES,
       ACCOUNT_TYPES.PARTNER_401K,
@@ -362,6 +380,8 @@ class WorkingYearCalculator {
       PERIODIC_FREQUENCY.MONTHLY,
       TransactionCategory.Contribution
     );
+    this.#reportingYear.WagesAndCompensation.partner401kContribution =
+      this.#fixedIncomeStreams.partnerCareerAllowed401kContribution;
 
     this.#accountYear.processAsPeriodicTransfers(
       ACCOUNT_TYPES.PARTNER_WAGES,
@@ -370,6 +390,8 @@ class WorkingYearCalculator {
       PERIODIC_FREQUENCY.MONTHLY,
       TransactionCategory.PayrollDeductions
     );
+    this.#reportingYear.WagesAndCompensation.partnerNonTaxableSalaryReductions =
+      this.#fixedIncomeStreams.partnerCareerNonTaxableSalaryReductions;
 
     this.#accountYear.processAsPeriodicTransfers(
       ACCOUNT_TYPES.PARTNER_WAGES,
@@ -380,6 +402,9 @@ class WorkingYearCalculator {
       TransactionCategory.Withholdings
     );
 
+    this.#reportingYear.WagesAndCompensation.partnerEstimatedWithholdings =
+      this.#fixedIncomeStreams.partnerCareerWagesAndCompensationEstimatedWithholdings;
+
     this.#accountYear.processAsPeriodicTransfers(
       ACCOUNT_TYPES.PARTNER_WAGES,
       ACCOUNT_TYPES.CASH,
@@ -387,11 +412,14 @@ class WorkingYearCalculator {
       PERIODIC_FREQUENCY.MONTHLY,
       TransactionCategory.IncomeNet
     );
+    this.#reportingYear.WagesAndCompensation.partnerActualIncome =
+      this.#fixedIncomeStreams.partnerCareerWagesAndCompensationActualIncome;
 
     this.#accountYear.analyzers[
       ACCOUNT_TYPES.SUBJECT_WAGES
     ].dumpAccountActivity("", TransactionCategory.IncomeGross);
 
+    this.#reportingYear.WagesAndCompensation.dump("Wages and Compensation Report");
     // debugger;
   }
 
