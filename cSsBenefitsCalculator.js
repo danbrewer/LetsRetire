@@ -37,7 +37,7 @@ class SsBenefitsCalculator {
 
       let taxableTier1Amount = (0.5 * excessOverTier1).asCurrency();
 
-      let taxableSsInTier1 = Math.min(
+      taxableSsInTier1 = Math.min(
         ssBreakdown.benefits_50pct,
         taxableTier1Amount
       ).asCurrency();
@@ -47,7 +47,7 @@ class SsBenefitsCalculator {
 
       let taxableTier2Amount = (0.85 * excessOverTier2).asCurrency();
 
-      let taxableSsInTier2 = Math.min(
+      taxableSsInTier2 = Math.min(
         ssBreakdown.benefits_85pct,
         taxableTier2Amount
       ).asCurrency();

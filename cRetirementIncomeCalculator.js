@@ -110,7 +110,7 @@ class RetirementIncomeCalculator {
       nonSsIncomeSources = [
         fixedIncomeStreams.combinedPensionGross,
         fixedIncomeStreams.interestEarnedOnSavings,
-        fixedIncomeStreams.miscTaxableIncomeWithNoWithholdings,
+        fixedIncomeStreams.miscTaxableIncome,
         adjustableIncomeStreams?.grossTaxableIncome ?? 0,
       ];
     }
@@ -156,7 +156,7 @@ class RetirementIncomeCalculator {
     const actualFixedIncome =
       fixedIncomeStreams.combinedSsActualIncome +
       fixedIncomeStreams.combinedPensionActualIncome +
-      fixedIncomeStreams.miscTaxableIncomeWithNoWithholdings;
+      fixedIncomeStreams.miscTaxableIncome;
 
     const requiredAdjustableIncome = targetIncome - actualFixedIncome;
 

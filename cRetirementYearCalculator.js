@@ -80,12 +80,12 @@ class RetirementYearCalculator {
       this.#accountYear
     );
 
-    // this.#incomeBreakdown = IncomeBreakdown.CreateFrom(
-    //   this.#fixedIncomeStreams,
-    //   this.#adjustableIncomeStreams,
-    //   this.#demographics,
-    //   this.#fiscalData
-    // );
+    this.#reportingYear.ReportData.demographics_isMarriedFilingJointly =
+      this.#demographics.hasPartner;
+    this.#reportingYear.ReportData.demographics_subjectAge =
+      this.#demographics.currentAge;
+    this.#reportingYear.ReportData.demographics_partnerAge =
+      this.#demographics.currentAgeOfPartner;
   }
 
   processRetirementYearData() {
@@ -273,109 +273,26 @@ class RetirementYearCalculator {
       this.#adjustableIncomeStreams
     );
 
-    // this.#accountYear.processAsPeriodicDeposits(
-    //   ACCOUNT_TYPES.SOCIAL_SECURITY_BREAKDOWN,
-    //   TransactionCategory.SubjectSsBenefits,
-    //   TransactionRoutes.External,
-    //   ssBreakdown.subjectBenefits,
-    //   PERIODIC_FREQUENCY.MONTHLY
-    // );
+    this.#reportingYear.ReportData.ss_subjectSsGross =
+      ssBreakdown.subjectBenefits;
+    this.#reportingYear.ReportData.ss_partnerSsGross =
+      ssBreakdown.partnerBenefits;
+    this.#reportingYear.ReportData.ss_subjectSsTaxable =
+      ssBreakdown.subjectTaxablePortion;
+    this.#reportingYear.ReportData.ss_partnerSsTaxable =
+      ssBreakdown.partnerTaxablePortion;
+    this.#reportingYear.ReportData.ss_provisionalIncome =
+      ssBreakdown.provisionalIncome;
+    this.#reportingYear.ReportData.ss_threshold1 = ssBreakdown.tier1Threshold;
+    this.#reportingYear.ReportData.ss_threshold2 = ssBreakdown.tier2Threshold;
+    this.#reportingYear.ReportData.ss_nonSocialSecurityTaxableIncome =
+      ssBreakdown.otherTaxableIncome;
+    this.#reportingYear.ReportData.ss_tier1TaxableAmount =
+      ssBreakdown.tier1TaxableAmount;
+    this.#reportingYear.ReportData.ss_tier2TaxableAmount =
+      ssBreakdown.tier2TaxableAmount;
 
-    // this.#accountYear.processAsPeriodicDeposits(
-    //   ACCOUNT_TYPES.SOCIAL_SECURITY_BREAKDOWN,
-    //   TransactionCategory.PartnerSsBenefits,
-    //   TransactionRoutes.External,
-    //   ssBreakdown.partnerBenefits,
-    //   PERIODIC_FREQUENCY.MONTHLY
-    // );
-
-    // this.#accountYear.processAsPeriodicDeposits(
-    //   ACCOUNT_TYPES.SOCIAL_SECURITY_BREAKDOWN,
-    //   TransactionCategory.NonSsIncome,
-    //   TransactionRoutes.External,
-    //   ssBreakdown.otherTaxableIncome,
-    //   PERIODIC_FREQUENCY.MONTHLY
-    // );
-
-    // this.#accountYear.processAsPeriodicDeposits(
-    //   ACCOUNT_TYPES.SOCIAL_SECURITY_BREAKDOWN,
-    //   TransactionCategory.Tier1Threshold,
-    //   TransactionRoutes.External,
-    //   ssBreakdown.tier1Threshold,
-    //   PERIODIC_FREQUENCY.MONTHLY
-    // );
-
-    // this.#accountYear.processAsPeriodicDeposits(
-    //   ACCOUNT_TYPES.SOCIAL_SECURITY_BREAKDOWN,
-    //   TransactionCategory.Tier2Threshold,
-    //   TransactionRoutes.External,
-    //   ssBreakdown.tier2Threshold,
-    //   PERIODIC_FREQUENCY.MONTHLY
-    // );
-
-    // this.#accountYear.processAsPeriodicDeposits(
-    //   ACCOUNT_TYPES.SOCIAL_SECURITY_BREAKDOWN,
-    //   TransactionCategory.IncomeExceedingTier1,
-    //   TransactionRoutes.External,
-    //   ssBreakdown.incomeExceedingTier1,
-    //   PERIODIC_FREQUENCY.MONTHLY
-    // );
-
-    // this.#accountYear.processAsPeriodicDeposits(
-    //   ACCOUNT_TYPES.SOCIAL_SECURITY_BREAKDOWN,
-    //   TransactionCategory.IncomeExceedingTier2,
-    //   TransactionRoutes.External,
-    //   ssBreakdown.incomeExceedingTier2,
-    //   PERIODIC_FREQUENCY.MONTHLY
-    // );
-
-    // this.#accountYear.processAsPeriodicDeposits(
-    //   ACCOUNT_TYPES.SOCIAL_SECURITY_BREAKDOWN,
-    //   TransactionCategory.Tier1TaxableAmount,
-    //   TransactionRoutes.External,
-    //   ssBreakdown.tier1TaxableAmount,
-    //   PERIODIC_FREQUENCY.MONTHLY
-    // );
-
-    // this.#accountYear.processAsPeriodicDeposits(
-    //   ACCOUNT_TYPES.SOCIAL_SECURITY_BREAKDOWN,
-    //   TransactionCategory.Tier2TaxableAmount,
-    //   TransactionRoutes.External,
-    //   ssBreakdown.tier2TaxableAmount,
-    //   PERIODIC_FREQUENCY.MONTHLY
-    // );
-
-    // this.#accountYear.processAsPeriodicDeposits(
-    //   ACCOUNT_TYPES.SOCIAL_SECURITY_BREAKDOWN,
-    //   TransactionCategory.SsTaxableAmount,
-    //   TransactionRoutes.External,
-    //   ssBreakdown.taxableAmount,
-    //   PERIODIC_FREQUENCY.MONTHLY
-    // );
-
-    // this.#accountYear.processAsPeriodicDeposits(
-    //   ACCOUNT_TYPES.SOCIAL_SECURITY_BREAKDOWN,
-    //   TransactionCategory.SsNonTaxableAmount,
-    //   TransactionRoutes.External,
-    //   ssBreakdown.nonTaxableAmount,
-    //   PERIODIC_FREQUENCY.MONTHLY
-    // );
-
-    // this.#accountYear.processAsPeriodicDeposits(
-    //   ACCOUNT_TYPES.SOCIAL_SECURITY_BREAKDOWN,
-    //   TransactionCategory.SsTaxablePercentage,
-    //   TransactionRoutes.External,
-    //   ssBreakdown.taxablePercentage,
-    //   PERIODIC_FREQUENCY.MONTHLY
-    // );
-
-    // this.#accountYear.processAsPeriodicDeposits(
-    //   ACCOUNT_TYPES.SOCIAL_SECURITY_BREAKDOWN,
-    //   TransactionCategory.SsMaxTaxableAMount,
-    //   TransactionRoutes.External,
-    //   ssBreakdown.maxTaxableSs,
-    //   PERIODIC_FREQUENCY.MONTHLY
-    // );
+    this.#reportingYear.ReportData.dump("Social Security Report");
 
     return ssBreakdown;
   }
@@ -621,6 +538,7 @@ class RetirementYearCalculator {
   }
 
   #processSocialSecurityIncome() {
+
     // Subject SS income goes into living expenses fund
     if (this.#fixedIncomeStreams.subjectSsGross ?? 0 > 0) {
       this.#accountYear.processAsPeriodicDeposits(
@@ -630,6 +548,9 @@ class RetirementYearCalculator {
         this.#fixedIncomeStreams.subjectSsGross ?? 0,
         PERIODIC_FREQUENCY.MONTHLY
       );
+
+      this.#reportingYear.ReportData.ss_subjectSsGross +=
+        this.#fixedIncomeStreams.subjectSsGross ?? 0;
 
       this.#accountYear.processAsPeriodicTransfers(
         ACCOUNT_TYPES.SUBJECT_SOCIAL_SECURITY,

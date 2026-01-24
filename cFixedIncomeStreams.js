@@ -306,8 +306,14 @@ class FixedIncomeStreams {
     return this.partnerSsGross - this.partnerSsWithholdings;
   }
 
-  get miscTaxableIncomeWithNoWithholdings() {
+  get miscTaxableIncome() {
     return this.#inputs.taxableIncomeAdjustment.asCurrency();
+  }
+
+  get miscTaxableIncomeWithholdings() {
+    return (
+      this.#inputs.flatCareerWageWithholdingRate * this.miscTaxableIncome
+    ).asCurrency();
   }
 
   get taxFreeIncomeAdjustment() {
@@ -379,7 +385,7 @@ class FixedIncomeStreams {
     return (
       this.combinedSsGross +
       this.combinedPensionGross +
-      this.miscTaxableIncomeWithNoWithholdings +
+      this.miscTaxableIncome +
       this.combinedCareerWagesAndCompensationTaxable +
       this.interestEarnedOnSavings +
       0
@@ -391,7 +397,7 @@ class FixedIncomeStreams {
       this.combinedCareerWagesAndCompensationTaxable +
       this.combinedPensionGross +
       this.interestEarnedOnSavings +
-      this.miscTaxableIncomeWithNoWithholdings +
+      this.miscTaxableIncome +
       this.combinedSsGross
     );
   }
@@ -424,7 +430,7 @@ class FixedIncomeStreams {
     return (
       this.combinedPensionGross +
       this.interestEarnedOnSavings +
-      this.miscTaxableIncomeWithNoWithholdings +
+      this.miscTaxableIncome +
       this.combinedCareerWagesAndCompensationTaxable
     );
   }
@@ -443,7 +449,7 @@ class FixedIncomeStreams {
       pension: this.combinedPensionGross,
       socialSecurity: this.combinedSsGross,
       earnedInterest: this.interestEarnedOnSavings,
-      taxableAdjustments: this.miscTaxableIncomeWithNoWithholdings,
+      taxableAdjustments: this.miscTaxableIncome,
       taxFreeAdjustments: this.taxFreeIncomeAdjustment,
     };
   }

@@ -50,6 +50,13 @@ class WorkingYearCalculator {
       this.#inputs
     );
 
+    this.#reportingYear.ReportData.demographics_isMarriedFilingJointly =
+      this.#demographics.hasPartner;
+    this.#reportingYear.ReportData.demographics_subjectAge =
+      this.#demographics.currentAge;
+    this.#reportingYear.ReportData.demographics_partnerAge =
+      this.#demographics.currentAgeOfPartner;
+
     // this.#workingYearIncome = WorkingYearIncome.CreateUsing(
     //   this.#fixedIncomeStreams,
     //   this.#demographics,
@@ -63,6 +70,7 @@ class WorkingYearCalculator {
     // Calculations
     // **************
     this.#processWagesAndCompensation();
+    this.#processMiscIncome();
     this.#processNonTaxableIncome();
     this.#processRothIraContributions();
     this.#processSavingsContributions();
@@ -223,6 +231,45 @@ class WorkingYearCalculator {
     workingYearData.dump("working year data");
     return workingYearData;
   }
+  #processMiscIncome() {
+    const miscIncome = this.#fixedIncomeStreams.miscTaxableIncome;
+
+    if (miscIncome > 0) {
+      this.#accountYear.processAsPeriodicDeposits(
+        ACCOUNT_TYPES.OTHER_INCOME,
+        TransactionCategory.IncomeGross,
+        TransactionRoutes.External,
+        miscIncome,
+        PERIODIC_FREQUENCY.MONTHLY
+      );
+
+      this.#reportingYear.ReportData.income_miscTaxableIncome = miscIncome;
+
+      const withholdings =
+        this.#fixedIncomeStreams.miscTaxableIncomeWithholdings;
+
+      this.#accountYear.processAsPeriodicTransfers(
+        ACCOUNT_TYPES.OTHER_INCOME,
+        ACCOUNT_TYPES.TAXES,
+        withholdings,
+        PERIODIC_FREQUENCY.MONTHLY,
+        TransactionCategory.Withholdings
+      );
+
+      this.#reportingYear.ReportData.taxes_miscIncomeWithholdings =
+        withholdings;
+
+      const takeHomeAmount = miscIncome - withholdings;
+
+      this.#accountYear.processAsPeriodicTransfers(
+        ACCOUNT_TYPES.OTHER_INCOME,
+        ACCOUNT_TYPES.CASH,
+        takeHomeAmount,
+        PERIODIC_FREQUENCY.MONTHLY,
+        TransactionCategory.Withholdings
+      );
+    }
+  }
   #processNonTaxableIncome() {
     const subjectNonTaxableIncome =
       this.#fixedIncomeStreams.subjectCareerNonTaxableSalaryReductions;
@@ -312,7 +359,7 @@ class WorkingYearCalculator {
       PERIODIC_FREQUENCY.MONTHLY
     );
 
-    this.#reportingYear.WagesAndCompensation.subjectGrossIncome =
+    this.#reportingYear.ReportData.income_subjectGrossWages =
       this.#fixedIncomeStreams.subjectCareerWagesAndCompensationGross;
 
     this.#accountYear.processAsPeriodicTransfers(
@@ -323,7 +370,7 @@ class WorkingYearCalculator {
       TransactionCategory.Contribution
     );
 
-    this.#reportingYear.WagesAndCompensation.subject401kContribution =
+    this.#reportingYear.ReportData.income_subject401kContribution =
       this.#fixedIncomeStreams.subjectCareerAllowed401kContribution;
 
     this.#accountYear.processAsPeriodicTransfers(
@@ -335,7 +382,7 @@ class WorkingYearCalculator {
       TransactionCategory.Withholdings
     );
 
-    this.#reportingYear.WagesAndCompensation.subjectEstimatedWithholdings =
+    this.#reportingYear.ReportData.income_subjectEstimatedWithholdings =
       this.#fixedIncomeStreams.subjectCareerWagesAndCompensationEstimatedWithholdings;
 
     this.#accountYear.processAsPeriodicTransfers(
@@ -346,7 +393,7 @@ class WorkingYearCalculator {
       TransactionCategory.PayrollDeductions
     );
 
-    this.#reportingYear.WagesAndCompensation.subjectNonTaxableSalaryReductions =
+    this.#reportingYear.ReportData.income_subjectNonTaxableSalaryDeductions =
       this.#fixedIncomeStreams.subjectCareerNonTaxableSalaryReductions;
 
     this.#accountYear.processAsPeriodicTransfers(
@@ -357,7 +404,7 @@ class WorkingYearCalculator {
       TransactionCategory.IncomeNet
     );
 
-    this.#reportingYear.WagesAndCompensation.subjectActualIncome =
+    this.#reportingYear.ReportData.income_subjectTakehomeWages =
       this.#fixedIncomeStreams.subjectCareerWagesAndCompensationActualIncome;
 
     // Partner wages and compensation
@@ -370,7 +417,7 @@ class WorkingYearCalculator {
       PERIODIC_FREQUENCY.MONTHLY
     );
 
-    this.#reportingYear.WagesAndCompensation.partnerGrossIncome =
+    this.#reportingYear.ReportData.income_partnerGrossWages =
       this.#fixedIncomeStreams.partnerCareerWagesAndCompensationGross;
 
     this.#accountYear.processAsPeriodicTransfers(
@@ -380,7 +427,7 @@ class WorkingYearCalculator {
       PERIODIC_FREQUENCY.MONTHLY,
       TransactionCategory.Contribution
     );
-    this.#reportingYear.WagesAndCompensation.partner401kContribution =
+    this.#reportingYear.ReportData.income_partner401kContribution =
       this.#fixedIncomeStreams.partnerCareerAllowed401kContribution;
 
     this.#accountYear.processAsPeriodicTransfers(
@@ -390,7 +437,7 @@ class WorkingYearCalculator {
       PERIODIC_FREQUENCY.MONTHLY,
       TransactionCategory.PayrollDeductions
     );
-    this.#reportingYear.WagesAndCompensation.partnerNonTaxableSalaryReductions =
+    this.#reportingYear.ReportData.income_partnerNonTaxableSalaryDeductions =
       this.#fixedIncomeStreams.partnerCareerNonTaxableSalaryReductions;
 
     this.#accountYear.processAsPeriodicTransfers(
@@ -402,7 +449,7 @@ class WorkingYearCalculator {
       TransactionCategory.Withholdings
     );
 
-    this.#reportingYear.WagesAndCompensation.partnerEstimatedWithholdings =
+    this.#reportingYear.ReportData.income_partnerEstimatedWithholdings =
       this.#fixedIncomeStreams.partnerCareerWagesAndCompensationEstimatedWithholdings;
 
     this.#accountYear.processAsPeriodicTransfers(
@@ -412,14 +459,14 @@ class WorkingYearCalculator {
       PERIODIC_FREQUENCY.MONTHLY,
       TransactionCategory.IncomeNet
     );
-    this.#reportingYear.WagesAndCompensation.partnerActualIncome =
+    this.#reportingYear.ReportData.income_partnerTakehomeWages =
       this.#fixedIncomeStreams.partnerCareerWagesAndCompensationActualIncome;
 
     this.#accountYear.analyzers[
       ACCOUNT_TYPES.SUBJECT_WAGES
     ].dumpAccountActivity("", TransactionCategory.IncomeGross);
 
-    this.#reportingYear.WagesAndCompensation.dump("Wages and Compensation Report");
+    this.#reportingYear.ReportData.dump("Wages and Compensation Report");
     // debugger;
   }
 

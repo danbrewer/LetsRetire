@@ -123,8 +123,8 @@ class WorkingYearIncome {
   }
 
   get taxableIncomeAdjustment() {
-    const result = this.#fixedIncomeStreams.miscTaxableIncomeWithNoWithholdings;
-    return result;
+    const result = this.#fixedIncomeStreams.miscTaxableIncome;
+    return result.asCurrency();
   }
 
   get taxableIncome() {

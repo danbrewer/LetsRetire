@@ -4,7 +4,6 @@
 import { AccountingYear } from "./cAccountingYear.js";
 import { Demographics } from "./cDemographics.js";
 import { FiscalData } from "./cFiscalData.js";
-import { WagesAndCompensationReport } from "./rWagesAndCompensation.js";
 
 /**
  * Abstract base class for year-based financial data.
