@@ -84,6 +84,8 @@ class WorkingYearCalculator {
 
     this.#processIncomeTaxes();
 
+    this.#generateReportData();
+
     // Declare and initialize the result object at the top
     const workingYearData = WorkingYearData.CreateUsing(
       this.#demographics,
@@ -228,8 +230,20 @@ class WorkingYearCalculator {
     //   ],
     // };
 
-    workingYearData.dump("working year data");
+    // workingYearData.dump("working year data");
+    this.#reportingYear.ReportData.dump("ReportData");
+    debugger;
     return workingYearData;
+  }
+  #generateReportData() {
+    
+    this.#reportingYear.ReportData.retirementAcct_subject401kBalance = this.#accountYear.getEndingBalance(ACCOUNT_TYPES.SUBJECT_401K);
+    this.#reportingYear.ReportData.retirementAcct_partner401kBalance = this.#accountYear.getEndingBalance(ACCOUNT_TYPES.PARTNER_401K);
+    this.#reportingYear.ReportData.retirementAcct_subjectRothIraBalance = this.#accountYear.getEndingBalance(ACCOUNT_TYPES.SUBJECT_ROTH_IRA);
+    this.#reportingYear.ReportData.retirementAcct_partnerRothIraBalance = this.#accountYear.getEndingBalance(ACCOUNT_TYPES.PARTNER_ROTH_IRA);
+    this.#reportingYear.ReportData.retirementAcct_savingsBalance = this.#accountYear.getEndingBalance(ACCOUNT_TYPES.SAVINGS);
+
+
   }
   #processMiscIncome() {
     const miscIncome = this.#fixedIncomeStreams.miscTaxableIncome;
@@ -523,6 +537,9 @@ class WorkingYearCalculator {
         PERIODIC_FREQUENCY.MONTHLY,
         TransactionCategory.SurplusIncome
       );
+
+      this.#reportingYear.ReportData.income_surplusAfterSpending =
+        this.surplusSpend;
     }
 
     if (this.surplusSpend < 0) {
@@ -548,6 +565,9 @@ class WorkingYearCalculator {
         TransactionCategory.IncomeShortfall
       );
 
+      this.#reportingYear.ReportData.income_shortfallAfterSpending =
+        -this.surplusSpend;
+
       this.#accountYear.processAsPeriodicWithdrawals(
         ACCOUNT_TYPES.CASH,
         TransactionCategory.Spend,
@@ -570,12 +590,22 @@ class WorkingYearCalculator {
 
   #apply401kInterest() {
     this.#accountYear.recordInterestEarnedForYear(ACCOUNT_TYPES.SUBJECT_401K);
+    this.#accountYear.recordInterestEarnedForYear(ACCOUNT_TYPES.PARTNER_401K);
+
+    this.#reportingYear.ReportData.retirementAcct_subject401kInterest =
+      this.#accountYear
+        .getDeposits(ACCOUNT_TYPES.SUBJECT_401K, TransactionCategory.Interest)
+        .asCurrency();
+    this.#reportingYear.ReportData.retirementAcct_partner401kInterest =
+      this.#accountYear
+        .getDeposits(ACCOUNT_TYPES.PARTNER_401K, TransactionCategory.Interest)
+        .asCurrency();
+
     this.#accountYear.analyzers[
       ACCOUNT_TYPES.SUBJECT_401K
     ].dumpAccountActivity();
     // debugger;
 
-    this.#accountYear.recordInterestEarnedForYear(ACCOUNT_TYPES.PARTNER_401K);
     this.#accountYear.analyzers[
       ACCOUNT_TYPES.SUBJECT_401K
     ].dumpAccountActivity();

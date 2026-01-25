@@ -163,6 +163,8 @@ class RetirementYearCalculator {
       this.#taxes
     );
 
+    this.#reportingYear.ReportData.dump("ReportData");
+
     debugger;
     // result.income.dump();
     // result.balances.dump();
@@ -291,8 +293,6 @@ class RetirementYearCalculator {
       ssBreakdown.tier1TaxableAmount;
     this.#reportingYear.ReportData.ss_tier2TaxableAmount =
       ssBreakdown.tier2TaxableAmount;
-
-    this.#reportingYear.ReportData.dump("Social Security Report");
 
     return ssBreakdown;
   }
@@ -538,7 +538,6 @@ class RetirementYearCalculator {
   }
 
   #processSocialSecurityIncome() {
-
     // Subject SS income goes into living expenses fund
     if (this.#fixedIncomeStreams.subjectSsGross ?? 0 > 0) {
       this.#accountYear.processAsPeriodicDeposits(
@@ -687,6 +686,9 @@ class RetirementYearCalculator {
       "Tax-free income"
     );
 
+    this.#reportingYear.ReportData.income_nonTaxableIncome =
+      nonTaxableActualIncome;
+
     this.#accountYear.analyzers[ACCOUNT_TYPES.CASH].dumpAccountActivity(
       "Non-taxable income processed"
     );
@@ -694,12 +696,21 @@ class RetirementYearCalculator {
 
   #applyPeriodic401kInterestEarned() {
     this.#accountYear.recordInterestEarnedForYear(ACCOUNT_TYPES.SUBJECT_401K);
+    this.#accountYear.recordInterestEarnedForYear(ACCOUNT_TYPES.PARTNER_401K);
+
+    this.#reportingYear.ReportData.retirementAcct_subject401kInterest =
+      this.#accountYear
+        .getDeposits(ACCOUNT_TYPES.SUBJECT_401K, TransactionCategory.Interest)
+        .asCurrency();
+    this.#reportingYear.ReportData.retirementAcct_partner401kInterest =
+      this.#accountYear
+        .getDeposits(ACCOUNT_TYPES.PARTNER_401K, TransactionCategory.Interest)
+        .asCurrency();
+
     this.#accountYear.analyzers[ACCOUNT_TYPES.SUBJECT_401K].dumpAccountActivity(
       "Subject 401k interest processed",
       TransactionCategory.Interest
     );
-
-    this.#accountYear.recordInterestEarnedForYear(ACCOUNT_TYPES.PARTNER_401K);
     this.#accountYear.analyzers[ACCOUNT_TYPES.PARTNER_401K].dumpAccountActivity(
       "Partner 401k interest processed",
       TransactionCategory.Interest
