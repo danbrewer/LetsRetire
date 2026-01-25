@@ -16,78 +16,95 @@ const testTracker = new TestTracker("Retirement Calculator Workbench");
 // Canonical test scenario (mapped to constructor)
 //------------------------------------------------------------
 function createInputs() {
-  return new Inputs(
-    /* startingYear */ 2025,
-    /* initialAgeSubject */ 60,
-    /* initialAgeSpouse */ 56,
-    /* subjectRetireAge */ 62,
-    /* subjectSsStartAge */ 62,
-    /* subjectPensionStartAge */ 65,
-    /* subject401kStartAge */ 62,
-    /* endAge */ 120,
+  /** @type {import("../cInputs.js").InputsOptions} */
+  const inputArgs = {
+    // Ages / timeline
+    startingYear: 2025,
+    initialAgeSubject: 60,
+    initialAgePartner: 56,
+    subjectRetireAge: 62,
+    subjectSsStartAge: 62,
+    subjectPensionStartAge: 65,
+    subject401kStartAge: 62,
+    endSubjectAge: 120,
 
-    /* inflation */ 0.03,
-    /* spendingToday */ 100000,
-    /* spendingDecline */ 0.01,
+    // Spending
+    inflationRate: 0.03,
+    spendingToday: 100000,
+    spendingDecline: 0.01,
 
-    /* spouseRetireAge */ 62,
-    /* spouseSsMonthly */ 1000,
-    /* spouseSsStartAge */ 62,
-    /* spouseSsCola */ 0.02,
-    /* spousePenMonthly */ 500,
-    /* spousePenStartAge */ 65,
-    /* spouse401kStartAge */ 62,
-    /* spousePenCola */ 0,
-    /* spouseTaxSS */ 0.1,
-    /* spouseTaxPension */ 0.2,
+    // Partner
+    partnerRetireAge: 62,
+    partnerSsMonthly: 1000,
+    partnerSsStartAge: 62,
+    partnerSsCola: 0.02,
+    partnerPenMonthly: 500,
+    partnerPenStartAge: 65,
+    partner401kStartAge: 62,
+    partnerPenCola: 0,
+    partnerTaxSS: 0.1,
+    partnerTaxPension: 0.2,
 
-    /* startingSalary */ 174500,
-    /* spouseStartingSalary */ 0,
-    /* subjectSalaryGrowthRate */ 0.02,
-    /* partnerSalaryGrowthRate */ 0.02,
-    /* pretaxPct */ 0,
-    /* rothPct */ 0,
-    /* taxablePct */ 0.35,
-    /* matchCap */ 0,
-    /* matchRate */ 0,
+    // Salary / contributions
+    subjectStartingSalary: 174500,
+    partnerStartingSalary: 0,
+    subjectSalaryGrowthRate: 0.02,
+    partnerSalaryGrowthRate: 0.02,
+    subject401kContributionRate: 0.05,
+    subjectRothContributionRate: 0.05,
+    taxablePct: 0.35,
+    matchCap: 0,
+    subject401kMatchRate: 0,
 
-    /* trad401k */ 500000,
-    /* rothIRA */ 0,
-    /* spouse401k */ 100000,
-    /* spouseRoth */ 0,
-    /* savings */ 500000,
+    // Starting balances
+    subject401kStartingBalance: 500000,
+    subjectRothStartingBalance: 0,
+    partner401kStartingBalance: 100000,
+    partnerRothStartingBalance: 0,
+    savingsStartingBalance: 500000,
 
-    /* ret401k */ 0.03,
-    /* retRoth */ 0,
-    /* retSpouse401k */ 0.03,
-    /* retSpouseRoth */ 0.03,
-    /* retSavings */ 0.03,
+    // Returns
+    trad401kInterestRate: 0.03,
+    tradRothInterestRate: 0,
+    partnerTrad401kInterestRate: 0.03,
+    partnerRothInterestRate: 0.03,
+    savingsInterestRate: 0.03,
 
-    /* ssMonthly */ 2500,
-    /* ssCola */ 0.025,
-    /* penMonthly */ 3500,
-    /* penCola */ 0,
+    // Benefits
+    ssMonthly: 2500,
+    ssCola: 0.025,
+    penMonthly: 3500,
+    penCola: 0,
 
-    /* filingStatus */ "married",
-    /* useRMD */ true,
-    /* flatSsWithholdingRate */ 0.07,
-    /* flatTrad401kWithholdingRate */ 0.15,
-    /* flatPensionWithholdingRate */ 0.2,
-    /* flatWageWithholdingRate */ 0.15,
-    /* order */ [
+    // Tax settings
+    filingStatus: "married",
+    useRMD: true,
+    flatSsWithholdingRate: 0.07,
+    flatTrad401kWithholdingRate: 0.15,
+    flatPensionWithholdingRate: 0.2,
+    flatWageWithholdingRate: 0.15,
+
+    // Withdrawal order
+    order: [
       ACCOUNT_TYPES.SAVINGS,
       ACCOUNT_TYPES.SUBJECT_401K,
       ACCOUNT_TYPES.SUBJECT_ROTH_IRA,
     ],
-    /** subjectWorkingYearSavingsContributionFixed */ 50,
-    /** subjectWorkingYearSavingsContributionVariable */ 0.05,
-    /** partnerWorkingYearSavingsContributionFixed */ 0,
-    /** partnerWorkingYearSavingsContributionVariable */ 0,
-    /** subjectRetirementYearSavingsContributionFixed */ 100,
-    /** subjectRetirementYearSavingsContributionVariable */ 0.01,
-    /** partnerRetirementYearSavingsContributionFixed */ 0,
-    /** partnerRetirementYearSavingsContributionVariable */ 0
-  );
+
+    // Savings contributions
+    subjectWorkingYearSavingsContributionFixed: 50,
+    subjectWorkingYearSavingsContributionVariable: 0.05,
+    partnerWorkingYearSavingsContributionFixed: 0,
+    partnerWorkingYearSavingsContributionVariable: 0,
+    subjectRetirementYearSavingsContributionFixed: 100,
+    subjectRetirementYearSavingsContributionVariable: 0.01,
+    partnerRetirementYearSavingsContributionFixed: 0,
+    partnerRetirementYearSavingsContributionVariable: 0,
+  };
+
+  inputArgs.dump("inputs");
+
+  return new Inputs(inputArgs);
 }
 
 //------------------------------------------------------------
@@ -151,7 +168,7 @@ function createMockUI(inputs) {
 
 //     assertEqual(inputs.totalWorkingYears, 2, "Working years mismatch");
 //     assertEqual(inputs.totalLivingYears, 30, "Living years mismatch");
-//     assert(inputs.hasSpouse, "Should detect spouse");
+//     assert(inputs.hasPartner, "Should detect partner");
 //     assert(inputs.spendAtRetire > 0, "Spend-at-retire should be computed");
 //   },
 //   testTracker

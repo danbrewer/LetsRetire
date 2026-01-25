@@ -2532,66 +2532,80 @@ function parseInputParameters() {
   const partnerRothReturnRate = 0.03;
   const partnerSavingsReturnRate = 0.03;
 
-  const inputs = new Inputs(
-    startingYear,
-    currentAge,
-    currentSpouseAge,
-    subjectRetireAge,
-    ssStartAge,
-    penStartAge,
-    subject401kStartAge,
-    endAge,
+  /** @type {import("./cInputs.js").InputsOptions} */
+  const inputArgs = {
+    // Ages / timeline
+    startingYear: startingYear,
+    initialAgeSubject: currentAge,
+    initialAgePartner: currentSpouseAge,
+    subjectRetireAge: subjectRetireAge,
+    subjectSsStartAge: ssStartAge,
+    subjectPensionStartAge: penStartAge,
+    subject401kStartAge: subject401kStartAge,
+    endSubjectAge: endAge,
 
-    inflation,
-    spendingToday,
-    spendingDecline,
+    // Spending
+    inflationRate: inflation,
+    spendingToday: spendingToday,
+    spendingDecline: spendingDecline,
 
     // Partner information
-    partnerRetireAge,
-    partnerSsMonthly,
-    partnerSsStartAge,
-    partnerSsCola,
-    partnerPenMonthly,
-    partnerPenStartAge,
-    partner401kStartAge,
-    partnerPenCola,
-    partnerTaxSS,
-    partnerTaxPension,
+    partnerRetireAge: partnerRetireAge,
+    partnerSsMonthly: partnerSsMonthly,
+    partnerSsStartAge: partnerSsStartAge,
+    partnerSsCola: partnerSsCola,
+    partnerPenMonthly: partnerPenMonthly,
+    partnerPenStartAge: partnerPenStartAge,
+    partner401kStartAge: partner401kStartAge,
+    partnerPenCola: partnerPenCola,
+    partnerTaxSS: partnerTaxSS,
+    partnerTaxPension: partnerTaxPension,
+
     // Employment and contributions
-    subjectStartingSalary,
-    partnerStartingSalary,
-    subjectSalaryGrowthRate,
-    partnerSalaryGrowthRate,
-    subject401kContributionRate,
-    subjectRothContributionRate,
-    taxablePct,
-    matchCap,
-    matchRate,
+    subjectStartingSalary: subjectStartingSalary,
+    partnerStartingSalary: partnerStartingSalary,
+    subjectSalaryGrowthRate: subjectSalaryGrowthRate,
+    partnerSalaryGrowthRate: partnerSalaryGrowthRate,
+    subject401kContributionRate: subject401kContributionRate,
+    subjectRothContributionRate: subjectRothContributionRate,
+    taxablePct: taxablePct,
+    matchCap: matchCap,
+    subject401kMatchRate: matchRate,
+
     // Account balances and returns
-    subject401kStartingBalance,
-    subjectRothStartingBalance,
-    partner401kStartingBalance,
-    partnerRothStartingBalance,
-    savings,
-    subject401kReturnRate,
-    subjectRothReturnRate,
-    partner401kReturnRate,
-    partnerRothReturnRate,
-    retSavings,
+    subject401kStartingBalance: subject401kStartingBalance,
+    subjectRothStartingBalance: subjectRothStartingBalance,
+    partner401kStartingBalance: partner401kStartingBalance,
+    partnerRothStartingBalance: partnerRothStartingBalance,
+    savingsStartingBalance: savings,
+
+    trad401kInterestRate: subject401kReturnRate,
+    tradRothInterestRate: subjectRothReturnRate,
+    partnerTrad401kInterestRate: partner401kReturnRate,
+    partnerRothInterestRate: partnerRothReturnRate,
+    savingsInterestRate: retSavings,
+
     // Income sources
-    subjectSsMonthly,
-    ssCola,
-    penMonthly,
-    penCola,
+    ssMonthly: subjectSsMonthly,
+    ssCola: ssCola,
+    penMonthly: penMonthly,
+    penCola: penCola,
+
     // Tax rates and settings
-    filingStatus,
-    useRMD,
-    flatSsWithholdingRate,
-    flatTrad401kWithholdingRate,
-    flatPensionWithholdingRate,
-    flatWageWithholdingRate,
-    order
-  );
+    filingStatus: filingStatus,
+    useRMD: useRMD,
+    flatSsWithholdingRate: flatSsWithholdingRate,
+    flatTrad401kWithholdingRate: flatTrad401kWithholdingRate,
+    flatPensionWithholdingRate: flatPensionWithholdingRate,
+    flatWageWithholdingRate: flatWageWithholdingRate,
+
+    // Withdrawal order
+    order: order,
+  };
+
+  inputArgs.dump("inputArgs");
+
+  const inputs = new Inputs(inputArgs);
   // Basic parameters
   // (currentAge = num("currentAge")),
   // (currentSpouseAge = num("partnerAge")),

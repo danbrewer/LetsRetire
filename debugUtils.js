@@ -840,9 +840,8 @@ Object.defineProperty(Object.prototype, "dump", {
             );
             console.log(`${outputKey}${outputValue}`);
             // @ts-ignore
-            console.log(
-              `${prefixIndent}    [function threw: ${e?.message ?? e}]`
-            );
+            const message = e?.message ?? e;
+            console.log(`${prefixIndent}    [function threw: ${message}]`);
           }
         } else {
           const sig = paramText === null ? "[unknown signature]" : paramText;

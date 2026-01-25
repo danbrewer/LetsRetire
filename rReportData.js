@@ -21,13 +21,23 @@ class ReportData extends BaseReports {
     "income_partnerTakehomeWages",
     "income_miscTaxableIncome",
     "income_savingsInterest",
-    "income_subject401k",
-    "income_partner401k",
-    "income_subjectPension",
-    "income_partnerPension",
     "income_shortfallAfterSpending",
     "income_surplusAfterSpending",
+    // Income that is not taxable
     "income_nonTaxableIncome",
+    // RETIREMENT INCOME
+    "income_subject401kGross",
+    "income_subject401kWithholdings",
+    "income_subject401kTakehome",
+    "income_partner401kGross",
+    "income_partner401kWithholdings",
+    "income_partner401kTakehome",
+    "income_subjectPensionGross",
+    "income_subjectPensionWithholdings",
+    "income_subjectPensionTakehome",
+    "income_partnerPensionGross",
+    "income_partnerPensionWithholdings",
+    "income_partnerPensionTakehome",
     // TAXES
     "taxes_standardDeduction",
     "taxes_ssTaxableIncome",
@@ -40,6 +50,10 @@ class ReportData extends BaseReports {
     "taxes_subjectPensionWithholdings",
     "taxes_partnerPensionWithholdings",
     "taxes_additionalWithholdings",
+    "taxes_totalWithholdings",
+    "taxes_federalIncomeTaxOwed",
+    "taxes_overPayment",
+    "taxes_underPayment",
     // SOCIAL SECURITY
     "ss_subjectSsGross",
     "ss_partnerSsGross",
@@ -57,21 +71,23 @@ class ReportData extends BaseReports {
     "ss_tier1TaxableAmount",
     "ss_tier2TaxableAmount",
     // RETIREMENT ACCOUNTS
+    "retirementAcct_subject401kWithdrawalGross",
+    "retirementAcct_subject401kWithdrawalNet",
+    "retirementAcct_subject401kInterest",
     "retirementAcct_subject401kBalance",
+    "retirementAcct_partner401kInterest",
     "retirementAcct_partner401kBalance",
     "retirementAcct_subjectRothIraBalance",
     "retirementAcct_partnerRothIraBalance",
-    "retirementAcct_subject401kWithdrawalGross",
-    "retirementAcct_subject401kWithdrawalNet",
     "retirementAcct_partner401kWithdrawalGross",
     "retirementAcct_partner401kWithdrawalNet",
     "retirementAcct_subjectRothIraWithdrawal",
     "retirementAcct_partnerRothIraWithdrawal",
-    "retirementAcct_partner401kInterest",
-    "retirementAcct_subject401kInterest",
+    "retirementAcct_subjectSavingsContributions",
+    "retirementAcct_partnerSavingsContributions",
+    "retirementAcct_savingsDeposits",
+    "retirementAcct_savingsWithdrawals",
     "retirementAcct_savingsBalance",
-
-    // ... etc ...
   ];
   constructor() {
     super();
@@ -97,10 +113,18 @@ class ReportData extends BaseReports {
 
     this.income_miscTaxableIncome = 0;
     this.income_savingsInterest = 0;
-    this.income_subject401k = 0;
-    this.income_partner401k = 0;
-    this.income_subjectPension = 0;
-    this.income_partnerPension = 0;
+    this.income_subject401kGross = 0;
+    this.income_subject401kWithholdings = 0;
+    this.income_subject401kTakehome = 0;
+    this.income_partner401kGross = 0;
+    this.income_partner401kWithholdings = 0;
+    this.income_partner401kTakehome = 0;
+    this.income_subjectPensionGross = 0;
+    this.income_subjectPensionWithholdings = 0;
+    this.income_subjectPensionTakehome = 0;
+    this.income_partnerPensionGross = 0;
+    this.income_partnerPensionWithholdings = 0;
+    this.income_partnerPensionTakehome = 0;
 
     this.income_shortfallAfterSpending = 0;
     this.income_surplusAfterSpending = 0;
@@ -111,13 +135,11 @@ class ReportData extends BaseReports {
     this.taxes_ssTaxableIncome = 0;
     this.taxes_nonSsTaxableIncome = 0;
     this.taxes_miscIncomeWithholdings = 0;
-    this.taxes_subjectWagesWithholdings = 0;
-    this.taxes_partnerWagesWithholdings = 0;
-    this.taxes_subject401kWithholdings = 0;
-    this.taxes_partner401kWithholdings = 0;
-    this.taxes_subjectPensionWithholdings = 0;
-    this.taxes_partnerPensionWithholdings = 0;
     this.taxes_additionalWithholdings = 0;
+    this.taxes_totalWithholdings = 0;
+    this.taxes_overPayment = 0;
+    this.taxes_underPayment = 0;
+    this.taxes_federalIncomeTaxOwed = 0;
 
     // SOCIAL SECURITY
     this.ss_subjectSsGross = 0;
@@ -144,7 +166,11 @@ class ReportData extends BaseReports {
     this.retirementAcct_partnerRothIraWithdrawal = 0;
     this.retirementAcct_partner401kInterest = 0;
     this.retirementAcct_subject401kInterest = 0;
+    this.retirementAcct_partnerSavingsContributions = 0;
+    this.retirementAcct_subjectSavingsContributions = 0;
     this.retirementAcct_savingsBalance = 0;
+    this.retirementAcct_savingsDeposits = 0;
+    this.retirementAcct_savingsWithdrawals = 0;
   }
 
   get demographics_filingStatus() {
@@ -189,6 +215,18 @@ class ReportData extends BaseReports {
   get ss_totalSsNonTaxable() {
     return this.ss_subjectSsNonTaxable + this.ss_partnerSsNonTaxable;
   }
-}
 
+  get taxes_subjectWagesWithholdings() {
+    return this.income_subjectEstimatedWithholdings;
+  }
+  get taxes_partnerWagesWithholdings() {
+    return this.income_partnerEstimatedWithholdings;
+  }
+  get taxes_subject401kWithholdings() {
+    return this.income_subject401kWithholdings;
+  }
+  get taxes_partner401kWithholdings() {
+    return this.income_partner401kWithholdings;
+  }
+}
 export { ReportData };
