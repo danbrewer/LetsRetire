@@ -34,21 +34,21 @@ class Contributions {
   get tradRoth() {
     return this.#accountYear.getDeposits(
       ACCOUNT_TYPES.SUBJECT_ROTH_IRA,
-      TransactionCategory.Contribution
+      TransactionCategory.RetirementContribution
     );
   }
 
   get savings() {
     return this.#accountYear.getDeposits(
       ACCOUNT_TYPES.SAVINGS,
-      TransactionCategory.Contribution
+      TransactionCategory.RetirementContribution
     );
   }
 
   get trad401k() {
     return this.#accountYear.getDeposits(
       ACCOUNT_TYPES.SUBJECT_401K,
-      TransactionCategory.Contribution
+      TransactionCategory.RetirementContribution
     );
   }
 

@@ -71,7 +71,7 @@ class WorkingYearCalculator {
     // **************
     this.#processWagesAndCompensation();
     this.#processMiscIncome();
-    this.#processNonTaxableIncome();
+    this.#processTaxFreeIncome();
     this.#processRothIraContributions();
     this.#processSavingsContributions();
 
@@ -84,6 +84,8 @@ class WorkingYearCalculator {
 
     this.#processIncomeTaxes();
 
+    this.#dumpAccountReports();
+
     this.#generateReportData();
 
     // Declare and initialize the result object at the top
@@ -93,13 +95,53 @@ class WorkingYearCalculator {
       this.#accountYear
     );
 
-    this.#accountYear.analyzers[ACCOUNT_TYPES.SAVINGS].dumpCategorySummaries();
-
     // workingYearData.dump("working year data");
     this.#reportingYear.ReportData.dump("ReportData");
     debugger;
     return workingYearData;
   }
+  #dumpAccountReports() {
+    // WAGES AND COMPENSATION
+    this.#accountYear.analyzers[
+      ACCOUNT_TYPES.SUBJECT_WAGES
+    ].dumpCategorySummaries();
+
+    this.#accountYear.analyzers[
+      ACCOUNT_TYPES.SUBJECT_WAGES
+    ].dumpAccountActivity();
+
+    this.#accountYear.analyzers[
+      ACCOUNT_TYPES.PARTNER_WAGES
+    ].dumpCategorySummaries();
+
+    this.#accountYear.analyzers[ACCOUNT_TYPES.CASH].dumpCategorySummaries();
+    this.#accountYear.analyzers[ACCOUNT_TYPES.CASH].dumpAccountActivity();
+
+    this.#accountYear.analyzers[
+      ACCOUNT_TYPES.SUBJECT_401K
+    ].dumpCategorySummaries();
+    // debugger;
+
+    this.#accountYear.analyzers[
+      ACCOUNT_TYPES.PARTNER_401K
+    ].dumpCategorySummaries();
+
+    this.#accountYear.analyzers[
+      ACCOUNT_TYPES.SUBJECT_ROTH_IRA
+    ].dumpCategorySummaries();
+    // debugger;
+
+    this.#accountYear.analyzers[
+      ACCOUNT_TYPES.PARTNER_ROTH_IRA
+    ].dumpCategorySummaries();
+
+    this.#accountYear.analyzers[ACCOUNT_TYPES.TAXES].dumpAccountActivity();
+    this.#accountYear.analyzers[ACCOUNT_TYPES.TAXES].dumpCategorySummaries();
+
+    this.#accountYear.analyzers[ACCOUNT_TYPES.SAVINGS].dumpCategorySummaries();
+    this.#accountYear.analyzers[ACCOUNT_TYPES.SAVINGS].dumpAccountActivity();
+  }
+
   #generateReportData() {
     this.#reportingYear.ReportData.retirementAcct_subject401kOpenBalance =
       this.#accountYear.getStartingBalance(ACCOUNT_TYPES.SUBJECT_401K);
@@ -197,45 +239,57 @@ class WorkingYearCalculator {
       this.#reportingYear.ReportData.income_miscIncomeTakehome = takeHomeAmount;
     }
   }
-  #processNonTaxableIncome() {
-    const subjectNonTaxableIncome =
-      this.#fixedIncomeStreams.subjectPayrollDeductions;
-
-    if (subjectNonTaxableIncome > 0) {
+  #processTaxFreeIncome() {
+    const taxFreeIncome = this.#fixedIncomeStreams.taxFreeIncomeAdjustment;
+    if (taxFreeIncome > 0) {
       this.#accountYear.processAsPeriodicDeposits(
-        ACCOUNT_TYPES.SUBJECT_WAGES,
+        ACCOUNT_TYPES.CASH,
         TransactionCategory.OtherNonTaxable,
         TransactionRoutes.External,
-        subjectNonTaxableIncome,
+        taxFreeIncome,
         PERIODIC_FREQUENCY.MONTHLY
-      );
-      this.#accountYear.processAsPeriodicTransfers(
-        ACCOUNT_TYPES.SUBJECT_WAGES,
-        ACCOUNT_TYPES.CASH,
-        subjectNonTaxableIncome,
-        PERIODIC_FREQUENCY.MONTHLY,
-        TransactionCategory.OtherNonTaxable
       );
     }
-    const partnerNonTaxableIncome =
-      this.#fixedIncomeStreams.partnerCareerNonTaxableSalaryDeductions;
-    if (partnerNonTaxableIncome > 0) {
-      this.#accountYear.processAsPeriodicDeposits(
-        ACCOUNT_TYPES.PARTNER_WAGES,
-        TransactionCategory.OtherNonTaxable,
-        TransactionRoutes.External,
-        partnerNonTaxableIncome,
-        PERIODIC_FREQUENCY.MONTHLY
-      );
+    this.#reportingYear.ReportData.income_taxFreeIncome = taxFreeIncome;
 
-      this.#accountYear.processAsPeriodicTransfers(
-        ACCOUNT_TYPES.PARTNER_WAGES,
-        ACCOUNT_TYPES.CASH,
-        partnerNonTaxableIncome,
-        PERIODIC_FREQUENCY.MONTHLY,
-        TransactionCategory.OtherNonTaxable
-      );
-    }
+    // const subjectNonTaxableIncome =
+    //   this.#fixedIncomeStreams.subjectPayrollDeductions;
+
+    // if (subjectNonTaxableIncome > 0) {
+    //   this.#accountYear.processAsPeriodicDeposits(
+    //     ACCOUNT_TYPES.SUBJECT_WAGES,
+    //     TransactionCategory.OtherNonTaxable,
+    //     TransactionRoutes.External,
+    //     subjectNonTaxableIncome,
+    //     PERIODIC_FREQUENCY.MONTHLY
+    //   );
+    //   this.#accountYear.processAsPeriodicTransfers(
+    //     ACCOUNT_TYPES.SUBJECT_WAGES,
+    //     ACCOUNT_TYPES.CASH,
+    //     subjectNonTaxableIncome,
+    //     PERIODIC_FREQUENCY.MONTHLY,
+    //     TransactionCategory.OtherNonTaxable
+    //   );
+    // }
+    // const partnerNonTaxableIncome =
+    //   this.#fixedIncomeStreams.partnerCareerNonTaxableSalaryDeductions;
+    // if (partnerNonTaxableIncome > 0) {
+    //   this.#accountYear.processAsPeriodicDeposits(
+    //     ACCOUNT_TYPES.PARTNER_WAGES,
+    //     TransactionCategory.OtherNonTaxable,
+    //     TransactionRoutes.External,
+    //     partnerNonTaxableIncome,
+    //     PERIODIC_FREQUENCY.MONTHLY
+    //   );
+
+    //   this.#accountYear.processAsPeriodicTransfers(
+    //     ACCOUNT_TYPES.PARTNER_WAGES,
+    //     ACCOUNT_TYPES.CASH,
+    //     partnerNonTaxableIncome,
+    //     PERIODIC_FREQUENCY.MONTHLY,
+    //     TransactionCategory.OtherNonTaxable
+    //   );
+    // }
   }
 
   #processSavingsContributions() {
@@ -294,7 +348,7 @@ class WorkingYearCalculator {
     this.#reportingYear.ReportData.retirementAcct_partnerSavingsContributions +=
       actualPartnerTransferAmount;
 
-    this.#accountYear.analyzers[ACCOUNT_TYPES.CASH].dumpAccountActivity("");
+    // this.#accountYear.analyzers[ACCOUNT_TYPES.CASH].dumpAccountActivity("");
 
     // debugger;
   }
@@ -317,7 +371,7 @@ class WorkingYearCalculator {
       ACCOUNT_TYPES.SUBJECT_401K,
       this.#fixedIncomeStreams.subjectCareerAllowed401kContribution,
       PERIODIC_FREQUENCY.MONTHLY,
-      TransactionCategory.Contribution
+      TransactionCategory.RetirementContribution
     );
 
     this.#reportingYear.ReportData.income_subject401kContribution =
@@ -375,7 +429,7 @@ class WorkingYearCalculator {
       ACCOUNT_TYPES.PARTNER_401K,
       this.#fixedIncomeStreams.partnerCareerAllowed401kContribution,
       PERIODIC_FREQUENCY.MONTHLY,
-      TransactionCategory.Contribution
+      TransactionCategory.RetirementContribution
     );
     this.#reportingYear.ReportData.income_partner401kContribution =
       this.#fixedIncomeStreams.partnerCareerAllowed401kContribution;
@@ -409,14 +463,11 @@ class WorkingYearCalculator {
       PERIODIC_FREQUENCY.MONTHLY,
       TransactionCategory.IncomeNet
     );
+
     this.#reportingYear.ReportData.income_partnerTakehomeWages =
       this.#fixedIncomeStreams.partnerCareerWagesAndCompensationActualIncome;
 
-    this.#accountYear.analyzers[
-      ACCOUNT_TYPES.SUBJECT_WAGES
-    ].dumpAccountActivity("", TransactionCategory.IncomeGross);
-
-    this.#reportingYear.ReportData.dump("Wages and Compensation Report");
+    // this.#reportingYear.ReportData.dump("Wages and Compensation Report");
     // debugger;
   }
 
@@ -428,7 +479,7 @@ class WorkingYearCalculator {
       ACCOUNT_TYPES.SUBJECT_ROTH_IRA,
       this.#fixedIncomeStreams.subjectAllowedRothContribution,
       PERIODIC_FREQUENCY.MONTHLY,
-      TransactionCategory.Contribution
+      TransactionCategory.RetirementContribution
     );
 
     this.#accountYear.processAsPeriodicTransfers(
@@ -436,7 +487,7 @@ class WorkingYearCalculator {
       ACCOUNT_TYPES.PARTNER_ROTH_IRA,
       this.#fixedIncomeStreams.partnerAllowedRothContribution,
       PERIODIC_FREQUENCY.MONTHLY,
-      TransactionCategory.Contribution
+      TransactionCategory.RetirementContribution
     );
   }
 
@@ -513,9 +564,6 @@ class WorkingYearCalculator {
         PERIODIC_FREQUENCY.MONTHLY
       );
     }
-
-    this.#accountYear.analyzers[ACCOUNT_TYPES.CASH].dumpAccountActivity();
-    // debugger;
   }
 
   #applySavingsInterest() {
@@ -525,7 +573,6 @@ class WorkingYearCalculator {
       .getDeposits(ACCOUNT_TYPES.SAVINGS, TransactionCategory.Interest)
       .asCurrency();
 
-    this.#accountYear.analyzers[ACCOUNT_TYPES.SAVINGS].dumpAccountActivity();
     // debugger;
   }
 
@@ -542,14 +589,6 @@ class WorkingYearCalculator {
         .getDeposits(ACCOUNT_TYPES.PARTNER_401K, TransactionCategory.Interest)
         .asCurrency();
 
-    this.#accountYear.analyzers[
-      ACCOUNT_TYPES.SUBJECT_401K
-    ].dumpAccountActivity();
-    // debugger;
-
-    this.#accountYear.analyzers[
-      ACCOUNT_TYPES.SUBJECT_401K
-    ].dumpAccountActivity();
     // debugger;
   }
 
@@ -576,14 +615,6 @@ class WorkingYearCalculator {
         )
         .asCurrency();
 
-    this.#accountYear.analyzers[
-      ACCOUNT_TYPES.SUBJECT_ROTH_IRA
-    ].dumpAccountActivity();
-    // debugger;
-
-    this.#accountYear.analyzers[
-      ACCOUNT_TYPES.PARTNER_ROTH_IRA
-    ].dumpAccountActivity();
     // debugger;
   }
 
@@ -662,7 +693,6 @@ class WorkingYearCalculator {
       );
       this.#reportingYear.ReportData.taxes_underPayment = withdrawalAmount;
     }
-    this.#accountYear.analyzers[ACCOUNT_TYPES.TAXES].dumpAccountActivity();
     // debugger;
   }
 }

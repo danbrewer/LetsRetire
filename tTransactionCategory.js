@@ -13,7 +13,7 @@ const TransactionCategoryNames = /** @type {const} */ ({
   // Transfer: "Transfer",
   AutoTransfer: "Auto-Transfer",
   OpeningBalance: "Opening Balance",
-  Contribution: "Contribution",
+  RetirementContribution: "Ret. Contrib.",
 
   IncomeNet: "Net Income",
   IncomeGross: "Gross Income",
@@ -77,8 +77,8 @@ class TransactionCategoryEnum extends EnumBase {
     return this.map[TransactionCategoryNames.OpeningBalance];
   }
 
-  get Contribution() {
-    return this.map[TransactionCategoryNames.Contribution];
+  get RetirementContribution() {
+    return this.map[TransactionCategoryNames.RetirementContribution];
   }
 
   get IncomeNet() {
@@ -190,7 +190,7 @@ const TransactionCategory = new TransactionCategoryEnum();
  *         | typeof TransactionCategory.Overage
  *         | typeof TransactionCategory.Shortage
  *         | typeof TransactionCategory.OpeningBalance
- *         | typeof TransactionCategory.Contribution
+ *         | typeof TransactionCategory.RetirementContribution
  *         | typeof TransactionCategory.IncomeNet
  *         | typeof TransactionCategory.Taxes
  *         | typeof TransactionCategory.Spend

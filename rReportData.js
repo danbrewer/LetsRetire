@@ -16,18 +16,18 @@ class ReportData extends BaseReports {
     "income_subjectGrossWages",
     "income_subject401kContribution",
     "income_subjectEstimatedWithholdings",
-    "income_subjectNonTaxableSalaryDeductions",
+    "income_subjectPayrollDeductions",
     "income_subjectTakehomeWages",
 
     "income_partnerGrossWages",
     "income_partner401kContribution",
     "income_partnerEstimatedWithholdings",
-    "income_partnerNonTaxableSalaryDeductions",
+    "income_partnerPayrollDeductions",
     "income_partnerTakehomeWages",
 
     "income_wagesTaxable",
     "income_wagesTaxExempt",
-    ,
+
     "income_miscIncomeGross",
     "income_miscIncomeWithholdings",
     "income_miscIncomeTakehome",

@@ -187,7 +187,7 @@ class AccountAnalyzer {
       "right"
     );
     const balanceHeader = StringFunctions.padAndAlign(
-      "Balance",
+      "Total",
       fieldLayout.balance,
       "right"
     );
