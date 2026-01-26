@@ -145,13 +145,15 @@ class WorkingYearCalculator {
     this.#reportingYear.ReportData.retirementAcct_partnerRothBalance =
       this.#accountYear.getEndingBalance(ACCOUNT_TYPES.PARTNER_ROTH_IRA);
 
-    this.#reportingYear.ReportData.retirementAcct_savingsOpeningBalance =
+    this.#reportingYear.ReportData.savings_OpeningBalance =
       this.#accountYear.getStartingBalance(ACCOUNT_TYPES.SAVINGS);
-    this.#reportingYear.ReportData.retirementAcct_savingsDeposits =
-      this.#accountYear.getDeposits(ACCOUNT_TYPES.SAVINGS).asCurrency();
-    this.#reportingYear.ReportData.retirementAcct_savingsWithdrawals =
-      this.#accountYear.getWithdrawals(ACCOUNT_TYPES.SAVINGS).asCurrency();
-    this.#reportingYear.ReportData.retirementAcct_savingsBalance =
+    this.#reportingYear.ReportData.savings_Deposits = this.#accountYear
+      .getDeposits(ACCOUNT_TYPES.SAVINGS)
+      .asCurrency();
+    this.#reportingYear.ReportData.savings_Withdrawals = this.#accountYear
+      .getWithdrawals(ACCOUNT_TYPES.SAVINGS)
+      .asCurrency();
+    this.#reportingYear.ReportData.savings_Balance =
       this.#accountYear.getEndingBalance(ACCOUNT_TYPES.SAVINGS);
   }
   #processMiscIncome() {
@@ -197,7 +199,7 @@ class WorkingYearCalculator {
   }
   #processNonTaxableIncome() {
     const subjectNonTaxableIncome =
-      this.#fixedIncomeStreams.subjectCareerNonTaxableSalaryReductions;
+      this.#fixedIncomeStreams.subjectPayrollDeductions;
 
     if (subjectNonTaxableIncome > 0) {
       this.#accountYear.processAsPeriodicDeposits(
@@ -216,7 +218,7 @@ class WorkingYearCalculator {
       );
     }
     const partnerNonTaxableIncome =
-      this.#fixedIncomeStreams.partnerCareerNonTaxableSalaryReductions;
+      this.#fixedIncomeStreams.partnerCareerNonTaxableSalaryDeductions;
     if (partnerNonTaxableIncome > 0) {
       this.#accountYear.processAsPeriodicDeposits(
         ACCOUNT_TYPES.PARTNER_WAGES,
@@ -336,13 +338,13 @@ class WorkingYearCalculator {
     this.#accountYear.processAsPeriodicTransfers(
       ACCOUNT_TYPES.SUBJECT_WAGES,
       ACCOUNT_TYPES.SUBJECT_PAYROLL_DEDUCTIONS,
-      this.#fixedIncomeStreams.subjectCareerNonTaxableSalaryReductions,
+      this.#fixedIncomeStreams.subjectPayrollDeductions,
       PERIODIC_FREQUENCY.MONTHLY,
       TransactionCategory.PayrollDeductions
     );
 
-    this.#reportingYear.ReportData.income_subjectNonTaxableSalaryDeductions =
-      this.#fixedIncomeStreams.subjectCareerNonTaxableSalaryReductions;
+    this.#reportingYear.ReportData.income_subjectPayrollDeductions =
+      this.#fixedIncomeStreams.subjectPayrollDeductions;
 
     this.#accountYear.processAsPeriodicTransfers(
       ACCOUNT_TYPES.SUBJECT_WAGES,
@@ -381,12 +383,12 @@ class WorkingYearCalculator {
     this.#accountYear.processAsPeriodicTransfers(
       ACCOUNT_TYPES.PARTNER_WAGES,
       ACCOUNT_TYPES.PARTNER_PAYROLL_DEDUCTIONS,
-      this.#fixedIncomeStreams.partnerCareerNonTaxableSalaryReductions,
+      this.#fixedIncomeStreams.partnerCareerNonTaxableSalaryDeductions,
       PERIODIC_FREQUENCY.MONTHLY,
       TransactionCategory.PayrollDeductions
     );
-    this.#reportingYear.ReportData.income_partnerNonTaxableSalaryDeductions =
-      this.#fixedIncomeStreams.partnerCareerNonTaxableSalaryReductions;
+    this.#reportingYear.ReportData.income_partnerPayrollDeductions =
+      this.#fixedIncomeStreams.partnerCareerNonTaxableSalaryDeductions;
 
     this.#accountYear.processAsPeriodicTransfers(
       ACCOUNT_TYPES.PARTNER_WAGES,

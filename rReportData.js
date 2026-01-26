@@ -10,6 +10,9 @@ class ReportData extends BaseReports {
     "demographics_filingStatus",
     // WAGES AND COMPENSATION
 
+    "ask",
+    "spend",
+
     "income_subjectGrossWages",
     "income_subject401kContribution",
     "income_subjectEstimatedWithholdings",
@@ -22,15 +25,19 @@ class ReportData extends BaseReports {
     "income_partnerNonTaxableSalaryDeductions",
     "income_partnerTakehomeWages",
 
+    "income_wagesTaxable",
+    "income_wagesTaxExempt",
+    ,
     "income_miscIncomeGross",
     "income_miscIncomeWithholdings",
     "income_miscIncomeTakehome",
 
     "income_additionalWithholdings",
-    // Income that is not taxable
-    "income_nonTaxableIncome",
-
     "income_savingsInterest",
+
+    // Income that is not taxable
+    "income_taxableIncome",
+    "income_taxFreeIncome",
 
     // RETIREMENT INCOME
     "income_subject401kGross",
@@ -46,8 +53,13 @@ class ReportData extends BaseReports {
     "income_partnerPensionWithholdings",
     "income_partnerPensionTakehome",
 
-    "ask",
-    "spend",
+    "savings_OpeningBalance",
+    "savings_Withdrawals",
+    "savings_Deposits",
+    "savings_Balance",
+    "savings_Interest",
+    "retirementAcct_subjectSavingsContributions",
+    "retirementAcct_partnerSavingsContributions",
     "spending_shortfall",
     "spending_surplus",
 
@@ -111,14 +123,6 @@ class ReportData extends BaseReports {
     "retirementAcct_partnerRothWithdrawals",
     "retirementAcct_partnerRothBalance",
     "retirementAcct_partnerRothInterest",
-
-    "retirementAcct_savingsOpeningBalance",
-    "retirementAcct_savingsWithdrawals",
-    "retirementAcct_savingsDeposits",
-    "retirementAcct_savingsBalance",
-    "retirementAcct_savingsInterest",
-    "retirementAcct_subjectSavingsContributions",
-    "retirementAcct_partnerSavingsContributions",
   ];
   constructor() {
     super();
@@ -133,12 +137,12 @@ class ReportData extends BaseReports {
     this.income_subjectGrossWages = 0;
     this.income_subject401kContribution = 0;
     this.income_subjectEstimatedWithholdings = 0;
-    this.income_subjectNonTaxableSalaryDeductions = 0;
+    this.income_subjectPayrollDeductions = 0;
     this.income_subjectTakehomeWages = 0;
 
     this.income_partnerGrossWages = 0;
     this.income_partner401kContribution = 0;
-    this.income_partnerNonTaxableSalaryDeductions = 0;
+    this.income_partnerPayrollDeductions = 0;
     this.income_partnerEstimatedWithholdings = 0;
     this.income_partnerTakehomeWages = 0;
 
@@ -147,7 +151,7 @@ class ReportData extends BaseReports {
     this.income_miscIncomeTakehome = 0;
 
     this.income_additionalWithholdings = 0;
-    this.income_nonTaxableIncome = 0;
+    this.income_taxFreeIncome = 0;
 
     this.income_savingsInterest = 0;
 
@@ -166,6 +170,11 @@ class ReportData extends BaseReports {
     this.income_partnerPensionGross = 0;
     this.income_partnerPensionWithholdings = 0;
     this.income_partnerPensionTakehome = 0;
+
+    this.savings_OpeningBalance = 0;
+    this.savings_Deposits = 0;
+    this.savings_Withdrawals = 0;
+    this.savings_Balance = 0;
 
     // SPENDING AND ASK
     this.ask = 0;
@@ -207,11 +216,6 @@ class ReportData extends BaseReports {
     this.retirementAcct_partner401kInterest = 0;
     this.retirementAcct_subjectRothInterest = 0;
     this.retirementAcct_partnerRothInterest = 0;
-
-    this.retirementAcct_savingsOpeningBalance = 0;
-    this.retirementAcct_savingsDeposits = 0;
-    this.retirementAcct_savingsWithdrawals = 0;
-    this.retirementAcct_savingsBalance = 0;
 
     this.retirementAcct_subject401kOpenBalance = 0;
     this.retirementAcct_subject401kWithdrawals = 0;
@@ -274,8 +278,39 @@ class ReportData extends BaseReports {
   get taxes_partner401kWithholdings() {
     return this.income_partner401kWithholdings;
   }
-  get retirementAcct_savingsInterest() {
+  get savings_Interest() {
     return this.income_savingsInterest;
+  }
+
+  get income_taxableIncome() {
+    return (
+      this.income_subjectGrossWages -
+      this.income_subject401kContribution -
+      this.income_subjectPayrollDeductions +
+      this.income_partnerGrossWages -
+      this.income_partner401kContribution -
+      this.income_partnerPayrollDeductions +
+      this.income_miscIncomeGross +
+      this.savings_Interest
+    );
+  }
+
+  get income_wagesTaxable() {
+    return (
+      this.income_subjectTakehomeWages +
+      this.income_partnerTakehomeWages +
+      this.income_subjectEstimatedWithholdings +
+      this.income_partnerEstimatedWithholdings
+    ).asCurrency();
+  }
+
+  get income_wagesTaxExempt() {
+    return (
+      this.income_subjectPayrollDeductions +
+      this.income_partnerPayrollDeductions +
+      this.income_subject401kContribution +
+      this.income_partner401kContribution
+    ).asCurrency();
   }
 }
 export { ReportData };

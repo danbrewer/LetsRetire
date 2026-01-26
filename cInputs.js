@@ -78,8 +78,10 @@ import { compoundedRate } from "./utils.js";
  * @property {number} [partner401kContributionRate]
  * @property {number} [partnerRothContributionRate]
  *
- * @property {number} [subjectNonTaxableSalaryReductions]
- * @property {number} [partnerNonTaxableSalaryReductions]
+ * @property {number} [subjectPayrollDeductions]
+ * @property {number} [partnerPayrollDeductions]
+ * @property {number} [subjectPayPeriods]
+ * @property {number} [partnerPayPeriods]
  */
 
 class Inputs {
@@ -107,7 +109,7 @@ class Inputs {
       endSubjectAge = 0,
 
       // Inflation + spending
-      inflationRate: inflation = 0,
+      inflationRate = 0,
       spendingToday = 0,
       spendingDecline = 0,
 
@@ -128,8 +130,8 @@ class Inputs {
       partnerStartingSalary = 0,
       subjectSalaryGrowthRate = 0,
       partnerSalaryGrowthRate = 0,
-      subject401kContributionRate = 0,
-      partner401kContributionRate = 0,
+      subject401kContributionRate: subjectCareer401kContributionRate = 0,
+      partner401kContributionRate: partnerCareer401kContributionRate = 0,
       subjectRothContributionRate = 0,
       partnerRothContributionRate = 0,
       taxablePct = 0,
@@ -144,9 +146,9 @@ class Inputs {
       savingsStartingBalance = 0,
 
       // Returns
-      subject401kInterestRate: trad401kInterestRate = 0,
-      subjectRothInterestRate: tradRothInterestRate = 0,
-      partner401kInterestRate: partnerTrad401kInterestRate = 0,
+      subject401kInterestRate = 0,
+      subjectRothInterestRate = 0,
+      partner401kInterestRate = 0,
       partnerRothInterestRate = 0,
       savingsInterestRate = 0,
 
@@ -160,7 +162,7 @@ class Inputs {
       filingStatus = "single",
       useRMD = false,
       flatSsWithholdingRate = 0.07,
-      flatTrad401kWithholdingRate = 0.2,
+      flatTrad401kWithholdingRate: flatCareerTrad401kWithholdingRate = 0.2,
       flatPensionWithholdingRate = 0.2,
       flatWageWithholdingRate = 0.15,
 
@@ -182,8 +184,10 @@ class Inputs {
       partnerRetirementYearSavingsContributionVariable = 0,
 
       // Salary reductions
-      subjectNonTaxableSalaryReductions = 500 * 26,
-      partnerNonTaxableSalaryReductions = 0,
+      subjectPayrollDeductions = 1,
+      partnerPayrollDeductions = 1,
+      subjectPayPeriods = 26,
+      partnerPayPeriods = 26,
     } = options;
 
     // ---------------------------
@@ -214,7 +218,7 @@ class Inputs {
     this.endSubjectAge = endSubjectAge;
 
     /** @type {number} */
-    this.inflation = inflation;
+    this.inflationRate = inflationRate;
 
     /** @type {number} */
     this.spendingToday = spendingToday;
@@ -267,7 +271,7 @@ class Inputs {
     this.partnerSalaryGrowthRate = partnerSalaryGrowthRate;
 
     /** @type {number} */
-    this.subjectCareer401kContributionRate = subject401kContributionRate;
+    this.subjectCareer401kContributionRate = subjectCareer401kContributionRate;
 
     /** @type {number} */
     this.subjectRothContributionRate = subjectRothContributionRate;
@@ -298,13 +302,13 @@ class Inputs {
     this.savingsStartingBalance = savingsStartingBalance;
 
     /** @type {number} */
-    this.trad401kInterestRate = trad401kInterestRate;
+    this.subject401kInterestRate = subject401kInterestRate;
 
     /** @type {number} */
-    this.tradRothInterestRate = tradRothInterestRate;
+    this.subjectRothInterestRate = subjectRothInterestRate;
 
     /** @type {number} */
-    this.partnerTrad401kInterestRate = partnerTrad401kInterestRate;
+    this.partner401kInterestRate = partner401kInterestRate;
 
     /** @type {number} */
     this.partnerRothInterestRate = partnerRothInterestRate;
@@ -336,13 +340,13 @@ class Inputs {
     this.flatSsWithholdingRate = flatSsWithholdingRate;
 
     /** @type {number} */
-    this.flatCareerTrad401kWithholdingRate = flatTrad401kWithholdingRate;
+    this.flatTrad401kWithholdingRate = flatCareerTrad401kWithholdingRate;
 
     /** @type {number} */
     this.flatPensionWithholdingRate = flatPensionWithholdingRate;
 
     /** @type {number} */
-    this.flatCareerWageWithholdingRate = flatWageWithholdingRate;
+    this.flatWageWithholdingRate = flatWageWithholdingRate;
 
     /** @type {string[]} */
     this.order = order;
@@ -358,18 +362,19 @@ class Inputs {
     this.savingsUseAge = this.subjectRetireAge;
 
     /** @type {number} */
+    this.savingsUseAge = this.subjectRetireAge;
+
+    /** @type {number} */
     this.trad401kUseAge = this.subjectRetireAge;
 
     /** @type {number} */
     this.rothUseAge = this.subjectRetireAge;
 
     /** @type {number} */
-    this.subjectCareerNonTaxableSalaryReductions =
-      subjectNonTaxableSalaryReductions;
+    this.subjectPayrollDeductions = subjectPayrollDeductions;
 
     /** @type {number} */
-    this.partnerCareerNonTaxableSalaryReductions =
-      partnerNonTaxableSalaryReductions;
+    this.partnerPayrollDeductions = partnerPayrollDeductions;
 
     /** @type {number} */
     this.subjectWorkingYearSavingsContributionFixed =
@@ -404,7 +409,7 @@ class Inputs {
       partnerRetirementYearSavingsContributionVariable;
 
     /** @type {number} */
-    this.partnerCareer401kContributionRate = partner401kContributionRate;
+    this.partnerCareer401kContributionRate = partnerCareer401kContributionRate;
 
     /** @type {number} */
     this.partnerRothContributionRate = partnerRothContributionRate;
@@ -422,6 +427,12 @@ class Inputs {
     /** @type {boolean} */
     this.hasPartner = false;
 
+    /** @type {number} */
+    this.subjectPayPeriods = subjectPayPeriods;
+
+    /** @type {number} */
+    this.partnerPayPeriods = partnerPayPeriods;
+
     // Calculate derived values
     this.#calculateDerivedValues();
   }
@@ -438,7 +449,7 @@ class Inputs {
 
     this.spendAtRetire =
       this.spendingToday *
-      compoundedRate(this.inflation, this.totalWorkingYears);
+      compoundedRate(this.inflationRate, this.totalWorkingYears);
   }
 
   // Utility methods for input validation and analysis
@@ -459,10 +470,10 @@ class Inputs {
 
   hasValidFinancials() {
     return (
-      this.inflation >= 0 &&
+      this.inflationRate >= 0 &&
       this.spendingToday >= 0 &&
-      this.trad401kInterestRate >= 0 &&
-      this.tradRothInterestRate >= 0 &&
+      this.subject401kInterestRate >= 0 &&
+      this.subjectRothInterestRate >= 0 &&
       this.savingsInterestRate >= 0
     );
   }
@@ -506,7 +517,7 @@ class Inputs {
       },
       financial: {
         spendingToday: this.spendingToday,
-        inflation: this.inflation,
+        inflation: this.inflationRate,
         totalAccountBalance: this.getTotalAccountBalance(),
         totalAnnualBenefits: this.getTotalAnnualBenefits(),
       },
@@ -568,7 +579,7 @@ class Inputs {
 
   get spend() {
     let result = this.spendingToday
-      .adjustedForInflation(this.inflation, this.yearIndex)
+      .adjustedForInflation(this.inflationRate, this.yearIndex)
       .asCurrency();
 
     if (this.#isRetired) {
@@ -669,6 +680,7 @@ class Inputs {
    * Optional helper: turn current instance into a plain object.
    * Great for persistence, cloning, diffing, etc.
    */
+  /** @returns {InputsOptions} */
   toObject() {
     return {
       startingYear: this.startingYear,
@@ -680,7 +692,7 @@ class Inputs {
       subject401kStartAge: this.subject401kStartAge,
       endSubjectAge: this.endSubjectAge,
 
-      inflation: this.inflation,
+      inflationRate: this.inflationRate,
       spendingToday: this.spendingToday,
       spendingDecline: this.spendingDecline,
 
@@ -711,9 +723,9 @@ class Inputs {
       partnerRothStartingBalance: this.partnerRothStartingBalance,
       savingsStartingBalance: this.savingsStartingBalance,
 
-      trad401kInterestRate: this.trad401kInterestRate,
-      tradRothInterestRate: this.tradRothInterestRate,
-      partnerTrad401kInterestRate: this.partnerTrad401kInterestRate,
+      subject401kInterestRate: this.subject401kInterestRate,
+      subjectRothInterestRate: this.subjectRothInterestRate,
+      partner401kInterestRate: this.partner401kInterestRate,
       partnerRothInterestRate: this.partnerRothInterestRate,
       savingsInterestRate: this.savingsInterestRate,
 
@@ -726,9 +738,9 @@ class Inputs {
       useRMD: this.useRMD,
 
       flatSsWithholdingRate: this.flatSsWithholdingRate,
-      flatTrad401kWithholdingRate: this.flatCareerTrad401kWithholdingRate,
+      flatTrad401kWithholdingRate: this.flatTrad401kWithholdingRate,
       flatPensionWithholdingRate: this.flatPensionWithholdingRate,
-      flatWageWithholdingRate: this.flatCareerWageWithholdingRate,
+      flatWageWithholdingRate: this.flatWageWithholdingRate,
 
       order: this.order,
 
@@ -752,10 +764,8 @@ class Inputs {
       partner401kContributionRate: this.partnerCareer401kContributionRate,
       partnerRothContributionRate: this.partnerRothContributionRate,
 
-      subjectNonTaxableSalaryReductions:
-        this.subjectCareerNonTaxableSalaryReductions,
-      partnerNonTaxableSalaryReductions:
-        this.partnerCareerNonTaxableSalaryReductions,
+      subjectPayrollDeductions: this.subjectPayrollDeductions,
+      partnerPayrollDeductions: this.partnerPayrollDeductions,
     };
   }
 }

@@ -177,9 +177,9 @@ class FiscalData {
    */
   static CreateUsing(inputs, taxYearBase) {
     return new FiscalData(
-      inputs.inflation,
-      inputs.trad401kInterestRate,
-      inputs.tradRothInterestRate,
+      inputs.inflationRate,
+      inputs.subject401kInterestRate,
+      inputs.subjectRothInterestRate,
       inputs.savingsInterestRate,
       inputs.yearIndex,
       inputs.spend,
@@ -189,7 +189,7 @@ class FiscalData {
       inputs.subjectUseTrad401k,
       inputs.subjectUseRoth,
       inputs.flatSsWithholdingRate,
-      inputs.flatCareerTrad401kWithholdingRate
+      inputs.flatTrad401kWithholdingRate
     );
   }
 }

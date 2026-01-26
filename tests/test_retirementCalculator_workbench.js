@@ -49,7 +49,7 @@ function createInputs() {
     subjectStartingSalary: 174500,
     partnerStartingSalary: 0,
     subjectSalaryGrowthRate: 0.02,
-    partnerSalaryGrowthRate: 0.02,
+    partnerSalaryGrowthRate: 0,
     subject401kContributionRate: 0.05,
     partner401kContributionRate: 0.05,
     subjectRothContributionRate: 0.01,
@@ -57,6 +57,10 @@ function createInputs() {
     taxablePct: 0.35,
     matchCap: 0,
     subject401kMatchRate: 0,
+    subjectPayrollDeductions: 500,
+    subjectPayPeriods: 26,
+    partnerPayrollDeductions: 0,
+    partnerPayPeriods: 26,
 
     // Starting balances
     subject401kStartingBalance: 500000,
@@ -96,8 +100,8 @@ function createInputs() {
     // Savings contributions
     subjectWorkingYearSavingsContributionFixed: 50,
     subjectWorkingYearSavingsContributionVariable: 0.05,
-    partnerWorkingYearSavingsContributionFixed: 0,
-    partnerWorkingYearSavingsContributionVariable: 0,
+    partnerWorkingYearSavingsContributionFixed: 1,
+    partnerWorkingYearSavingsContributionVariable: 0.02,
     subjectRetirementYearSavingsContributionFixed: 100,
     subjectRetirementYearSavingsContributionVariable: 0.01,
     partnerRetirementYearSavingsContributionFixed: 0,

@@ -33,17 +33,17 @@ class AccountsManager {
       switch (accountType) {
         case ACCOUNT_TYPES.SUBJECT_401K:
           startingBalance = inputs.subject401kStartingBalance || 0;
-          interestRate = inputs.trad401kInterestRate || 0;
+          interestRate = inputs.subject401kInterestRate || 0;
           break;
 
         case ACCOUNT_TYPES.PARTNER_401K:
           startingBalance = inputs.partner401kStartingBalance || 0;
-          interestRate = inputs.partnerTrad401kInterestRate || 0;
+          interestRate = inputs.partner401kInterestRate || 0;
           break;
 
         case ACCOUNT_TYPES.SUBJECT_ROTH_IRA:
           startingBalance = inputs.subjectRothStartingBalance || 0;
-          interestRate = inputs.tradRothInterestRate || 0;
+          interestRate = inputs.subjectRothInterestRate || 0;
           break;
 
         case ACCOUNT_TYPES.PARTNER_ROTH_IRA:

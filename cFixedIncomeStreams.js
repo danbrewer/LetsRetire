@@ -120,12 +120,16 @@ class FixedIncomeStreams {
     ).asCurrency();
   }
 
-  get subjectCareerNonTaxableSalaryReductions() {
-    return this.#inputs.subjectCareerNonTaxableSalaryReductions.asCurrency();
+  get subjectPayrollDeductions() {
+    return (
+      this.#inputs.subjectPayrollDeductions * this.#inputs.subjectPayPeriods
+    ).asCurrency();
   }
 
-  get partnerCareerNonTaxableSalaryReductions() {
-    return this.#inputs.partnerCareerNonTaxableSalaryReductions.asCurrency();
+  get partnerCareerNonTaxableSalaryDeductions() {
+    return (
+      this.#inputs.partnerPayrollDeductions * this.#inputs.partnerPayPeriods
+    ).asCurrency();
   }
 
   get partnerCareerAllowed401kContribution() {
@@ -135,7 +139,7 @@ class FixedIncomeStreams {
   }
 
   get nonTaxableBenefits() {
-    return this.#inputs.subjectCareerNonTaxableSalaryReductions.asCurrency();
+    return this.subjectPayrollDeductions.asCurrency();
   }
 
   get subjectCareerWagesAndCompensationGross() {
@@ -150,14 +154,13 @@ class FixedIncomeStreams {
     return (
       this.subjectCareerWagesAndCompensationGross +
       this.partnerCareerWagesAndCompensationGross +
-      this.#inputs.taxableIncomeAdjustment
+      this.miscTaxableIncome
     ).asCurrency();
   }
 
   get subjectCareerWagesAndCompensationNonTaxable() {
     return (
-      this.subjectCareerAllowed401kContribution +
-      this.#inputs.subjectCareerNonTaxableSalaryReductions
+      this.subjectCareerAllowed401kContribution + this.subjectPayrollDeductions
     ).asCurrency();
   }
 
@@ -175,7 +178,7 @@ class FixedIncomeStreams {
   get partnerCareerWagesAndCompensationNonTaxable() {
     return (
       this.partnerCareerAllowed401kContribution +
-      this.#inputs.partnerCareerNonTaxableSalaryReductions
+      this.#inputs.partnerPayrollDeductions
     ).asCurrency();
   }
 
@@ -195,14 +198,14 @@ class FixedIncomeStreams {
 
   get subjectCareerWagesAndCompensationEstimatedWithholdings() {
     return (
-      this.#inputs.flatCareerWageWithholdingRate *
+      this.#inputs.flatWageWithholdingRate *
       this.subjectCareerWagesAndCompensationGross
     ).asCurrency();
   }
 
   get partnerCareerWagesAndCompensationEstimatedWithholdings() {
     return (
-      this.#inputs.flatCareerWageWithholdingRate *
+      this.#inputs.flatWageWithholdingRate *
       this.partnerCareerWagesAndCompensationGross
     ).asCurrency();
   }
@@ -226,7 +229,7 @@ class FixedIncomeStreams {
       this.subjectCareerWagesAndCompensationGross -
       this.subjectCareerWagesAndCompensationEstimatedWithholdings -
       this.subjectCareerAllowed401kContribution -
-      this.subjectCareerNonTaxableSalaryReductions
+      this.subjectPayrollDeductions
     ).asCurrency();
   }
 
@@ -235,7 +238,7 @@ class FixedIncomeStreams {
       this.partnerCareerWagesAndCompensationGross -
       this.partnerCareerWagesAndCompensationEstimatedWithholdings -
       this.partnerCareerAllowed401kContribution -
-      this.partnerCareerNonTaxableSalaryReductions
+      this.partnerCareerNonTaxableSalaryDeductions
     ).asCurrency();
   }
 
@@ -247,7 +250,7 @@ class FixedIncomeStreams {
   }
 
   get flatCareer401kWithholdingRate() {
-    return this.#inputs.flatCareerTrad401kWithholdingRate;
+    return this.#inputs.flatTrad401kWithholdingRate;
   }
 
   get subjectPensionGross() {
@@ -312,7 +315,7 @@ class FixedIncomeStreams {
 
   get miscTaxableIncomeWithholdings() {
     return (
-      this.#inputs.flatCareerWageWithholdingRate * this.miscTaxableIncome
+      this.#inputs.flatWageWithholdingRate * this.miscTaxableIncome
     ).asCurrency();
   }
 
@@ -332,7 +335,8 @@ class FixedIncomeStreams {
   }
 
   get subjectWorkingYearSavingsContributionFixed() {
-    return this.#inputs.subjectWorkingYearSavingsContributionFixed.asCurrency();
+    const result = this.#inputs.subjectWorkingYearSavingsContributionFixed ?? 0;
+    return result.asCurrency();
   }
 
   get subjectWorkingYearSavingsContributionVariable() {
@@ -343,7 +347,8 @@ class FixedIncomeStreams {
   }
 
   get partnerWorkingYearSavingsContributionFixed() {
-    return this.#inputs.partnerWorkingYearSavingsContributionFixed.asCurrency();
+    const result = this.#inputs.partnerWorkingYearSavingsContributionFixed ?? 0;
+    return result.asCurrency();
   }
 
   get partnerWorkingYearSavingsContributionVariable() {
@@ -354,15 +359,21 @@ class FixedIncomeStreams {
   }
 
   get subjectRetirementYearSavingsContributionFixed() {
-    return this.#inputs.subjectRetirementYearSavingsContributionFixed.asCurrency();
+    const result =
+      this.#inputs.subjectRetirementYearSavingsContributionFixed ?? 0;
+    return result.asCurrency();
   }
 
   get subjectRetirementYearSavingsContributionVariable() {
-    return this.#inputs.subjectRetirementYearSavingsContributionVariable ?? 0;
+    const result =
+      this.#inputs.subjectRetirementYearSavingsContributionVariable ?? 0;
+    return result.asCurrency();
   }
 
   get partnerRetirementYearSavingsContributionFixed() {
-    return this.#inputs.partnerRetirementYearSavingsContributionFixed.asCurrency();
+    const result =
+      this.#inputs.partnerRetirementYearSavingsContributionFixed ?? 0;
+    return result.asCurrency();
   }
 
   get partnerRetirementYearSavingsContributionVariable() {
@@ -374,65 +385,74 @@ class FixedIncomeStreams {
   }
 
   get interestEarnedOnSavings() {
-    return (
-      this.#accountYear
-        ?.getDeposits(ACCOUNT_TYPES.SAVINGS, TransactionCategory.Interest)
-        .asCurrency() ?? 0
-    );
+    const result =
+      this.#accountYear?.getDeposits(
+        ACCOUNT_TYPES.SAVINGS,
+        TransactionCategory.Interest
+      ) ?? 0;
+    return result.asCurrency();
   }
 
   get grossTaxableIncome() {
-    return (
+    const result =
       this.combinedSsGross +
       this.combinedPensionGross +
       this.miscTaxableIncome +
       this.combinedCareerWagesAndCompensationTaxable +
       this.interestEarnedOnSavings +
-      0
-    );
+      0;
+    return result.asCurrency();
   }
 
   get taxableIncome() {
-    return (
+    const result =
       this.combinedCareerWagesAndCompensationTaxable +
       this.combinedPensionGross +
       this.interestEarnedOnSavings +
       this.miscTaxableIncome +
-      this.combinedSsGross
-    );
+      this.combinedSsGross;
+    return result.asCurrency();
   }
 
   get combinedSsGross() {
-    return this.subjectSsGross + this.partnerSsGross;
+    const result = this.subjectSsGross + this.partnerSsGross;
+    return result.asCurrency();
   }
 
   get combinedGrossSsWithholdings() {
-    return this.subjectSsWithholdings + this.partnerSsWithholdings;
+    const result = this.subjectSsWithholdings + this.partnerSsWithholdings;
+    return result.asCurrency();
   }
 
   get combinedSsActualIncome() {
-    return this.subjectSsActualIncome + this.partnerSsActualIncome;
+    const result = this.subjectSsActualIncome + this.partnerSsActualIncome;
+    return result.asCurrency();
   }
 
   get combinedPensionGross() {
-    return this.subjectPensionGross + this.partnerPensionGross;
+    const result = this.subjectPensionGross + this.partnerPensionGross;
+    return result.asCurrency();
   }
 
   get combinedPensionWithholdings() {
-    return this.subjectPensionWithholdings + this.partnerPensionWithholdings;
+    const result =
+      this.subjectPensionWithholdings + this.partnerPensionWithholdings;
+    return result.asCurrency();
   }
 
   get combinedPensionActualIncome() {
-    return this.subjectPensionActualIncome + this.partnerPensionActualIncome;
+    const result =
+      this.subjectPensionActualIncome + this.partnerPensionActualIncome;
+    return result.asCurrency();
   }
 
   get nonSsGrossIncome() {
-    return (
+    const result =
       this.combinedPensionGross +
       this.interestEarnedOnSavings +
       this.miscTaxableIncome +
-      this.combinedCareerWagesAndCompensationTaxable
-    );
+      this.combinedCareerWagesAndCompensationTaxable;
+    return result.asCurrency();
   }
 
   get totalActualFixedIncome() {

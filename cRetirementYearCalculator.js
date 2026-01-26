@@ -90,7 +90,7 @@ class RetirementYearCalculator {
 
   processRetirementYearData() {
     // Dump misc non-taxable income into savings account just to get it accounted for
-    this.#processNonTaxableIncome();
+    this.#processTaxFreeIncome();
 
     // Process non-variable income streams into savings account
     this.#processPensionIncome();
@@ -671,23 +671,21 @@ class RetirementYearCalculator {
     ].dumpAccountActivity("Partner pension processed");
   }
 
-  #processNonTaxableIncome() {
-    const nonTaxableActualIncome =
-      this.#fixedIncomeStreams.taxFreeIncomeAdjustment;
+  #processTaxFreeIncome() {
+    const taxFreeIncome = this.#fixedIncomeStreams.taxFreeIncomeAdjustment;
 
-    if (nonTaxableActualIncome <= 0) return;
+    if (taxFreeIncome <= 0) return;
 
     this.#accountYear.processAsPeriodicDeposits(
       ACCOUNT_TYPES.CASH,
       TransactionCategory.OtherNonTaxable,
       TransactionRoutes.External,
-      nonTaxableActualIncome,
+      taxFreeIncome,
       PERIODIC_FREQUENCY.MONTHLY,
       "Tax-free income"
     );
 
-    this.#reportingYear.ReportData.income_nonTaxableIncome =
-      nonTaxableActualIncome;
+    this.#reportingYear.ReportData.income_taxFreeIncome = taxFreeIncome;
 
     this.#accountYear.analyzers[ACCOUNT_TYPES.CASH].dumpAccountActivity(
       "Non-taxable income processed"
