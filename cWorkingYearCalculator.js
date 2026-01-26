@@ -88,19 +88,21 @@ class WorkingYearCalculator {
 
     this.#generateReportData();
 
-    // Declare and initialize the result object at the top
+    // workingYearData.dump("working year data");
+    this.#reportingYear.ReportData.dump("ReportData");
+    // debugger;
+
     const workingYearData = WorkingYearData.CreateUsing(
       this.#demographics,
       this.#fiscalData,
       this.#accountYear
     );
 
-    // workingYearData.dump("working year data");
-    this.#reportingYear.ReportData.dump("ReportData");
-    debugger;
     return workingYearData;
   }
   #dumpAccountReports() {
+    return;
+
     // WAGES AND COMPENSATION
     this.#accountYear.analyzers[
       ACCOUNT_TYPES.SUBJECT_WAGES
