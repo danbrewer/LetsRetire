@@ -101,14 +101,52 @@ class WorkingYearCalculator {
     return workingYearData;
   }
   #generateReportData() {
+    this.#reportingYear.ReportData.retirementAcct_subject401kOpenBalance =
+      this.#accountYear.getStartingBalance(ACCOUNT_TYPES.SUBJECT_401K);
+    this.#reportingYear.ReportData.retirementAcct_subject401kWithdrawals =
+      this.#accountYear.getWithdrawals(ACCOUNT_TYPES.SUBJECT_401K).asCurrency();
+    this.#reportingYear.ReportData.retirementAcct_subject401kDeposits =
+      this.#accountYear.getDeposits(ACCOUNT_TYPES.SUBJECT_401K).asCurrency();
     this.#reportingYear.ReportData.retirementAcct_subject401kBalance =
       this.#accountYear.getEndingBalance(ACCOUNT_TYPES.SUBJECT_401K);
+
+    this.#reportingYear.ReportData.retirementAcct_partner401kOpenBalance =
+      this.#accountYear.getStartingBalance(ACCOUNT_TYPES.PARTNER_401K);
+    this.#reportingYear.ReportData.retirementAcct_partner401kWithdrawals =
+      this.#accountYear.getWithdrawals(ACCOUNT_TYPES.PARTNER_401K).asCurrency();
+    this.#reportingYear.ReportData.retirementAcct_partner401kDeposits =
+      this.#accountYear.getDeposits(ACCOUNT_TYPES.PARTNER_401K).asCurrency();
     this.#reportingYear.ReportData.retirementAcct_partner401kBalance =
       this.#accountYear.getEndingBalance(ACCOUNT_TYPES.PARTNER_401K);
-    this.#reportingYear.ReportData.retirementAcct_subjectRothIraBalance =
+
+    this.#reportingYear.ReportData.retirementAcct_subjectRothOpenBalance =
+      this.#accountYear.getStartingBalance(ACCOUNT_TYPES.SUBJECT_ROTH_IRA);
+    this.#reportingYear.ReportData.retirementAcct_subjectRothWithdrawals =
+      this.#accountYear
+        .getWithdrawals(ACCOUNT_TYPES.SUBJECT_ROTH_IRA)
+        .asCurrency();
+    this.#reportingYear.ReportData.retirementAcct_subjectRothDeposits =
+      this.#accountYear
+        .getDeposits(ACCOUNT_TYPES.SUBJECT_ROTH_IRA)
+        .asCurrency();
+    this.#reportingYear.ReportData.retirementAcct_subjectRothBalance =
       this.#accountYear.getEndingBalance(ACCOUNT_TYPES.SUBJECT_ROTH_IRA);
-    this.#reportingYear.ReportData.retirementAcct_partnerRothIraBalance =
+
+    this.#reportingYear.ReportData.retirementAcct_partnerRothOpenBalance =
+      this.#accountYear.getStartingBalance(ACCOUNT_TYPES.PARTNER_ROTH_IRA);
+    this.#reportingYear.ReportData.retirementAcct_partnerRothWithdrawals =
+      this.#accountYear
+        .getWithdrawals(ACCOUNT_TYPES.PARTNER_ROTH_IRA)
+        .asCurrency();
+    this.#reportingYear.ReportData.retirementAcct_partnerRothDeposits =
+      this.#accountYear
+        .getDeposits(ACCOUNT_TYPES.PARTNER_ROTH_IRA)
+        .asCurrency();
+    this.#reportingYear.ReportData.retirementAcct_partnerRothBalance =
       this.#accountYear.getEndingBalance(ACCOUNT_TYPES.PARTNER_ROTH_IRA);
+
+    this.#reportingYear.ReportData.retirementAcct_savingsOpeningBalance =
+      this.#accountYear.getStartingBalance(ACCOUNT_TYPES.SAVINGS);
     this.#reportingYear.ReportData.retirementAcct_savingsDeposits =
       this.#accountYear.getDeposits(ACCOUNT_TYPES.SAVINGS).asCurrency();
     this.#reportingYear.ReportData.retirementAcct_savingsWithdrawals =
@@ -128,7 +166,7 @@ class WorkingYearCalculator {
         PERIODIC_FREQUENCY.MONTHLY
       );
 
-      this.#reportingYear.ReportData.income_miscTaxableIncome = miscIncome;
+      this.#reportingYear.ReportData.income_miscIncomeTakehome = miscIncome;
 
       const withholdings =
         this.#fixedIncomeStreams.miscTaxableIncomeWithholdings;
@@ -141,7 +179,7 @@ class WorkingYearCalculator {
         TransactionCategory.Withholdings
       );
 
-      this.#reportingYear.ReportData.taxes_miscIncomeWithholdings =
+      this.#reportingYear.ReportData.income_miscIncomeWithholdings =
         withholdings;
 
       const takeHomeAmount = miscIncome - withholdings;
@@ -153,6 +191,8 @@ class WorkingYearCalculator {
         PERIODIC_FREQUENCY.MONTHLY,
         TransactionCategory.Withholdings
       );
+
+      this.#reportingYear.ReportData.income_miscIncomeTakehome = takeHomeAmount;
     }
   }
   #processNonTaxableIncome() {
@@ -410,6 +450,9 @@ class WorkingYearCalculator {
 
     const actualSpend = Math.min(cash, this.#fiscalData.spend);
 
+    this.#reportingYear.ReportData.ask = this.#fiscalData.spend;
+    this.#reportingYear.ReportData.spend = actualSpend;
+
     this.#accountYear.processAsPeriodicWithdrawals(
       ACCOUNT_TYPES.CASH,
       TransactionCategory.Spend,
@@ -432,8 +475,7 @@ class WorkingYearCalculator {
         TransactionCategory.SurplusIncome
       );
 
-      this.#reportingYear.ReportData.income_surplusAfterSpending =
-        this.surplusSpend;
+      this.#reportingYear.ReportData.spending_surplus = this.surplusSpend;
     }
 
     if (this.surplusSpend < 0) {
@@ -459,8 +501,7 @@ class WorkingYearCalculator {
         TransactionCategory.IncomeShortfall
       );
 
-      this.#reportingYear.ReportData.income_shortfallAfterSpending =
-        -this.surplusSpend;
+      this.#reportingYear.ReportData.spending_shortfall = -this.surplusSpend;
 
       this.#accountYear.processAsPeriodicWithdrawals(
         ACCOUNT_TYPES.CASH,
@@ -518,6 +559,21 @@ class WorkingYearCalculator {
       ACCOUNT_TYPES.PARTNER_ROTH_IRA
     );
 
+    this.#reportingYear.ReportData.retirementAcct_subjectRothInterest =
+      this.#accountYear
+        .getDeposits(
+          ACCOUNT_TYPES.SUBJECT_ROTH_IRA,
+          TransactionCategory.Interest
+        )
+        .asCurrency();
+    this.#reportingYear.ReportData.retirementAcct_partnerRothInterest =
+      this.#accountYear
+        .getDeposits(
+          ACCOUNT_TYPES.PARTNER_ROTH_IRA,
+          TransactionCategory.Interest
+        )
+        .asCurrency();
+
     this.#accountYear.analyzers[
       ACCOUNT_TYPES.SUBJECT_ROTH_IRA
     ].dumpAccountActivity();
@@ -538,8 +594,19 @@ class WorkingYearCalculator {
     );
 
     const federalIncomeTaxOwed = actualTaxes.federalTaxesOwed.asCurrency();
+
     this.#reportingYear.ReportData.taxes_federalIncomeTaxOwed =
       federalIncomeTaxOwed;
+
+    this.#reportingYear.ReportData.taxes_grossIncome =
+      actualTaxes.totalTaxableIncome.asCurrency();
+    this.#reportingYear.ReportData.taxes_adjustedGrossIncome =
+      actualTaxes.adjustedGrossIncome.asCurrency();
+    this.#reportingYear.ReportData.taxes_standardDeduction =
+      actualTaxes.standardDeduction.asCurrency();
+    this.#reportingYear.ReportData.taxes_taxableIncome =
+      actualTaxes.taxableIncome.asCurrency();
+    actualTaxes.totalTaxableIncome;
 
     const withholdings = Math.max(
       this.#accountYear.getAnnualRevenues(

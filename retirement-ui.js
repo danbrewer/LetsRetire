@@ -2579,9 +2579,9 @@ function parseInputParameters() {
     partnerRothStartingBalance: partnerRothStartingBalance,
     savingsStartingBalance: savings,
 
-    trad401kInterestRate: subject401kReturnRate,
-    tradRothInterestRate: subjectRothReturnRate,
-    partnerTrad401kInterestRate: partner401kReturnRate,
+    subject401kInterestRate: subject401kReturnRate,
+    subjectRothInterestRate: subjectRothReturnRate,
+    partner401kInterestRate: partner401kReturnRate,
     partnerRothInterestRate: partnerRothReturnRate,
     savingsInterestRate: retSavings,
 

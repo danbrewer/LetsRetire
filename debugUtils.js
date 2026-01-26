@@ -933,12 +933,20 @@ Object.defineProperty(Object.prototype, "dump", {
 
     const printed = new Set();
 
+    // Dump in declared order first
     const orderedKeys = getDumpKeysInDeclaredOrder(this);
     if (orderedKeys && orderedKeys.length > 0) {
       // Dump in declared order first
+      const missingFromClass = [];
+
       for (const key of orderedKeys) {
         const didPrint = dumpKeyUnified(key, indent);
-        if (didPrint) printed.add(key);
+        if (didPrint) {
+          printed.add(key);
+        } else {
+          // In dumpOrder but not actually found on instance/prototype
+          missingFromClass.push(key);
+        }
       }
 
       // Then dump everything else not listed (ONLY if there is anything)
@@ -978,6 +986,26 @@ Object.defineProperty(Object.prototype, "dump", {
         for (const key of leftovers) {
           dumpKeyUnified(key, indent);
           printed.add(key);
+        }
+      }
+
+      // 4) Print missing-from-class section ONLY if needed
+      if (missingFromClass.length > 0) {
+        console.log(
+          `${indent}--- (not in class: ${missingFromClass.length}) ---`
+        );
+
+        for (const key of missingFromClass) {
+          const outputKey = StringFunctions.padAndAlign(
+            `${indent}${key}`,
+            keyWidth
+          );
+          const outputValue = StringFunctions.padAndAlign(
+            "[missing]",
+            valueWidth,
+            "right"
+          );
+          console.log(`${outputKey}${outputValue}`);
         }
       }
 

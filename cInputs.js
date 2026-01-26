@@ -32,7 +32,9 @@ import { compoundedRate } from "./utils.js";
  * @property {number} [subjectSalaryGrowthRate]
  * @property {number} [partnerSalaryGrowthRate]
  * @property {number} [subject401kContributionRate]
+ * @property {number} [partner401kContributionRate]
  * @property {number} [subjectRothContributionRate]
+ * @property {number} [partnerRothContributionRate]
  * @property {number} [taxablePct]
  * @property {number} [matchCap]
  * @property {number} [subject401kMatchRate]
@@ -43,9 +45,9 @@ import { compoundedRate } from "./utils.js";
  * @property {number} [partnerRothStartingBalance]
  * @property {number} [savingsStartingBalance]
  *
- * @property {number} [trad401kInterestRate]
- * @property {number} [tradRothInterestRate]
- * @property {number} [partnerTrad401kInterestRate]
+ * @property {number} [subject401kInterestRate]
+ * @property {number} [subjectRothInterestRate]
+ * @property {number} [partner401kInterestRate]
  * @property {number} [partnerRothInterestRate]
  * @property {number} [savingsInterestRate]
  *
@@ -127,7 +129,9 @@ class Inputs {
       subjectSalaryGrowthRate = 0,
       partnerSalaryGrowthRate = 0,
       subject401kContributionRate = 0,
+      partner401kContributionRate = 0,
       subjectRothContributionRate = 0,
+      partnerRothContributionRate = 0,
       taxablePct = 0,
       matchCap = 0,
       subject401kMatchRate = 0,
@@ -140,9 +144,9 @@ class Inputs {
       savingsStartingBalance = 0,
 
       // Returns
-      trad401kInterestRate = 0,
-      tradRothInterestRate = 0,
-      partnerTrad401kInterestRate = 0,
+      subject401kInterestRate: trad401kInterestRate = 0,
+      subjectRothInterestRate: tradRothInterestRate = 0,
+      partner401kInterestRate: partnerTrad401kInterestRate = 0,
       partnerRothInterestRate = 0,
       savingsInterestRate = 0,
 
@@ -176,10 +180,6 @@ class Inputs {
       subjectRetirementYearSavingsContributionVariable = 0,
       partnerRetirementYearSavingsContributionFixed = 0,
       partnerRetirementYearSavingsContributionVariable = 0,
-
-      // Partner contributions
-      partner401kContributionRate = 0,
-      partnerRothContributionRate = 0,
 
       // Salary reductions
       subjectNonTaxableSalaryReductions = 500 * 26,

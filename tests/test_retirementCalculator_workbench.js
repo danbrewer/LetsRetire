@@ -51,23 +51,25 @@ function createInputs() {
     subjectSalaryGrowthRate: 0.02,
     partnerSalaryGrowthRate: 0.02,
     subject401kContributionRate: 0.05,
-    subjectRothContributionRate: 0.05,
+    partner401kContributionRate: 0.05,
+    subjectRothContributionRate: 0.01,
+    partnerRothContributionRate: 0.01,
     taxablePct: 0.35,
     matchCap: 0,
     subject401kMatchRate: 0,
 
     // Starting balances
     subject401kStartingBalance: 500000,
-    subjectRothStartingBalance: 0,
+    subjectRothStartingBalance: 1000,
     partner401kStartingBalance: 100000,
-    partnerRothStartingBalance: 0,
+    partnerRothStartingBalance: 1000,
     savingsStartingBalance: 500000,
 
     // Returns
-    trad401kInterestRate: 0.03,
-    tradRothInterestRate: 0,
-    partnerTrad401kInterestRate: 0.03,
-    partnerRothInterestRate: 0.03,
+    subject401kInterestRate: 0.03,
+    subjectRothInterestRate: 0.02,
+    partner401kInterestRate: 0.03,
+    partnerRothInterestRate: 0.02,
     savingsInterestRate: 0.03,
 
     // Benefits
