@@ -616,7 +616,7 @@ class RetirementYearCalculator {
 
     this.#generateReportData();
 
-    this.#reportingYear.ReportData.dump("ReportData");
+    // this.#reportingYear.ReportData.dump("ReportData");
 
     // const balances = {
     //   year: this.#fiscalData.taxYear,
@@ -1325,7 +1325,8 @@ class RetirementYearCalculator {
     this.#reportingYear.ReportData.income_subject401kGross = grossAmount;
     this.#reportingYear.ReportData.income_subject401kWithholdings =
       withholdingAmount.asCurrency();
-    this.#reportingYear.ReportData.income_subject401kTakehome = actualAmount.asCurrency();
+    this.#reportingYear.ReportData.income_subject401kTakehome =
+      actualAmount.asCurrency();
   }
 
   /**

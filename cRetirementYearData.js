@@ -40,8 +40,22 @@ import { ReportData } from "./rReportData.js";
 
 //    */
 class RetirementYearData extends BaseYearData {
-  static dumpOrder = ["fiscalYear", "takeHome", "balances"];
-  static dumpIgnore = ["*"];
+  static dumpOrder = ["fiscalYear", "allAccountBalances", "spend", "takeHome"];
+  static dumpIgnore = [
+    "taxes",
+    "savings",
+    "trad401k",
+    "tradRoth",
+    "takeHomeBreakdown",
+    "cashFromSavings",
+    "cashFrom401k",
+    "cashFromRoth",
+    "balances",
+    "demographics",
+    "fiscalData",
+  ];
+  /** @type {Demographics} */
+  #demographics;
   /** @type {FiscalData} */
   #fiscalData;
   /** @type {ReportData} */
@@ -57,6 +71,7 @@ class RetirementYearData extends BaseYearData {
   constructor(demographics, fiscalData, accountYear, taxes, reportData) {
     super(demographics, fiscalData, accountYear);
     this.#fiscalData = Object.freeze(fiscalData);
+    this.#demographics = Object.freeze(demographics);
 
     this.balances = Balances.CreateUsing(accountYear);
 
@@ -226,6 +241,10 @@ class RetirementYearData extends BaseYearData {
 
   get allAccountBalances() {
     return this.balances.allBalances;
+  }
+
+  get demographics() {
+    return this.#demographics;
   }
 }
 

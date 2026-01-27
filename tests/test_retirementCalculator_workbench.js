@@ -26,7 +26,7 @@ function createInputs() {
     subjectSsStartAge: 62,
     subjectPensionStartAge: 65,
     subject401kStartAge: 62,
-    endSubjectAge: 120,
+    endSubjectAge: 95,
 
     // Spending
     inflationRate: 0.03,
