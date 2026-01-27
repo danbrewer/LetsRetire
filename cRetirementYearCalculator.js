@@ -533,7 +533,7 @@ class RetirementYearCalculator {
       PERIODIC_FREQUENCY.MONTHLY
     );
 
-    this.surplusSpend = cash - this.#fiscalData.spend;
+    this.surplusSpend = (cash - this.#fiscalData.spend).asCurrency();
 
     if (this.surplusSpend == 0) return;
 
@@ -1169,13 +1169,13 @@ class RetirementYearCalculator {
   }
 
   #processPensionIncome() {
-    if (this.#fixedIncomeStreams.combinedPensionActualIncome == 0) return;
+    if (this.#fixedIncomeStreams.combinedPensionActualIncome.asCurrency() == 0) return;
 
     this.#accountYear.processAsPeriodicDeposits(
       ACCOUNT_TYPES.SUBJECT_PENSION,
       TransactionCategory.IncomeGross,
       TransactionRoutes.External,
-      this.#fixedIncomeStreams?.subjectPensionGross ?? 0,
+      this.#fixedIncomeStreams?.subjectPensionGross.asCurrency() ?? 0,
       PERIODIC_FREQUENCY.MONTHLY
     );
 
@@ -1391,7 +1391,7 @@ class RetirementYearCalculator {
       : 0;
 
     const combinedAvaiableRothFunds =
-      subjectAvailableRothFunds + partnerAvailableRothFunds;
+      (subjectAvailableRothFunds + partnerAvailableRothFunds).asCurrency();
 
     if (combinedAvaiableRothFunds == 0) return;
 

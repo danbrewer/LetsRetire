@@ -40,7 +40,7 @@ import { ReportData } from "./rReportData.js";
 
 //    */
 class RetirementYearData extends BaseYearData {
-  static dumpOrder = ["fiscalYear", "allAccountBalances", "spend", "takeHome"];
+  static dumpOrder = ["fiscalYear", "accountBalances", "spend", "takeHome"];
   static dumpIgnore = [
     "taxes",
     "savings",
@@ -50,6 +50,7 @@ class RetirementYearData extends BaseYearData {
     "cashFromSavings",
     "cashFrom401k",
     "cashFromRoth",
+    "allAccountBalances",
     "balances",
     "demographics",
     "fiscalData",
@@ -222,21 +223,32 @@ class RetirementYearData extends BaseYearData {
   }
 
   get cashFromSavings() {
-    return this.#reportData.savings_Withdrawals;
+    return this.#reportData.savings_Withdrawals.asCurrency();
   }
 
   get cashFrom401k() {
     return (
       this.#reportData.income_subject401kTakehome +
       this.#reportData.income_partner401kTakehome
-    );
+    ).asCurrency();
   }
 
   get cashFromRoth() {
     return (
       this.#reportData.retirementAcct_subjectRothWithdrawals +
       this.#reportData.retirementAcct_partnerRothWithdrawals
-    );
+    ).asCurrency();
+  }
+
+  get accountBalances() {
+    return {
+      total: this.allAccountBalances,
+      breakdown: {
+        savings: this.savings.endingBalanceForYear,
+        trad401k: this.trad401k.endingBalanceForYear,
+        tradRoth: this.tradRoth.endingBalanceForYear,
+      },
+    };
   }
 
   get allAccountBalances() {
