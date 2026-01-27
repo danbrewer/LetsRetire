@@ -274,6 +274,12 @@ class Inputs {
     this.subjectCareer401kContributionRate = subjectCareer401kContributionRate;
 
     /** @type {number} */
+    this.partnerCareer401kContributionRate = 0;
+
+    this.subjectRetirement401kContributionRate = 0;
+    this.partnerRetirement401kContributionRate = 0;
+
+    /** @type {number} */
     this.subjectRothContributionRate = subjectRothContributionRate;
 
     /** @type {number} */
@@ -371,10 +377,13 @@ class Inputs {
     this.rothUseAge = this.subjectRetireAge;
 
     /** @type {number} */
-    this.subjectPayrollDeductions = subjectPayrollDeductions;
+    this.subjectCareerPayrollDeductions = subjectPayrollDeductions;
+
+    this.subjectRetirementPayrollDeductions = 0;
+    this.partnerRetirementPayrollDeductions = 0;
 
     /** @type {number} */
-    this.partnerPayrollDeductions = partnerPayrollDeductions;
+    this.partnerCareerPayrollDeductions = partnerPayrollDeductions;
 
     /** @type {number} */
     this.subjectWorkingYearSavingsContributionFixed =
@@ -428,10 +437,13 @@ class Inputs {
     this.hasPartner = false;
 
     /** @type {number} */
-    this.subjectPayPeriods = subjectPayPeriods;
+    this.subjectCareerPayPeriods = subjectPayPeriods;
+
+    this.subjectRetirementPayPeriods = 0;
+    this.partnerRetirementPayPeriods = 0;
 
     /** @type {number} */
-    this.partnerPayPeriods = partnerPayPeriods;
+    this.partnerCareerPayPeriods = partnerPayPeriods;
 
     // Calculate derived values
     this.#calculateDerivedValues();
@@ -599,6 +611,14 @@ class Inputs {
     );
   }
 
+  get subjectRetirementSalary() {
+    return 0;
+  }
+
+  get partnerRetirementSalary() {
+    return 0;
+  }
+
   get partnerCareerSalary() {
     return this.partnerStartingSalary.adjustedForInflation(
       this.partnerSalaryGrowthRate,
@@ -764,8 +784,8 @@ class Inputs {
       partner401kContributionRate: this.partnerCareer401kContributionRate,
       partnerRothContributionRate: this.partnerRothContributionRate,
 
-      subjectPayrollDeductions: this.subjectPayrollDeductions,
-      partnerPayrollDeductions: this.partnerPayrollDeductions,
+      subjectPayrollDeductions: this.subjectCareerPayrollDeductions,
+      partnerPayrollDeductions: this.partnerCareerPayrollDeductions,
     };
   }
 }

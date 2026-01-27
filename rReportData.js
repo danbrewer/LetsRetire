@@ -52,6 +52,8 @@ class ReportData extends BaseReports {
     "income_partnerPensionGross",
     "income_partnerPensionWithholdings",
     "income_partnerPensionTakehome",
+    "income_subjectSsActual",
+    "income_partnerSsActual",
 
     "savings_OpeningBalance",
     "savings_Withdrawals",
@@ -81,10 +83,15 @@ class ReportData extends BaseReports {
 
     // SOCIAL SECURITY
     "ss_subjectSsGross",
+    "ss_subjectSsWithholdings",
+    "ss_subjectSsTakehome",
+
     "ss_subjectSsTaxable",
     "ss_subjectSsNonTaxable",
 
     "ss_partnerSsGross",
+    "ss_partnerSsWithholdings",
+    "ss_partnerSsTakehome",
     "ss_partnerSsTaxable",
     "ss_partnerSsNonTaxable",
 
@@ -195,7 +202,11 @@ class ReportData extends BaseReports {
 
     // SOCIAL SECURITY
     this.ss_subjectSsGross = 0;
+    this.ss_subjectSsWithholdings = 0;
+    this.ss_subjectSsTakehome = 0;
     this.ss_partnerSsGross = 0;
+    this.ss_partnerSsWithholdings = 0;
+    this.ss_partnerSsTakehome = 0;
     this.ss_subjectSsTaxable = 0;
     this.ss_partnerSsTaxable = 0;
 
@@ -311,6 +322,14 @@ class ReportData extends BaseReports {
       this.income_subject401kContribution +
       this.income_partner401kContribution
     ).asCurrency();
+  }
+
+  get income_subjectSsActual() {
+    return this.ss_subjectSsTakehome;
+  }
+
+  get income_partnerSsActual() {
+    return this.ss_partnerSsTakehome;
   }
 }
 export { ReportData };

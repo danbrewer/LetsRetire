@@ -115,10 +115,11 @@ class AccountPortioner {
     return this.#final401kPortions;
   }
 
-  /**
-   * @param {number} ask
-   */
-  calculatePortions(ask) {
+  /** @param {number} cashRemaining */
+  calculatePortions(cashRemaining) {
+    const annualSpend = this.#fiscalData.spend;
+    let ask = (annualSpend - cashRemaining).asCurrency();
+
     if (ask <= 0) return;
 
     let totalFundsAvailable =
@@ -145,12 +146,11 @@ class AccountPortioner {
       totalFundsAvailable > 0
         ? this.#availableSavings / totalFundsAvailable
         : 0;
-    const pctThatIsRoth =
-      totalFundsAvailable > 0 ? this.#availableRoth / totalFundsAvailable : 0;
-
     const withdrawFromSavings = ask * pctThatIsSavings;
     this.#savingsWithdrawal = withdrawFromSavings;
 
+    const pctThatIsRoth =
+      totalFundsAvailable > 0 ? this.#availableRoth / totalFundsAvailable : 0;
     const withdrawFromRoth = ask * pctThatIsRoth;
     this.#rothIraWithdrawal = withdrawFromRoth;
 
@@ -192,13 +192,21 @@ class AccountPortioner {
   }
 
   #tradRothAvailable() {
-    if (this.#demographics.isSubjectEligibleFor401k === false) return 0;
+    let rothAvailable = 0;
+    if (this.#fiscalData.useRoth) {
+      if (this.#demographics.isSubjectEligibleFor401k) {
+        rothAvailable += this.#accountYear.getEndingBalance(
+          ACCOUNT_TYPES.SUBJECT_ROTH_IRA
+        );
+      }
+      if (this.#demographics.isPartnerEligibleFor401k) {
+        rothAvailable += this.#accountYear.getEndingBalance(
+          ACCOUNT_TYPES.PARTNER_ROTH_IRA
+        );
+      }
+    }
 
-    if (!this.#fiscalData.useRoth) return 0;
-
-    return this.#fiscalData.useRoth
-      ? this.#accountYear.getEndingBalance(ACCOUNT_TYPES.SUBJECT_ROTH_IRA)
-      : 0;
+    return rothAvailable;
   }
 
   // #rothIraPortion() {

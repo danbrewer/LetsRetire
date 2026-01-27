@@ -104,21 +104,19 @@ class WorkingYearIncome {
   }
 
   get combinedGrossWagesTipsAndCompensation() {
-    const result =
-      this.#fixedIncomeStreams.combinedCareerWagesAndCompensationGross;
+    const result = this.#fixedIncomeStreams.career.combinedWagesAndCompensationGross;
     return result;
   }
 
   get combinedNonTaxableWagesAndCompensation() {
     const result =
-      this.#fixedIncomeStreams.subjectCareerWagesAndCompensationNonTaxable +
-      this.#fixedIncomeStreams.partnerCareerWagesAndCompensationNonTaxable;
+      this.#fixedIncomeStreams.career.subjectWagesAndCompensationNonTaxable +
+      this.#fixedIncomeStreams.career.partnerWagesAndCompensationNonTaxable;
     return result;
   }
 
   get taxableWagesAndCompensation() {
-    const result =
-      this.#fixedIncomeStreams.combinedCareerWagesAndCompensationGross;
+    const result = this.#fixedIncomeStreams.career.combinedWagesAndCompensationGross;
     return result;
   }
 
@@ -219,7 +217,7 @@ class WorkingYearIncome {
 
   get annualRothContributions() {
     return Math.min(
-      this.#fixedIncomeStreams.subjectAllowedRothContribution,
+      this.#fixedIncomeStreams.career.subjectAllowedRothContribution,
       this.netIncome
     );
   }
