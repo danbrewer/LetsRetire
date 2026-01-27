@@ -57,6 +57,16 @@ class Account {
   /** @type {number} Annual interest rate as a decimal (e.g., 0.05 for 5%) */
   #interestRate = 0;
 
+  /**
+   * @param {number} yyyy
+   */
+  #getTransactionsForYearFast(yyyy) {
+    return this.#transactionManager.getTransactionsForAccountYear(
+      this.#name,
+      yyyy
+    );
+  }
+
   get #transactions() {
     return this.#transactionManager.getTransactionsForAccount(this.#name);
   }
@@ -66,48 +76,71 @@ class Account {
    * @param {TransactionCategorySymbol | undefined} [category]
    */
   #startingBalanceForYear(yyyy, category) {
-    let startingBalance = 0;
-    const transactions = this.#transactions.filter(
-      (tx) => !category || tx.category === category
-    );
-    for (const tx of transactions.sort(
-      (a, b) => a.date.getTime() - b.date.getTime()
-    )) {
-      if (tx.date.getFullYear() < yyyy) {
-        if (tx.transactionType === TransactionType.Deposit) {
-          startingBalance += tx.amount;
-        } else if (tx.transactionType === TransactionType.Withdrawal) {
-          startingBalance -= tx.amount;
-        }
-      } else break; // Future transactions don't affect the current year's starting balance
+    let bal = 0;
+
+    for (const tx of this.#transactions) {
+      if (tx.date.getFullYear() >= yyyy) break;
+      if (category && tx.category !== category) continue;
+
+      bal +=
+        tx.transactionType === TransactionType.Deposit ? tx.amount : -tx.amount;
     }
-    return startingBalance;
+    return bal;
   }
+  // #startingBalanceForYear(yyyy, category) {
+  //   let startingBalance = 0;
+  //   const transactions = this.#transactions.filter(
+  //     (tx) => !category || tx.category === category
+  //   );
+  //   for (const tx of transactions.sort(
+  //     (a, b) => a.date.getTime() - b.date.getTime()
+  //   )) {
+  //     if (tx.date.getFullYear() < yyyy) {
+  //       if (tx.transactionType === TransactionType.Deposit) {
+  //         startingBalance += tx.amount;
+  //       } else if (tx.transactionType === TransactionType.Withdrawal) {
+  //         startingBalance -= tx.amount;
+  //       }
+  //     } else break; // Future transactions don't affect the current year's starting balance
+  //   }
+  //   return startingBalance;
+  // }
 
   /**
    * @param {number} yyyy
    * @param {TransactionCategorySymbol | undefined} [category]
    */
   #endingBalanceForYear(yyyy, category) {
-    let endingBalance = this.#startingBalanceForYear(yyyy, category);
-    const transactions = this.#transactions.filter(
-      (tx) => !category || tx.category === category
-    );
-    for (const tx of transactions.sort(
-      (a, b) => a.date.getTime() - b.date.getTime()
-    )) {
-      if (tx.date.getFullYear() === yyyy) {
-        if (tx.transactionType === TransactionType.Deposit) {
-          endingBalance += tx.amount;
-        } else if (tx.transactionType === TransactionType.Withdrawal) {
-          endingBalance -= tx.amount;
-        }
-      } else if (tx.date.getFullYear() > yyyy) {
-        break; // Future transactions don't affect the current year's ending balance
-      }
+    let bal = this.#startingBalanceForYear(yyyy, category);
+
+    for (const tx of this.#getTransactionsForYearFast(yyyy)) {
+      if (category && tx.category !== category) continue;
+
+      bal +=
+        tx.transactionType === TransactionType.Deposit ? tx.amount : -tx.amount;
     }
-    return endingBalance;
+    return bal;
   }
+  // #endingBalanceForYear(yyyy, category) {
+  //   let endingBalance = this.#startingBalanceForYear(yyyy, category);
+  //   const transactions = this.#transactions.filter(
+  //     (tx) => !category || tx.category === category
+  //   );
+  //   for (const tx of transactions.sort(
+  //     (a, b) => a.date.getTime() - b.date.getTime()
+  //   )) {
+  //     if (tx.date.getFullYear() === yyyy) {
+  //       if (tx.transactionType === TransactionType.Deposit) {
+  //         endingBalance += tx.amount;
+  //       } else if (tx.transactionType === TransactionType.Withdrawal) {
+  //         endingBalance -= tx.amount;
+  //       }
+  //     } else if (tx.date.getFullYear() > yyyy) {
+  //       break; // Future transactions don't affect the current year's ending balance
+  //     }
+  //   }
+  //   return endingBalance;
+  // }
 
   /**
    * Calculate the annual revenue for a given year
@@ -127,19 +160,29 @@ class Account {
    * @param {Date} date
    */
   #balanceAsOfDate(date) {
-    let startingBalance = this.initialBalance;
-    const transactions = this.#transactions.filter((tx) => tx.date <= date);
-    for (const tx of transactions.sort(
-      (a, b) => a.date.getTime() - b.date.getTime()
-    )) {
-      if (tx.transactionType === TransactionType.Deposit) {
-        startingBalance += tx.amount;
-      } else if (tx.transactionType === TransactionType.Withdrawal) {
-        startingBalance -= tx.amount;
-      }
+    let bal = this.initialBalance;
+
+    for (const tx of this.#transactions) {
+      if (tx.date > date) break;
+      bal +=
+        tx.transactionType === TransactionType.Deposit ? tx.amount : -tx.amount;
     }
-    return startingBalance;
+    return bal;
   }
+  // #balanceAsOfDate(date) {
+  //   let startingBalance = this.initialBalance;
+  //   const transactions = this.#transactions.filter((tx) => tx.date <= date);
+  //   for (const tx of transactions.sort(
+  //     (a, b) => a.date.getTime() - b.date.getTime()
+  //   )) {
+  //     if (tx.transactionType === TransactionType.Deposit) {
+  //       startingBalance += tx.amount;
+  //     } else if (tx.transactionType === TransactionType.Withdrawal) {
+  //       startingBalance -= tx.amount;
+  //     }
+  //   }
+  //   return startingBalance;
+  // }
 
   /**
    * @param {string} name - Name of the account
@@ -565,57 +608,76 @@ class Account {
   /**
    * @param {number} yyyy
    */
-  #calculateRollingInterestForYear(yyyy, recordInterestEarned = false) {
-    let interestEarned = 0;
-    let monthlyBalance = this.#startingBalanceForYear(yyyy);
+  #calculateRollingInterestForYear(yyyy, record = false) {
+    let bal = this.#startingBalanceForYear(yyyy);
+    let interest = 0;
 
-    for (let month = 0; month < 12; month++) {
-      // Process transactions for the month
-      this.#transactions
-        .filter(
-          (tx) => tx.date.getFullYear() === yyyy && tx.date.getMonth() === month
-        )
-        .reduce(
-          (bal, tx) =>
-            tx.transactionType === TransactionType.Deposit
-              ? bal + tx.amount
-              : bal - tx.amount,
-          monthlyBalance
-        );
-      // for (const tx of this.#transactions) {
-      //   if (tx.date.getFullYear() === yyyy) {
-      //     if (tx.date.getMonth() === month) {
-      //       if (tx.transactionType === TransactionType.Deposit) {
-      //         startingBalanceForYear += tx.amount;
-      //       } else if (tx.transactionType === TransactionType.Withdrawal) {
-      //         startingBalanceForYear -= tx.amount;
-      //       }
-      //     }
-      //   }
-      // }
+    const monthly = Array(12).fill(0);
 
-      // Calculate interest for the month
-      const monthlyInterest = (
-        monthlyBalance *
-        (this.interestRate / 12)
-      ).asCurrency();
-      if (recordInterestEarned) {
+    for (const tx of this.#getTransactionsForYearFast(yyyy)) {
+      monthly[tx.date.getMonth()] +=
+        tx.transactionType === TransactionType.Deposit ? tx.amount : -tx.amount;
+    }
+
+    for (let m = 0; m < 12; m++) {
+      bal += monthly[m];
+      const i = (bal * (this.interestRate / 12)).asCurrency();
+      interest += i;
+      bal += i;
+
+      if (record) {
         this.#deposit(
-          monthlyInterest,
+          i,
           TransactionCategory.Interest,
           TransactionRoutes.External,
-          new Date(yyyy, month, 1),
+          new Date(yyyy, m, 1),
           "Interest dividend"
         );
       }
-      interestEarned += monthlyInterest;
-
-      // Update balance with interest
-      monthlyBalance += monthlyInterest;
     }
 
-    return interestEarned.asCurrency();
+    return interest.asCurrency();
   }
+  // #calculateRollingInterestForYear(yyyy, recordInterestEarned = false) {
+  //   let interestEarned = 0;
+  //   let monthlyBalance = this.#startingBalanceForYear(yyyy);
+
+  //   for (let month = 0; month < 12; month++) {
+  //     // Process transactions for the month
+  //     this.#transactions
+  //       .filter(
+  //         (tx) => tx.date.getFullYear() === yyyy && tx.date.getMonth() === month
+  //       )
+  //       .reduce(
+  //         (bal, tx) =>
+  //           tx.transactionType === TransactionType.Deposit
+  //             ? bal + tx.amount
+  //             : bal - tx.amount,
+  //         monthlyBalance
+  //       );
+
+  //     // Calculate interest for the month
+  //     const monthlyInterest = (
+  //       monthlyBalance *
+  //       (this.interestRate / 12)
+  //     ).asCurrency();
+  //     if (recordInterestEarned) {
+  //       this.#deposit(
+  //         monthlyInterest,
+  //         TransactionCategory.Interest,
+  //         TransactionRoutes.External,
+  //         new Date(yyyy, month, 1),
+  //         "Interest dividend"
+  //       );
+  //     }
+  //     interestEarned += monthlyInterest;
+
+  //     // Update balance with interest
+  //     monthlyBalance += monthlyInterest;
+  //   }
+
+  //   return interestEarned.asCurrency();
+  // }
 
   /**
    * @param {number} yyyy
@@ -623,31 +685,50 @@ class Account {
    * @param {string | undefined} [memo = ""]
    */
   depositsForYear(yyyy, category, memo) {
-    const transactions = this.#transactions.filter(
-      (tx) =>
-        tx.transactionType === TransactionType.Deposit &&
-        tx.date.getFullYear() === yyyy &&
-        (category ? tx.category === category : true) &&
-        (memo ? tx.memo === memo : true)
-    );
-    const total = transactions.reduce((sum, tx) => sum + tx.amount, 0);
+    let total = 0;
+    for (const tx of this.#getTransactionsForYearFast(yyyy)) {
+      if (tx.transactionType !== TransactionType.Deposit) continue;
+      if (category && tx.category !== category) continue;
+      if (memo && tx.memo !== memo) continue;
+      total += tx.amount;
+    }
     return total.asCurrency();
   }
+  // depositsForYear(yyyy, category, memo) {
+  //   const transactions = this.#transactions.filter(
+  //     (tx) =>
+  //       tx.transactionType === TransactionType.Deposit &&
+  //       tx.date.getFullYear() === yyyy &&
+  //       (category ? tx.category === category : true) &&
+  //       (memo ? tx.memo === memo : true)
+  //   );
+  //   const total = transactions.reduce((sum, tx) => sum + tx.amount, 0);
+  //   return total.asCurrency();
+  // }
 
   /**
    * @param {number} yyyy
    * @param {TransactionCategorySymbol | undefined} [category]
    */
   withdrawalsForYear(yyyy, category) {
-    const transactions = this.#transactions.filter(
-      (tx) =>
-        tx.transactionType === TransactionType.Withdrawal &&
-        tx.date.getFullYear() === yyyy &&
-        (category ? tx.category === category : true)
-    );
-    const total = transactions.reduce((sum, tx) => sum + tx.amount, 0);
+    let total = 0;
+    for (const tx of this.#getTransactionsForYearFast(yyyy)) {
+      if (tx.transactionType !== TransactionType.Withdrawal) continue;
+      if (category && tx.category !== category) continue;
+      total += tx.amount;
+    }
     return total.asCurrency();
   }
+  // withdrawalsForYear(yyyy, category) {
+  //   const transactions = this.#transactions.filter(
+  //     (tx) =>
+  //       tx.transactionType === TransactionType.Withdrawal &&
+  //       tx.date.getFullYear() === yyyy &&
+  //       (category ? tx.category === category : true)
+  //   );
+  //   const total = transactions.reduce((sum, tx) => sum + tx.amount, 0);
+  //   return total.asCurrency();
+  // }
 
   /**
    * @param {number} yyyy
