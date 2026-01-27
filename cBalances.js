@@ -20,10 +20,8 @@ class Balances {
    * Creates a new Balances instance with account balance data.
    *
    * @param {AccountingYear} accountYear -Accounting year
-   * @param {string} [description="Account Balances"] - Descriptive label for this balance snapshot
    */
-  constructor(accountYear, description = "Account Balances") {
-    this._description = description;
+  constructor(accountYear) {
     this.#accountYear = accountYear;
   }
 
@@ -39,23 +37,6 @@ class Balances {
     return this.#accountYear.getEndingBalance(ACCOUNT_TYPES.SUBJECT_ROTH_IRA);
   }
 
-  //   /**
-  //    * Gets the descriptive label for this balance snapshot.
-  //    *
-  //    * @returns {string} Description of the account balances
-  //    */
-  //   get description() {
-  //     return this._description;
-  //   }
-
-  /**
-   * Sets a new description for this balance snapshot.
-   *
-   * @param {string} newDescription - New descriptive label
-   */
-  set description(newDescription) {
-    this._description = newDescription;
-  }
 
   /**
    * Calculates the total portfolio value across all accounts.
@@ -180,7 +161,6 @@ class Balances {
    * It handles the account balance calculations and currency formatting automatically.
    *
    * @param {AccountingYear} accountYear - AccountYear instance containing account data
-   * @param {string} [description="Account Balances"] - Optional description
    *
    * @returns {Balances} A new Balances instance with current account balances
    *
@@ -196,8 +176,8 @@ class Balances {
    * @static
    * @since 1.0.0
    */
-  static CreateUsing(accountYear, description = "Account Balances") {
-    return new Balances(accountYear, description);
+  static CreateUsing(accountYear) {
+    return new Balances(accountYear);
   }
 
   // static Empty() {

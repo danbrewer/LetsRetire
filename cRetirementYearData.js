@@ -36,25 +36,27 @@ import { AccountAnalyzer } from "./cAccountAnalyzer.js";
 import { SocialSecurityBreakdown } from "./cSsBreakdown.js";
 import { Taxes } from "./cTaxes.js";
 import { BaseYearData } from "./cYearDataBase.js";
+import { ReportData } from "./rReportData.js";
 
 //    */
 class RetirementYearData extends BaseYearData {
+  static dumpOrder = ["fiscalYear", "takeHome", "balances"];
+
   /** @type {FiscalData} */
   #fiscalData;
-  /** @type {SocialSecurityBreakdown} */
-  #ssBreakdown;
+  /** @type {ReportData} */
+  #reportData;
 
   /**
    * @param {Demographics} demographics
    * @param {FiscalData} fiscalData
    * @param {AccountingYear} accountYear
-   * @param {SocialSecurityBreakdown} ssBreakdown
    * @param {Taxes} taxes
+   * @param {ReportData} reportData
    */
-  constructor(demographics, fiscalData, accountYear, ssBreakdown, taxes) {
+  constructor(demographics, fiscalData, accountYear, taxes, reportData) {
     super(demographics, fiscalData, accountYear);
     this.#fiscalData = Object.freeze(fiscalData);
-    this.#ssBreakdown = ssBreakdown;
 
     this.balances = Balances.CreateUsing(accountYear);
 
@@ -68,13 +70,7 @@ class RetirementYearData extends BaseYearData {
       accountYear,
       ACCOUNT_TYPES.SUBJECT_ROTH_IRA
     );
-  }
-
-  get description() {
-    return `
------------------------------------------------
---- Retirement Year ${this.fiscalData.yearIndex + 1} (Age ${this.demographics.currentAge}) (Year ${this.demographics.retirementYear}) ---
------------------------------------------------`;
+    this.#reportData = reportData;
   }
 
   get fiscalData() {
@@ -85,23 +81,17 @@ class RetirementYearData extends BaseYearData {
    * @param {Demographics} demographics
    * @param {FiscalData} fiscalData
    * @param {AccountingYear} accountYear
-   * @param {SocialSecurityBreakdown} ssBreakdown
    * @param {Taxes} taxes
+   * @param {ReportData} reportData
    * @returns {RetirementYearData}
    */
-  static CreateUsing(
-    demographics,
-    fiscalData,
-    accountYear,
-    ssBreakdown,
-    taxes
-  ) {
+  static CreateUsing(demographics, fiscalData, accountYear, taxes, reportData) {
     const result = new RetirementYearData(
       demographics,
       fiscalData,
       accountYear,
-      ssBreakdown,
-      taxes
+      taxes,
+      reportData
     );
     return result;
   }
@@ -179,14 +169,63 @@ class RetirementYearData extends BaseYearData {
   //   };
   // }
 
-  // Method to get breakdown by category
-  getBreakdowns() {
+  get fiscalYear() {
+    return this.#fiscalData.taxYear;
+  }
+
+  get spend() {
+    return this.#reportData.spend;
+  }
+
+  get takeHome() {
+    const total = Object.values(this.takeHomeBreakdown).reduce(
+      (sum, value) => sum + (value || 0),
+      0
+    );
     return {
-      // savings: this.savingsBreakdown,
-      // withdrawal: this.withdrawalBreakdown,
-      // socialSecurity: this.ssBreakdown,
-      // pension: this.pensionBreakdown,
+      total: total.asCurrency(),
+      breakdown: this.takeHomeBreakdown,
     };
+  }
+
+  get takeHomeBreakdown() {
+    return {
+      income_partnerTakehomeWages: this.#reportData.income_partnerTakehomeWages,
+      income_subjectTakehomeWages: this.#reportData.income_subjectTakehomeWages,
+      income_subjectPensionTakehome:
+        this.#reportData.income_subjectPensionTakehome,
+      income_partnerPensionTakehome:
+        this.#reportData.income_partnerPensionTakehome,
+      ss_subjectSsTakehome: this.#reportData.ss_subjectSsTakehome,
+      ss_partnerSsTakehome: this.#reportData.ss_partnerSsTakehome,
+      income_miscIncomeTakehome: this.#reportData.income_miscIncomeTakehome,
+      income_taxFreeIncome: this.#reportData.income_taxFreeIncome,
+      cashFromSavings: this.cashFromSavings,
+      cashFrom401k: this.cashFrom401k,
+      cashFromRoth: this.cashFromRoth,
+    };
+  }
+
+  get cashFromSavings() {
+    return this.#reportData.savings_Withdrawals;
+  }
+
+  get cashFrom401k() {
+    return (
+      this.#reportData.income_subject401kTakehome +
+      this.#reportData.income_partner401kTakehome
+    );
+  }
+
+  get cashFromRoth() {
+    return (
+      this.#reportData.retirementAcct_subjectRothWithdrawals +
+      this.#reportData.retirementAcct_partnerRothWithdrawals
+    );
+  }
+
+  get allAccountBalances() {
+    return this.balances.allBalances;
   }
 }
 
@@ -194,3 +233,33 @@ class RetirementYearData extends BaseYearData {
 // const result = RetirementYearData.Empty();
 
 export { RetirementYearData };
+
+/*
+      year: this.#fiscalData.taxYear,
+      spend: this.#reportingYear.ReportData.spend,
+      takeHome: this.#reportingYear.ReportData.takeHome,
+      financialHealth:
+        this.#reportingYear.ReportData.takeHome >=
+        this.#reportingYear.ReportData.spend
+          ? "✅"
+          : "⚠️",
+      savings: this.#reportingYear.ReportData.savings_Balance,
+      subject401k:
+        this.#reportingYear.ReportData.retirementAcct_subject401kBalance,
+      partner401k:
+        this.#reportingYear.ReportData.retirementAcct_partner401kBalance,
+      subjectRoth:
+        this.#reportingYear.ReportData.retirementAcct_subjectRothBalance,
+      partnerRoth:
+        this.#reportingYear.ReportData.retirementAcct_partnerRothBalance,
+      subjectWagesTakehome:
+        this.#reportingYear.ReportData.income_subjectTakehomeWages,
+      partnerWagesTakehome:
+        this.#reportingYear.ReportData.income_partnerTakehomeWages,
+      subjectPensionTakehome:
+        this.#reportingYear.ReportData.income_subjectPensionTakehome,
+      partnerPensionTakehome:
+        this.#reportingYear.ReportData.income_partnerPensionTakehome,
+      subjectSsTakehome: this.#reportingYear.ReportData.ss_subjectSsTakehome,
+      partnerSsTakehome: this.#reportingYear.ReportData.ss_partnerSsTakehome,
+*/

@@ -11,7 +11,10 @@ class ReportData extends BaseReports {
     // WAGES AND COMPENSATION
 
     "ask",
+    "takeHome",
     "spend",
+    "spending_shortfall",
+    "spending_surplus",
 
     "income_subjectGrossWages",
     "income_subject401kContribution",
@@ -35,7 +38,6 @@ class ReportData extends BaseReports {
     "income_additionalWithholdings",
     "income_savingsInterest",
 
-    // Income that is not taxable
     "income_taxableIncome",
     "income_taxFreeIncome",
 
@@ -52,8 +54,8 @@ class ReportData extends BaseReports {
     "income_partnerPensionGross",
     "income_partnerPensionWithholdings",
     "income_partnerPensionTakehome",
-    "income_subjectSsActual",
-    "income_partnerSsActual",
+    "income_subjectSsTakehome",
+    "income_partnerSsTakehome",
 
     "savings_OpeningBalance",
     "savings_Withdrawals",
@@ -62,8 +64,6 @@ class ReportData extends BaseReports {
     "savings_Interest",
     "retirementAcct_subjectSavingsContributions",
     "retirementAcct_partnerSavingsContributions",
-    "spending_shortfall",
-    "spending_surplus",
 
     // TAXES
     "taxes_grossIncome",
@@ -186,6 +186,7 @@ class ReportData extends BaseReports {
     // SPENDING AND ASK
     this.ask = 0;
     this.spend = 0;
+    this.takeHome = 0;
     this.spending_shortfall = 0;
     this.spending_surplus = 0;
 
@@ -324,11 +325,11 @@ class ReportData extends BaseReports {
     ).asCurrency();
   }
 
-  get income_subjectSsActual() {
+  get income_subjectSsTakehome() {
     return this.ss_subjectSsTakehome;
   }
 
-  get income_partnerSsActual() {
+  get income_partnerSsTakehome() {
     return this.ss_partnerSsTakehome;
   }
 }

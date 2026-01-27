@@ -15,7 +15,6 @@ import { SsBenefitsCalculator } from "./cSsBenefitsCalculator.js";
 import { SocialSecurityBreakdown } from "./cSsBreakdown.js";
 import { Taxes } from "./cTaxes.js";
 import { TransactionCategory } from "./cTransaction.js";
-import { withLabel } from "./debugUtils.js";
 import { TransactionRoutes } from "./tTransactionRoute.js";
 
 /**
@@ -524,6 +523,7 @@ class RetirementYearCalculator {
 
     this.#reportingYear.ReportData.ask = this.#fiscalData.spend.asCurrency();
     this.#reportingYear.ReportData.spend = actualSpend.asCurrency();
+    this.#reportingYear.ReportData.takeHome = cash.asCurrency();
 
     this.#accountYear.processAsPeriodicWithdrawals(
       ACCOUNT_TYPES.CASH,
@@ -596,7 +596,7 @@ class RetirementYearCalculator {
     this.#processPensionIncome();
     this.#processSocialSecurityIncome();
 
-    this.#processSavingsContributions();
+    // this.#processSavingsContributions();
 
     this.determineRetirementAccountWithdrawalPortions();
 
@@ -618,46 +618,56 @@ class RetirementYearCalculator {
 
     this.#reportingYear.ReportData.dump("ReportData");
 
-    const balances = {
-      year: this.#fiscalData.taxYear,
-      spend: this.#reportingYear.ReportData.spend,
-      savings: this.#reportingYear.ReportData.savings_Balance,
-      subject401k:
-        this.#reportingYear.ReportData.retirementAcct_subject401kBalance,
-      partner401k:
-        this.#reportingYear.ReportData.retirementAcct_partner401kBalance,
-      subjectRoth:
-        this.#reportingYear.ReportData.retirementAcct_subjectRothBalance,
-      partnerRoth:
-        this.#reportingYear.ReportData.retirementAcct_partnerRothBalance,
-      subjectWagesTakehome:
-        this.#reportingYear.ReportData.income_subjectTakehomeWages,
-      partnerWagesTakehome:
-        this.#reportingYear.ReportData.income_partnerTakehomeWages,
-      subjectPensionTakehome:
-        this.#reportingYear.ReportData.income_subjectPensionTakehome,
-      partnerPensionTakehome:
-        this.#reportingYear.ReportData.income_partnerPensionTakehome,
-      subjectSsTakehome: this.#reportingYear.ReportData.ss_subjectSsTakehome,
-      partnerSsTakehome: this.#reportingYear.ReportData.ss_partnerSsTakehome,
-    };
+    // const balances = {
+    //   year: this.#fiscalData.taxYear,
+    //   spend: this.#reportingYear.ReportData.spend,
+    //   takeHome: this.#reportingYear.ReportData.takeHome,
+    //   financialHealth:
+    //     this.#reportingYear.ReportData.takeHome >=
+    //     this.#reportingYear.ReportData.spend
+    //       ? "✅"
+    //       : "⚠️",
+    //   savings: this.#reportingYear.ReportData.savings_Balance,
+    //   subject401k:
+    //     this.#reportingYear.ReportData.retirementAcct_subject401kBalance,
+    //   partner401k:
+    //     this.#reportingYear.ReportData.retirementAcct_partner401kBalance,
+    //   subjectRoth:
+    //     this.#reportingYear.ReportData.retirementAcct_subjectRothBalance,
+    //   partnerRoth:
+    //     this.#reportingYear.ReportData.retirementAcct_partnerRothBalance,
+    //   subjectWagesTakehome:
+    //     this.#reportingYear.ReportData.income_subjectTakehomeWages,
+    //   partnerWagesTakehome:
+    //     this.#reportingYear.ReportData.income_partnerTakehomeWages,
+    //   subjectPensionTakehome:
+    //     this.#reportingYear.ReportData.income_subjectPensionTakehome,
+    //   partnerPensionTakehome:
+    //     this.#reportingYear.ReportData.income_partnerPensionTakehome,
+    //   subjectSsTakehome: this.#reportingYear.ReportData.ss_subjectSsTakehome,
+    //   partnerSsTakehome: this.#reportingYear.ReportData.ss_partnerSsTakehome,
+    // };
 
-    balances.dump("balances");
-
-    // debugger;
+    // balances.dump("balances");
 
     const retirementYearData = RetirementYearData.CreateUsing(
       this.#demographics,
       this.#fiscalData,
       this.#accountYear,
-      this.#ssBreakdown,
-      this.#taxes
+      this.#taxes,
+      this.#reportingYear.ReportData
     );
 
+    retirementYearData.dump("retirementYearData");
+
+    debugger;
     return retirementYearData;
   }
   determineRetirementAccountWithdrawalPortions() {
-    this.#accountPortioner?.calculatePortions(this.#cashRemaining);
+    // this.#accountYear.analyzers[ACCOUNT_TYPES.CASH].dumpAccountActivity(
+    //   "Before Portioner Calculation"
+    // );
+    this.#accountPortioner?.calculatePortions(this.#cashAccountBalance);
   }
 
   // #processSavingsContributions() {
@@ -708,7 +718,7 @@ class RetirementYearCalculator {
   //   );
   // }
 
-  get #cashRemaining() {
+  get #cashAccountBalance() {
     return this.#accountYear.getEndingBalance(ACCOUNT_TYPES.CASH);
   }
 
@@ -926,6 +936,20 @@ class RetirementYearCalculator {
       this.#accountYear.getDeposits(ACCOUNT_TYPES.PARTNER_401K).asCurrency();
     this.#reportingYear.ReportData.retirementAcct_partner401kBalance =
       this.#accountYear.getEndingBalance(ACCOUNT_TYPES.PARTNER_401K);
+
+    this.#reportingYear.ReportData.income_subjectPensionGross =
+      this.#fixedIncomeStreams?.subjectPensionGross ?? 0;
+    this.#reportingYear.ReportData.income_subjectPensionWithholdings =
+      this.#fixedIncomeStreams?.subjectPensionWithholdings ?? 0;
+    this.#reportingYear.ReportData.income_subjectPensionTakehome =
+      this.#fixedIncomeStreams?.subjectPensionActualIncome ?? 0;
+
+    this.#reportingYear.ReportData.income_partnerPensionGross =
+      this.#fixedIncomeStreams?.partnerPensionGross ?? 0;
+    this.#reportingYear.ReportData.income_partnerPensionWithholdings =
+      this.#fixedIncomeStreams?.partnerPensionWithholdings ?? 0;
+    this.#reportingYear.ReportData.income_partnerPensionTakehome =
+      this.#fixedIncomeStreams?.partnerPensionActualIncome ?? 0;
 
     this.#reportingYear.ReportData.retirementAcct_subjectRothOpenBalance =
       this.#accountYear.getStartingBalance(ACCOUNT_TYPES.SUBJECT_ROTH_IRA);
@@ -1263,30 +1287,23 @@ class RetirementYearCalculator {
     const partnerGrossWithdrawalAmount =
       combinedGrossWithdrawalAmount * partnerPortion;
 
-    this.#processGrossPeriodic401kIncome(
-      subjectGrossWithdrawalAmount,
-      ACCOUNT_TYPES.SUBJECT_401K
-    );
+    this.#processSubjectGrossPeriodic401kIncome(subjectGrossWithdrawalAmount);
 
-    this.#processGrossPeriodic401kIncome(
-      partnerGrossWithdrawalAmount,
-      ACCOUNT_TYPES.PARTNER_401K
-    );
+    this.#processPartnerGrossPeriodic401kIncome(partnerGrossWithdrawalAmount);
   }
 
   /**
    * @param {number} grossAmount
-   * @param {string} sourceAccountType
    * @param {string} [memo]
    */
-  #processGrossPeriodic401kIncome(grossAmount, sourceAccountType, memo) {
+  #processSubjectGrossPeriodic401kIncome(grossAmount, memo) {
     const actualAmount = Common.convertGross401kToActual401k(
       grossAmount,
       this.#fiscalData.flatTrad401kWithholdingRate ?? 0
     );
 
     this.#accountYear.processAsPeriodicTransfers(
-      sourceAccountType,
+      ACCOUNT_TYPES.SUBJECT_401K,
       ACCOUNT_TYPES.CASH,
       actualAmount,
       PERIODIC_FREQUENCY.MONTHLY,
@@ -1297,13 +1314,54 @@ class RetirementYearCalculator {
     const withholdingAmount = grossAmount - actualAmount;
 
     this.#accountYear.processAsPeriodicTransfers(
-      sourceAccountType,
+      ACCOUNT_TYPES.SUBJECT_401K,
       ACCOUNT_TYPES.TAXES,
       withholdingAmount,
       PERIODIC_FREQUENCY.MONTHLY,
       TransactionCategory.Withholdings,
       memo
     );
+
+    this.#reportingYear.ReportData.income_subject401kGross = grossAmount;
+    this.#reportingYear.ReportData.income_subject401kWithholdings =
+      withholdingAmount.asCurrency();
+    this.#reportingYear.ReportData.income_subject401kTakehome = actualAmount.asCurrency();
+  }
+
+  /**
+   * @param {number} grossAmount
+   * @param {string} [memo]
+   */
+  #processPartnerGrossPeriodic401kIncome(grossAmount, memo) {
+    const actualAmount = Common.convertGross401kToActual401k(
+      grossAmount,
+      this.#fiscalData.flatTrad401kWithholdingRate ?? 0
+    );
+
+    this.#accountYear.processAsPeriodicTransfers(
+      ACCOUNT_TYPES.PARTNER_401K,
+      ACCOUNT_TYPES.CASH,
+      actualAmount,
+      PERIODIC_FREQUENCY.MONTHLY,
+      TransactionCategory.IncomeNet,
+      memo
+    );
+
+    const withholdingAmount = grossAmount - actualAmount;
+
+    this.#accountYear.processAsPeriodicTransfers(
+      ACCOUNT_TYPES.PARTNER_401K,
+      ACCOUNT_TYPES.TAXES,
+      withholdingAmount,
+      PERIODIC_FREQUENCY.MONTHLY,
+      TransactionCategory.Withholdings,
+      memo
+    );
+
+    this.#reportingYear.ReportData.income_partner401kGross = grossAmount;
+    this.#reportingYear.ReportData.income_partner401kWithholdings +=
+      withholdingAmount;
+    this.#reportingYear.ReportData.income_partner401kTakehome += actualAmount;
   }
 
   // #applyRothInterest() {
@@ -1321,13 +1379,15 @@ class RetirementYearCalculator {
       this.#accountPortioner?.rothIraWithdrawal ?? 0;
     if (desiredRothWithdrawal <= 0) return;
 
-    const subjectAvailableRothFunds = this.#accountYear.getEndingBalance(
-      ACCOUNT_TYPES.SUBJECT_ROTH_IRA
-    );
+    const subjectAvailableRothFunds = this.#demographics
+      .isSubjectEligibleFor401k
+      ? this.#accountYear.getEndingBalance(ACCOUNT_TYPES.SUBJECT_ROTH_IRA)
+      : 0;
 
-    const partnerAvailableRothFunds = this.#accountYear.getEndingBalance(
-      ACCOUNT_TYPES.PARTNER_ROTH_IRA
-    );
+    const partnerAvailableRothFunds = this.#demographics
+      .isPartnerEligibleFor401k
+      ? this.#accountYear.getEndingBalance(ACCOUNT_TYPES.PARTNER_ROTH_IRA)
+      : 0;
 
     const combinedAvaiableRothFunds =
       subjectAvailableRothFunds + partnerAvailableRothFunds;

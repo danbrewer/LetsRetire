@@ -62,7 +62,7 @@ function isProxy(value) {
  */
 function safeFormat(value) {
   try {
-    if (typeof value === "string") return JSON.stringify(value);
+    if (typeof value === "string") return value; // JSON.stringify(value);
     if (value && typeof value === "object") {
       // @ts-ignore
       return JSON.stringify(value, (k, v) => (v === undefined ? null : v));
