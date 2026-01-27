@@ -1,6 +1,9 @@
 import { BaseReports } from "./cBaseReports.js";
 
 class ReportData extends BaseReports {
+  static dumpIgnore = [
+    "*"
+  ];
   static dumpOrder = [
     // DEMOGRAPHICS
     "demographics_subjectAge",

@@ -41,7 +41,7 @@ import { ReportData } from "./rReportData.js";
 //    */
 class RetirementYearData extends BaseYearData {
   static dumpOrder = ["fiscalYear", "takeHome", "balances"];
-
+  static dumpIgnore = ["*"];
   /** @type {FiscalData} */
   #fiscalData;
   /** @type {ReportData} */

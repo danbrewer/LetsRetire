@@ -624,6 +624,27 @@ Object.defineProperty(Object.prototype, "dump", {
      * @param {any} obj
      * @returns {string[] | null}
      */
+    function getDumpIgnoreList(obj) {
+      const ctor = obj?.constructor;
+      return Array.isArray(ctor?.dumpIgnore) ? ctor.dumpIgnore : null;
+    }
+
+    /**
+     * @param {string} key
+     * @param {string[] | null} dumpIgnore
+     * @param {boolean} hasWildcard
+     */
+    function isIgnoredKey(key, dumpIgnore, hasWildcard) {
+      if (!dumpIgnore) return false;
+      if (dumpIgnore.includes(key)) return true;
+      if (hasWildcard) return true;
+      return false;
+    }
+
+    /**
+     * @param {any} obj
+     * @returns {string[] | null}
+     */
     function getDumpKeysInDeclaredOrder(obj) {
       const ctor = obj?.constructor;
       const order = Array.isArray(ctor?.dumpOrder) ? ctor.dumpOrder : null;
@@ -932,6 +953,8 @@ Object.defineProperty(Object.prototype, "dump", {
     };
 
     const printed = new Set();
+    const dumpIgnore = getDumpIgnoreList(this);
+    const hasWildcardIgnore = dumpIgnore?.includes("*") ?? false;
 
     // Dump in declared order first
     const orderedKeys = getDumpKeysInDeclaredOrder(this);
@@ -940,6 +963,7 @@ Object.defineProperty(Object.prototype, "dump", {
       const missingFromClass = [];
 
       for (const key of orderedKeys) {
+        if (dumpIgnore?.includes(key)) continue;
         const didPrint = dumpKeyUnified(key, indent);
         if (didPrint) {
           printed.add(key);
@@ -955,6 +979,7 @@ Object.defineProperty(Object.prototype, "dump", {
       // Remaining instance fields (own enumerable props)
       for (const key of Object.keys(this)) {
         if (printed.has(key)) continue;
+        if (isIgnoredKey(key, dumpIgnore, hasWildcardIgnore)) continue;
         leftovers.push(key);
       }
 
@@ -971,8 +996,9 @@ Object.defineProperty(Object.prototype, "dump", {
 
           // Only include things that are part of the "API surface"
           if (
-            typeof desc.get === "function" ||
-            typeof desc.value === "function"
+            (typeof desc.get === "function" ||
+              typeof desc.value === "function") &&
+            !isIgnoredKey(key, dumpIgnore, hasWildcardIgnore)
           ) {
             leftovers.push(key);
           }
@@ -980,7 +1006,7 @@ Object.defineProperty(Object.prototype, "dump", {
       }
 
       // Only print the divider if we actually have leftovers
-      if (leftovers.length > 0) {
+      if (!hasWildcardIgnore && leftovers.length > 0) {
         console.log(`${indent}--- (not in dumpOrder) ---`);
 
         for (const key of leftovers) {
