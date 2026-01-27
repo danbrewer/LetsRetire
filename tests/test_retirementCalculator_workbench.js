@@ -77,9 +77,9 @@ function createInputs() {
     savingsInterestRate: 0.03,
 
     // Benefits
-    ssMonthly: 2500,
+    subjectSsMonthly: 2500,
     ssCola: 0.025,
-    penMonthly: 3500,
+    subjectPennsionMonthly: 3500,
     penCola: 0,
 
     // Tax settings

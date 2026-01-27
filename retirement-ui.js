@@ -2586,9 +2586,9 @@ function parseInputParameters() {
     savingsInterestRate: retSavings,
 
     // Income sources
-    ssMonthly: subjectSsMonthly,
+    subjectSsMonthly: subjectSsMonthly,
     ssCola: ssCola,
-    penMonthly: penMonthly,
+    subjectPennsionMonthly: penMonthly,
     penCola: penCola,
 
     // Tax rates and settings

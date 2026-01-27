@@ -51,9 +51,9 @@ import { compoundedRate } from "./utils.js";
  * @property {number} [partnerRothInterestRate]
  * @property {number} [savingsInterestRate]
  *
- * @property {number} [ssMonthly]
+ * @property {number} [subjectSsMonthly]
  * @property {number} [ssCola]
- * @property {number} [penMonthly]
+ * @property {number} [subjectPennsionMonthly]
  * @property {number} [penCola]
  *
  * @property {string} [filingStatus]
@@ -153,9 +153,9 @@ class Inputs {
       savingsInterestRate = 0,
 
       // Benefits
-      ssMonthly = 0,
+      subjectSsMonthly: ssMonthly = 0,
       ssCola = 0,
-      penMonthly = 0,
+      subjectPennsionMonthly: penMonthly = 0,
       penCola = 0,
 
       // Taxes/settings
@@ -749,9 +749,9 @@ class Inputs {
       partnerRothInterestRate: this.partnerRothInterestRate,
       savingsInterestRate: this.savingsInterestRate,
 
-      ssMonthly: this.ssMonthly,
+      subjectSsMonthly: this.ssMonthly,
       ssCola: this.ssCola,
-      penMonthly: this.penMonthly,
+      subjectPennsionMonthly: this.penMonthly,
       penCola: this.penCola,
 
       filingStatus: this.filingStatus,
