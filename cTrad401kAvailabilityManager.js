@@ -95,7 +95,7 @@ class Trad401kAvailabilityManager {
     return this.subject401kGrossAvailable + this.partner401kGrossAvailable;
   }
 
-  get combined401kAllocatedForSpend() {
+  get combined401kTakehomeAvailable() {
     return (
       this.subject401kTakeHomeAvailable + this.partner401kTakeHomeAvailable
     );

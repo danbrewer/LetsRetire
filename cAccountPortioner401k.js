@@ -28,7 +28,7 @@ class AccountPortioner401k {
   get #percentageOfTotalAllocatedSpendFundsThatIsActualized401k() {
     if (this.#totalCashAllocatedForSpend === 0) return 0;
     return (
-      this.#trad401kFunds.combined401kAllocatedForSpend /
+      this.#trad401kFunds.combined401kTakehomeAvailable /
       this.#totalCashAllocatedForSpend
     );
   }

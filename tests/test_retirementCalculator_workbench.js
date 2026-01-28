@@ -18,11 +18,12 @@ const testTracker = new TestTracker("Retirement Calculator Workbench");
 function createInputs() {
   /** @type {import("../cInputs.js").InputsOptions} */
   const inputArgs = {
+    subjectRetireAge: 62,
+    partnerRetireAge: 62,
     // Ages / timeline
     startingYear: 2025,
     initialAgeSubject: 60,
     initialAgePartner: 56,
-    subjectRetireAge: 62,
     subjectSsStartAge: 62,
     subjectPensionStartAge: 65,
     subject401kStartAge: 62,
@@ -30,11 +31,10 @@ function createInputs() {
 
     // Spending
     inflationRate: 0.03,
-    spendingToday: 100000,
+    spendingToday: 90000,
     spendingDecline: 0.01,
 
     // Partner
-    partnerRetireAge: 62,
     partnerSsMonthly: 1000,
     partnerSsStartAge: 62,
     partnerSsCola: 0.02,

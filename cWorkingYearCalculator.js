@@ -659,7 +659,7 @@ class WorkingYearCalculator {
       ACCOUNT_TYPES.TAXES,
       TransactionCategory.TaxPayment,
       TransactionRoutes.External,
-      federalIncomeTaxOwed,
+      Math.min(federalIncomeTaxOwed, withholdings),
       PERIODIC_FREQUENCY.ANNUAL_TRAILING
     );
 

@@ -115,50 +115,88 @@ class AccountPortioner {
     return this.#final401kPortions;
   }
 
-  /** @param {number} cashRemaining */
-  calculatePortions(cashRemaining) {
-    const annualSpend = this.#fiscalData.spend;
-    let ask = (annualSpend - cashRemaining).asCurrency();
+  /** @param {number} cashOnHand */
+  calculatePortions(cashOnHand) {
+    const annualSpend = this.#fiscalData.spend.asCurrency();
+    let ask = annualSpend - cashOnHand.asCurrency();
 
     if (ask <= 0) return;
 
-    let totalFundsAvailable =
-      this.#availableSavings +
-      this.#trad401kAccountPortioner.combined401kAllocatedForSpend +
-      this.#availableRoth;
+    // to prevent never reaching zero, if the fund is less than $100 remaining, just take it all
+
+    let availableSavings = this.#availableSavings.asCurrency();
+    if (availableSavings > 0 && availableSavings < 100) {
+      ask -= availableSavings;
+      this.#savingsWithdrawal = availableSavings;
+      availableSavings = 0;
+    }
+
+    let available401k =
+      this.#trad401kAccountPortioner.combined401kTakehomeAvailable.asCurrency();
+    if (available401k > 0 && available401k < 100) {
+      ask -= available401k;
+      this.#final401kPortions = new AccountPortioner401k(
+        this.#trad401kAccountPortioner,
+        available401k.asCurrency(),
+        available401k.asCurrency(),
+        this.#fiscalData
+      );
+      available401k = 0;
+    }
+
+    let availableRoth = this.#availableRoth.asCurrency();
+    if (availableRoth > 0 && availableRoth < 100) {
+      ask -= availableRoth;
+      this.#rothIraWithdrawal = availableRoth;
+      availableRoth = 0;
+    }
+
+    ask = Math.max(ask, 0).asCurrency();
+
+    let totalFundsAvailable = availableSavings + available401k + availableRoth;
 
     totalFundsAvailable = Math.max(totalFundsAvailable, 0).asCurrency();
 
-    this.#final401kPortions = this.#determineFinal401kPortions(
-      this.#trad401kAccountPortioner,
-      ask,
-      totalFundsAvailable
-    );
-
-    ask -= this.#final401kPortions.combinedFinalWithdrawalNet.asCurrency();
+    if (available401k.asCurrency() > 0 && ask > 0) {
+      this.#final401kPortions = this.#determineFinal401kPortions(
+        this.#trad401kAccountPortioner,
+        ask,
+        totalFundsAvailable
+      );
+      ask -= this.#final401kPortions.combinedFinalWithdrawalNet.asCurrency();
+    }
 
     ask = Math.max(ask, 0).asCurrency();
 
     totalFundsAvailable = this.#availableSavings + this.#availableRoth;
     totalFundsAvailable = Math.max(totalFundsAvailable, 0).asCurrency();
 
-    const pctThatIsSavings =
-      totalFundsAvailable > 0
-        ? this.#availableSavings / totalFundsAvailable
-        : 0;
-    const withdrawFromSavings = ask * pctThatIsSavings;
-    this.#savingsWithdrawal = withdrawFromSavings;
+    let withdrawFromSavings = 0;
+    if (availableSavings > 0 && ask > 0) {
+      const pctThatIsSavings =
+        totalFundsAvailable > 0
+          ? this.#availableSavings / totalFundsAvailable
+          : 0;
+      withdrawFromSavings = (ask * pctThatIsSavings).asCurrency();
+      this.#savingsWithdrawal = withdrawFromSavings;
+    }
 
-    const pctThatIsRoth =
-      totalFundsAvailable > 0 ? this.#availableRoth / totalFundsAvailable : 0;
-    const withdrawFromRoth = ask * pctThatIsRoth;
-    this.#rothIraWithdrawal = withdrawFromRoth;
+    let withdrawFromRoth = 0;
+    if (availableRoth > 0 && ask > 0) {
+      const pctThatIsRoth =
+        totalFundsAvailable > 0 ? this.#availableRoth / totalFundsAvailable : 0;
+      withdrawFromRoth = (ask * pctThatIsRoth).asCurrency();
+      this.#rothIraWithdrawal = withdrawFromRoth;
+    }
 
     const withdrawFrom401k =
       this.#final401kPortions?.combinedFinalWithdrawalNet ?? 0;
 
-    this.#totalActualWithdrawals =
+    let totalWithdrawals =  
       withdrawFrom401k + withdrawFromSavings + withdrawFromRoth;
+
+    this.#totalActualWithdrawals = totalWithdrawals.asCurrency();
+
   }
 
   /**
@@ -188,25 +226,29 @@ class AccountPortioner {
   }
 
   get #availableRoth() {
-    return this.#tradRothAvailable();
+    return this.#availableSubjectRoth + this.#availablePartnerRoth;
   }
 
-  #tradRothAvailable() {
-    let rothAvailable = 0;
+  get #availableSubjectRoth() {
     if (this.#fiscalData.useRoth) {
       if (this.#demographics.isSubjectEligibleFor401k) {
-        rothAvailable += this.#accountYear.getEndingBalance(
+        return this.#accountYear.getEndingBalance(
           ACCOUNT_TYPES.SUBJECT_ROTH_IRA
         );
       }
+    }
+    return 0;
+  }
+
+  get #availablePartnerRoth() {
+    if (this.#fiscalData.useRoth) {
       if (this.#demographics.isPartnerEligibleFor401k) {
-        rothAvailable += this.#accountYear.getEndingBalance(
+        return this.#accountYear.getEndingBalance(
           ACCOUNT_TYPES.PARTNER_ROTH_IRA
         );
       }
     }
-
-    return rothAvailable;
+    return 0;
   }
 
   // #rothIraPortion() {

@@ -40,7 +40,14 @@ import { ReportData } from "./rReportData.js";
 
 //    */
 class RetirementYearData extends BaseYearData {
-  static dumpOrder = ["fiscalYear", "accountBalances", "spend", "takeHome"];
+  static dumpOrder = [
+    "fiscalYear",
+    "subjectAge",
+    "partnerAge",
+    "spend",
+    "accountBalances",
+    "takeHome",
+  ];
   static dumpIgnore = [
     "taxes",
     "savings",
@@ -257,6 +264,14 @@ class RetirementYearData extends BaseYearData {
 
   get demographics() {
     return this.#demographics;
+  }
+
+  get subjectAge() {
+    return this.#demographics.currentAge;
+  }
+
+  get partnerAge() {
+    return this.#demographics.currentAgeOfPartner;
   }
 }
 
