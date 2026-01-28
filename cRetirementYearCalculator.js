@@ -659,8 +659,8 @@ class RetirementYearCalculator {
     );
 
     retirementYearData.dump("retirementYearData");
-
     debugger;
+
     return retirementYearData;
   }
   determineRetirementAccountWithdrawalPortions() {
@@ -1169,7 +1169,8 @@ class RetirementYearCalculator {
   }
 
   #processPensionIncome() {
-    if (this.#fixedIncomeStreams.combinedPensionActualIncome.asCurrency() == 0) return;
+    if (this.#fixedIncomeStreams.combinedPensionActualIncome.asCurrency() == 0)
+      return;
 
     this.#accountYear.processAsPeriodicDeposits(
       ACCOUNT_TYPES.SUBJECT_PENSION,
@@ -1390,8 +1391,9 @@ class RetirementYearCalculator {
       ? this.#accountYear.getEndingBalance(ACCOUNT_TYPES.PARTNER_ROTH_IRA)
       : 0;
 
-    const combinedAvaiableRothFunds =
-      (subjectAvailableRothFunds + partnerAvailableRothFunds).asCurrency();
+    const combinedAvaiableRothFunds = (
+      subjectAvailableRothFunds + partnerAvailableRothFunds
+    ).asCurrency();
 
     if (combinedAvaiableRothFunds == 0) return;
 

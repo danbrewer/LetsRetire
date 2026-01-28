@@ -145,7 +145,7 @@ function calc(calculations, UI) {
 
       const retirementYearData = calculator.processRetirementYearData();
 
-      retirementYearData.dump("retirement year");
+      // retirementYearData.dump("retirement year");
 
       console.log(
         `------ END OF RETIREMENT YEAR ` +
