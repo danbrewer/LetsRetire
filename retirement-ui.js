@@ -2504,7 +2504,7 @@ function parseInputParameters() {
   const partnerSalaryGrowthRate = pct(num("partnerSalaryGrowth"));
   const subject401kContributionRate = pct(num("pretaxPct"));
   const subjectRothContributionRate = pct(num("rothPct"));
-  const taxablePct = pct(num("taxablePct"));
+  // const taxablePct = pct(num("taxablePct"));
   const matchCap = pct(num("matchCap"));
   const matchRate = pct(num("matchRate"));
   const subject401kStartingBalance = num("balPre");
@@ -2566,10 +2566,10 @@ function parseInputParameters() {
     partnerStartingSalary: partnerStartingSalary,
     subjectSalaryGrowthRate: subjectSalaryGrowthRate,
     partnerSalaryGrowthRate: partnerSalaryGrowthRate,
-    subject401kContributionRate: subject401kContributionRate,
+    subjectCareer401kContributionRate: subject401kContributionRate,
     subjectRothContributionRate: subjectRothContributionRate,
-    taxablePct: taxablePct,
-    matchCap: matchCap,
+    // taxablePct: taxablePct,
+    employer401kMatchRate: matchCap,
     subject401kMatchRate: matchRate,
 
     // Account balances and returns
@@ -2588,14 +2588,14 @@ function parseInputParameters() {
     // Income sources
     subjectSsMonthly: subjectSsMonthly,
     ssCola: ssCola,
-    subjectPennsionMonthly: penMonthly,
+    subjectPensionMonthly: penMonthly,
     penCola: penCola,
 
     // Tax rates and settings
     filingStatus: filingStatus,
     useRMD: useRMD,
     flatSsWithholdingRate: flatSsWithholdingRate,
-    flatTrad401kWithholdingRate: flatTrad401kWithholdingRate,
+    flatCareerTrad401kWithholdingRate: flatTrad401kWithholdingRate,
     flatPensionWithholdingRate: flatPensionWithholdingRate,
     flatWageWithholdingRate: flatWageWithholdingRate,
 

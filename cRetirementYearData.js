@@ -61,6 +61,10 @@ class RetirementYearData extends BaseYearData {
     "balances",
     "demographics",
     "fiscalData",
+    "subject401k",
+    "partner401k",
+    "subjectTradRoth",
+    "partnerTradRoth",
   ];
   /** @type {Demographics} */
   #demographics;
@@ -85,13 +89,21 @@ class RetirementYearData extends BaseYearData {
 
     this.taxes = taxes;
     this.savings = Balance.CreateUsing(accountYear, ACCOUNT_TYPES.SAVINGS);
-    this.trad401k = Balance.CreateUsing(
+    this.subject401k = Balance.CreateUsing(
       accountYear,
       ACCOUNT_TYPES.SUBJECT_401K
     );
-    this.tradRoth = Balance.CreateUsing(
+    this.partner401k = Balance.CreateUsing(
+      accountYear,
+      ACCOUNT_TYPES.PARTNER_401K
+    );
+    this.subjectTradRoth = Balance.CreateUsing(
       accountYear,
       ACCOUNT_TYPES.SUBJECT_ROTH_IRA
+    );
+    this.partnerTradRoth = Balance.CreateUsing(
+      accountYear,
+      ACCOUNT_TYPES.PARTNER_ROTH_IRA
     );
     this.#reportData = reportData;
   }
@@ -118,79 +130,6 @@ class RetirementYearData extends BaseYearData {
     );
     return result;
   }
-
-  // // Factory method to create from existing data
-  // /**
-  //  * @param {{
-  //  * demographics: Demographics;
-  //  * fiscalData: FiscalData;
-  //  * revenue: Income;
-  //  * grossIncome: Income;
-  //  * expenditures: Expenditures;
-  //  * contributions: Object | undefined;
-  //  * withdrawals: Object | undefined;
-  //  * balances: Balances;
-  //  * disbursements: Disbursements;
-  //  * pen: Object | undefined;
-  //  * savings: Object | undefined;
-  //  * ss: SocialSecurityIncome;
-  //  * incomeStreams: IncomeStreams;
-  //  * incomeBreakdown: IncomeBreakdown;
-  //  * taxes: Taxes;
-  //  * totals: Object | undefined;
-  //  * myPensionBenefits: Object | undefined;
-  //  * spousePensionBenefits: Object | undefined;
-  //  * mySsBenefits: Object | undefined;
-  //  * spouseSsBenefits: Object | undefined;
-  //  * savingsBreakdown: Object | undefined;
-  //  * withdrawalBreakdown: Object | undefined;
-  //  * ssBreakdown: SsBenefitsCalculator;
-  //  * pensionBreakdown: Object | undefined;
-  //  * accountYear: AccountYear }} data
-  //  */
-  // static fromData(data) {
-  //   return new RetirementYearData(
-  //     data.demographics,
-  //     data.fiscalData,
-  //     data.revenue,
-  //     data.grossIncome,
-  //     data.expenditures,
-  //     data.contributions,
-  //     data.withdrawals,
-  //     data.balances,
-  //     data.pen,
-  //     data.savings,
-  //     data.ss,
-  //     data.incomeStreams,
-  //     data.incomeBreakdown,
-  //     data.taxes,
-  //     data.totals,
-  //     data.myPensionBenefits,
-  //     data.spousePensionBenefits,
-  //     data.mySsBenefits,
-  //     data.spouseSsBenefits,
-  //     data.savingsBreakdown,
-  //     data.withdrawalBreakdown,
-  //     data.ssBreakdown,
-  //     data.pensionBreakdown,
-  //     data.accountYear
-  //   );
-  // }
-
-  // // Method to get a summary of the retirement year
-  // getYearSummary() {
-  //   return {
-  //     year: this.fiscalData?.taxYear || "Unknown",
-  //     age: this.demographics?.age || "Unknown",
-  //     // totalIncome: this.totalIncome(),
-  //     //   totalExpenses: this.getTotalExpenses(),
-  //     netIncome: this.netIncome,
-  //     totalTaxes: this.totalTaxes,
-  //     //   surplusDeficit: this.getSurplusOrDeficit(),
-  //     totalBalances: this.totalAccountBalances,
-  //     //   hasDeficit: this.hasDeficit(),
-  //   };
-  // }
 
   get fiscalYear() {
     return this.#fiscalData.taxYear;
@@ -252,8 +191,14 @@ class RetirementYearData extends BaseYearData {
       total: this.allAccountBalances,
       breakdown: {
         savings: this.savings.endingBalanceForYear,
-        trad401k: this.trad401k.endingBalanceForYear,
-        tradRoth: this.tradRoth.endingBalanceForYear,
+        subject401k:
+          this.subject401k.endingBalanceForYear,
+        partner401k:
+          this.partner401k.endingBalanceForYear,
+        subjectRoth:
+          this.subjectTradRoth.endingBalanceForYear,
+        partnerRoth:
+          this.partnerTradRoth.endingBalanceForYear,
       },
     };
   }
@@ -275,37 +220,4 @@ class RetirementYearData extends BaseYearData {
   }
 }
 
-// Create instance using the factory method for backward compatibility
-// const result = RetirementYearData.Empty();
-
 export { RetirementYearData };
-
-/*
-      year: this.#fiscalData.taxYear,
-      spend: this.#reportingYear.ReportData.spend,
-      takeHome: this.#reportingYear.ReportData.takeHome,
-      financialHealth:
-        this.#reportingYear.ReportData.takeHome >=
-        this.#reportingYear.ReportData.spend
-          ? "✅"
-          : "⚠️",
-      savings: this.#reportingYear.ReportData.savings_Balance,
-      subject401k:
-        this.#reportingYear.ReportData.retirementAcct_subject401kBalance,
-      partner401k:
-        this.#reportingYear.ReportData.retirementAcct_partner401kBalance,
-      subjectRoth:
-        this.#reportingYear.ReportData.retirementAcct_subjectRothBalance,
-      partnerRoth:
-        this.#reportingYear.ReportData.retirementAcct_partnerRothBalance,
-      subjectWagesTakehome:
-        this.#reportingYear.ReportData.income_subjectTakehomeWages,
-      partnerWagesTakehome:
-        this.#reportingYear.ReportData.income_partnerTakehomeWages,
-      subjectPensionTakehome:
-        this.#reportingYear.ReportData.income_subjectPensionTakehome,
-      partnerPensionTakehome:
-        this.#reportingYear.ReportData.income_partnerPensionTakehome,
-      subjectSsTakehome: this.#reportingYear.ReportData.ss_subjectSsTakehome,
-      partnerSsTakehome: this.#reportingYear.ReportData.ss_partnerSsTakehome,
-*/

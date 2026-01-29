@@ -48,16 +48,6 @@ class FixedIncomeStreams {
     );
 
     this._description = "FixedIncomeStreams";
-
-    // stub these in for now; later we can implement retirement income streams
-    // this.subjectRetirementWagesAndCompensationGross = 0;
-    // this.subjectRetirementWagesAndCompensationEstimatedWithholdings = 0;
-    // this.subjectRetirementWagesAndCompensationActualIncome = 0;
-    // this.partnerRetirementWagesAndCompensationGross = 0;
-    // this.partnerRetirementWagesAndCompensationEstimatedWithholdings = 0;
-    // this.partnerRetirementWagesAndCompensationActualIncome = 0;
-    // this.subjectRetirementNonTaxableSalaryReductions = 0;
-    // this.partnerRetirementNonTaxableSalaryReductions = 0;
   }
 
   get career() {
@@ -69,7 +59,7 @@ class FixedIncomeStreams {
   }
 
   get flat401kWithholdingRate() {
-    return this.#inputs.flatTrad401kWithholdingRate;
+    return this.#inputs.flatCareerTrad401kWithholdingRate;
   }
 
   get subjectPensionGross() {
@@ -154,26 +144,28 @@ class FixedIncomeStreams {
   }
 
   get subjectSavingsContributionFixed() {
-    const result = this.#inputs.subjectWorkingYearSavingsContributionFixed ?? 0;
+    const result =
+      this.#inputs.subjectWorkingYearSavingsContributionFixedAmount ?? 0;
     return result.asCurrency();
   }
 
   get subjectSavingsContributionVariable() {
     const totalSalary = this.#inputs.subjectCareerSalary;
     return (
-      this.#inputs.subjectWorkingYearSavingsContributionVariable * totalSalary
+      this.#inputs.subjectWorkingYearSavingsContributionRate * totalSalary
     ).asCurrency();
   }
 
   get partnerSavingsContributionFixed() {
-    const result = this.#inputs.partnerWorkingYearSavingsContributionFixed ?? 0;
+    const result =
+      this.#inputs.partnerWorkingYearSavingsContributionFixedAmount ?? 0;
     return result.asCurrency();
   }
 
   get partnerSavingsContributionVariable() {
     const totalSalary = this.#inputs.partnerCareerSalary;
     return (
-      this.#inputs.partnerWorkingYearSavingsContributionVariable * totalSalary
+      this.#inputs.partnerWorkingYearSavingsContributionRate * totalSalary
     ).asCurrency();
   }
 

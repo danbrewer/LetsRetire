@@ -189,7 +189,7 @@ class FiscalData {
       inputs.subjectUseTrad401k,
       inputs.subjectUseRoth,
       inputs.flatSsWithholdingRate,
-      inputs.flatTrad401kWithholdingRate
+      inputs.flatCareerTrad401kWithholdingRate
     );
   }
 }

@@ -31,12 +31,11 @@ import { compoundedRate } from "./utils.js";
  * @property {number} [partnerStartingSalary]
  * @property {number} [subjectSalaryGrowthRate]
  * @property {number} [partnerSalaryGrowthRate]
- * @property {number} [subject401kContributionRate]
- * @property {number} [partner401kContributionRate]
+ * @property {number} [subjectCareer401kContributionRate]
+ * @property {number} [partnerCareer401kContributionRate]
  * @property {number} [subjectRothContributionRate]
  * @property {number} [partnerRothContributionRate]
- * @property {number} [taxablePct]
- * @property {number} [matchCap]
+ * @property {number} [employer401kMatchRate]
  * @property {number} [subject401kMatchRate]
  *
  * @property {number} [subject401kStartingBalance]
@@ -53,33 +52,33 @@ import { compoundedRate } from "./utils.js";
  *
  * @property {number} [subjectSsMonthly]
  * @property {number} [ssCola]
- * @property {number} [subjectPennsionMonthly]
+ * @property {number} [subjectPensionMonthly]
  * @property {number} [penCola]
  *
  * @property {string} [filingStatus]
  * @property {boolean} [useRMD]
  *
  * @property {number} [flatSsWithholdingRate]
- * @property {number} [flatTrad401kWithholdingRate]
+ * @property {number} [flatCareerTrad401kWithholdingRate]
  * @property {number} [flatPensionWithholdingRate]
  * @property {number} [flatWageWithholdingRate]
  *
  * @property {string[]} [order]
  *
- * @property {number} [subjectWorkingYearSavingsContributionFixed]
- * @property {number} [subjectWorkingYearSavingsContributionVariable]
- * @property {number} [partnerWorkingYearSavingsContributionFixed]
- * @property {number} [partnerWorkingYearSavingsContributionVariable]
- * @property {number} [subjectRetirementYearSavingsContributionFixed]
- * @property {number} [subjectRetirementYearSavingsContributionVariable]
- * @property {number} [partnerRetirementYearSavingsContributionFixed]
- * @property {number} [partnerRetirementYearSavingsContributionVariable]
+ * @property {number} [subjectWorkingYearSavingsContributionFixedAmount]
+ * @property {number} [subjectWorkingYearSavingsContributionRate]
+ * @property {number} [partnerWorkingYearSavingsContributionFixedAmount]
+ * @property {number} [partnerWorkingYearSavingsContributionRate]
+ * @property {number} [subjectRetirementYearSavingsContributionFixedAmount]
+ * @property {number} [subjectRetirementYearSavingsContributionRate]
+ * @property {number} [partnerRetirementYearSavingsContributionFixedAmount]
+ * @property {number} [partnerRetirementYearSavingsContributionRate]
  *
- * @property {number} [partner401kContributionRate]
+ * @property {number} [partnerCareer401kContributionRate]
  * @property {number} [partnerRothContributionRate]
  *
- * @property {number} [subjectPayrollDeductions]
- * @property {number} [partnerPayrollDeductions]
+ * @property {number} [subjectCareerPayrollDeductions]
+ * @property {number} [partnerCareerPayrollDeductions]
  * @property {number} [subjectPayPeriods]
  * @property {number} [partnerPayPeriods]
  */
@@ -130,13 +129,17 @@ class Inputs {
       partnerStartingSalary = 0,
       subjectSalaryGrowthRate = 0,
       partnerSalaryGrowthRate = 0,
-      subject401kContributionRate: subjectCareer401kContributionRate = 0,
-      partner401kContributionRate: partnerCareer401kContributionRate = 0,
+      subjectCareer401kContributionRate = 0,
+      partnerCareer401kContributionRate = 0,
       subjectRothContributionRate = 0,
       partnerRothContributionRate = 0,
-      taxablePct = 0,
-      matchCap = 0,
+      // taxablePct = 0,
+      employer401kMatchRate = 0,
       subject401kMatchRate = 0,
+      partnerCareerPayrollDeductions = 1,
+      subjectCareerPayrollDeductions = 1,
+      subjectPayPeriods = 26,
+      partnerPayPeriods = 26,
 
       // Starting balances
       subject401kStartingBalance = 0,
@@ -155,14 +158,14 @@ class Inputs {
       // Benefits
       subjectSsMonthly: ssMonthly = 0,
       ssCola = 0,
-      subjectPennsionMonthly: penMonthly = 0,
+      subjectPensionMonthly: penMonthly = 0,
       penCola = 0,
 
       // Taxes/settings
-      filingStatus = "single",
-      useRMD = false,
+      filingStatus = "married",
+      useRMD = true,
       flatSsWithholdingRate = 0.07,
-      flatTrad401kWithholdingRate: flatCareerTrad401kWithholdingRate = 0.2,
+      flatCareerTrad401kWithholdingRate = 0.2,
       flatPensionWithholdingRate = 0.2,
       flatWageWithholdingRate = 0.15,
 
@@ -174,20 +177,15 @@ class Inputs {
       ],
 
       // Savings contribution knobs
-      subjectWorkingYearSavingsContributionFixed = 100,
-      subjectWorkingYearSavingsContributionVariable = 0,
-      partnerWorkingYearSavingsContributionFixed = 0,
-      partnerWorkingYearSavingsContributionVariable = 0,
-      subjectRetirementYearSavingsContributionFixed = 0,
-      subjectRetirementYearSavingsContributionVariable = 0,
-      partnerRetirementYearSavingsContributionFixed = 0,
-      partnerRetirementYearSavingsContributionVariable = 0,
-
+      subjectWorkingYearSavingsContributionFixedAmount = 0,
+      subjectWorkingYearSavingsContributionRate = 0,
+      partnerWorkingYearSavingsContributionFixedAmount = 0,
+      partnerWorkingYearSavingsContributionRate = 0,
+      subjectRetirementYearSavingsContributionFixedAmount = 0,
+      subjectRetirementYearSavingsContributionRate = 0,
+      partnerRetirementYearSavingsContributionFixedAmount = 0,
+      partnerRetirementYearSavingsContributionRate = 0,
       // Salary reductions
-      subjectPayrollDeductions = 1,
-      partnerPayrollDeductions = 1,
-      subjectPayPeriods = 26,
-      partnerPayPeriods = 26,
     } = options;
 
     // ---------------------------
@@ -282,11 +280,11 @@ class Inputs {
     /** @type {number} */
     this.subjectRothContributionRate = subjectRothContributionRate;
 
-    /** @type {number} */
-    this.taxablePct = taxablePct;
+    // /** @type {number} */
+    // this.taxablePct = taxablePct;
 
     /** @type {number} */
-    this.matchCap = matchCap;
+    this.employer401kMatchRate = employer401kMatchRate;
 
     /** @type {number} */
     this.subject401kMatchRate = subject401kMatchRate;
@@ -346,7 +344,7 @@ class Inputs {
     this.flatSsWithholdingRate = flatSsWithholdingRate;
 
     /** @type {number} */
-    this.flatTrad401kWithholdingRate = flatCareerTrad401kWithholdingRate;
+    this.flatCareerTrad401kWithholdingRate = flatCareerTrad401kWithholdingRate;
 
     /** @type {number} */
     this.flatPensionWithholdingRate = flatPensionWithholdingRate;
@@ -377,45 +375,45 @@ class Inputs {
     this.rothUseAge = this.subjectRetireAge;
 
     /** @type {number} */
-    this.subjectCareerPayrollDeductions = subjectPayrollDeductions;
+    this.subjectCareerPayrollDeductions = subjectCareerPayrollDeductions;
 
     this.subjectRetirementPayrollDeductions = 0;
     this.partnerRetirementPayrollDeductions = 0;
 
     /** @type {number} */
-    this.partnerCareerPayrollDeductions = partnerPayrollDeductions;
+    this.partnerCareerPayrollDeductions = partnerCareerPayrollDeductions;
 
     /** @type {number} */
-    this.subjectWorkingYearSavingsContributionFixed =
-      subjectWorkingYearSavingsContributionFixed;
+    this.subjectWorkingYearSavingsContributionFixedAmount =
+      subjectWorkingYearSavingsContributionFixedAmount;
 
     /** @type {number} */
-    this.subjectWorkingYearSavingsContributionVariable =
-      subjectWorkingYearSavingsContributionVariable;
+    this.subjectWorkingYearSavingsContributionRate =
+      subjectWorkingYearSavingsContributionRate;
 
     /** @type {number} */
-    this.partnerWorkingYearSavingsContributionFixed =
-      partnerWorkingYearSavingsContributionFixed;
+    this.partnerWorkingYearSavingsContributionFixedAmount =
+      partnerWorkingYearSavingsContributionFixedAmount;
 
     /** @type {number} */
-    this.partnerWorkingYearSavingsContributionVariable =
-      partnerWorkingYearSavingsContributionVariable;
+    this.partnerWorkingYearSavingsContributionRate =
+      partnerWorkingYearSavingsContributionRate;
 
     /** @type {number} */
-    this.subjectRetirementYearSavingsContributionFixed =
-      subjectRetirementYearSavingsContributionFixed;
+    this.subjectRetirementYearSavingsContributionFixedAmount =
+      subjectRetirementYearSavingsContributionFixedAmount;
 
     /** @type {number} */
-    this.subjectRetirementYearSavingsContributionVariable =
-      subjectRetirementYearSavingsContributionVariable;
+    this.subjectRetirementYearSavingsContributionRate =
+      subjectRetirementYearSavingsContributionRate;
 
     /** @type {number} */
-    this.partnerRetirementYearSavingsContributionFixed =
-      partnerRetirementYearSavingsContributionFixed;
+    this.partnerRetirementYearSavingsContributionFixedAmount =
+      partnerRetirementYearSavingsContributionFixedAmount;
 
     /** @type {number} */
-    this.partnerRetirementYearSavingsContributionVariable =
-      partnerRetirementYearSavingsContributionVariable;
+    this.partnerRetirementYearSavingsContributionRate =
+      partnerRetirementYearSavingsContributionRate;
 
     /** @type {number} */
     this.partnerCareer401kContributionRate = partnerCareer401kContributionRate;
@@ -731,10 +729,10 @@ class Inputs {
       partnerStartingSalary: this.partnerStartingSalary,
       subjectSalaryGrowthRate: this.subjectSalaryGrowthRate,
       partnerSalaryGrowthRate: this.partnerSalaryGrowthRate,
-      subject401kContributionRate: this.subjectCareer401kContributionRate,
+      subjectCareer401kContributionRate: this.subjectCareer401kContributionRate,
       subjectRothContributionRate: this.subjectRothContributionRate,
-      taxablePct: this.taxablePct,
-      matchCap: this.matchCap,
+      // taxablePct: this.taxablePct,
+      employer401kMatchRate: this.employer401kMatchRate,
       subject401kMatchRate: this.subject401kMatchRate,
 
       subject401kStartingBalance: this.subject401kStartingBalance,
@@ -751,41 +749,41 @@ class Inputs {
 
       subjectSsMonthly: this.ssMonthly,
       ssCola: this.ssCola,
-      subjectPennsionMonthly: this.penMonthly,
+      subjectPensionMonthly: this.penMonthly,
       penCola: this.penCola,
 
       filingStatus: this.filingStatus,
       useRMD: this.useRMD,
 
       flatSsWithholdingRate: this.flatSsWithholdingRate,
-      flatTrad401kWithholdingRate: this.flatTrad401kWithholdingRate,
+      flatCareerTrad401kWithholdingRate: this.flatCareerTrad401kWithholdingRate,
       flatPensionWithholdingRate: this.flatPensionWithholdingRate,
       flatWageWithholdingRate: this.flatWageWithholdingRate,
 
       order: this.order,
 
-      subjectWorkingYearSavingsContributionFixed:
-        this.subjectWorkingYearSavingsContributionFixed,
-      subjectWorkingYearSavingsContributionVariable:
-        this.subjectWorkingYearSavingsContributionVariable,
-      partnerWorkingYearSavingsContributionFixed:
-        this.partnerWorkingYearSavingsContributionFixed,
-      partnerWorkingYearSavingsContributionVariable:
-        this.partnerWorkingYearSavingsContributionVariable,
-      subjectRetirementYearSavingsContributionFixed:
-        this.subjectRetirementYearSavingsContributionFixed,
-      subjectRetirementYearSavingsContributionVariable:
-        this.subjectRetirementYearSavingsContributionVariable,
-      partnerRetirementYearSavingsContributionFixed:
-        this.partnerRetirementYearSavingsContributionFixed,
-      partnerRetirementYearSavingsContributionVariable:
-        this.partnerRetirementYearSavingsContributionVariable,
+      subjectWorkingYearSavingsContributionFixedAmount:
+        this.subjectWorkingYearSavingsContributionFixedAmount,
+      subjectWorkingYearSavingsContributionRate:
+        this.subjectWorkingYearSavingsContributionRate,
+      partnerWorkingYearSavingsContributionFixedAmount:
+        this.partnerWorkingYearSavingsContributionFixedAmount,
+      partnerWorkingYearSavingsContributionRate:
+        this.partnerWorkingYearSavingsContributionRate,
+      subjectRetirementYearSavingsContributionFixedAmount:
+        this.subjectRetirementYearSavingsContributionFixedAmount,
+      subjectRetirementYearSavingsContributionRate:
+        this.subjectRetirementYearSavingsContributionRate,
+      partnerRetirementYearSavingsContributionFixedAmount:
+        this.partnerRetirementYearSavingsContributionFixedAmount,
+      partnerRetirementYearSavingsContributionRate:
+        this.partnerRetirementYearSavingsContributionRate,
 
-      partner401kContributionRate: this.partnerCareer401kContributionRate,
+      partnerCareer401kContributionRate: this.partnerCareer401kContributionRate,
       partnerRothContributionRate: this.partnerRothContributionRate,
 
-      subjectPayrollDeductions: this.subjectCareerPayrollDeductions,
-      partnerPayrollDeductions: this.partnerCareerPayrollDeductions,
+      subjectCareerPayrollDeductions: this.subjectCareerPayrollDeductions,
+      partnerCareerPayrollDeductions: this.partnerCareerPayrollDeductions,
     };
   }
 }

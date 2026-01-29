@@ -29,64 +29,66 @@ function createInputs() {
     subject401kStartAge: 62,
     endSubjectAge: 95,
 
-    // Spending
-    inflationRate: 0.03,
-    spendingToday: 90000,
-    spendingDecline: 0.01,
-
-    // Partner
-    partnerSsMonthly: 1000,
-    partnerSsStartAge: 62,
+    // Cost of living
+    inflationRate: 0.0,
+    spendingToday: 75000,
+    spendingDecline: 0.0,
     partnerSsCola: 0.02,
+    partnerPenCola: 0,
+    ssCola: 0, // 0.025,
+    penCola: 0,
+
+    // Pension
     partnerPenMonthly: 500,
     partnerPenStartAge: 65,
     partner401kStartAge: 62,
-    partnerPenCola: 0,
-    partnerTaxSS: 0.1,
     partnerTaxPension: 0.2,
+
+    // Social Security Benefits
+    subjectSsMonthly: 2500,
+    subjectPensionMonthly: 3500,
+    partnerSsMonthly: 1000,
+    partnerSsStartAge: 62,
+    partnerTaxSS: 0.1,
 
     // Salary / contributions
     subjectStartingSalary: 174500,
     partnerStartingSalary: 0,
-    subjectSalaryGrowthRate: 0.02,
-    partnerSalaryGrowthRate: 0,
-    subject401kContributionRate: 0.05,
-    partner401kContributionRate: 0.05,
-    subjectRothContributionRate: 0.01,
-    partnerRothContributionRate: 0.01,
-    taxablePct: 0.35,
-    matchCap: 0,
+    subjectCareer401kContributionRate: 0, // 0.05,
+    partnerCareer401kContributionRate: 0, //0.05,
+    subjectRothContributionRate: 0, //0.01,
+    partnerRothContributionRate: 0, //0.01,
+
+    employer401kMatchRate: 0,
     subject401kMatchRate: 0,
-    subjectPayrollDeductions: 500,
+
+    subjectCareerPayrollDeductions: 500,
+    partnerCareerPayrollDeductions: 0,
+
     subjectPayPeriods: 26,
-    partnerPayrollDeductions: 0,
     partnerPayPeriods: 26,
 
+    // Growth rates
+    subjectSalaryGrowthRate: 0, //0.02,
+    partnerSalaryGrowthRate: 0,
+    subject401kInterestRate: 0, //0.03,
+    subjectRothInterestRate: 0, //0.02,
+    partner401kInterestRate: 0, //0.03,
+    partnerRothInterestRate: 0, // 0.02,
+    savingsInterestRate: 0, // 0.03,
+
     // Starting balances
-    subject401kStartingBalance: 500000,
+    savingsStartingBalance: 50000,
+    subject401kStartingBalance: 10000,
+    partner401kStartingBalance: 10000,
     subjectRothStartingBalance: 1000,
-    partner401kStartingBalance: 100000,
     partnerRothStartingBalance: 1000,
-    savingsStartingBalance: 500000,
-
-    // Returns
-    subject401kInterestRate: 0.03,
-    subjectRothInterestRate: 0.02,
-    partner401kInterestRate: 0.03,
-    partnerRothInterestRate: 0.02,
-    savingsInterestRate: 0.03,
-
-    // Benefits
-    subjectSsMonthly: 2500,
-    ssCola: 0.025,
-    subjectPennsionMonthly: 3500,
-    penCola: 0,
 
     // Tax settings
     filingStatus: "married",
     useRMD: true,
     flatSsWithholdingRate: 0.07,
-    flatTrad401kWithholdingRate: 0.15,
+    flatCareerTrad401kWithholdingRate: 0.15,
     flatPensionWithholdingRate: 0.2,
     flatWageWithholdingRate: 0.15,
 
@@ -98,14 +100,15 @@ function createInputs() {
     ],
 
     // Savings contributions
-    subjectWorkingYearSavingsContributionFixed: 50,
-    subjectWorkingYearSavingsContributionVariable: 0.05,
-    partnerWorkingYearSavingsContributionFixed: 1,
-    partnerWorkingYearSavingsContributionVariable: 0.02,
-    subjectRetirementYearSavingsContributionFixed: 100,
-    subjectRetirementYearSavingsContributionVariable: 0.01,
-    partnerRetirementYearSavingsContributionFixed: 0,
-    partnerRetirementYearSavingsContributionVariable: 0,
+    subjectWorkingYearSavingsContributionFixedAmount: 50,
+    subjectWorkingYearSavingsContributionRate: 0.05,
+    partnerWorkingYearSavingsContributionFixedAmount: 1,
+    partnerWorkingYearSavingsContributionRate: 0.02,
+
+    subjectRetirementYearSavingsContributionFixedAmount: 0,
+    subjectRetirementYearSavingsContributionRate: 0,
+    partnerRetirementYearSavingsContributionFixedAmount: 0,
+    partnerRetirementYearSavingsContributionRate: 0,
   };
 
   inputArgs.dump("inputs");

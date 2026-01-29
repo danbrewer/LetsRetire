@@ -111,15 +111,13 @@ class FixedIncomeCareerStreams {
 
   get subjectAllowedRothContribution() {
     return (
-      this.#subjectDesiredRothContribution *
-      this._getElectiveScale()
+      this.#subjectDesiredRothContribution * this._getElectiveScale()
     ).asCurrency();
   }
 
   get partnerAllowedRothContribution() {
     return (
-      this.#partnerDesiredRothContribution *
-      this._getElectiveScale()
+      this.#partnerDesiredRothContribution * this._getElectiveScale()
     ).asCurrency();
   }
 
@@ -139,8 +137,7 @@ class FixedIncomeCareerStreams {
 
   get partnerAllowed401kContribution() {
     return (
-      this.#partnerDesired401kContribution *
-      this._getElectiveScale()
+      this.#partnerDesired401kContribution * this._getElectiveScale()
     ).asCurrency();
   }
 
@@ -162,15 +159,13 @@ class FixedIncomeCareerStreams {
 
   get subjectWagesAndCompensationNonTaxable() {
     return (
-      this.subjectAllowed401kContribution +
-      this.subjectPayrollDeductions
+      this.subjectAllowed401kContribution + this.subjectPayrollDeductions
     ).asCurrency();
   }
 
   get subjectAllowed401kContribution() {
     return (
-      this.#subjectDesired401kContribution *
-      this._getElectiveScale()
+      this.#subjectDesired401kContribution * this._getElectiveScale()
     ).asCurrency();
   }
 
@@ -242,7 +237,7 @@ class FixedIncomeCareerStreams {
   }
 
   get flat401kWithholdingRate() {
-    return this.#inputs.flatTrad401kWithholdingRate;
+    return this.#inputs.flatCareerTrad401kWithholdingRate;
   }
 
   get subjectPensionGross() {
@@ -316,26 +311,28 @@ class FixedIncomeCareerStreams {
   }
 
   get subjectWorkingYearSavingsContributionFixed() {
-    const result = this.#inputs.subjectWorkingYearSavingsContributionFixed ?? 0;
+    const result =
+      this.#inputs.subjectWorkingYearSavingsContributionFixedAmount ?? 0;
     return result.asCurrency();
   }
 
   get subjectWorkingYearSavingsContributionVariable() {
     const totalSalary = this.#inputs.subjectCareerSalary;
     return (
-      this.#inputs.subjectWorkingYearSavingsContributionVariable * totalSalary
+      this.#inputs.subjectWorkingYearSavingsContributionRate * totalSalary
     ).asCurrency();
   }
 
   get partnerWorkingYearSavingsContributionFixed() {
-    const result = this.#inputs.partnerWorkingYearSavingsContributionFixed ?? 0;
+    const result =
+      this.#inputs.partnerWorkingYearSavingsContributionFixedAmount ?? 0;
     return result.asCurrency();
   }
 
   get partnerWorkingYearSavingsContributionVariable() {
     const totalSalary = this.#inputs.partnerCareerSalary;
     return (
-      this.#inputs.partnerWorkingYearSavingsContributionVariable * totalSalary
+      this.#inputs.partnerWorkingYearSavingsContributionRate * totalSalary
     ).asCurrency();
   }
 

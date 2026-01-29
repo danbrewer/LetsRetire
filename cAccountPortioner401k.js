@@ -55,21 +55,21 @@ class AccountPortioner401k {
     return Math.max(
       this.#subjectActualizedPortionOf401kAsk,
       this.#trad401kFunds.subject401kRMDActualized
-    );
+    ).asCurrency();
   }
 
   get subjectFinalWithdrawalGross() {
     return Common.convertActual401kToGross401k(
       this.subjectFinalWithdrawalNet,
       this.#fiscalData.flatTrad401kWithholdingRate ?? 0
-    );
+    ).asCurrency();
   }
 
   get partnerFinalWithdrawalNet() {
     return Math.max(
       this.#partnerActualizedPortionOf401kAsk,
       this.#trad401kFunds.partner401kRMDActualized
-    );
+    ).asCurrency();
   }
 
   get partnerFinalWithdrawalGross() {

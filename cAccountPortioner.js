@@ -19,6 +19,14 @@ const ProportionStrategyNames = /** @type {const} */ ({
  */
 
 class ProportionStrategyEnum extends EnumBase {
+  static dumpOrder = [
+    "ask",
+    "totalActualWithdrawals",
+    "savingsWithdrawal",
+    "rothIraWithdrawal",
+    "trad401kWithdrawal",
+  ];
+
   constructor() {
     super("ProportionStrategy", Object.values(ProportionStrategyNames));
   }
@@ -76,6 +84,8 @@ class AccountPortioner {
 
   /** @type {AccountPortioner401k | null} */
   #final401kPortions = null;
+  /** @type {number} */
+  #ask = 0;
 
   get totalActualWithdrawals() {
     return this.#totalActualWithdrawals;
@@ -95,6 +105,12 @@ class AccountPortioner {
     return this.#rothIraWithdrawal.asCurrency();
   }
 
+  get trad401kWithdrawal() {
+    return (
+      this.#final401kPortions?.combinedFinalWithdrawalNet.asCurrency() ?? 0
+    );
+  }
+
   /**
    * @param {AccountingYear} accountYear
    * @param {FiscalData} fiscalData
@@ -111,102 +127,340 @@ class AccountPortioner {
     );
   }
 
+  get ask() {
+    return this.#ask;
+  }
+
   get trad401kAccountPortions() {
     return this.#final401kPortions;
   }
 
   /** @param {number} cashOnHand */
   calculatePortions(cashOnHand) {
+    const MIN_WITHDRAWAL = 200;
+    const MIN_PCT_OF_TOTAL = 0.01;
+
+    // ============================
+    // Helper functions & types
+    // ============================
+
+    /**
+     * @typedef {Object} WithdrawalAccount
+     * @property {string} key
+     * @property {number} available
+     * @property {number} min
+     * @property {(amt:number)=>void} setWithdrawal
+     */
+
+    /**
+     * Determines whether an account balance is immaterial and should be drained.
+     *
+     * @param {number} amount
+     * @param {number} total
+     * @param {number} minAmount
+     * @param {number} minPct
+     * @returns {boolean}
+     */
+    function isImmaterialBalance(amount, total, minAmount, minPct) {
+      if (amount <= 0) return false;
+      if (amount < minAmount) return true;
+
+      const pct = amount / total;
+
+      return total > 0 && pct < minPct;
+    }
+
+    /**
+     * @param {number} ask
+     * @param {WithdrawalAccount[]} accounts
+     */
+    function allocateProportionally(ask, accounts) {
+      const totalAvailable = accounts.reduce((sum, a) => sum + a.available, 0);
+
+      if (totalAvailable <= 0 || ask <= 0) return [];
+
+      return accounts.map((account) => ({
+        key: account.key,
+        account,
+        withdrawal: ((ask * account.available) / totalAvailable).asCurrency(),
+      }));
+    }
+
+    /**
+     * @param {number} ask
+     * @param {WithdrawalAccount[]} accounts
+     */
+    function allocateWithMinimums(ask, accounts) {
+      let remainingAsk = ask.asCurrency();
+      let eligible = [...accounts];
+
+      /** @type {{key:string, account:WithdrawalAccount, withdrawal:number}[]} */
+      const final = [];
+
+      while (eligible.length > 0 && remainingAsk > 0) {
+        const allocations = allocateProportionally(remainingAsk, eligible);
+
+        const tooSmall = allocations.filter(
+          (a) => a.withdrawal > 0 && a.withdrawal < a.account.min
+        );
+
+        if (tooSmall.length === 0) {
+          return final.concat(allocations);
+        }
+
+        for (const a of tooSmall) {
+          a.account.setWithdrawal(0);
+          eligible = eligible.filter((e) => e.key !== a.key);
+        }
+
+        remainingAsk = (
+          ask - final.reduce((s, a) => s + a.withdrawal, 0)
+        ).asCurrency();
+      }
+
+      return final;
+    }
+
+    // ============================
+    // Phase 1: Determine ask
+    // ============================
+
     const annualSpend = this.#fiscalData.spend.asCurrency();
+
     let ask = annualSpend - cashOnHand.asCurrency();
 
-    if (ask <= 0) return;
+    this.#ask = ask;
 
-    // to prevent never reaching zero, if the fund is less than $100 remaining, just take it all
-
-    let availableSavings = this.#availableSavings.asCurrency();
-    if (availableSavings > 0 && availableSavings < 100) {
-      ask -= availableSavings;
-      this.#savingsWithdrawal = availableSavings;
-      availableSavings = 0;
+    if (ask <= 0) {
+      this.#totalActualWithdrawals = 0;
+      return;
     }
 
-    let available401k =
+    // ============================
+    // Generic account definitions
+    // ============================
+
+    const genericAccountDefs = [
+      {
+        key: "savings",
+        getAvailable: () => this.#availableSavings.asCurrency(),
+        setWithdrawal: (/** @type {number} */ amt) =>
+          (this.#savingsWithdrawal = amt),
+        getWithdrawal: () => this.#savingsWithdrawal ?? 0,
+        min: MIN_WITHDRAWAL,
+      },
+      {
+        key: "roth",
+        getAvailable: () => this.#availableRoth.asCurrency(),
+        setWithdrawal: (/** @type {number} */ amt) =>
+          (this.#rothIraWithdrawal = amt),
+        getWithdrawal: () => this.#rothIraWithdrawal ?? 0,
+        min: MIN_WITHDRAWAL,
+      },
+      // brokerage / HSA later
+    ];
+
+    // ============================
+    // Phase 2: Drain immaterial GENERIC balances
+    // ============================
+
+    const totalSpendCapableFunds =
+      genericAccountDefs.reduce((s, a) => s + a.getAvailable(), 0) +
       this.#trad401kAccountPortioner.combined401kTakehomeAvailable.asCurrency();
-    if (available401k > 0 && available401k < 100) {
-      ask -= available401k;
-      this.#final401kPortions = new AccountPortioner401k(
-        this.#trad401kAccountPortioner,
-        available401k.asCurrency(),
-        available401k.asCurrency(),
-        this.#fiscalData
-      );
-      available401k = 0;
-    }
 
-    let availableRoth = this.#availableRoth.asCurrency();
-    if (availableRoth > 0 && availableRoth < 100) {
-      ask -= availableRoth;
-      this.#rothIraWithdrawal = availableRoth;
-      availableRoth = 0;
+    /** @type {WithdrawalAccount[]} */
+    const remainingGenericAccounts = [];
+
+    for (const acct of genericAccountDefs) {
+      const available = acct.getAvailable();
+
+      if (
+        isImmaterialBalance(
+          available,
+          totalSpendCapableFunds,
+          acct.min,
+          MIN_PCT_OF_TOTAL
+        )
+      ) {
+        acct.setWithdrawal(available);
+        ask -= available;
+        console.log(`Draining immaterial account ${acct.key}: $` + available);
+      } else if (available > 0) {
+        remainingGenericAccounts.push({
+          key: acct.key,
+          available,
+          min: acct.min,
+          setWithdrawal: acct.setWithdrawal,
+        });
+      }
     }
 
     ask = Math.max(ask, 0).asCurrency();
 
-    let totalFundsAvailable = availableSavings + available401k + availableRoth;
+    // ============================
+    // Phase 2b: Drain immaterial 401k (special)
+    // ============================
 
-    totalFundsAvailable = Math.max(totalFundsAvailable, 0).asCurrency();
+    let available401k =
+      this.#trad401kAccountPortioner.combined401kTakehomeAvailable.asCurrency();
 
-    if (available401k.asCurrency() > 0 && ask > 0) {
-      this.#final401kPortions = this.#determineFinal401kPortions(
+    if (
+      isImmaterialBalance(
+        available401k,
+        totalSpendCapableFunds,
+        MIN_WITHDRAWAL,
+        MIN_PCT_OF_TOTAL
+      )
+    ) {
+      this.#final401kPortions = new AccountPortioner401k(
         this.#trad401kAccountPortioner,
-        ask,
-        totalFundsAvailable
+        available401k,
+        available401k,
+        this.#fiscalData
       );
+
+      ask -= available401k;
+      available401k = 0;
+    }
+
+    ask = Math.max(ask, 0).asCurrency();
+
+    // ============================
+    // Phase 3: 401k allocation (policy engine)
+    // ============================
+
+    let fundsForWeighting =
+      remainingGenericAccounts.reduce((s, a) => s + a.available, 0) +
+      available401k;
+
+    fundsForWeighting = Math.max(fundsForWeighting, 0).asCurrency();
+
+    if (available401k > 0 && ask > 0) {
+      this.#final401kPortions = this.#determineFinal401kPortions(
+        ask,
+        fundsForWeighting
+      );
+
       ask -= this.#final401kPortions.combinedFinalWithdrawalNet.asCurrency();
     }
 
     ask = Math.max(ask, 0).asCurrency();
 
-    totalFundsAvailable = this.#availableSavings + this.#availableRoth;
-    totalFundsAvailable = Math.max(totalFundsAvailable, 0).asCurrency();
+    // ============================
+    // Phase 4: Proportional N-account allocation
+    // ============================
 
-    let withdrawFromSavings = 0;
-    if (availableSavings > 0 && ask > 0) {
-      const pctThatIsSavings =
-        totalFundsAvailable > 0
-          ? this.#availableSavings / totalFundsAvailable
-          : 0;
-      withdrawFromSavings = (ask * pctThatIsSavings).asCurrency();
-      this.#savingsWithdrawal = withdrawFromSavings;
+    const allocations = allocateWithMinimums(ask, remainingGenericAccounts);
+
+    for (const a of allocations) {
+      a.account.setWithdrawal(a.withdrawal);
     }
 
-    let withdrawFromRoth = 0;
-    if (availableRoth > 0 && ask > 0) {
-      const pctThatIsRoth =
-        totalFundsAvailable > 0 ? this.#availableRoth / totalFundsAvailable : 0;
-      withdrawFromRoth = (ask * pctThatIsRoth).asCurrency();
-      this.#rothIraWithdrawal = withdrawFromRoth;
-    }
+    // ============================
+    // Phase 5: Observe total withdrawals
+    // ============================
 
-    const withdrawFrom401k =
-      this.#final401kPortions?.combinedFinalWithdrawalNet ?? 0;
+    const allWithdrawalSources = [
+      ...genericAccountDefs.map((a) => a.getWithdrawal),
+      () => this.#final401kPortions?.combinedFinalWithdrawalNet ?? 0,
+    ];
 
-    let totalWithdrawals =  
-      withdrawFrom401k + withdrawFromSavings + withdrawFromRoth;
-
-    this.#totalActualWithdrawals = totalWithdrawals.asCurrency();
-
+    this.#totalActualWithdrawals = allWithdrawalSources
+      .reduce((sum, getAmt) => sum + getAmt(), 0)
+      .asCurrency();
   }
 
+  // /** @param {number} cashOnHand */
+  // calculatePortions(cashOnHand) {
+  //   const annualSpend = this.#fiscalData.spend.asCurrency();
+  //   let ask = annualSpend - cashOnHand.asCurrency();
+
+  //   if (ask <= 0) return;
+
+  //   // to prevent never reaching zero, if the fund is less than $100 remaining, just take it all
+
+  //   let availableSavings = this.#availableSavings.asCurrency();
+  //   if (availableSavings > 0 && availableSavings < 100) {
+  //     ask -= availableSavings;
+  //     this.#savingsWithdrawal = availableSavings;
+  //     availableSavings = 0;
+  //   }
+
+  //   let available401k =
+  //     this.#trad401kAccountPortioner.combined401kTakehomeAvailable.asCurrency();
+  //   if (available401k > 0 && available401k < 100) {
+  //     ask -= available401k;
+  //     this.#final401kPortions = new AccountPortioner401k(
+  //       this.#trad401kAccountPortioner,
+  //       available401k.asCurrency(),
+  //       available401k.asCurrency(),
+  //       this.#fiscalData
+  //     );
+  //     available401k = 0;
+  //   }
+
+  //   let availableRoth = this.#availableRoth.asCurrency();
+  //   if (availableRoth > 0 && availableRoth < 100) {
+  //     ask -= availableRoth;
+  //     this.#rothIraWithdrawal = availableRoth;
+  //     availableRoth = 0;
+  //   }
+
+  //   ask = Math.max(ask, 0).asCurrency();
+
+  //   let totalFundsAvailable = availableSavings + available401k + availableRoth;
+
+  //   totalFundsAvailable = Math.max(totalFundsAvailable, 0).asCurrency();
+
+  //   if (available401k.asCurrency() > 0 && ask > 0) {
+  //     this.#final401kPortions = this.#determineFinal401kPortions(
+  //       this.#trad401kAccountPortioner,
+  //       ask,
+  //       totalFundsAvailable
+  //     );
+  //     ask -= this.#final401kPortions.combinedFinalWithdrawalNet.asCurrency();
+  //   }
+
+  //   ask = Math.max(ask, 0).asCurrency();
+
+  //   totalFundsAvailable = this.#availableSavings + this.#availableRoth;
+  //   totalFundsAvailable = Math.max(totalFundsAvailable, 0).asCurrency();
+
+  //   let withdrawFromSavings = 0;
+  //   if (availableSavings > 0 && ask > 0) {
+  //     const pctThatIsSavings =
+  //       totalFundsAvailable > 0
+  //         ? this.#availableSavings / totalFundsAvailable
+  //         : 0;
+  //     withdrawFromSavings = (ask * pctThatIsSavings).asCurrency();
+  //     this.#savingsWithdrawal = withdrawFromSavings;
+  //   }
+
+  //   let withdrawFromRoth = 0;
+  //   if (availableRoth > 0 && ask > 0) {
+  //     const pctThatIsRoth =
+  //       totalFundsAvailable > 0 ? this.#availableRoth / totalFundsAvailable : 0;
+  //     withdrawFromRoth = (ask * pctThatIsRoth).asCurrency();
+  //     this.#rothIraWithdrawal = withdrawFromRoth;
+  //   }
+
+  //   const withdrawFrom401k =
+  //     this.#final401kPortions?.combinedFinalWithdrawalNet ?? 0;
+
+  //   let totalWithdrawals =
+  //     withdrawFrom401k + withdrawFromSavings + withdrawFromRoth;
+
+  //   this.#totalActualWithdrawals = totalWithdrawals.asCurrency();
+
+  // }
+
   /**
-   * @param {Trad401kAvailabilityManager} trad401kFunds
    * @param {number} ask
    * @param {number} totalFundsAvailable
    */
-  #determineFinal401kPortions(trad401kFunds, ask, totalFundsAvailable) {
+  #determineFinal401kPortions(ask, totalFundsAvailable) {
     const result = new AccountPortioner401k(
-      trad401kFunds,
+      this.#trad401kAccountPortioner,
       ask,
       totalFundsAvailable,
       this.#fiscalData

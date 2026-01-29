@@ -30,11 +30,13 @@ class Balances {
   }
 
   get trad401k() {
-    return this.#accountYear.getEndingBalance(ACCOUNT_TYPES.SUBJECT_401K);
+    return this.#accountYear.getEndingBalance(ACCOUNT_TYPES.SUBJECT_401K) +
+      this.#accountYear.getEndingBalance(ACCOUNT_TYPES.PARTNER_401K);
   }
 
   get rothIra() {
-    return this.#accountYear.getEndingBalance(ACCOUNT_TYPES.SUBJECT_ROTH_IRA);
+    return this.#accountYear.getEndingBalance(ACCOUNT_TYPES.SUBJECT_ROTH_IRA) +
+      this.#accountYear.getEndingBalance(ACCOUNT_TYPES.PARTNER_ROTH_IRA);
   }
 
 
@@ -46,15 +48,6 @@ class Balances {
   get allBalances() {
     return this.savings + this.trad401k + this.rothIra;
   }
-
-  // /**
-  //  * Gets the total retirement account balance (401k + Roth, excluding savings).
-  //  *
-  //  * @returns {number} Combined retirement account balance
-  //  */
-  // get retirementAccountBalances() {
-  //   return this.trad401k + this.rothIra;
-  // }
 
   /**
    * Gets the percentage of total portfolio held in each account type.

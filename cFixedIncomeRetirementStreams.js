@@ -237,7 +237,7 @@ class FixedIncomeRetirementStreams {
   }
 
   get flat401kWithholdingRate() {
-    return this.#inputs.flatTrad401kWithholdingRate;
+    return this.#inputs.flatCareerTrad401kWithholdingRate;
   }
 
   get subjectPensionGross() {
@@ -311,26 +311,28 @@ class FixedIncomeRetirementStreams {
   }
 
   get subjectWorkingYearSavingsContributionFixed() {
-    const result = this.#inputs.subjectWorkingYearSavingsContributionFixed ?? 0;
+    const result =
+      this.#inputs.subjectWorkingYearSavingsContributionFixedAmount ?? 0;
     return result.asCurrency();
   }
 
   get subjectWorkingYearSavingsContributionVariable() {
     const totalSalary = this.#inputs.subjectRetirementSalary;
     return (
-      this.#inputs.subjectWorkingYearSavingsContributionVariable * totalSalary
+      this.#inputs.subjectWorkingYearSavingsContributionRate * totalSalary
     ).asCurrency();
   }
 
   get partnerWorkingYearSavingsContributionFixed() {
-    const result = this.#inputs.partnerWorkingYearSavingsContributionFixed ?? 0;
+    const result =
+      this.#inputs.partnerWorkingYearSavingsContributionFixedAmount ?? 0;
     return result.asCurrency();
   }
 
   get partnerWorkingYearSavingsContributionVariable() {
     const totalSalary = this.#inputs.partnerRetirementSalary;
     return (
-      this.#inputs.partnerWorkingYearSavingsContributionVariable * totalSalary
+      this.#inputs.partnerWorkingYearSavingsContributionRate * totalSalary
     ).asCurrency();
   }
 
