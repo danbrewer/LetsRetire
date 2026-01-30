@@ -2559,7 +2559,7 @@ function parseInputParameters() {
     partner401kStartAge: partner401kStartAge,
     partnerPenCola: partnerPenCola,
     partnerTaxSS: partnerTaxSS,
-    partnerTaxPension: partnerTaxPension,
+    partnerPensionWithholdings: partnerTaxPension,
 
     // Employment and contributions
     subjectStartingSalary: subjectStartingSalary,

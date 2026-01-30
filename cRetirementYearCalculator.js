@@ -648,7 +648,6 @@ class RetirementYearCalculator {
     );
 
     retirementYearData.dump("retirementYearData");
-    debugger;
 
     return retirementYearData;
   }

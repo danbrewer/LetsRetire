@@ -23,21 +23,21 @@ function createInputs() {
     // Ages / timeline
     startingYear: 2025,
     initialAgeSubject: 60,
-    initialAgePartner: 60,
-    endSubjectAge: 95,
+    initialAgePartner: 56,
+    endSubjectAge: 104,
 
     // Cost of living
-    inflationRate: 0.0,
-    spendingToday: 10000,
-    spendingDecline: 0.0,
-    partnerSsCola: 0, //0.02,
-    partnerPenCola: 0,
-    ssCola: 0, // 0.025,
-    penCola: 0,
+    spendingToday: 100000,
+    inflationRate: 0.03,
+    ssCola: 0.025,
+    spendingDecline: 0.01,
+    // partnerSsCola: 0, //0.02,
+    // partnerPenCola: 0,
+    // penCola: 0,
 
     // 401k
-    flatCareerTrad401kWithholdingRate: 0, // 0.15,
-    partnerTaxSS: 0, //0.1,
+    flatCareerTrad401kWithholdingRate: 0.15,
+    // partnerTaxSS: 0.1,
     subject401kStartAge: 62,
     partner401kStartAge: 62,
     employer401kMatchRate: 0,
@@ -46,46 +46,46 @@ function createInputs() {
     // Pension
     subjectPensionStartAge: 65,
     partnerPenStartAge: 65,
-    subjectPensionMonthly: 0, //3500,
-    partnerPenMonthly: 0, //500,
-    partnerTaxPension: 0, // 0.2,
+    subjectPensionMonthly: 3500,
+    partnerPenMonthly: 500,
+    partnerPensionWithholdings: 0.2,
 
     // Social Security Benefits
-    flatSsWithholdingRate: 0, // 0.07,
-    subjectSsMonthly: 0, //1000, //2500,
-    partnerSsMonthly: 0, //1000,
+    flatSsWithholdingRate: 0.07,
+    subjectSsMonthly: 2500,
+    partnerSsMonthly: 1000,
     subjectSsStartAge: 62,
     partnerSsStartAge: 62,
 
     // Salary / contributions
-    subjectStartingSalary: 0, // 174500,
+    subjectStartingSalary: 174500,
     partnerStartingSalary: 0,
     subjectCareer401kContributionRate: 0, // 0.05,
     partnerCareer401kContributionRate: 0, //0.05,
     subjectRothContributionRate: 0, //0.01,
     partnerRothContributionRate: 0, //0.01,
 
-    subjectCareerPayrollDeductions: 0, //500,
-    partnerCareerPayrollDeductions: 0,
+    subjectCareerMonthlyPayrollDeductions: 500,
+    partnerCareerMonthlyPayrollDeductions: 0,
 
     subjectPayPeriods: 26,
     partnerPayPeriods: 26,
 
     // Growth rates
-    subjectSalaryGrowthRate: 0, //0.02,
-    partnerSalaryGrowthRate: 0,
-    subject401kInterestRate: 0, //0.03,
-    subjectRothInterestRate: 0, //0.02,
-    partner401kInterestRate: 0, //0.03,
-    partnerRothInterestRate: 0, // 0.02,
-    savingsInterestRate: 0, // 0.03,
+    subjectSalaryGrowthRate: 0.02,
+    partnerSalaryGrowthRate: 0.02,
+    subject401kInterestRate: 0.03,
+    subjectRothInterestRate: 0.02,
+    partner401kInterestRate: 0.03,
+    partnerRothInterestRate: 0.02,
+    savingsInterestRate: 0.03,
 
     // Starting balances
-    savingsStartingBalance: 10000,
-    subject401kStartingBalance: 10000,
-    partner401kStartingBalance: 10000,
-    subjectRothStartingBalance: 10000,
-    partnerRothStartingBalance: 10000,
+    savingsStartingBalance: 500000, //10000,
+    subject401kStartingBalance: 500000, //1250,
+    partner401kStartingBalance: 100000, //1250,
+    subjectRothStartingBalance: 1500,
+    partnerRothStartingBalance: 1500,
 
     // Tax settings
     filingStatus: "married",

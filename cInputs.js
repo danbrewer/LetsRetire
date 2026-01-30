@@ -25,7 +25,7 @@ import { compoundedRate } from "./utils.js";
  * @property {number} [partner401kStartAge]
  * @property {number} [partnerPenCola]
  * @property {number} [partnerTaxSS]
- * @property {number} [partnerTaxPension]
+ * @property {number} [partnerPensionWithholdings]
  *
  * @property {number} [subjectStartingSalary]
  * @property {number} [partnerStartingSalary]
@@ -77,8 +77,8 @@ import { compoundedRate } from "./utils.js";
  * @property {number} [partnerCareer401kContributionRate]
  * @property {number} [partnerRothContributionRate]
  *
- * @property {number} [subjectCareerPayrollDeductions]
- * @property {number} [partnerCareerPayrollDeductions]
+ * @property {number} [subjectCareerMonthlyPayrollDeductions]
+ * @property {number} [partnerCareerMonthlyPayrollDeductions]
  * @property {number} [subjectPayPeriods]
  * @property {number} [partnerPayPeriods]
  */
@@ -122,7 +122,7 @@ class Inputs {
       partner401kStartAge = 0,
       partnerPenCola = 0,
       partnerTaxSS = 0,
-      partnerTaxPension = 0,
+      partnerPensionWithholdings = 0,
 
       // Salary / contributions
       subjectStartingSalary = 0,
@@ -136,8 +136,8 @@ class Inputs {
       // taxablePct = 0,
       employer401kMatchRate = 0,
       subject401kMatchRate = 0,
-      partnerCareerPayrollDeductions = 1,
-      subjectCareerPayrollDeductions = 1,
+      partnerCareerMonthlyPayrollDeductions = 1,
+      subjectCareerMonthlyPayrollDeductions = 1,
       subjectPayPeriods = 26,
       partnerPayPeriods = 26,
 
@@ -156,9 +156,9 @@ class Inputs {
       savingsInterestRate = 0,
 
       // Benefits
-      subjectSsMonthly: ssMonthly = 0,
+      subjectSsMonthly = 0,
       ssCola = 0,
-      subjectPensionMonthly: penMonthly = 0,
+      subjectPensionMonthly = 0,
       penCola = 0,
 
       // Taxes/settings
@@ -253,7 +253,7 @@ class Inputs {
     this.partnerTaxSS = partnerTaxSS;
 
     /** @type {number} */
-    this.partnerTaxPension = partnerTaxPension;
+    this.partnerTaxPension = partnerPensionWithholdings;
 
     // Employment and contributions
     /** @type {number} */
@@ -322,13 +322,13 @@ class Inputs {
 
     // Income sources
     /** @type {number} */
-    this.ssMonthly = ssMonthly;
+    this.ssMonthly = subjectSsMonthly;
 
     /** @type {number} */
     this.ssCola = ssCola;
 
     /** @type {number} */
-    this.penMonthly = penMonthly;
+    this.penMonthly = subjectPensionMonthly;
 
     /** @type {number} */
     this.penCola = penCola;
@@ -375,13 +375,13 @@ class Inputs {
     this.rothUseAge = this.subjectRetireAge;
 
     /** @type {number} */
-    this.subjectCareerPayrollDeductions = subjectCareerPayrollDeductions;
+    this.subjectCareerPayrollDeductions = subjectCareerMonthlyPayrollDeductions;
 
     this.subjectRetirementPayrollDeductions = 0;
     this.partnerRetirementPayrollDeductions = 0;
 
     /** @type {number} */
-    this.partnerCareerPayrollDeductions = partnerCareerPayrollDeductions;
+    this.partnerCareerPayrollDeductions = partnerCareerMonthlyPayrollDeductions;
 
     /** @type {number} */
     this.subjectWorkingYearSavingsContributionFixedAmount =
@@ -723,7 +723,7 @@ class Inputs {
       partner401kStartAge: this.partner401kStartAge,
       partnerPenCola: this.partnerPenCola,
       partnerTaxSS: this.partnerTaxSS,
-      partnerTaxPension: this.partnerTaxPension,
+      partnerPensionWithholdings: this.partnerTaxPension,
 
       subjectStartingSalary: this.subjectStartingSalary,
       partnerStartingSalary: this.partnerStartingSalary,
@@ -782,8 +782,10 @@ class Inputs {
       partnerCareer401kContributionRate: this.partnerCareer401kContributionRate,
       partnerRothContributionRate: this.partnerRothContributionRate,
 
-      subjectCareerPayrollDeductions: this.subjectCareerPayrollDeductions,
-      partnerCareerPayrollDeductions: this.partnerCareerPayrollDeductions,
+      subjectCareerMonthlyPayrollDeductions:
+        this.subjectCareerPayrollDeductions,
+      partnerCareerMonthlyPayrollDeductions:
+        this.partnerCareerPayrollDeductions,
     };
   }
 }
