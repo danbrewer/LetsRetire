@@ -184,66 +184,62 @@ class RetirementYearCalculator {
     // }
   }
 
-  #processSavingsContributions() {
-    const subjectDesiredSavingsContribution = Math.max(
-      this.#fixedIncomeStreams.subjectSavingsContributionVariable,
-      this.#fixedIncomeStreams.subjectSavingsContributionFixed
-    ).asCurrency();
+  // #processSavingsContributions() {
+  //   const subjectDesiredSavingsContribution = Math.max(
+  //     this.#fixedIncomeStreams.subjectSavingsContributionVariable,
+  //     this.#fixedIncomeStreams.subjectSavingsContributionFixed
+  //   ).asCurrency();
 
-    const partnerDesiredSavingsContribution = Math.max(
-      this.#fixedIncomeStreams.partnerSavingsContributionVariable,
-      this.#fixedIncomeStreams.partnerSavingsContributionFixed
-    ).asCurrency();
+  //   const partnerDesiredSavingsContribution = Math.max(
+  //     this.#fixedIncomeStreams.partnerSavingsContributionVariable,
+  //     this.#fixedIncomeStreams.partnerSavingsContributionFixed
+  //   ).asCurrency();
 
-    const desiredTransferAmount =
-      subjectDesiredSavingsContribution + partnerDesiredSavingsContribution;
+  //   const desiredTransferAmount =
+  //     subjectDesiredSavingsContribution + partnerDesiredSavingsContribution;
 
-    if (desiredTransferAmount <= 0) return;
+  //   if (desiredTransferAmount <= 0) return;
 
-    let availableCash = this.#accountYear.getEndingBalance(ACCOUNT_TYPES.CASH);
+  //   let availableCash = this.#accountYear.getEndingBalance(ACCOUNT_TYPES.CASH);
 
-    if (availableCash <= 0) return;
+  //   if (availableCash <= 0) return;
 
-    const actualTransferAmount = Math.min(
-      availableCash,
-      subjectDesiredSavingsContribution
-    );
+  //   const actualTransferAmount = Math.min(
+  //     availableCash,
+  //     subjectDesiredSavingsContribution
+  //   );
 
-    this.#accountYear.processAsPeriodicTransfers(
-      ACCOUNT_TYPES.CASH,
-      ACCOUNT_TYPES.SAVINGS,
-      actualTransferAmount,
-      PERIODIC_FREQUENCY.MONTHLY,
-      TransactionCategory.AutoTransfer,
-      "Combined contrib."
-    );
+  //   this.#accountYear.processAsPeriodicTransfers(
+  //     ACCOUNT_TYPES.CASH,
+  //     ACCOUNT_TYPES.SAVINGS,
+  //     actualTransferAmount,
+  //     PERIODIC_FREQUENCY.MONTHLY,
+  //     TransactionCategory.AutoTransfer,
+  //     "Combined contrib."
+  //   );
 
-    this.#reportingYear.ReportData.retirementAcct_subjectSavingsContributions +=
-      actualTransferAmount;
+  //   this.#reportingYear.ReportData.retirementAcct_subjectSavingsContributions +=
+  //     actualTransferAmount;
 
-    availableCash -= actualTransferAmount;
+  //   availableCash -= actualTransferAmount;
 
-    const actualPartnerTransferAmount = Math.min(
-      availableCash,
-      partnerDesiredSavingsContribution
-    );
+  //   const actualPartnerTransferAmount = Math.min(
+  //     availableCash,
+  //     partnerDesiredSavingsContribution
+  //   );
 
-    this.#accountYear.processAsPeriodicTransfers(
-      ACCOUNT_TYPES.CASH,
-      ACCOUNT_TYPES.SAVINGS,
-      actualPartnerTransferAmount,
-      PERIODIC_FREQUENCY.MONTHLY,
-      TransactionCategory.AutoTransfer,
-      "Combined contrib."
-    );
+  //   this.#accountYear.processAsPeriodicTransfers(
+  //     ACCOUNT_TYPES.CASH,
+  //     ACCOUNT_TYPES.SAVINGS,
+  //     actualPartnerTransferAmount,
+  //     PERIODIC_FREQUENCY.MONTHLY,
+  //     TransactionCategory.AutoTransfer,
+  //     "Combined contrib."
+  //   );
 
-    this.#reportingYear.ReportData.retirementAcct_partnerSavingsContributions +=
-      actualPartnerTransferAmount;
-
-    // this.#accountYear.analyzers[ACCOUNT_TYPES.CASH].dumpAccountActivity("");
-
-    // debugger;
-  }
+  //   this.#reportingYear.ReportData.retirementAcct_partnerSavingsContributions +=
+  //     actualPartnerTransferAmount;
+  // }
 
   #processWagesAndCompensation() {
     // Subject wages and compensation
@@ -418,13 +414,6 @@ class RetirementYearCalculator {
   }
 
   #processIncomeTaxes() {
-    // const actualTaxes = Taxes.CreateFromTaxableIncome(
-    //   this.#fixedIncomeStreams.grossTaxableIncome,
-    //   this.#fixedIncomeStreams.taxableIncome,
-    //   this.#fiscalData,
-    //   this.#demographics
-    // );
-
     this.#ssBreakdown = this.#determineSocialSecurityBreakdown();
 
     const grossIncome =
@@ -491,12 +480,12 @@ class RetirementYearCalculator {
       const savingsBalance = this.#accountYear.getEndingBalance(
         ACCOUNT_TYPES.SAVINGS
       );
-      if (taxesOwed > savingsBalance) {
-        console.warn(
-          "Warning: Taxes due exceed available savings. Partial payment will be made."
-        );
-      }
-      const withdrawalAmount = Math.min(taxesOwed, savingsBalance);
+      // if (taxesOwed > savingsBalance) {
+      //   console.warn(
+      //     "Warning: Taxes due exceed available savings. Partial payment will be made."
+      //   );
+      // }
+      const withdrawalAmount = taxesOwed; // Math.min(taxesOwed, savingsBalance);
       this.#accountYear.processAsPeriodicTransfers(
         ACCOUNT_TYPES.SAVINGS,
         ACCOUNT_TYPES.TAXES,
@@ -514,10 +503,10 @@ class RetirementYearCalculator {
 
     const cash = this.#accountYear.getEndingBalance(ACCOUNT_TYPES.CASH);
 
-    if (cash <= 0) {
-      console.warn("Warning: No cash available to cover spending.");
-      return;
-    }
+    // if (cash <= 0) {
+    //   console.warn("Warning: No cash available to cover spending.");
+    //   return;
+    // }
 
     const actualSpend = Math.min(cash, this.#fiscalData.spend);
 
@@ -556,14 +545,14 @@ class RetirementYearCalculator {
         ACCOUNT_TYPES.SAVINGS
       );
 
-      if (availableSavings <= 0) {
-        console.warn(
-          "Warning: No savings available to cover spending shortfall."
-        );
-        return;
-      }
+      // if (availableSavings <= 0) {
+      //   console.warn(
+      //     "Warning: No savings available to cover spending shortfall."
+      //   );
+      //   return;
+      // }
 
-      const withdrawalAmount = Math.min(-this.surplusSpend, availableSavings);
+      const withdrawalAmount = -this.surplusSpend; // Math.min(-this.surplusSpend, availableSavings);
 
       this.#accountYear.processAsPeriodicTransfers(
         ACCOUNT_TYPES.SAVINGS,

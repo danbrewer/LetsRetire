@@ -20,7 +20,7 @@ class SsBenefitsCalculator {
     }
 
     // Case 2: Provisional income exceeds Tier 1 but not Tier 2
-    if (ssBreakdown.provisionalIncome <= ssBreakdown.tier2Threshold) {
+    else if (ssBreakdown.provisionalIncome <= ssBreakdown.tier2Threshold) {
       excessOverTier1 =
         ssBreakdown.provisionalIncome - ssBreakdown.tier1Threshold;
 

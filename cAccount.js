@@ -467,21 +467,22 @@ class Account {
    * @param {TransferId | null} [transferId]
    */
   #withdrawal(amount, category, route, date, memo, transferId) {
-    if (amount < 0) {
-      throw new Error("Withdrawal amount must be positive.");
-    }
+    // if (amount < 0) {
+    //   throw new Error("Withdrawal amount must be positive.");
+    // }
 
     if (amount === 0) return amount.asCurrency();
 
-    const withdrawalAmount = Math.min(
-      amount,
-      this.#endingBalanceForYear(date.getFullYear())
-    );
-    if (withdrawalAmount < amount) {
-      console.warn(
-        `Requested withdrawal of ${amount} exceeds available balance. Withdrawing only ${withdrawalAmount}.`
-      );
-    }
+    const withdrawalAmount = amount;
+    //  Math.min(
+    //   amount,
+    //   this.#endingBalanceForYear(date.getFullYear())
+    // );
+    // if (withdrawalAmount < amount) {
+    //   console.warn(
+    //     `Requested withdrawal of ${amount} exceeds available balance. Withdrawing only ${withdrawalAmount}.`
+    //   );
+    // }
     this.#transactionManager.addTransaction(
       new Transaction(
         this.#name,
@@ -558,35 +559,49 @@ class Account {
    */
   calculateInterestForYear(intensity, yyyy) {
     let interestEarned = 0;
+    let bal = 0;
     switch (intensity) {
       case INTEREST_CALCULATION_EPOCH.STARTING_BALANCE:
+        bal = this.#startingBalanceForYear(yyyy);
+        if (bal <= 0) break;
         interestEarned = (
-          this.#startingBalanceForYear(yyyy) * this.interestRate
+          bal * this.interestRate
         ).asCurrency();
         break;
       case INTEREST_CALCULATION_EPOCH.IGNORE_DEPOSITS:
+        bal =
+          this.#startingBalanceForYear(yyyy) - this.withdrawalsForYear(yyyy);
+        if (bal <= 0) break;
         interestEarned = (
-          (this.#startingBalanceForYear(yyyy) - this.withdrawalsForYear(yyyy)) *
+          bal *
           this.interestRate
         ).asCurrency();
         break;
       case INTEREST_CALCULATION_EPOCH.IGNORE_WITHDRAWALS:
+        bal =
+          this.#startingBalanceForYear(yyyy) + this.depositsForYear(yyyy);
+        if (bal <= 0) break;
         interestEarned = (
-          (this.#startingBalanceForYear(yyyy) + this.depositsForYear(yyyy)) *
+          bal *
           this.interestRate
         ).asCurrency();
         break;
       case INTEREST_CALCULATION_EPOCH.AVERAGE_BALANCE:
-        interestEarned = (
-          ((this.#endingBalanceForYear(yyyy) +
+        bal =
+          (this.#endingBalanceForYear(yyyy) +
             this.#startingBalanceForYear(yyyy)) /
-            2) *
+          2;
+        if (bal <= 0) break;
+        interestEarned = (
+          bal *
           this.interestRate
         ).asCurrency();
         break;
       case INTEREST_CALCULATION_EPOCH.ENDING_BALANCE:
+        bal = this.#endingBalanceForYear(yyyy);
+        if (bal <= 0) break;
         interestEarned = (
-          this.#endingBalanceForYear(yyyy) * this.interestRate
+          bal * this.interestRate
         ).asCurrency();
         break;
       case INTEREST_CALCULATION_EPOCH.ROLLING_BALANCE:
@@ -621,6 +636,7 @@ class Account {
 
     for (let m = 0; m < 12; m++) {
       bal += monthly[m];
+      if (bal <= 0) continue;
       const i = (bal * (this.interestRate / 12)).asCurrency();
       interest += i;
       bal += i;
@@ -694,17 +710,6 @@ class Account {
     }
     return total.asCurrency();
   }
-  // depositsForYear(yyyy, category, memo) {
-  //   const transactions = this.#transactions.filter(
-  //     (tx) =>
-  //       tx.transactionType === TransactionType.Deposit &&
-  //       tx.date.getFullYear() === yyyy &&
-  //       (category ? tx.category === category : true) &&
-  //       (memo ? tx.memo === memo : true)
-  //   );
-  //   const total = transactions.reduce((sum, tx) => sum + tx.amount, 0);
-  //   return total.asCurrency();
-  // }
 
   /**
    * @param {number} yyyy
@@ -719,16 +724,6 @@ class Account {
     }
     return total.asCurrency();
   }
-  // withdrawalsForYear(yyyy, category) {
-  //   const transactions = this.#transactions.filter(
-  //     (tx) =>
-  //       tx.transactionType === TransactionType.Withdrawal &&
-  //       tx.date.getFullYear() === yyyy &&
-  //       (category ? tx.category === category : true)
-  //   );
-  //   const total = transactions.reduce((sum, tx) => sum + tx.amount, 0);
-  //   return total.asCurrency();
-  // }
 
   /**
    * @param {number} yyyy
@@ -1044,7 +1039,7 @@ class Account {
     memo,
     transferId = null
   ) {
-    if (amount < 0) return;
+    // if (amount < 0) return;
     if (amount <= 12) {
       let month = 0;
       while (amount > 0) {
@@ -1236,20 +1231,6 @@ class Account {
     }
 
     return amount.asCurrency();
-
-    /*
-      for (let quarter = 0; quarter < 3; quarter++) {
-      const month = quarter * 3;
-      this.#withdrawal(quarterlyAmount, category, new Date(yyyy, month, 1));
-    }
-
-    // Adjust final quarter to account for rounding
-    const totalWithdrawn = quarterlyAmount * 3;
-    const finalQuarterAmount = (amount - totalWithdrawn).asCurrency();
-    this.#withdrawal(finalQuarterAmount, category, new Date(yyyy, 9, 1));
-
-    return amount.asCurrency();
-  }*/
   }
 
   /**
