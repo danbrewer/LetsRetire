@@ -154,7 +154,7 @@ function createMockUI(inputs) {
      * @param {number} age
      */
     getTaxableIncomeOverride(age) {
-      console.log(`UI.getTaxableIncomeOverride(age=${age})`);
+      // console.log(`UI.getTaxableIncomeOverride(age=${age})`);
       return 0;
     },
 
@@ -162,7 +162,7 @@ function createMockUI(inputs) {
      * @param {Number} age
      */
     getTaxFreeIncomeOverride(age) {
-      console.log(`UI.getTaxFreeIncomeOverride(age=${age})`);
+      // console.log(`UI.getTaxFreeIncomeOverride(age=${age})`);
       return 0;
     },
   };
