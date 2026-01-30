@@ -30,7 +30,7 @@ function createInputs() {
     spendingToday: 100000,
     inflationRate: 0.03,
     ssCola: 0.025,
-    spendingDecline: 0.01,
+    spendingDecline: 0.015,
     // partnerSsCola: 0, //0.02,
     // partnerPenCola: 0,
     // penCola: 0,

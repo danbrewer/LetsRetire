@@ -46,7 +46,7 @@ class RetirementYearData extends BaseYearData {
     "partnerAge",
     "spend",
     "accountBalances",
-    "takeHome",
+    "cashFlowBreakdown",
   ];
   static dumpIgnore = [
     "taxes",
@@ -65,6 +65,8 @@ class RetirementYearData extends BaseYearData {
     "partner401k",
     "subjectTradRoth",
     "partnerTradRoth",
+    "incomeBreakdown",
+    "withdrawals",
   ];
   /** @type {Demographics} */
   #demographics;
@@ -139,18 +141,7 @@ class RetirementYearData extends BaseYearData {
     return this.#reportData.spend;
   }
 
-  get takeHome() {
-    const total = Object.values(this.takeHomeBreakdown).reduce(
-      (sum, value) => sum + (value || 0),
-      0
-    );
-    return {
-      total: total.asCurrency(),
-      breakdown: this.takeHomeBreakdown,
-    };
-  }
-
-  get takeHomeBreakdown() {
+  get incomeBreakdown() {
     return {
       income_partnerTakehomeWages: this.#reportData.income_partnerTakehomeWages,
       income_subjectTakehomeWages: this.#reportData.income_subjectTakehomeWages,
@@ -162,9 +153,36 @@ class RetirementYearData extends BaseYearData {
       ss_partnerSsTakehome: this.#reportData.ss_partnerSsTakehome,
       income_miscIncomeTakehome: this.#reportData.income_miscIncomeTakehome,
       income_taxFreeIncome: this.#reportData.income_taxFreeIncome,
+    };
+  }
+
+  get withdrawals() {
+    return {
       cashFromSavings: this.cashFromSavings,
       cashFrom401k: this.cashFrom401k,
       cashFromRoth: this.cashFromRoth,
+    };
+  }
+
+  get cashFlowBreakdown() {
+    const incomeTotals = Object.values(this.incomeBreakdown)
+      .reduce((sum, value) => sum + (value || 0), 0)
+      .asCurrency();
+
+    const withdrawalTotals = Object.values(this.withdrawals)
+      .reduce((sum, value) => sum + (value || 0), 0)
+      .asCurrency();
+
+    return {
+      totalCashFlow: (incomeTotals + withdrawalTotals).asCurrency(),
+      income: {
+        total: incomeTotals,
+        breakdown: this.incomeBreakdown,
+      },
+      withdrawals: {
+        total: withdrawalTotals,
+        breakdown: this.withdrawals,
+      },
     };
   }
 
@@ -191,14 +209,10 @@ class RetirementYearData extends BaseYearData {
       total: this.allAccountBalances,
       breakdown: {
         savings: this.savings.endingBalanceForYear,
-        subject401k:
-          this.subject401k.endingBalanceForYear,
-        partner401k:
-          this.partner401k.endingBalanceForYear,
-        subjectRoth:
-          this.subjectTradRoth.endingBalanceForYear,
-        partnerRoth:
-          this.partnerTradRoth.endingBalanceForYear,
+        subject401k: this.subject401k.endingBalanceForYear,
+        partner401k: this.partner401k.endingBalanceForYear,
+        subjectRoth: this.subjectTradRoth.endingBalanceForYear,
+        partnerRoth: this.partnerTradRoth.endingBalanceForYear,
       },
     };
   }
