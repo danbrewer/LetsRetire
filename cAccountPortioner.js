@@ -179,10 +179,15 @@ class AccountPortioner {
 
       if (totalAvailable <= 0 || ask <= 0) return [];
 
+      const finalAsk = Math.min(totalAvailable, ask);
+
       return accounts.map((account) => ({
         key: account.key,
         account,
-        withdrawal: ((ask * account.available) / totalAvailable).asCurrency(),
+        withdrawal: (
+          (finalAsk * account.available) /
+          totalAvailable
+        ).asCurrency(),
       }));
     }
 

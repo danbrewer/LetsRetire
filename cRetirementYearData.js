@@ -137,6 +137,10 @@ class RetirementYearData extends BaseYearData {
     return this.#fiscalData.taxYear;
   }
 
+  get ask(){
+    return this.#reportData.ask;
+  }
+
   get spend() {
     return this.#reportData.spend;
   }

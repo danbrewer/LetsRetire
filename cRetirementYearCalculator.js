@@ -503,16 +503,18 @@ class RetirementYearCalculator {
 
     const cash = this.#accountYear.getEndingBalance(ACCOUNT_TYPES.CASH);
 
-    // if (cash <= 0) {
-    //   console.warn("Warning: No cash available to cover spending.");
-    //   return;
-    // }
+    const spend = this.#fiscalData.spend.asCurrency();
 
-    const actualSpend = Math.min(cash, this.#fiscalData.spend);
+    const actualSpend = Math.min(cash, spend);
 
-    this.#reportingYear.ReportData.ask = this.#fiscalData.spend.asCurrency();
+    this.#reportingYear.ReportData.ask = spend;
     this.#reportingYear.ReportData.spend = actualSpend.asCurrency();
     this.#reportingYear.ReportData.takeHome = cash.asCurrency();
+
+    if (cash <= 0) {
+      console.warn("Warning: No cash available to cover spending.");
+      return;
+    }
 
     this.#accountYear.processAsPeriodicWithdrawals(
       ACCOUNT_TYPES.CASH,
@@ -522,7 +524,7 @@ class RetirementYearCalculator {
       PERIODIC_FREQUENCY.MONTHLY
     );
 
-    this.surplusSpend = (cash - this.#fiscalData.spend).asCurrency();
+    this.surplusSpend = (cash - spend).asCurrency();
 
     if (this.surplusSpend == 0) return;
 
@@ -545,12 +547,12 @@ class RetirementYearCalculator {
         ACCOUNT_TYPES.SAVINGS
       );
 
-      // if (availableSavings <= 0) {
-      //   console.warn(
-      //     "Warning: No savings available to cover spending shortfall."
-      //   );
-      //   return;
-      // }
+      if (availableSavings <= 0) {
+        console.warn(
+          "Warning: No savings available to cover spending shortfall."
+        );
+        return;
+      }
 
       const withdrawalAmount = -this.surplusSpend; // Math.min(-this.surplusSpend, availableSavings);
 
@@ -647,7 +649,19 @@ class RetirementYearCalculator {
       this.#reportingYear.ReportData
     );
 
-    retirementYearData.dump("retirementYearData");
+    const temp = {
+      subjectAge: retirementYearData.subjectAge,
+      year: retirementYearData.fiscalYear,
+      ask: retirementYearData.ask,
+      spend: retirementYearData.spend,
+      balances: retirementYearData.accountBalances.total,
+      income: retirementYearData.cashFlowBreakdown.income.total,
+      withdrawals: retirementYearData.cashFlowBreakdown.withdrawals.total,
+    };
+
+    temp.dump();
+
+    // retirementYearData.dump("retirementYearData");
 
     return retirementYearData;
   }

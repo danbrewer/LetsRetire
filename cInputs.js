@@ -1,7 +1,14 @@
 import { ACCOUNT_TYPES } from "./cAccount.js";
 import { compoundedRate } from "./utils.js";
 
+
+
 /**
+ * @typedef {Object} RetirementYearExtraSpending
+ * @property {number} year - Year number relative to retirement (1 = first year of retirement)
+ * @property {number} amount - Extra spending amount for that year
+ * 
+ * 
  * @typedef {Object} InputsOptions
  * @property {number} [startingYear]
  * @property {number} [initialAgeSubject]
@@ -11,6 +18,7 @@ import { compoundedRate } from "./utils.js";
  * @property {number} [subjectPensionStartAge]
  * @property {number} [subject401kStartAge]
  * @property {number} [endSubjectAge]
+ * @property {RetirementYearExtraSpending[]} [retirementYearExtraSpending]
  *
  * @property {number} [inflationRate]
  * @property {number} [spendingToday]
@@ -106,6 +114,7 @@ class Inputs {
       subjectPensionStartAge = 0,
       subject401kStartAge = 0,
       endSubjectAge = 0,
+      retirementYearExtraSpending = [],
 
       // Inflation + spending
       inflationRate = 0,
@@ -214,6 +223,9 @@ class Inputs {
 
     /** @type {number} */
     this.endSubjectAge = endSubjectAge;
+
+    /** @type {RetirementYearExtraSpending[]} */
+    this.retirementYearExtraSpending = options.retirementYearExtraSpending || [];
 
     /** @type {number} */
     this.inflationRate = inflationRate;
@@ -597,6 +609,7 @@ class Inputs {
         -this.spendingDecline,
         this.#retirementYearIndex
       );
+      result += this.retirementYearExtraSpend;
     }
 
     return result;
@@ -686,6 +699,13 @@ class Inputs {
     return this.#taxFreeIncomeAdjustment;
   }
 
+  get retirementYearExtraSpend() {
+    const ryes = this.retirementYearExtraSpending.find(
+      (rye) => rye.year === this.#retirementYearIndex + 1
+    );
+    return ryes ? ryes.amount : 0;
+  }
+
   /**
    * Clone using the options-object pattern.
    * This avoids the "giant positional argument list" problem forever.
@@ -709,6 +729,7 @@ class Inputs {
       subjectPensionStartAge: this.subjectPensionStartAge,
       subject401kStartAge: this.subject401kStartAge,
       endSubjectAge: this.endSubjectAge,
+      retirementYearExtraSpending: this.retirementYearExtraSpending,
 
       inflationRate: this.inflationRate,
       spendingToday: this.spendingToday,
@@ -786,6 +807,8 @@ class Inputs {
         this.subjectCareerPayrollDeductions,
       partnerCareerMonthlyPayrollDeductions:
         this.partnerCareerPayrollDeductions,
+      subjectPayPeriods: this.subjectCareerPayPeriods,
+      partnerPayPeriods: this.partnerCareerPayPeriods,
     };
   }
 }
