@@ -666,59 +666,8 @@ class RetirementYearCalculator {
     return retirementYearData;
   }
   determineRetirementAccountWithdrawalPortions() {
-    // this.#accountYear.analyzers[ACCOUNT_TYPES.CASH].dumpAccountActivity(
-    //   "Before Portioner Calculation"
-    // );
     this.#accountPortioner?.calculatePortions(this.#cashAccountBalance);
   }
-
-  // #processSavingsContributions() {
-  //   const subjectDesiredSavingsContribution = Math.max(
-  //     this.#fixedIncomeStreams
-  //       .subjectRetirementYearSavingsContributionVariable *
-  //       this.#fixedIncomeStreams.totalActualFixedIncome,
-  //     this.#fixedIncomeStreams.subjectRetirementYearSavingsContributionFixed
-  //   ).asCurrency();
-
-  //   const partnerDesiredSavingsContribution = Math.max(
-  //     this.#fixedIncomeStreams
-  //       .partnerRetirementYearSavingsContributionVariable *
-  //       this.#fixedIncomeStreams.totalActualFixedIncome,
-  //     this.#fixedIncomeStreams.partnerRetirementYearSavingsContributionFixed
-  //   ).asCurrency();
-
-  //   if (this.#cashRemaining <= 0) return;
-
-  //   const subjectActualSavingsContribution = Math.min(
-  //     this.#cashRemaining,
-  //     subjectDesiredSavingsContribution
-  //   );
-
-  //   this.#accountYear.processAsPeriodicTransfers(
-  //     ACCOUNT_TYPES.CASH,
-  //     ACCOUNT_TYPES.SAVINGS,
-  //     subjectActualSavingsContribution,
-  //     PERIODIC_FREQUENCY.MONTHLY,
-  //     TransactionCategory.AutoTransfer,
-  //     "Subject contrib."
-  //   );
-
-  //   if (this.#cashRemaining <= 0) return;
-
-  //   const partnerActualSavingsContribution = Math.min(
-  //     this.#cashRemaining,
-  //     partnerDesiredSavingsContribution
-  //   );
-
-  //   this.#accountYear.processAsPeriodicTransfers(
-  //     ACCOUNT_TYPES.CASH,
-  //     ACCOUNT_TYPES.SAVINGS,
-  //     partnerActualSavingsContribution,
-  //     PERIODIC_FREQUENCY.MONTHLY,
-  //     TransactionCategory.AutoTransfer,
-  //     "Partner contrib."
-  //   );
-  // }
 
   get #cashAccountBalance() {
     return this.#accountYear.getEndingBalance(ACCOUNT_TYPES.CASH);
