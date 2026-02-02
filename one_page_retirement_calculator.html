@@ -106,7 +106,39 @@
     }
     .hint { font-size: 12px; color: var(--muted); }
 
-    .actions { display:flex; gap:10px; padding: 14px; border-top: 1px solid var(--border); background: #0c1323; justify-content:flex-end; border-radius: 0 0 16px 16px; }
+   .actions {
+      display: flex;
+      flex-wrap: wrap;        /* 🔑 allow wrapping */
+      gap: 10px;
+      padding: 14px;
+      border-top: 1px solid var(--border);
+      background: #0c1323;
+      justify-content: flex-end;
+      border-radius: 0 0 16px 16px;
+    }
+
+    .actions button {
+      flex: 1 1 160px;        /* 🔑 minimum width before wrap */
+    }
+
+
+    /* @media (max-width: 520px) {
+      .card:first-of-type .actions {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .card:first-of-type .actions button {
+        width: 100%;
+      }
+    } */
+
+    @media (max-width: 640px) {
+      .card:first-of-type .actions {
+        flex-direction: column;
+      }
+    }
+
     button {
       appearance: none; border: 1px solid var(--border); background: #0f1930; color: var(--text);
       padding: 10px 14px; border-radius: 10px; font-weight: 600; cursor: pointer; transition: .2s;
