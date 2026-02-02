@@ -26,6 +26,10 @@
       margin: 0;
       color: var(--text);
       background: radial-gradient(1200px 900px at 15% -10%, #1a2440, #0b1220 50%);
+      height: 100vh;
+      overflow: hidden;
+      display: grid;
+      grid-template-rows: auto 1fr;  /* header | main */
     }
     header {
       padding: 20px clamp(16px, 3vw, 40px);
@@ -40,15 +44,69 @@
     }
     .title { font-weight: 700; letter-spacing:.2px; }
     .title small{ color: var(--muted); font-weight: 500; }
+
     .wrap {
-      display: grid;
-      /* grid-template-columns: 360px 6px 1fr; /* inputs | splitter | results */
-      grid-template-columns: var(--inputs-width) 6px 1fr;
-      gap: 0;
-      padding: clamp(16px, 3vw, 40px);
-      align-items: start;
-      transition: grid-template-columns 180ms ease;
+      /* height: calc(100vh - 88px); header height */
+  min-height: 0;          /* 🔑 allow children to shrink */
+  overflow: hidden;
+
+  display: grid;
+  grid-template-columns: var(--inputs-width) 6px 1fr;
     }
+
+
+.wrap > .card:first-of-type {
+  display: grid;
+  grid-template-rows: 1fr auto; /* panel | actions */
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.wrap > .card:first-of-type .panel h3 {
+  padding: 18px 18px 8px;
+}
+
+
+.wrap > .card:first-of-type .panel {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);  /* h3 | sections */
+  min-height: 0;                            /* 🔑 allow shrink */
+  overflow: hidden;
+
+  /* keep your padding here */
+  padding: 0;
+  padding-bottom: 0; /* so actions border touches nicely */
+}
+
+.wrap > .card:first-of-type .sections {
+  min-height: 0;
+  overflow-y: auto;
+  padding-bottom: 18px;
+  padding: 0 18px 18px;
+}
+
+.wrap > .card:first-of-type .actions {
+  /* actions takes exactly what it needs */
+  align-self: end;
+}
+
+
+/* .card:first-of-type .panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.card:first-of-type .sections {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.card:first-of-type .actions {
+  flex-shrink: 0;
+} */
 
     .wrap.inputs-hidden {
       grid-template-columns: 1fr;
@@ -68,14 +126,14 @@
       border-radius: 16px;
       box-shadow: 0 10px 30px rgba(0,0,0,.2);
     }
-    .panel { padding: 18px; }
+    /* .panel { padding: 18px; } */
     .panel h3 { margin: 0 0 8px; font-size: 14px; color: var(--muted); font-weight: 600; letter-spacing:.4px; text-transform: uppercase; }
 
-    /* Make inputs section independently scrollable */
+    /* Make inputs section independently scrollable
     .card:first-of-type .sections {
       max-height: 100vh;
       overflow-y: auto;
-    }
+    } */
 
     .sections { display: grid; gap: 12px; }
     details { border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
@@ -713,7 +771,7 @@
       border-left: 1px solid var(--border);
       border-right: 1px solid var(--border);
       height: 100%;
-      min-height: 100vh;
+      min-height: 0;
       position: relative;
     }
 
