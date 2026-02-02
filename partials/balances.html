@@ -1,0 +1,85 @@
+<details>
+    <summary>
+        <span>💰 Balances & Return Rates</span>
+        <span class="chev">▶</span>
+    </summary>
+    <div class="content">
+        <div class="grid-3">
+            <div>
+                <label for="balPre">Pre‑tax (401k/Trad IRA) balance
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1em" height="1em" fill="white"
+                        class="help-icon" onclick="showHelpToast(event, 'balPre')" style="vertical-align: middle;">
+                        <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none" />
+                        <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2"
+                            fill="none" stroke-linecap="round" />
+                        <circle cx="12" cy="17" r="1" fill="white" />
+                    </svg>
+                </label>
+                <input id="balPre" type="number" step="1000" value="400000" />
+            </div>
+            <div>
+                <label for="balRoth">Roth balance (tax-free)
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1em" height="1em"
+                        fill="white" class="help-icon" onclick="showHelpToast(event, 'balRoth')"
+                        style="vertical-align: middle;">
+                        <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none" />
+                        <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2"
+                            fill="none" stroke-linecap="round" />
+                        <circle cx="12" cy="17" r="1" fill="white" />
+                    </svg>
+                </label>
+                <input id="balRoth" type="number" step="1000" value="100000" />
+            </div>
+            <div>
+                <label for="balSavings">Savings balance (taxable interest)
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1em" height="1em" fill="white"
+                        class="help-icon" onclick="showHelpToast(event, 'balSavings')" style="vertical-align: middle;">
+                        <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none" />
+                        <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2"
+                            fill="none" stroke-linecap="round" />
+                        <circle cx="12" cy="17" r="1" fill="white" />
+                    </svg>
+                </label>
+                <input id="balSavings" type="number" step="1000" value="80000" />
+            </div>
+        </div>
+        <div class="grid-3">
+            <div>
+                <label for="retPre">Pre‑tax return (%/yr)
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1em" height="1em" fill="white"
+                        class="help-icon" onclick="showHelpToast(event, 'retPre')" style="vertical-align: middle;">
+                        <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none" />
+                        <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2"
+                            fill="none" stroke-linecap="round" />
+                        <circle cx="12" cy="17" r="1" fill="white" />
+                    </svg>
+                </label>
+                <input id="retPre" type="number" step="0.1" value="6.0" />
+            </div>
+            <div>
+                <label for="retRoth">Roth return (%/yr)
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1em" height="1em" fill="white"
+                        class="help-icon" onclick="showHelpToast(event, 'retRoth')" style="vertical-align: middle;">
+                        <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none" />
+                        <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2"
+                            fill="none" stroke-linecap="round" />
+                        <circle cx="12" cy="17" r="1" fill="white" />
+                    </svg>
+                </label>
+                <input id="retRoth" type="number" step="0.1" value="6.0" />
+            </div>
+            <div>
+                <label for="retTax">Savings return (APY)
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1em" height="1em" fill="white"
+                        class="help-icon" onclick="showHelpToast(event, 'retTax')" style="vertical-align: middle;">
+                        <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none" />
+                        <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2"
+                            fill="none" stroke-linecap="round" />
+                        <circle cx="12" cy="17" r="1" fill="white" />
+                    </svg>
+                </label>
+                <input id="retTax" type="number" step="0.1" value="5.5" />
+            </div>
+        </div>
+    </div>
+</details>

@@ -687,548 +687,20 @@
     <section class="card">
       <div class="panel">
         <h3>Inputs</h3>
-        <div class="sections">
-          <!-- Personal -->
-          <details>
-            <summary>
-              <span>👤 Personal & Timeline</span>
-              <span class="chev">▶</span>
-            </summary>
-            <div class="content grid">
-              <div>
-                <label for="currentAge">Current age 
-                  <span class="help-icon-placeholder" data-field="currentAge"></span>
-                </label>
-                <input id="currentAge" type="number" min="18" max="80" step="1" value="45" />
-              </div>
-              <div>
-                <label for="retireAge">Retirement age
-                  <span class="help-icon-placeholder" data-field="retireAge"></span>
-                </label>
-                <input id="retireAge" type="number" min="40" max="80" step="1" value="67" />
-              </div>
-              <div>
-                <label for="endAge">Plan to age
-                  <span class="help-icon-placeholder" data-field="endAge"></span>
-                </label>
-                <input id="endAge" type="number" min="70" max="110" step="1" value="95" />
-              </div>
-              <div>
-                <label for="inflation">Inflation (%)
-                  <span class="help-icon-placeholder" data-field="inflation"></span>
-                </label>
-                <input id="inflation" type="number" step="0.1" value="2.5" min="0" />
-              </div>
-              <div>
-                <label for="spendingToday">Retirement spending (today's $ / yr)
-                  <span class="help-icon-placeholder" data-field="spendingToday"></span>
-                </label>
-                <input id="spendingToday" type="number" step="1000" value="80000" />
-                <div class="hint">We'll inflate this to retirement, then apply COLA annually.</div>
-              </div>
-              <div>
-                <label for="spendingDecline">Annual spending decline in retirement (%)
-                  <span class="help-icon-placeholder" data-field="spendingDecline"></span>
-                </label>
-                <input id="spendingDecline" type="number" step="0.1" value="0" />
-                <div class="hint">Spending reduction each year (e.g., 2% = spending drops to 98%, then 96%, etc.)</div>
-              </div>
-            </div>
-          </details>
-
-          <!-- Spouse Information -->
-          <details>
-            <summary>
-              <span>👥 Spouse Information</span>
-              <span class="chev">▶</span>
-            </summary>
-            <div class="content">
-              <div class="grid-2">
-                <div>
-                  <label for="spouseAge">Current age
-                    <span class="help-icon-placeholder" data-field="spouseAge"></span>
-                  </label>
-                  <input id="spouseAge" type="number" min="18" max="80" step="1" value="0" />
-                  <div class="hint">Set to 0 if no spouse</div>
-                </div>
-                <div>
-                  <label for="spouseRetireAge">Retirement age
-                    <span class="help-icon-placeholder" data-field="spouseRetireAge"></span>
-                  </label>
-                  <input id="spouseRetireAge" type="number" min="40" max="80" step="1" value="67" />
-                </div>
-              </div>
-              <div class="grid-1">
-                
-                <div>
-                  <label for="spouseSsStartAge">Social Sec start age</label>
-                  <input id="spouseSsStartAge" type="number" step="1" value="67" />
-                </div>
-              </div>
-              <div class="grid-2">
-                <div>
-                  <label for="spouseSsMonthly">$/Month (1st yr benefits)</label>
-                  <input id="spouseSsMonthly" type="number" step="50" value="0" />
-                </div>
-                
-                <div>
-                  <label for="spouseSsCola">Social Sec COLA (%/yr)</label>
-                  <input id="spouseSsCola" type="number" step="0.1" value="2.0" />
-                </div>
-              </div>
-              <div class=""grid-1">
-                <div>
-                  <label for="spousePenStartAge">Pension start age</label>
-                  <input id="spousePenStartAge" type="number" step="1" value="65" />
-                </div>
-              </div>
-              <div class="grid-2">
-                <div>
-                  <label for="spousePenMonthly">Pension disbursement ($/mo, first year)</label>
-                  <input id="spousePenMonthly" type="number" step="50" value="0" />
-                </div>
-                <div>
-                  <label for="spousePenCola">Spouse Pension COLA (%/yr)</label>
-                  <input id="spousePenCola" type="number" step="0.1" value="0" />
-                </div>
-              </div>
-              <div class="grid-2">
-                <div>
-                  <label for="spouseTaxSS">Effective tax on Spouse Social Security (%)</label>
-                  <input id="spouseTaxSS" type="number" step="0.5" value="10" />
-                </div>
-                <div>
-                  <label for="spouseTaxPension">Effective tax on Spouse Pension (%)</label>
-                  <input id="spouseTaxPension" type="number" step="0.5" value="20" />
-                </div>
-              </div>
-            </div>
-          </details>
-
-          <!-- Work & Contributions -->
-          <details>
-            <summary>
-              <span>💼 Work & Contributions</span>
-              <span class="chev">▶</span>
-            </summary>
-            <div class="content">
-              <div class="grid">
-                <div>
-                  <label for="salary">Current salary ($/yr)
-                    <span class="help-icon-placeholder" data-field="salary"></span>
-                  </label>
-                  <input id="salary" type="number" step="1000" value="150000" />
-                </div>
-                <div>
-                  <label for="salaryGrowth">Salary growth (%)
-                    <span class="help-icon-placeholder" data-field="salaryGrowth"></span>
-                  </label>
-                  <input id="salaryGrowth" type="number" step="0.1" value="3.0" />
-                </div>
-              </div>
-              <div>
-                <label for="pretaxPct">Pre‑tax 401k/IRA contribution (% of salary)
-                  <span class="help-icon-placeholder" data-field="pretaxPct"></span>
-                </label>
-                <input id="pretaxPct" type="number" step="0.1" value="10" />
-              </div>
-              <div>
-                <label for="rothPct">Roth contribution (% of salary)
-                  <span class="help-icon-placeholder" data-field="rothPct"></span>
-                </label>
-                <input id="rothPct" type="number" step="0.1" value="5" />
-              </div>
-              <div>
-                <label for="taxablePct">Savings rate (% of salary)
-                  <span class="help-icon-placeholder" data-field="taxablePct"></span>
-                </label>
-                <input id="taxablePct" type="number" step="0.1" value="2" />
-              </div>
-              <div>
-                <label for="matchCap">Employer 401k match up to (% of salary)</label>
-                <input id="matchCap" type="number" step="0.1" value="4" />
-              </div>
-              <div>
-                <label for="matchRate">Employer 401k match rate (%)</label>
-                <input id="matchRate" type="number" step="1" value="50" />
-              </div>
-            </div>
-          </details>
-
-          <!-- Balances & Returns -->
-          <details>
-            <summary>
-              <span>💰 Balances & Returns</span>
-              <span class="chev">▶</span>
-            </summary>
-            <div class="content">
-              <div class="grid-1">
-                <div>
-                  <label for="balPre">Pre‑tax (401k/Trad IRA) balance
-                    <svg xmlns="http://www.w3.org/2000/svg" 
-                         viewBox="0 0 24 24" 
-                         width="1em" height="1em" 
-                         fill="white" 
-                         class="help-icon"
-                         onclick="showHelpToast(event, 'balPre')"
-                         style="vertical-align: middle;">
-                      <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none"/>
-                      <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
-                      <circle cx="12" cy="17" r="1" fill="white"/>
-                    </svg>
-                  </label>
-                  <input id="balPre" type="number" step="1000" value="400000" />
-                </div>
-                <div class="grid-1">
-                <div>
-                  <label for="balRoth">Roth balance (tax-free)
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1em" height="1em" fill="white" class="help-icon"
-                      onclick="showHelpToast(event, 'balRoth')" style="vertical-align: middle;">
-                      <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none" />
-                      <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2" fill="none"
-                        stroke-linecap="round" />
-                      <circle cx="12" cy="17" r="1" fill="white" />
-                    </svg>
-                  </label>
-                  <input id="balRoth" type="number" step="1000" value="100000" />
-                </div>
-
-                </div>
-                <div class="grid-1">
-                  <label for="balSavings">Savings balance (taxable interest/dividends)
-                    <svg xmlns="http://www.w3.org/2000/svg" 
-                         viewBox="0 0 24 24" 
-                         width="1em" height="1em" 
-                         fill="white" 
-                         class="help-icon"
-                         onclick="showHelpToast(event, 'balSavings')"
-                         style="vertical-align: middle;">
-                      <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none"/>
-                      <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
-                      <circle cx="12" cy="17" r="1" fill="white"/>
-                    </svg>
-                  </label>
-                  <input id="balSavings" type="number" step="1000" value="80000" />
-                </div>
-              </div>
-              <div class="grid-3">
-                <div>
-                  <label for="retPre">Pre‑tax return (%/yr)
-                    <svg xmlns="http://www.w3.org/2000/svg" 
-                         viewBox="0 0 24 24" 
-                         width="1em" height="1em" 
-                         fill="white" 
-                         class="help-icon"
-                         onclick="showHelpToast(event, 'retPre')"
-                         style="vertical-align: middle;">
-                      <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none"/>
-                      <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
-                      <circle cx="12" cy="17" r="1" fill="white"/>
-                    </svg>
-                  </label>
-                  <input id="retPre" type="number" step="0.1" value="6.0" />
-                </div>
-                <div>
-                  <label for="retRoth">Roth return (%/yr)
-                    <svg xmlns="http://www.w3.org/2000/svg" 
-                         viewBox="0 0 24 24" 
-                         width="1em" height="1em" 
-                         fill="white" 
-                         class="help-icon"
-                         onclick="showHelpToast(event, 'retRoth')"
-                         style="vertical-align: middle;">
-                      <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none"/>
-                      <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
-                      <circle cx="12" cy="17" r="1" fill="white"/>
-                    </svg>
-                  </label>
-                  <input id="retRoth" type="number" step="0.1" value="6.0" />
-                </div>
-                <div>
-                  <label for="retTax">Savings return (APY)
-                    <svg xmlns="http://www.w3.org/2000/svg" 
-                         viewBox="0 0 24 24" 
-                         width="1em" height="1em" 
-                         fill="white" 
-                         class="help-icon"
-                         onclick="showHelpToast(event, 'retTax')"
-                         style="vertical-align: middle;">
-                      <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none"/>
-                      <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
-                      <circle cx="12" cy="17" r="1" fill="white"/>
-                    </svg>
-                  </label>
-                  <input id="retTax" type="number" step="0.1" value="5.5" />
-                </div>
-              </div>
-            </div>
-          </details>
-
-          <!-- Income Sources -->
-          <details>
-            <summary>
-              <span>🏛️ Social Security & Pension</span>
-              <span class="chev">▶</span>
-            </summary>
-            <div class="content">
-              <div class="grid-2">
-                <div>
-                  <label for="ssMonthly">Social Security ($/mo, first year)
-                    <svg xmlns="http://www.w3.org/2000/svg" 
-                         viewBox="0 0 24 24" 
-                         width="1em" height="1em" 
-                         fill="white" 
-                         class="help-icon"
-                         onclick="showHelpToast(event, 'ssMonthly')"
-                         style="vertical-align: middle;">
-                      <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none"/>
-                      <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
-                      <circle cx="12" cy="17" r="1" fill="white"/>
-                    </svg>
-                  </label>
-                  <input id="ssMonthly" type="number" step="50" value="2800" />
-                </div>
-                <div>
-                  <label for="ssStart">SS start age
-                    <svg xmlns="http://www.w3.org/2000/svg" 
-                         viewBox="0 0 24 24" 
-                         width="1em" height="1em" 
-                         fill="white" 
-                         class="help-icon"
-                         onclick="showHelpToast(event, 'ssStart')"
-                         style="vertical-align: middle;">
-                      <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none"/>
-                      <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
-                      <circle cx="12" cy="17" r="1" fill="white"/>
-                    </svg>
-                  </label>
-                  <input id="ssStart" type="number" step="1" value="67" />
-                </div>
-                <div>
-                  <label for="ssCola">SS COLA (%/yr)
-                    <svg xmlns="http://www.w3.org/2000/svg" 
-                         viewBox="0 0 24 24" 
-                         width="1em" height="1em" 
-                         fill="white" 
-                         class="help-icon"
-                         onclick="showHelpToast(event, 'ssCola')"
-                         style="vertical-align: middle;">
-                      <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none"/>
-                      <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
-                      <circle cx="12" cy="17" r="1" fill="white"/>
-                    </svg>
-                  </label>
-                  <input id="ssCola" type="number" step="0.1" value="2.0" />
-                </div>
-              </div>
-              <div class="grid-3">
-                <div>
-                  <label for="penMonthly">Pension ($/mo, first year)
-                    <svg xmlns="http://www.w3.org/2000/svg" 
-                         viewBox="0 0 24 24" 
-                         width="1em" height="1em" 
-                         fill="white" 
-                         class="help-icon"
-                         onclick="showHelpToast(event, 'penMonthly')"
-                         style="vertical-align: middle;">
-                      <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none"/>
-                      <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
-                      <circle cx="12" cy="17" r="1" fill="white"/>
-                    </svg>
-                  </label>
-                  <input id="penMonthly" type="number" step="50" value="0" />
-                </div>
-                <div>
-                  <label for="penStart">Pension start age
-                    <svg xmlns="http://www.w3.org/2000/svg" 
-                         viewBox="0 0 24 24" 
-                         width="1em" height="1em" 
-                         fill="white" 
-                         class="help-icon"
-                         onclick="showHelpToast(event, 'penStart')"
-                         style="vertical-align: middle;">
-                      <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none"/>
-                      <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
-                      <circle cx="12" cy="17" r="1" fill="white"/>
-                    </svg>
-                  </label>
-                  <input id="penStart" type="number" step="1" value="65" />
-                </div>
-                <div>
-                  <label for="penCola">Pension COLA (%/yr)
-                    <svg xmlns="http://www.w3.org/2000/svg" 
-                         viewBox="0 0 24 24" 
-                         width="1em" height="1em" 
-                         fill="white" 
-                         class="help-icon"
-                         onclick="showHelpToast(event, 'penCola')"
-                         style="vertical-align: middle;">
-                      <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none"/>
-                      <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
-                      <circle cx="12" cy="17" r="1" fill="white"/>
-                    </svg>
-                  </label>
-                  <input id="penCola" type="number" step="0.1" value="0" />
-                </div>
-              </div>
-            </div>
-          </details>
-
-          <!-- Taxes & Strategy -->
-          <details>
-            <summary>
-              <span>📊 Taxes & Withdrawal Strategy</span>
-              <span class="chev">▶</span>
-            </summary>
-            <div class="content">
-              <div class="grid-3">
-                <div>
-                  <label for="taxPre">Effective tax on pre‑tax withdrawals (%)
-                    <span class="help-icon-placeholder" data-field="taxPre"></span>
-                  </label>
-                  <input id="taxPre" type="number" step="0.5" value="22" />
-                </div>
-                <div>
-                  <label for="taxTaxable">Effective tax on taxable withdrawals (%)
-                    <span class="help-icon-placeholder" data-field="taxTaxable"></span>
-                  </label>
-                  <input id="taxTaxable" type="number" step="0.5" value="10" />
-                </div>
-                <div>
-                  <label for="taxRoth">Effective tax on Roth withdrawals (%)
-                    <span class="help-icon-placeholder" data-field="taxRoth"></span>
-                  </label>
-                  <input id="taxRoth" type="number" step="0.5" value="0" />
-                </div>
-              </div>
-              <div class="grid-3">
-                <div>
-                  <label for="taxSS">Effective tax on Social Security (%)
-                    <span class="help-icon-placeholder"  data-field="taxSS"></span>
-                  </label>
-                  <input id="taxSS" type="number" step="0.5" value="10" />
-                </div>
-                <div>
-                  <label for="taxPension">Effective tax on Pension (%)
-                    <span class="help-icon-placeholder" data-field="taxPension"></span>
-                  </label>
-                  <input id="taxPension" type="number" step="0.5" value="20" />
-                </div>
-                <div>
-                  <label for="order">Withdrawal order
-                    <span class="help-icon-placeholder" data-field="order"></span>
-                  </label>
-                  <select id="order">
-                    <option value="taxable,pretax,roth">Savings → 401k → Roth (default)</option>
-                    <option value="pretax,taxable,roth">401k → Savings → Roth</option>
-                    <option value="roth,pretax,taxable">Roth → Pre‑tax → Taxable</option>
-                    <option value="50/50">50/50 Savings/401k (after SS & Pension)</option>
-                  </select>
-                </div>
-              </div>
-              <div style="margin-top: 10px;">
-                <label for="filingStatus">Tax filing status
-                  <span class="help-icon-placeholder" data-field="filingStatus"></span>
-                </label>
-                <select id="filingStatus">
-                  <option value="single">Single</option>
-                  <option value="married">Married Filing Jointly</option>
-                </select>
-              </div>
-              <div style="margin-top: 10px;">
-                <div style="display: flex; align-items: center; gap: 5px;">
-                  <input type="checkbox" id="useRMD" checked style="width: auto;" />
-                  <label for="useRMD">
-                    Apply Required Minimum Distribution (RMD) rules
-                    <span class="help-icon-placeholder" data-field="useRMD"></span>
-                  </label>
-                </div>
-              </div>
-              <div class="hint">These are simplified, all‑in effective rates to keep the model understandable (not tax advice).</div>
-            </div>
-          </details>
-
-          <!-- Annual Spending Details -->
-          <details>
-            <summary>
-              <span>🛒 Annual Spending Adjustments</span>
-              <span class="chev">▶</span>
-            </summary>
-            <div class="content">
-              <div class="hint">
-                <div style="margin-bottom: 8px;">
-                  Override calculated annual income for specific retirement years.
-                  Leave fields blank to use automatic annual income calculations based on COLA and spending decline.
-                </div>
-                <div style="display: flex; align-items: center; gap: 5px;">
-                  <input type="checkbox" id="useCurrentYearValues" style="width: auto;" />
-                  <label for="useCurrentYearValues">
-                    Use current year values (will be adjusted for inflation for target year)
-                  </label>
-                </div>
-              </div>
-            
-              <div id="spendingDetailsGrid" class="grid-3">
-                <!-- Spending override fields will be dynamically generated here -->
-              </div>
-            </div>
-          </details>
-
-          <!-- Taxable Income Adjustments -->
-          <details>
-            <summary>
-              <span>📈 Taxable Income Adjustments</span>
-              <span class="chev">▶</span>
-            </summary>
-            <div class="content">
-              <div class="hint">
-                <div style="margin-bottom: 8px;">
-                  Add additional taxable income sources (rental income, part-time work, etc.) for specific years.
-                  These amounts will be added to your annual salary and are subject to income tax.
-                  Leave fields blank if no additional taxable income for that year.
-                </div>
-                <div style="display: flex; align-items: center; gap: 5px;">
-                  <input type="checkbox" id="useTaxableCurrentYearValues" style="width: auto;" />
-                  <label for="useTaxableCurrentYearValues">
-                    Use current year values (will be adjusted for inflation for target year)
-                  </label>
-                </div>
-              </div>
-            
-              <div id="taxableIncomeDetailsGrid" class="grid-3">
-                <!-- Taxable income adjustment fields will be dynamically generated here -->
-              </div>
-            </div>
-          </details>
-
-          <!-- Tax-free Income Adjustments -->
-          <details>
-            <summary>
-              <span>🎁 Tax-free Income Adjustments</span>
-              <span class="chev">▶</span>
-            </summary>
-            <div class="content">
-              <div class="hint">
-                <div style="margin-bottom: 8px;">
-                  Add additional tax-free income sources (gifts, inheritance, Roth conversions, etc.) for specific years.
-                  These amounts will be added to your savings balance and are not subject to income tax.
-                  Leave fields blank if no additional tax-free income for that year.
-                </div>
-                <div style="display: flex; align-items: center; gap: 5px;">
-                  <input type="checkbox" id="useTaxFreeCurrentYearValues" style="width: auto;" />
-                  <label for="useTaxFreeCurrentYearValues">
-                    Use current year values (will be adjusted for inflation for target year)
-                  </label>
-                </div>
-              </div>
-            
-              <div id="taxFreeIncomeDetailsGrid" class="grid-3">
-                <!-- Tax-free income adjustment fields will be dynamically generated here -->
-              </div>
-            </div>
-          </details>
+        <div class="sections" id="inputsSections">
+          <div id="subjectSection"></div>
+          <div id="spouseSection"></div>
+          <div id="annualSpendingSection"></div>
+          <div id="balancesSection"></div>
+          <div id="workSection"></div>
+          <div id="socialSecuritySection"></div>
+          <div id="pensionSection"></div>
+          <div id="taxesSection"></div>
+          <div id="taxableIncomeAdjustmentsSection"></div>
+          <div id="taxfreeIncomeAdjustmentsSection"></div>
         </div>
       </div>
+
       <div class="actions">
         <button id="pdfBtn" title="Generate comprehensive PDF report">PDF Report</button>
         <button id="csvBtn" title="Export yearly table">Export CSV</button>
@@ -1316,6 +788,30 @@
       </div>
     </section>
   </main>
+
+
+<script type="module">
+  import { loadPartial, initUI } from './retirement-ui.js';
+
+  const partials = [
+    ['#subjectSection', './partials/subject.html'],
+    ['#socialSecuritySection', './partials/socialSecurity.html'],
+    ['#pensionSection', './partials/pension.html'],
+    ['#spouseSection', './partials/spouse.html'],
+    ['#annualSpendingSection', './partials/annualSpending.html'],
+    ['#workSection', './partials/work.html'],
+    ['#balancesSection', './partials/balances.html'],
+    ['#taxesSection', './partials/taxes.html'],
+    ['#taxableIncomeAdjustmentsSection', './partials/taxableIncomeAdjustments.html'],
+    ['#taxfreeIncomeAdjustmentsSection', './partials/taxfreeIncomeAdjustments.html']
+  ];
+
+  await Promise.all(
+    partials.map(p => loadPartial(p[0], p[1]))
+  );
+
+  initUI();
+</script>
 
 <script>
   // Handle inputs panel toggle
@@ -1417,11 +913,8 @@
 <script type="module" src="cAccountYear.js"></script>
 <script type="module" src="cAccountsManager.js"></script>
 <script type="module" src="cAccountingYear.js"></script>
-<script type="module" src="cRevenue.js"></script>
 <script type="module" src="cBalance.js"></script>
 <script type="module" src="cTaxCalculations.js"></script>
-
-<script type="module" src="cWorkingIncomeCalculator.js"></script>
 
 <script type="module" src="cDeposits.js"></script>
 <script type="module" src="cWithdrawals.js"></script>
@@ -1429,16 +922,10 @@
 
 <script type="module" src="cTargetedAccount.js"></script>
 
-<script type="module" src="cIncomeBreakdown.js"></script>
-
-<script type="module" src="cIncomeStreams.js"></script>
-
 <script type="module" src="cSsBreakdown.js"></script>
 <script type="module" src="cSsBenefitsCalculator.js"></script>
 <script type="module" src="cSocialSecurityIncome.js"></script>
-<script type="module" src="cIncomeRs.js"></script>
 <script type="module" src="cExpenditures.js"></script>
-<script type="module" src="cReport_Disbursements.js"></script>
 
 <script type="module" src="cRetirementYearData.js"></script>
 <script type="module" src="cAccountPortioner.js"></script>
@@ -1448,7 +935,6 @@
 <script type="module" src="cWorkingYearData.js"></script>
 <script type="module" src="cDebugData.js"></script>
 
-<script type="module" src="cWithdrawalFactory.js"></script>
 <script type="module" src="cWorkingYearCalculator.js"></script>
 <script type="module" src="cRetirementYearCalculator.js"></script>
 <script type="module" src="retirement-calculator.js"></script>

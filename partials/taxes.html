@@ -1,0 +1,73 @@
+<details>
+    <summary>
+        <span>📊 Taxes & Withdrawal Strategy</span>
+        <span class="chev">▶</span>
+    </summary>
+    <div class="content">
+        <div class="grid-3">
+            <div>
+                <label for="taxPre">Effective tax on pre‑tax withdrawals (%)
+                    <span class="help-icon-placeholder" data-field="taxPre"></span>
+                </label>
+                <input id="taxPre" type="number" step="0.5" value="22" />
+            </div>
+            <div>
+                <label for="taxTaxable">Effective tax on taxable withdrawals (%)
+                    <span class="help-icon-placeholder" data-field="taxTaxable"></span>
+                </label>
+                <input id="taxTaxable" type="number" step="0.5" value="10" />
+            </div>
+            <div>
+                <label for="taxRoth">Effective tax on Roth withdrawals (%)
+                    <span class="help-icon-placeholder" data-field="taxRoth"></span>
+                </label>
+                <input id="taxRoth" type="number" step="0.5" value="0" />
+            </div>
+        </div>
+        <div class="grid-3">
+            <div>
+                <label for="taxSS">Effective tax on Social Security (%)
+                    <span class="help-icon-placeholder" data-field="taxSS"></span>
+                </label>
+                <input id="taxSS" type="number" step="0.5" value="10" />
+            </div>
+            <div>
+                <label for="taxPension">Effective tax on Pension (%)
+                    <span class="help-icon-placeholder" data-field="taxPension"></span>
+                </label>
+                <input id="taxPension" type="number" step="0.5" value="20" />
+            </div>
+            <div>
+                <label for="order">Withdrawal order
+                    <span class="help-icon-placeholder" data-field="order"></span>
+                </label>
+                <select id="order">
+                    <option value="taxable,pretax,roth">Savings → 401k → Roth (default)</option>
+                    <option value="pretax,taxable,roth">401k → Savings → Roth</option>
+                    <option value="roth,pretax,taxable">Roth → Pre‑tax → Taxable</option>
+                    <option value="50/50">50/50 Savings/401k (after SS & Pension)</option>
+                </select>
+            </div>
+        </div>
+        <div style="margin-top: 10px;">
+            <label for="filingStatus">Tax filing status
+                <span class="help-icon-placeholder" data-field="filingStatus"></span>
+            </label>
+            <select id="filingStatus">
+                <option value="single">Single</option>
+                <option value="married">Married Filing Jointly</option>
+            </select>
+        </div>
+        <div style="margin-top: 10px;">
+            <div style="display: flex; align-items: center; gap: 5px;">
+                <input type="checkbox" id="useRMD" checked style="width: auto;" />
+                <label for="useRMD">
+                    Apply Required Minimum Distribution (RMD) rules
+                    <span class="help-icon-placeholder" data-field="useRMD"></span>
+                </label>
+            </div>
+        </div>
+        <div class="hint">These are simplified, all‑in effective rates to keep the model understandable (not tax
+            advice).</div>
+    </div>
+</details>

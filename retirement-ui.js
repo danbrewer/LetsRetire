@@ -2477,9 +2477,9 @@ function parseInputParameters() {
       ACCOUNT_TYPES.SUBJECT_ROTH_IRA,
     ];
   }
-  const startingYear = num("startingYear");
+  const startingYear = 2025; // num("startingYear");
   const currentAge = num("currentAge");
-  const currentSpouseAge = num("partnerAge");
+  const currentSpouseAge = num("spouseAge");
   const subjectRetireAge = num("retireAge");
   const ssStartAge = num("ssStart");
   const penStartAge = num("penStart");
@@ -2497,7 +2497,7 @@ function parseInputParameters() {
   const partner401kStartAge = num("partner401kStartAge");
   const partnerPenCola = pct(num("partnerPenCola"));
   const partnerTaxSS = pct(num("partnerTaxSS"));
-  const partnerTaxPension = pct(num("partnerTaxPension"));
+  const partnerPensionWithholdings = pct(num("partnerTaxPension"));
   const subjectStartingSalary = num("salary");
   const partnerStartingSalary = num("partnerSalary");
   const subjectSalaryGrowthRate = pct(num("salaryGrowth"));
@@ -2527,10 +2527,8 @@ function parseInputParameters() {
   const partner401kStartingBalance = 100000;
   const partnerRothStartingBalance = 50000;
 
-  const partnerSavingsStartingBalance = 0;
   const partner401kReturnRate = 0.03;
   const partnerRothReturnRate = 0.03;
-  const partnerSavingsReturnRate = 0.03;
 
   /** @type {import("./cInputs.js").InputsOptions} */
   const inputArgs = {
@@ -2559,7 +2557,7 @@ function parseInputParameters() {
     partner401kStartAge: partner401kStartAge,
     partnerPenCola: partnerPenCola,
     partnerTaxSS: partnerTaxSS,
-    partnerPensionWithholdings: partnerTaxPension,
+    partnerPensionWithholdings: partnerPensionWithholdings,
 
     // Employment and contributions
     subjectStartingSalary: subjectStartingSalary,
@@ -2606,110 +2604,6 @@ function parseInputParameters() {
   inputArgs.dump("inputArgs");
 
   const inputs = new Inputs(inputArgs);
-  // Basic parameters
-  // (currentAge = num("currentAge")),
-  // (currentSpouseAge = num("partnerAge")),
-  // (retireAge = num("retireAge")),
-  // (ssStartAge = num("ssStart")),
-  // (penStartAge = num("penStart")),
-  // (endAge = num("endAge")),
-  // (inflation = pct(num("inflation"))),
-  // (spendingToday = num("spendingToday")),
-  // (spendingDecline = pct(num("spendingDecline"))),
-  // // Spouse information
-  // (partnerRetireAge = num("partnerRetireAge")),
-  // (partnerSsMonthly = num("partnerSsMonthly")),
-  // (partnerSsStartAge = num("partnerSsStart")),
-  // (partnerSsCola = pct(num("partnerSsCola"))),
-  // (partnerPenMonthly = num("partnerPenMonthly")),
-  // (partnerPenStartAge = num("partnerPenStart")),
-  // (partnerPenCola = pct(num("partnerPenCola"))),
-  // (partnerTaxSS = pct(num("partnerTaxSS"))),
-  // (partnerTaxPension = pct(num("partnerTaxPension"))),
-  // // Employment and contributions
-  // (startingSalary = num("salary")),
-  // (salaryGrowth = pct(num("salaryGrowth"))),
-  // (pretaxPct = pct(num("pretaxPct"))),
-  // (rothPct = pct(num("rothPct"))),
-  // (taxablePct = pct(num("taxablePct"))),
-  // (matchCap = pct(num("matchCap"))),
-  // (matchRate = pct(num("matchRate"))),
-  // // Account balances and returns
-  // (trad401k = num("balPre")),
-  // (rothIRA = num("balRoth")),
-  // (savings = num("balSavings")),
-  // (ret401k = pct(num("retPre"))),
-  // (retRoth = pct(num("retRoth"))),
-  // (retSavings = pct(num("retTax"))),
-  // // Income sources
-  // (ssMonthly = num("ssMonthly")),
-  // (ssCola = pct(num("ssCola"))),
-  // (penMonthly = num("penMonthly")),
-  // (penCola = pct(num("penCola"))),
-  // // Tax rates and settings
-  // (filingStatus = $("filingStatus").value),
-  // (useRMD = $("useRMD").checked),
-  // (order = withdrawalOrder)
-  // );
-
-  // const inputs = {
-  //   currentAge: num("currentAge"),
-  //   currentSpouseAge: num("partnerAge"),
-  //   retireAge: num("retireAge"),
-  //   ssStartAge: num("ssStart"),
-  //   penStartAge: num("penStart"),
-  //   endAge: num("endAge"),
-  //   inflation: pct(num("inflation")),
-  //   spendingToday: num("spendingToday"),
-  //   spendingDecline: pct(num("spendingDecline")),
-
-  //   // Spouse information
-  //   partnerRetireAge: num("partnerRetireAge"),
-  //   partnerSsMonthly: num("partnerSsMonthly"),
-  //   partnerSsStartAge: num("partnerSsStart"),
-  //   partnerSsCola: pct(num("partnerSsCola")),
-  //   partnerPenMonthly: num("partnerPenMonthly"),
-  //   partnerPenStartAge: num("partnerPenStart"),
-  //   partnerPenCola: pct(num("partnerPenCola")),
-  //   partnerTaxSS: pct(num("partnerTaxSS")),
-  //   partnerTaxPension: pct(num("partnerTaxPension")),
-
-  //   // Employment and contributions
-  //   startingSalary: num("salary"),
-  //   salaryGrowth: pct(num("salaryGrowth")),
-  //   pretaxPct: pct(num("pretaxPct")),
-  //   rothPct: pct(num("rothPct")),
-  //   taxablePct: pct(num("taxablePct")),
-  //   matchCap: pct(num("matchCap")),
-  //   matchRate: pct(num("matchRate")),
-
-  //   // Account balances and returns
-  //   trad401k: num("balPre"),
-  //   rothIRA: num("balRoth"),
-  //   savings: num("balSavings"),
-  //   ret401k: pct(num("retPre")),
-  //   retRoth: pct(num("retRoth")),
-  //   retSavings: pct(num("retTax")),
-
-  //   // Income sources
-  //   ssMonthly: num("ssMonthly"),
-  //   ssCola: pct(num("ssCola")),
-  //   penMonthly: num("penMonthly"),
-  //   penCola: pct(num("penCola")),
-  //   // Tax rates and settings
-  //   filingStatus: $("filingStatus").value,
-  //   useRMD: $("useRMD").checked,
-  // };
-
-  // inputs.order = withdrawalOrder;
-
-  // Derived values
-  // inputs.hasSpouse = inputs.currentSpouseAge > 0;
-  // inputs.totalWorkingYears = inputs.retireAge - inputs.currentAge;
-  // inputs.totalLivingYears = inputs.endAge - inputs.currentAge;
-  // inputs.spendAtRetire =
-  //   inputs.spendingToday *
-  //   compoundedRate(inputs.inflation, inputs.totalWorkingYears);
 
   if (!inputs.isValid()) {
     showToast(
@@ -2781,9 +2675,7 @@ function resetAll() {
 // Initialize when DOM is loaded
 document.addEventListener("DOMContentLoaded", function () {
   // First render
-  initializeHelpIcons();
-  loadExample();
-  doCalculations();
+  // initUI();
 });
 
 function doCalculations() {
@@ -3635,6 +3527,22 @@ function applyInflationToIncomeValue(currentYearValue, targetAge) {
   return currentYearValue * Math.pow(1 + inflationRate, yearsFromNow);
 }
 
+/**
+ * @param {any} hostSelector
+ * @param {RequestInfo | URL} url
+ */
+async function loadPartial(hostSelector, url) {
+  const host = document.querySelector(hostSelector);
+  const html = await fetch(url).then((r) => r.text());
+  host.insertAdjacentHTML("beforeend", html);
+}
+
+function initUI() {
+  initializeHelpIcons();
+  loadExample();
+  doCalculations();
+}
+
 export {
   parseInputParameters,
   resetAll,
@@ -3648,4 +3556,6 @@ export {
   getSpendingOverride,
   getTaxFreeIncomeOverride,
   getTaxableIncomeOverride,
+  loadPartial,
+  initUI,
 };
