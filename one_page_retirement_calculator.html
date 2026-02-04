@@ -101,13 +101,15 @@
     .wrap.is-dragging {
       transition: none;
     }
-    @media (max-width: 980px){ .wrap{ grid-template-columns: 1fr; } }
+    
+    /* @media (max-width: 980px){ .wrap{ grid-template-columns: 1fr; } } */
 
     .card {
       background: linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.00));
       border: 1px solid var(--border);
       border-radius: 16px;
       box-shadow: 0 10px 30px rgba(0,0,0,.2);
+      container-type: inline-size;
     }
 
     .panel h3 { margin: 0 0 8px; font-size: 14px; color: var(--muted); font-weight: 600; letter-spacing:.4px; text-transform: uppercase; }
@@ -124,8 +126,12 @@
     .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .grid-1 { display: grid; grid-template-columns: repeat(1, 1fr); gap: 10px; }
     .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-    @media (max-width: 520px){ .grid, .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+    .grid-3 {   
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+      }
+    @container (max-width: 550px){ .grid-3 { grid-template-columns: 1fr; } }
 
     label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; }
     input, select { width: 100%; padding: 10px 11px; background: #0b1426; color: var(--text); border: 1px solid var(--border); border-radius: 10px; outline: none; }
@@ -781,6 +787,41 @@
       display: none;
     }
 
+    /* ---------- Animated details ---------- */
+
+ details {
+  overflow: hidden;
+}
+
+details .content {
+  overflow: hidden;
+  height: 0;
+  opacity: 0;
+}
+
+details[open] .content {
+  /* height: auto; */
+  opacity: 1;
+}
+
+.chev {
+  transition: transform 220ms ease;
+}
+
+
+    details:not([open]) {
+      opacity: 0.92;
+    }
+
+    details:focus-within {
+      border-color: var(--accent);
+    }
+
+    /* details[open] {
+      box-shadow: 0 12px 30px rgba(0,0,0,.25);
+    } */
+
+
   </style>
 </head>
 <body>
@@ -824,7 +865,7 @@
         <button id="csvBtn" title="Export yearly table">Export CSV</button>
         <button id="exportJsonBtn" title="Export inputs as JSON file">Export JSON</button>
         <button id="importJsonBtn" title="Import inputs from JSON file">Import JSON</button>
-        <input type="file" id="jsonFileInput" accept=".json" style="display: none;">
+        <input type="file" id="jsonFileInputFile" accept=".json" style="display: none;">
       </div>
     </section>
 
@@ -916,9 +957,154 @@
     };
   </script>
 
-<script type="module">
-  import { loadPartial, initUI } from './retirement-ui.js';
 
+
+<script type="module">
+  import { loadPartial, initUI, resyncAllOpenDetails, detailsObservers } from './retirement-ui.js';
+  
+  window.resyncAllOpenDetails = resyncAllOpenDetails;
+
+  function persistDetailsState(root = document) {
+      const STORAGE_PREFIX = 'details:';
+
+      root.querySelectorAll('details[data-key]').forEach(details => {
+        const key = STORAGE_PREFIX + details.dataset.key;
+
+        // Restore state
+        const saved = localStorage.getItem(key);
+        if (saved === 'open') {
+          details.open = true;
+        } else if (saved === 'closed') {
+          details.open = false;
+        }
+
+        // Listen for user toggle
+        details.addEventListener('toggle', () => {
+          localStorage.setItem(key, details.open ? 'open' : 'closed');
+        });
+      });
+    } 
+
+ function animateDetails(root = document) {
+    root.querySelectorAll('details').forEach(details => {
+      const summary = details.querySelector('summary');
+      const content = details.querySelector('.content');
+      if (!summary || !content) return;
+
+      let resizeObserver;
+
+      summary.addEventListener('click', e => {
+        e.preventDefault();
+
+        content.getAnimations().forEach(a => a.cancel());
+
+        const isOpen = details.hasAttribute('open');
+
+        if (isOpen) {
+          // ----- CLOSE -----
+          // resizeObserver?.disconnect();
+          // resizeObserver = null;
+          // details._ro?.disconnect();
+          detailsObservers.get(details)?.disconnect();
+
+          const startHeight = content.offsetHeight;
+
+          content.animate(
+            [
+              { height: startHeight + 'px', opacity: 1 },
+              { height: '0px', opacity: 0 }
+            ],
+            { duration: 220, easing: 'ease-in', fill: 'forwards' }
+          ).onfinish = () => {
+            details.removeAttribute('open');
+            content.style.height = '';
+          };
+
+        } else {
+          // ----- OPEN -----
+          details.setAttribute('open', '');
+          content.style.height = '0px';
+
+          const endHeight = content.scrollHeight;
+
+          content.animate(
+            [
+              { height: '0px', opacity: 0 },
+              { height: endHeight + 'px', opacity: 1 }
+            ],
+            { duration: 260, easing: 'ease-out', fill: 'forwards' }
+          ).onfinish = () => {
+            content.style.height = content.scrollHeight + 'px';
+            // resizeObserver = syncOpenDetailsHeight(details, content);
+            // details._ro = syncOpenDetailsHeight(details, content);
+            detailsObservers.set(details, syncOpenDetailsHeight(details, content));
+
+            // 🔑 Force one immediate sync after observer attaches
+            requestAnimationFrame(() => {
+              if (details.hasAttribute('open')) {
+                content.style.height = content.scrollHeight + 'px';
+              }
+            });
+          };
+        }
+      });
+    });
+  }
+
+//  function syncOpenDetailsHeight(details, content) {
+//     const container = details.closest('.card');
+//     const inner = content.firstElementChild; // 👈 the grid wrapper
+
+//     let raf;
+
+//     const ro = new ResizeObserver(() => {
+//       if (!details.hasAttribute('open')) return;
+
+//       cancelAnimationFrame(raf);
+//       raf = requestAnimationFrame(() => {
+//         const h = content.scrollHeight;
+//         content.style.height = h + 'px';
+
+//         // DO NOT set height:auto here — resync owns release
+//         // requestAnimationFrame(() => {
+//         //   if (details.hasAttribute('open')) {
+//         //     content.style.height = 'auto';
+//         //   }
+//         // });
+//       });
+//     });
+
+//     // 🔑 Observe ALL sources of layout change
+//     ro.observe(content);
+//     if (inner) ro.observe(inner);     // 👈 THIS is the missing piece
+//     if (container) ro.observe(container);
+
+//     return ro;
+//   }
+
+  function syncOpenDetailsHeight(details, content) {
+    const container = details.closest('.card');
+    const inner = content.firstElementChild;
+
+    let raf;
+
+    const ro = new ResizeObserver(() => {
+      if (!details.hasAttribute('open')) return;
+
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        content.style.height = content.scrollHeight + 'px';
+      });
+    });
+
+    ro.observe(content);
+    if (inner) ro.observe(inner);
+    if (container) ro.observe(container);
+
+    return ro;
+  }
+
+  
   const partials = [
     ['#subjectSection', './partials/subject.html'],
     ['#socialSecuritySection', './partials/socialSecurity.html'],
@@ -927,7 +1113,7 @@
     ['#annualSpendingSection', './partials/annualSpending.html'],
     ['#workSection', './partials/work.html'],
     ['#balancesSection', './partials/balances.html'],
-    ['#taxesSection', './partials/taxes.html'],
+    ['#taxesSection', './partials/withholdings.html'],
     ['#taxableIncomeAdjustmentsSection', './partials/taxableIncomeAdjustments.html'],
     ['#taxfreeIncomeAdjustmentsSection', './partials/taxfreeIncomeAdjustments.html']
   ];
@@ -937,6 +1123,8 @@
   );
 
   initUI();
+  persistDetailsState(document);
+  animateDetails(document);
 </script>
 
 <script>
@@ -949,6 +1137,9 @@
     if (hideInputsCheckbox && wrap) {
       hideInputsCheckbox.addEventListener('change', function() {
         wrap.classList.toggle('inputs-hidden', hideInputsCheckbox.checked);
+        requestAnimationFrame(() => {
+          window.resyncAllOpenDetails?.(); 
+        });
         // // First, completely hide the canvas to prevent visual artifacts
         // const canvas = document.getElementById('chart');
         // if (canvas) {
@@ -1044,15 +1235,18 @@
 <script type="module" src="cWorkingYearCalculator.js"></script>
 <script type="module" src="cRetirementYearCalculator.js"></script>
 <script type="module" src="retirement-calculator.js"></script>
-<script type="module" src="retirement-ui.js"></script>
+<!-- <script type="module" src="retirement-ui.js"></script> -->
 <script type="module" src="retirement-popups.js"></script>
 <script>
   const STORAGE_KEY = 'inputsWidth';
   const DEFAULT_LEFT_WIDTH = 360;
 
+  const wrap = document.querySelector('.wrap');
+  const splitter = document.getElementById('splitter');
+
   document.addEventListener('DOMContentLoaded', () => {
-    const splitter = document.getElementById('splitter');
-    const wrap = document.querySelector('.wrap');
+    // const splitter = document.getElementById('splitter');
+    // const wrap = document.querySelector('.wrap');
 
     // wrap.style.gridTemplateColumns =
     // `${window.layoutState.currentLeftWidth}px 6px 1fr`;
@@ -1093,6 +1287,22 @@
       document.body.style.userSelect = 'none';
     });
 
+    // function resyncAllOpenDetails(root = document) {
+    //   root.querySelectorAll('details[open] .content').forEach(content => {
+    //     const details = content.closest('details');
+    //     if (!details) return;
+
+    //     content.style.height = content.scrollHeight + 'px';
+
+    //     requestAnimationFrame(() => {
+    //       if (details.hasAttribute('open')) {
+    //         content.style.height = 'auto';
+    //       }
+    //     });
+    //   });
+    // }
+
+
     document.addEventListener('mousemove', (e) => {
       if (!isDragging) return;
 
@@ -1110,6 +1320,12 @@
       // wrap.style.gridTemplateColumns = `${newLeft}px 6px 1fr`;
       window.layoutState.currentLeftWidth = newLeft;
       setInputsWidth(newLeft);
+      
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          window.resyncAllOpenDetails?.();
+        });
+      });
     });
 
     document.addEventListener('mouseup', () => {
@@ -1128,6 +1344,7 @@
 
   document.addEventListener('keydown', (e) => {
       if (!e.altKey) return;
+      if (!wrap) return;
       if (wrap.classList.contains('inputs-hidden')) return;
 
       const step = e.shiftKey ? 60 : 20;
@@ -1148,6 +1365,11 @@
       const max = wrapRect.width - 400;
 
       setInputsWidth(Math.min(Math.max(width, min), max));
+      window.resyncAllOpenDetails?.();
+    });
+
+  window.addEventListener("resize", () => {
+      window.resyncAllOpenDetails?.();
     });
 </script>
 

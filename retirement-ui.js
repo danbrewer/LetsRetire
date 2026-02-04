@@ -2679,6 +2679,7 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 function doCalculations() {
+  return; // for now
   const calculations = new Calculations();
   calc(calculations, DefaultUI);
 }
@@ -3543,6 +3544,61 @@ function initUI() {
   doCalculations();
 }
 
+// /**
+//  * Forces all open <details> panels to recompute animated height.
+//  * @param {ParentNode} [root=document]
+//  */
+// function resyncAllOpenDetails(root = document) {
+//   root.querySelectorAll("details[open] .content").forEach((el) => {
+//     /** @type {HTMLElement} */
+//     const content = /** @type {HTMLElement} */ (el);
+
+//     const details = content.closest("details");
+//     if (!details) return;
+
+//     // 🔑 Break out of 'auto' first
+//     content.style.height = "0px";
+//     content.offsetHeight; // Force reflow
+
+//     const h = content.scrollHeight;
+//     content.style.height = h + "px";
+
+//     requestAnimationFrame(() => {
+//       if (details.hasAttribute("open")) {
+//         content.style.height = "auto";
+//       }
+//     });
+//   });
+// }
+
+/** @type {WeakMap<HTMLElement, ResizeObserver>} */
+const detailsObservers = new WeakMap();
+
+
+/**
+ * Forces all open <details> panels to recompute animated height.
+ * @param {ParentNode} [root=document]
+ */
+function resyncAllOpenDetails(root = document) {
+  root.querySelectorAll("details[open]").forEach(details => {
+    const content = /** @type {HTMLElement} */ (
+      details.querySelector(".content")
+    );
+    if (!content) return;
+
+    // HARD reset out of any stale auto-height state
+    content.style.height = "0px";
+    content.offsetHeight; // force reflow
+
+    // 🔑 Force a real height recompute
+    content.style.height = content.scrollHeight + "px";
+  });
+}
+
+
+
+
+
 export {
   parseInputParameters,
   resetAll,
@@ -3558,4 +3614,6 @@ export {
   getTaxableIncomeOverride,
   loadPartial,
   initUI,
+  resyncAllOpenDetails,
+  detailsObservers,
 };
