@@ -974,6 +974,18 @@ details[open] .content {
   
   window.resyncAllOpenDetails = resyncAllOpenDetails;
 
+  /**
+   * OBSERVER INVARIANT
+   * ------------------
+   * - Container queries control column count
+   * - `.inputs-scroll` is the container-query driver
+   * - `.content` height must track changes caused by container width
+   *
+   * Therefore:
+   * ❌ Do NOT observe `.content` only
+   * ✅ ALWAYS observe `.inputs-scroll`
+   */
+
   function persistDetailsState(root = document) {
       const STORAGE_PREFIX = 'details:';
 
@@ -1001,8 +1013,6 @@ details[open] .content {
       const content = details.querySelector('.content');
       if (!summary || !content) return;
 
-      let resizeObserver;
-
       summary.addEventListener('click', e => {
         e.preventDefault();
 
@@ -1015,7 +1025,9 @@ details[open] .content {
           // resizeObserver?.disconnect();
           // resizeObserver = null;
           // details._ro?.disconnect();
-          detailsObservers.get(details)?.disconnect();
+          const ro = detailsObservers.get(details);
+          if (ro) ro.disconnect();
+          detailsObservers.delete(details);
 
           const startHeight = content.offsetHeight;
 
