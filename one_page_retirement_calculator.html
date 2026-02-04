@@ -78,9 +78,6 @@
       container-type: inline-size;
     }
 
-    /* .panel h3 { margin: 0 0 8px; font-size: 14px; color: var(--muted); font-weight: 600; letter-spacing:.4px; text-transform: uppercase; } */
-
-    /* .sections { display: grid; gap: 12px; } */
     details { border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
     details[open] summary { background: #0d172b; }
     summary { padding: 14px 14px; cursor: pointer; list-style: none; user-select: none; display:flex; align-items:center; justify-content:space-between; gap:8px; }
@@ -112,21 +109,6 @@
       border-radius: 0 !important;
     }
     .hint { font-size: 12px; color: var(--muted); }
-
-   /* .actions {
-      display: flex;
-      flex-wrap: wrap;    
-      gap: 10px;
-      padding: 14px;
-      border-top: 1px solid var(--border);
-      background: #0c1323;
-      justify-content: flex-end;
-      border-radius: 0 0 16px 16px;
-    }
-
-    .actions button {
-      flex: 1 1 160px;    
-    } */
 
     @media (max-width: 640px) {
       .inputs-actions {
@@ -766,7 +748,6 @@ details .content {
 }
 
 details[open] .content {
-  /* height: auto; */
   opacity: 1;
 }
 
@@ -783,9 +764,6 @@ details[open] .content {
       border-color: var(--accent);
     }
 
-    /* details[open] {
-      box-shadow: 0 12px 30px rgba(0,0,0,.25);
-    } */
 .inputs-panel {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
@@ -1022,9 +1000,6 @@ details[open] .content {
 
         if (isOpen) {
           // ----- CLOSE -----
-          // resizeObserver?.disconnect();
-          // resizeObserver = null;
-          // details._ro?.disconnect();
           const ro = detailsObservers.get(details);
           if (ro) ro.disconnect();
           detailsObservers.delete(details);
@@ -1057,8 +1032,6 @@ details[open] .content {
             { duration: 260, easing: 'ease-out', fill: 'forwards' }
           ).onfinish = () => {
             content.style.height = content.scrollHeight + 'px';
-            // resizeObserver = syncOpenDetailsHeight(details, content);
-            // details._ro = syncOpenDetailsHeight(details, content);
             detailsObservers.set(details, syncOpenDetailsHeight(details, content));
 
             // 🔑 Force one immediate sync after observer attaches
@@ -1072,37 +1045,6 @@ details[open] .content {
       });
     });
   }
-
-//  function syncOpenDetailsHeight(details, content) {
-//     const container = details.closest('.card');
-//     const inner = content.firstElementChild; // 👈 the grid wrapper
-
-//     let raf;
-
-//     const ro = new ResizeObserver(() => {
-//       if (!details.hasAttribute('open')) return;
-
-//       cancelAnimationFrame(raf);
-//       raf = requestAnimationFrame(() => {
-//         const h = content.scrollHeight;
-//         content.style.height = h + 'px';
-
-//         // DO NOT set height:auto here — resync owns release
-//         // requestAnimationFrame(() => {
-//         //   if (details.hasAttribute('open')) {
-//         //     content.style.height = 'auto';
-//         //   }
-//         // });
-//       });
-//     });
-
-//     // 🔑 Observe ALL sources of layout change
-//     ro.observe(content);
-//     if (inner) ro.observe(inner);     // 👈 THIS is the missing piece
-//     if (container) ro.observe(container);
-
-//     return ro;
-//   }
 
   function syncOpenDetailsHeight(details, content) {
     const inputsScroll = details.closest('.inputs-scroll');
@@ -1162,44 +1104,6 @@ details[open] .content {
         requestAnimationFrame(() => {
           window.resyncAllOpenDetails?.(); 
         });
-        // // First, completely hide the canvas to prevent visual artifacts
-        // const canvas = document.getElementById('chart');
-        // if (canvas) {
-        //   canvas.style.visibility = 'hidden';
-        // }
-        
-        // // Apply the layout change after a brief delay
-        // setTimeout(function() {
-        //    wrap.classList.toggle('inputs-hidden', hideInputsCheckbox.checked);
-
-        //   // Wait for the CSS transition to complete (0.3s) then redraw chart
-        //   setTimeout(function() {
-        //     if (canvas) {
-        //       // Force complete canvas redraw by temporarily hiding/showing
-        //       const originalDisplay = canvas.style.display;
-        //       canvas.style.display = 'none';
-        //       canvas.offsetHeight; // Force reflow
-        //       canvas.style.display = originalDisplay || '';
-              
-        //       // Clear any cached dimensions
-        //       canvas.width = 0;
-        //       canvas.height = 0;
-              
-        //       // Force the canvas to recalculate its size
-        //       canvas.style.width = '';
-        //       canvas.style.height = '';
-        //       canvas.offsetWidth; // Force reflow
-              
-        //       // Now redraw the chart
-        //       if (typeof drawChart === 'function' && typeof calculations !== 'undefined' && calculations.length > 0) {
-        //         drawChart(calculations.map((r) => ({ x: r.year, y: r.total, age: r.age })));
-        //       }
-              
-        //       // Restore canvas visibility
-        //       canvas.style.visibility = 'visible';
-        //     }
-        //   }, 5); // Wait for layout transition to complete
-        // }, 5); // Brief delay to ensure canvas is hidden before layout change
       });
     }
   });
@@ -1267,11 +1171,6 @@ details[open] .content {
   const splitter = document.getElementById('splitter');
 
   document.addEventListener('DOMContentLoaded', () => {
-    // const splitter = document.getElementById('splitter');
-    // const wrap = document.querySelector('.wrap');
-
-    // wrap.style.gridTemplateColumns =
-    // `${window.layoutState.currentLeftWidth}px 6px 1fr`;
 
     let isDragging = false;
     let startX = 0;
@@ -1308,21 +1207,6 @@ details[open] .content {
       document.body.style.cursor = 'col-resize';
       document.body.style.userSelect = 'none';
     });
-
-    // function resyncAllOpenDetails(root = document) {
-    //   root.querySelectorAll('details[open] .content').forEach(content => {
-    //     const details = content.closest('details');
-    //     if (!details) return;
-
-    //     content.style.height = content.scrollHeight + 'px';
-
-    //     requestAnimationFrame(() => {
-    //       if (details.hasAttribute('open')) {
-    //         content.style.height = 'auto';
-    //       }
-    //     });
-    //   });
-    // }
 
 
     document.addEventListener('mousemove', (e) => {
