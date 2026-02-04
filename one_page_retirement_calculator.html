@@ -7,6 +7,13 @@
   <!-- jsPDF library for PDF generation -->
   <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script> -->
   <style>
+    /*
+    Scroll strategy:
+    - Page never scrolls
+    - Inputs scroll inside inputs-scroll
+    - Results scroll inside .results
+    - Tables may scroll internally
+    */
     :root {
       --bg: #0b1220;
       --card: #121a2b;
@@ -53,47 +60,6 @@
       grid-template-columns: var(--inputs-width) 6px 1fr;
         }
 
-
-    .wrap > .card:first-of-type {
-      display: grid;
-      grid-template-rows: 1fr auto; /* panel | actions */
-      height: 100%;
-      min-height: 0;
-      overflow: hidden;
-    }
-
-    .wrap > .card:first-of-type .panel h3 {
-      padding: 18px 18px 8px;
-    }
-
-
-    .wrap > .card:first-of-type .panel {
-      display: grid;
-      grid-template-rows: auto minmax(0, 1fr);  /* h3 | sections */
-      min-height: 0;                            /* 🔑 allow shrink */
-      overflow: hidden;
-
-      /* keep your padding here */
-      padding: 0;
-      padding-bottom: 0; /* so actions border touches nicely */
-    }
-
-    .wrap > .card:first-of-type .sections {
-      min-height: 0;
-      overflow-y: auto;
-      padding-bottom: 18px;
-      padding: 0 18px 18px;
-    }
-
-    .wrap > .card:first-of-type .actions {
-      /* actions takes exactly what it needs */
-      align-self: end;
-    }
-
-
-    .wrap.inputs-hidden {
-      grid-template-columns: 1fr;
-    }
     .wrap.inputs-hidden .card:first-of-type {
       display: none;
     }
@@ -112,9 +78,9 @@
       container-type: inline-size;
     }
 
-    .panel h3 { margin: 0 0 8px; font-size: 14px; color: var(--muted); font-weight: 600; letter-spacing:.4px; text-transform: uppercase; }
+    /* .panel h3 { margin: 0 0 8px; font-size: 14px; color: var(--muted); font-weight: 600; letter-spacing:.4px; text-transform: uppercase; } */
 
-    .sections { display: grid; gap: 12px; }
+    /* .sections { display: grid; gap: 12px; } */
     details { border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
     details[open] summary { background: #0d172b; }
     summary { padding: 14px 14px; cursor: pointer; list-style: none; user-select: none; display:flex; align-items:center; justify-content:space-between; gap:8px; }
@@ -147,9 +113,9 @@
     }
     .hint { font-size: 12px; color: var(--muted); }
 
-   .actions {
+   /* .actions {
       display: flex;
-      flex-wrap: wrap;        /* 🔑 allow wrapping */
+      flex-wrap: wrap;    
       gap: 10px;
       padding: 14px;
       border-top: 1px solid var(--border);
@@ -159,11 +125,11 @@
     }
 
     .actions button {
-      flex: 1 1 160px;        /* 🔑 minimum width before wrap */
-    }
+      flex: 1 1 160px;    
+    } */
 
     @media (max-width: 640px) {
-      .card:first-of-type .actions {
+      .inputs-actions {
         flex-direction: column;
       }
     }
@@ -820,6 +786,51 @@ details[open] .content {
     /* details[open] {
       box-shadow: 0 12px 30px rgba(0,0,0,.25);
     } */
+.inputs-panel {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Header */
+.inputs-header {
+  padding: 18px 18px 8px;
+  flex-shrink: 0;
+}
+
+.inputs-header h3 {
+  margin: 0;
+  font-size: 14px;
+  color: var(--muted);
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+
+/* Scrollable content */
+.inputs-scroll {
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0 18px 18px;
+  display: grid;
+  gap: 12px;
+}
+
+/* Actions footer */
+.inputs-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 14px;
+  border-top: 1px solid var(--border);
+  background: #0c1323;
+  justify-content: flex-end;
+}
+
+.inputs-actions button {
+  flex: 1 1 160px;
+}
 
 
   </style>
@@ -843,24 +854,23 @@ details[open] .content {
 
   <main class="wrap">
     <!-- Inputs -->
-    <section class="card">
-      <div class="panel">
+    <section class="card inputs-panel">
+      <div class="inputs-header">
         <h3>Inputs</h3>
-        <div class="sections" id="inputsSections">
-          <div id="subjectSection"></div>
-          <div id="spouseSection"></div>
-          <div id="annualSpendingSection"></div>
-          <div id="balancesSection"></div>
-          <div id="workSection"></div>
-          <div id="socialSecuritySection"></div>
-          <div id="pensionSection"></div>
-          <div id="taxesSection"></div>
-          <div id="taxableIncomeAdjustmentsSection"></div>
-          <div id="taxfreeIncomeAdjustmentsSection"></div>
-        </div>
       </div>
-
-      <div class="actions">
+      <div class="inputs-scroll" id="inputsSections">
+        <div id="subjectSection"></div>
+        <div id="spouseSection"></div>
+        <div id="annualSpendingSection"></div>
+        <div id="balancesSection"></div>
+        <div id="workSection"></div>
+        <div id="socialSecuritySection"></div>
+        <div id="pensionSection"></div>
+        <div id="taxesSection"></div>
+        <div id="taxableIncomeAdjustmentsSection"></div>
+        <div id="taxfreeIncomeAdjustmentsSection"></div>
+      </div>
+      <div class="inputs-actions">
         <button id="pdfBtn" title="Generate comprehensive PDF report">PDF Report</button>
         <button id="csvBtn" title="Export yearly table">Export CSV</button>
         <button id="exportJsonBtn" title="Export inputs as JSON file">Export JSON</button>
