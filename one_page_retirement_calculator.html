@@ -1022,28 +1022,23 @@ details[open] .content {
           details.setAttribute('open', '');
           content.style.height = '0px';
 
-          const endHeight = content.scrollHeight;
-
-          content.animate(
-            [
-              { height: '0px', opacity: 0 },
-              { height: endHeight + 'px', opacity: 1 }
-            ],
-            { duration: 260, easing: 'ease-out', fill: 'forwards' }
-          ).onfinish = () => {
-            content.style.height = content.scrollHeight + 'px';
-            const ro = syncOpenDetailsHeight(details, content);
-            if (ro) {
-              detailsObservers.set(details, ro);
-            }
-
-            // 🔑 Force one immediate sync after observer attaches
+          // Let container queries + grid settle
+          requestAnimationFrame(() => {
             requestAnimationFrame(() => {
-              if (details.hasAttribute('open')) {
+              const endHeight = content.scrollHeight;
+
+              content.animate(
+                [
+                  { height: '0px', opacity: 0 },
+                  { height: endHeight + 'px', opacity: 1 }
+                ],
+                { duration: 260, easing: 'ease-out', fill: 'forwards' }
+              ).onfinish = () => {
                 content.style.height = content.scrollHeight + 'px';
-              }
+                detailsObservers.set(details, syncOpenDetailsHeight(details, content));
+              };
             });
-          };
+          });
         }
       });
     });
@@ -1074,6 +1069,27 @@ details[open] .content {
     return ro;
   }
 
+  function hydrateOpenDetails(root = document) {
+      root.querySelectorAll('details[open]').forEach(details => {
+        const content = details.querySelector('.content');
+        if (!content) return;
+
+        // Cancel any stale animations
+        content.getAnimations().forEach(a => a.cancel());
+
+        // Force correct height
+        content.style.height = content.scrollHeight + 'px';
+        content.style.opacity = '1';
+
+        // Attach observer if missing
+        if (!detailsObservers.has(details)) {
+          const ro = syncOpenDetailsHeight(details, content);
+          if (ro) detailsObservers.set(details, ro);
+        }
+      });
+    }
+
+
 
   
   const partials = [
@@ -1095,10 +1111,18 @@ details[open] .content {
 
   initUI();
   persistDetailsState(document);
-  // Safety: disconnect any leftover observers before re-binding
+
+  // Ensure clean slate
   detailsObservers.forEach(ro => ro.disconnect());
   detailsObservers.clear();
+
+  // Bind animations
   animateDetails(document);
+
+  // 🔑 FINAL STEP: hydrate restored-open sections
+  requestAnimationFrame(() => {
+    hydrateOpenDetails(document);
+  });
 </script>
 
 <script>

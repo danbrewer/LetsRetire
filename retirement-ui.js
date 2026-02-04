@@ -3571,8 +3571,8 @@ function initUI() {
 //   });
 // }
 
-/** @type {WeakMap<HTMLElement, ResizeObserver>} */
-const detailsObservers = new WeakMap();
+/** @type {Map<HTMLElement, ResizeObserver>} */
+const detailsObservers = new Map();
 
 
 /**
