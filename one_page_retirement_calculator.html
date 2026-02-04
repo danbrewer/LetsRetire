@@ -1093,9 +1093,7 @@ details[open] .content {
 //   }
 
   function syncOpenDetailsHeight(details, content) {
-    const container = details.closest('.card');
-    const inner = content.firstElementChild;
-
+    const inputsScroll = details.closest('.inputs-scroll');
     let raf;
 
     const ro = new ResizeObserver(() => {
@@ -1107,12 +1105,14 @@ details[open] .content {
       });
     });
 
-    ro.observe(content);
-    if (inner) ro.observe(inner);
-    if (container) ro.observe(container);
+    // 🔑 Observe the container-query driver
+    if (inputsScroll) {
+      ro.observe(inputsScroll);
+    }
 
     return ro;
   }
+
 
   
   const partials = [
