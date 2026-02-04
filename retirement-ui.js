@@ -3581,14 +3581,14 @@ const detailsObservers = new WeakMap();
  */
 function resyncAllOpenDetails(root = document) {
   root.querySelectorAll("details[open]").forEach(details => {
+    // Find the content element inside every open details section
     const content = /** @type {HTMLElement} */ (
       details.querySelector(".content")
     );
     if (!content) return;
 
-    // HARD reset out of any stale auto-height state
-    content.style.height = "0px";
-    content.offsetHeight; // force reflow
+    // Cancel any in-flight animations
+    content.getAnimations().forEach((a) => a.cancel());
 
     // 🔑 Force a real height recompute
     content.style.height = content.scrollHeight + "px";

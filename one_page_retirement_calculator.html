@@ -1032,7 +1032,10 @@ details[open] .content {
             { duration: 260, easing: 'ease-out', fill: 'forwards' }
           ).onfinish = () => {
             content.style.height = content.scrollHeight + 'px';
-            detailsObservers.set(details, syncOpenDetailsHeight(details, content));
+            const ro = syncOpenDetailsHeight(details, content);
+            if (ro) {
+              detailsObservers.set(details, ro);
+            }
 
             // 🔑 Force one immediate sync after observer attaches
             requestAnimationFrame(() => {
@@ -1048,6 +1051,10 @@ details[open] .content {
 
   function syncOpenDetailsHeight(details, content) {
     const inputsScroll = details.closest('.inputs-scroll');
+    if (!inputsScroll) {
+      console.warn('No inputs-scroll found for details', details);
+      return null;
+    }
     let raf;
 
     const ro = new ResizeObserver(() => {
@@ -1088,6 +1095,9 @@ details[open] .content {
 
   initUI();
   persistDetailsState(document);
+  // Safety: disconnect any leftover observers before re-binding
+  detailsObservers.forEach(ro => ro.disconnect());
+  detailsObservers.clear();
   animateDetails(document);
 </script>
 
