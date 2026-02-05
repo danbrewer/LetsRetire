@@ -5,146 +5,77 @@
     </summary>
     <div class="content">
         <div class="grid-2">
-            <!-- <div> 
-                <div class="label-with-help">
-                    <label for="totalSavingsBalance">
-                        Savings balance (taxable interest)
-                    </label>
-                    
-                </div>
-                <input id="totalSavingsBalance" type="number" step="1000" value="80000" />
-            </div> -->
-            <!-- FANCY SCHMANCY NEW COMPONENT -->
             <labeled-input 
                 input-id="totalSavingsBalance" 
                 label="Savings balance (taxable interest)" 
                 help="totalSavingsBalance"
                 step="1000" value="80000">
             </labeled-input>
-
-            <div> <!-- savings return rate -->
-                <label for="savingsReturnRate">Savings return rate (APY %)
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1em" height="1em" fill="white"
-                        class="help-icon" onclick="showHelpToast(event, 'savingsReturnRate')" style="vertical-align: middle;">
-                        <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none" />
-                        <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2" fill="none"
-                            stroke-linecap="round" />
-                        <circle cx="12" cy="17" r="1" fill="white" />
-                    </svg>
-                </label>
-                <input id="retsavingsReturnRateTax" type="number" step="0.1" value="5.5" />
-            </div>
+            <labeled-input 
+                input-id="savingsReturnRate" 
+                label="Savings return rate (APY %)" 
+                help="savingsReturnRate"
+                step="0.1" value="5.5">
+            </labeled-input>
         </div>
         <div class="grid-2">
-            <div> <!-- subject 401k balance -->
-                <label for="subject401kBalance">Subject (401k/Trad IRA) balance
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1em" height="1em" fill="white"
-                        class="help-icon" onclick="showHelpToast(event, 'balPre')" style="vertical-align: middle;">
-                        <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none" />
-                        <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2"
-                            fill="none" stroke-linecap="round" />
-                        <circle cx="12" cy="17" r="1" fill="white" />
-                    </svg>
-                </label>
-                <input id="subject401kBalance" type="number" step="1000" value="400000" />
-            </div>
-            <div> <!-- subject 401k return rate -->
-                <label for="subject401kReturnRate">Savings return rate (APY %)
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1em" height="1em" fill="white"
-                        class="help-icon" onclick="showHelpToast(event, 'subject401kReturnRate')" style="vertical-align: middle;">
-                        <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none" />
-                        <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2" fill="none"
-                            stroke-linecap="round" />
-                        <circle cx="12" cy="17" r="1" fill="white" />
-                    </svg>
-                </label>
-                <input id="subject401kReturnRate" type="number" step="0.1" value="5.5" />
-            </div>
+            <labeled-input 
+                input-id="subject401kBalance" 
+                label="Subject (401k/Trad IRA) balance" 
+                help="balPre"
+                step="1000" value="400000">
+            </labeled-input>
+            <labeled-input 
+                input-id="subject401kReturnRate" 
+                label="Subject 401k return rate (APY %)" 
+                help="subject401kReturnRate"
+                step="0.1" value="5.5">
+            </labeled-input>
+            
         </div>
         <div class="grid-2">
-            <div> <!-- partner 401k balance -->
-                <div class="label-with-help">
-                    <label for="partner401kBalance">
-                        Pre‑tax return (%/yr)
-                    </label>
-                    <svg class="help-icon" 
-                        width="1em" 
-                        height="1em" 
-                        role="button" 
-                        tabindex="0"
-                        onclick="showHelpToast(event, 'totalSavingsBalance')">
-                        <use href="#icon-help"></use>
-                    </svg>
-                </div>
-                <input id="partner401kBalance" type="number" step="0.1" value="6.0" />
-            </div>
-            <div> <!-- partner 401k return rate -->
-                <label for="partner401kReturnRate">Savings return (APY)
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1em" height="1em" fill="white"
-                        class="help-icon" onclick="showHelpToast(event, 'partner401kReturnRate')"
-                        style="vertical-align: middle;">
-                        <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none" />
-                        <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2" fill="none"
-                            stroke-linecap="round" />
-                        <circle cx="12" cy="17" r="1" fill="white" />
-                    </svg>
-                </label>
-                <input id="partner401kReturnRate" type="number" step="0.1" value="5.5" />
-            </div>
+            <labeled-input 
+                input-id="partner401kBalance" 
+                label="Partner (401k/Trad IRA) balance" 
+                help="balPre"
+                step="1000" value="300000">
+            </labeled-input>
+            <labeled-input 
+                input-id="partner401kReturnRate" 
+                label="Partner 401k return rate (APY %)" 
+                help="partner401kReturnRate"
+                step="0.1" value="5.5">
+            </labeled-input>
+           
         </div>
         <div class="grid-2">
-            <div> <!-- subject Roth balance -->
-                <label for="subjectRothBalance">Subject Roth balance
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1em" height="1em"
-                        fill="white" class="help-icon" onclick="showHelpToast(event, 'balRoth')"
-                        style="vertical-align: middle;">
-                        <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none" />
-                        <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2"
-                            fill="none" stroke-linecap="round" />
-                        <circle cx="12" cy="17" r="1" fill="white" />
-                    </svg>
-                </label>
-                <input id="subjectRothBalance" type="number" step="1000" value="100000" />
-            </div>
-            <div> <!-- subject Roth return rate -->
-                <label for="subjectRothReturnRate">Savings return (APY)
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1em" height="1em" fill="white"
-                        class="help-icon" onclick="showHelpToast(event, 'subjectRothReturnRate')" style="vertical-align: middle;">
-                        <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none" />
-                        <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2" fill="none"
-                            stroke-linecap="round" />
-                        <circle cx="12" cy="17" r="1" fill="white" />
-                    </svg>
-                </label>
-                <input id="subjectRothReturnRate" type="number" step="0.1" value="5.5" />
-            </div>
+            <labeled-input 
+                input-id="subjectRothBalance" 
+                label="Subject Roth balance" 
+                help="balRoth"
+                step="1000" value="100000">
+            </labeled-input>
+            <labeled-input 
+                input-id="subjectRothReturnRate" 
+                label="Subject Roth return rate (APY %)" 
+                help="subjectRothReturnRate"
+                step="0.1" value="5.5">
+            </labeled-input>
         </div>
 
         <div class="grid-2">
-            <div> <!-- partner Roth balance -->
-                <label for="partnerRothBalance">Roth return (%/yr)
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1em" height="1em" fill="white"
-                        class="help-icon" onclick="showHelpToast(event, 'partnerRothBalance')" style="vertical-align: middle;">
-                        <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none" />
-                        <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2" fill="none"
-                            stroke-linecap="round" />
-                        <circle cx="12" cy="17" r="1" fill="white" />
-                    </svg>
-                </label>
-                <input id="partnerRothBalance" type="number" step="1000" value="100000" />
-            </div>
-            <div> <!-- partner Roth return rate -->
-                <label for="partnerRothReturnRate">Savings return (APY)
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1em" height="1em" fill="white"
-                        class="help-icon" onclick="showHelpToast(event, 'partnerRothReturnRate')" style="vertical-align: middle;">
-                        <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none" />
-                        <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2" fill="none"
-                            stroke-linecap="round" />
-                        <circle cx="12" cy="17" r="1" fill="white" />
-                    </svg>
-                </label>
-                <input id="partnerRothReturnRate" type="number" step="0.1" value="5.5" />
-            </div>
+            <labeled-input 
+                input-id="partnerRothBalance" 
+                label="Partner Roth balance" 
+                help="balRoth"
+                step="1000" value="100000">
+            </labeled-input>
+            <labeled-input 
+                input-id="partnerRothReturnRate" 
+                label="Partner Roth return rate (APY %)" 
+                help="partnerRothReturnRate"
+                step="0.1" value="5.5">
+            </labeled-input>
         </div>
     </div>
 </details>
