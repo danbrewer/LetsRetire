@@ -670,15 +670,33 @@
       background: #17a2b8;
     }
     
-    .help-icon {
-      cursor: pointer;
-      transition: opacity 0.2s ease;
-      margin-left: 0.3em;
-      vertical-align: middle;
-    }
-    .help-icon:hover {
-      opacity: 0.7;
-    }
+ /* Help icon — matches legacy inline SVG exactly */
+.help-icon {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+
+  /* Match old muted gray */
+  color: var(--muted);
+
+    /* Force SVG to respect currentColor */
+  fill: currentColor;
+  stroke: currentColor;
+
+  /* Match old perceived size */
+  transform: scale(0.78);
+  transform-origin: center;
+
+  margin-left: 0.3em;
+  vertical-align: middle;
+
+  cursor: pointer;
+}
+
+.help-icon:hover {
+  opacity: 1.0;
+  color: #FFFFFF;
+}
 
     #splitter {
       cursor: col-resize;
@@ -810,6 +828,16 @@ details[open] .content {
   flex: 1 1 160px;
 }
 
+/* Wrapper behaves like inline text */
+.label-with-help {
+  display: inline;
+}
+
+/* Label keeps existing typography */
+.label-with-help > label {
+  display: inline;
+}
+
 
   </style>
 </head>
@@ -829,6 +857,30 @@ details[open] .content {
  
     </div>
   </header>
+
+  <!-- SVG symbol definitions (define once) -->
+    <svg xmlns="http://www.w3.org/2000/svg" 
+      viewBox="0 0 24 24" 
+      width="1em" 
+      height="1em" 
+      fill="white" 
+      class="help-icon"
+      onclick="showHelpToast(event, 'totalSavingsBalance')" 
+      style="vertical-align: middle;">
+      <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none" />
+      <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2" fill="none"
+        stroke-linecap="round" />
+      <circle cx="12" cy="17" r="1" fill="white" />
+    </svg>
+  <svg xmlns="http://www.w3.org/2000/svg" 
+    style="display: none;">
+    <symbol id="icon-help" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" fill="none" />
+      <path d="M9.5 9a2.5 2.5 0 0 1 5 0
+           c0 1.5-2.5 2-2.5 3.5v1" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" />
+      <circle cx="12" cy="17" r="1" fill="currentColor" />
+    </symbol>
+  </svg>
 
   <main class="wrap">
     <!-- Inputs -->
@@ -1110,6 +1162,13 @@ details[open] .content {
   );
 
   initUI();
+
+   document.querySelectorAll("labeled-input").forEach((el) => {
+      el.onHelp = (event, helpKey) => {
+        showHelpToast(event, helpKey);
+      };
+    });
+  
   persistDetailsState(document);
 
   // Ensure clean slate
@@ -1144,6 +1203,7 @@ details[open] .content {
 </script>
 
 <!-- Module Imports -->
+<script type="module" src="components.js"></script>
 <script type="module" src="debugUtils.js"></script>
 <script type="module" src="consts.js"></script>
 <script type="module" src="utils.js"></script>

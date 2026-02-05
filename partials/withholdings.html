@@ -1,33 +1,46 @@
 <details data-key="withholdings">
     <summary>
-        <span>📊 Withholding Rates</span>
+        <span>📊 Taxes</span>
         <span class="chev">...</span>
     </summary>
     <div class="content">
+        <div>
+            <label for="filingStatus">Tax filing status
+                <span class="help-icon-placeholder" data-field="filingStatus"></span>
+            </label>
+            <select id="filingStatus">
+                <option value="single">Single</option>
+                <option value="married">Married Filing Jointly</option>
+            </select>
+        </div>
+                <div>
+                    <h5>Withholding Rates (%)</h5>
+                </div>
         <div class="grid-2">
             <div>
-                <label for="taxPre">401k withdrawals (%)
+                <label for="taxPre">401k withdrawals
                     <span class="help-icon-placeholder" data-field="taxPre"></span>
                 </label>
                 <input id="taxPre" type="number" step="0.5" value="22" />
             </div>
             <div>
-                <label for="taxTaxable">Other taxable withdrawals (%)
+                <label for="taxTaxable">Misc. income
                     <span class="help-icon-placeholder" data-field="taxTaxable"></span>
                 </label>
                 <input id="taxTaxable" type="number" step="0.5" value="10" />
             </div>
         
         </div>
+
         <div class="grid-2">
             <div>
-                <label for="taxSS">Social Security disbursements (%)
+                <label for="taxSS">Social Security
                     <span class="help-icon-placeholder" data-field="taxSS"></span>
                 </label>
                 <input id="taxSS" type="number" step="0.5" value="10" />
             </div>
             <div>
-                <label for="taxPension">Pension disbursements (%)
+                <label for="taxPension">Pension income
                     <span class="help-icon-placeholder" data-field="taxPension"></span>
                 </label>
                 <input id="taxPension" type="number" step="0.5" value="20" />
