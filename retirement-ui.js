@@ -338,9 +338,9 @@ function showHelpToast(event, fieldId) {
       title: "Roth Balance",
       body: "Your current balance in Roth retirement accounts like Roth 401(k) or Roth IRA. These grow tax-free.",
     },
-    balSavings: {
-      title: "Taxable Balance",
-      body: "Your current balance in regular taxable investment accounts like brokerage accounts, savings, or CDs.",
+    startingSavingsBalance: {
+      title: "Savings Balance",
+      body: "Total savings starting balance for regular taxable investment accounts like brokerage accounts, savings, or CDs.",
     },
     workingYearsSpending: {
       title: "Working Years Spending",
