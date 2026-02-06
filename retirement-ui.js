@@ -342,6 +342,14 @@ function showHelpToast(event, fieldId) {
       title: "Taxable Balance",
       body: "Your current balance in regular taxable investment accounts like brokerage accounts, savings, or CDs.",
     },
+    workingYearsSpending: {
+      title: "Working Years Spending",
+      body: "The amount you expect to spend per year while you are still working, expressed in today's dollars. This will be adjusted for inflation over time.",
+    },
+    retirementYearsSpending: {
+      title: "Retirement Years Spending",
+      body: "The amount you expect to spend per year during retirement, expressed in today's dollars. This will be adjusted for inflation to your retirement date.",
+    },
     retPre: {
       title: "Pre-tax Return Rate",
       body: "The expected annual return on your pre-tax retirement investments, expressed as a percentage. Typically 6-8% for diversified portfolios.",

@@ -1,9 +1,17 @@
 <details data-key="annualSpending" >
     <summary>
-        <span>🛒 Annual Spending</span>
+        <span>🗓️ Fiscal Planning</span>
         <span class="chev">▼</span>
     </summary>
     <div class="content">
+        <div class="grid-2">
+            <labeled-input input-id="workingYearsSpending" label="Working years spending ($/yr)"
+                help="workingYearsSpending" type="number" step="1000" value="80000">
+            </labeled-input>
+            <labeled-input input-id="retirementYearsSpending" label="Retirement years spending ($/yr)"
+                help="retirementYearsSpending" type="number" step="1000" value="80000">
+            </labeled-input>
+        </div>
         <div class="grid-2">
             <labeled-input input-id="currentYear" label="Current year" help="currentYear" type="number" min="2020" max="2100"
                 step="1" value="2024">
@@ -12,26 +20,8 @@
                 min="0">
             </labeled-input>
         </div>
-        <div class="grid-2">
-
-            <labeled-input 
-                input-id="retirementYearsSpending" 
-                label="Retirement years spending <br> (in today's $ / yr)" 
-                help="retirementYearsSpending"
-                type="number" step="1000" value="80000">
-            </labeled-input>
-        </div>
-        <div>
-            <!-- <labeled-input
-                input-id="targetYear" 
-                label="Target year for spending values" 
-                help="targetYear"
-                type="number" min="2024" max="2100" step="1" value="2046">
-            </labeled-input> -->
-
-
+        <div>  
             <div class="hint">
-
                 <div style="display: flex; align-items: center; gap: 5px;">
                     <input type="checkbox" id="useCurrentYearValues" style="width: auto;" />
                     <label for="useCurrentYearValues">
