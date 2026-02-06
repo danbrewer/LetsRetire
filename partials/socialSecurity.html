@@ -1,46 +1,28 @@
 <details data-key="socialSecurity">
     <summary>
         <span>🏛️ Social Security</span>
-        <span class="chev">▶</span>
+        <span class="chev">▼</span>
     </summary>
     <div class="content">
         <div class="grid-3">
-            <div>
-                <label for="ssSubject">Subject Social Security ($/mo, first year)
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1em" height="1em" fill="white"
-                        class="help-icon" onclick="showHelpToast(event, 'ssSubject')" style="vertical-align: middle;">
-                        <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none" />
-                        <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2"
-                            fill="none" stroke-linecap="round" />
-                        <circle cx="12" cy="17" r="1" fill="white" />
-                    </svg>
-                </label>
-                <input id="ssSubject" type="number" step="50" value="2800" />
-            </div>
-            <div>
-                <label for="ssPartner">Partner Social Security ($/mo, first year)
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1em" height="1em" fill="white"
-                        class="help-icon" onclick="showHelpToast(event, 'ssSubject')" style="vertical-align: middle;">
-                        <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none" />
-                        <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2" fill="none"
-                            stroke-linecap="round" />
-                        <circle cx="12" cy="17" r="1" fill="white" />
-                    </svg>
-                </label>
-                <input id="ssSubject" type="number" step="50" value="2800" />
-            </div>
-            <div>
-                <label for="ssWithholdingRate">Withholding rate (%)
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1em" height="1em" fill="white"
-                        class="help-icon" onclick="showHelpToast(event, 'ssWithholdingRate')" style="vertical-align: middle;">
-                        <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none" />
-                        <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2" fill="none"
-                            stroke-linecap="round" />
-                        <circle cx="12" cy="17" r="1" fill="white" />
-                    </svg>
-                </label>
-                <input id="ssWithholdingRate" type="number" step="1" value="15" />
-            </div>
+            <labeled-input
+                input-id="ssSubject" 
+                label="Subject ($/mo, first year)" 
+                help="ssSubject"
+                type="number" step="50" value="2800">
+            </labeled-input>
+            <labeled-input
+                input-id="ssPartner" 
+                label="Partner ($/mo, first year)" 
+                help="ssPartner"
+                type="number" step="50" value="2800">
+            </labeled-input>
+            <labeled-input
+                input-id="ssWithholdingRate" 
+                label="Withholding rate (%)" 
+                help="ssWithholdingRate"
+                type="number" step="1" value="15">
+            </labeled-input>
         </div>
     </div>
 </details>

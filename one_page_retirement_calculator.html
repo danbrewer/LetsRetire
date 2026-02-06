@@ -82,8 +82,8 @@
     details[open] summary { background: #0d172b; }
     summary { padding: 14px 14px; cursor: pointer; list-style: none; user-select: none; display:flex; align-items:center; justify-content:space-between; gap:8px; }
     summary::-webkit-details-marker{ display:none; }
-    .chev { transition: transform .2s; }
-    details[open] .chev{ transform: rotate(90deg); }
+    .chev { transition: transform .4s; }
+    details[open] .chev{ transform: rotate(180deg); }
     .content { padding: 14px; border-top: 1px dashed var(--border); background: rgba(255,255,255,.02); display:grid; gap:10px; }
 
     .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -770,7 +770,7 @@ details[open] .content {
 }
 
 .chev {
-  transition: transform 220ms ease;
+  transition: transform 650ms ease;
 }
 
 
@@ -1000,7 +1000,7 @@ details[open] .content {
 
 
 <script type="module">
-  import { loadPartial, initUI, resyncAllOpenDetails, detailsObservers } from './retirement-ui.js';
+  import { showHelpToast, loadPartial, initUI, resyncAllOpenDetails, detailsObservers } from './retirement-ui.js';
   
   window.resyncAllOpenDetails = resyncAllOpenDetails;
 
@@ -1148,7 +1148,7 @@ details[open] .content {
     ['#subjectSection', './partials/subject.html'],
     ['#socialSecuritySection', './partials/socialSecurity.html'],
     ['#pensionSection', './partials/pension.html'],
-    ['#spouseSection', './partials/spouse.html'],
+    ['#spouseSection', './partials/partner.html'],
     ['#annualSpendingSection', './partials/annualSpending.html'],
     ['#workSection', './partials/work.html'],
     ['#balancesSection', './partials/balances.html'],

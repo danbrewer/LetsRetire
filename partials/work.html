@@ -1,48 +1,16 @@
 <details data-key="work">
     <summary>
         <span>💼 Working Years</span>
-        <span class="chev">▶</span>
+        <span class="chev">▼</span>
     </summary>
     <div class="content">
-        <div class="grid">
-            <div>
-                <label for="salary">Current salary ($/yr)
-                    <span class="help-icon-placeholder" data-field="salary"></span>
-                </label>
-                <input id="salary" type="number" step="1000" value="150000" />
-            </div>
-            <div>
-                <label for="salaryGrowth">Salary growth (%)
-                    <span class="help-icon-placeholder" data-field="salaryGrowth"></span>
-                </label>
-                <input id="salaryGrowth" type="number" step="0.1" value="3.0" />
-            </div>
-        </div>
         <div>
-            <label for="pretaxPct">Pre‑tax 401k/IRA contribution (% of salary)
-                <span class="help-icon-placeholder" data-field="pretaxPct"></span>
-            </label>
-            <input id="pretaxPct" type="number" step="0.1" value="10" />
-        </div>
-        <div>
-            <label for="rothPct">Roth contribution (% of salary)
-                <span class="help-icon-placeholder" data-field="rothPct"></span>
-            </label>
-            <input id="rothPct" type="number" step="0.1" value="5" />
-        </div>
-        <div>
-            <label for="taxablePct">Savings rate (% of salary)
-                <span class="help-icon-placeholder" data-field="taxablePct"></span>
-            </label>
-            <input id="taxablePct" type="number" step="0.1" value="2" />
-        </div>
-        <div>
-            <label for="matchCap">Employer 401k match up to (% of salary)</label>
-            <input id="matchCap" type="number" step="0.1" value="4" />
-        </div>
-        <div>
-            <label for="matchRate">Employer 401k match rate (%)</label>
-            <input id="matchRate" type="number" step="1" value="50" />
+        <labeled-input 
+            input-id="workingYearsSpending" 
+            label="Working years spending (in today's $ / yr)"
+            help="workingYearsSpending" 
+            type="number" step="1000" value="80000">
+        </labeled-input>
         </div>
     </div>
 </details>

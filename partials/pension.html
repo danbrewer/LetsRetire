@@ -1,87 +1,61 @@
 <details data-key="pension">
     <summary>
         <span>⏳ Pensions</span>
-        <span class="chev">▶</span>
+        <span class="chev">▼</span>
     </summary>
     <div class="content">
         <div class="grid-3">
-            <div>
-                <label for="subjectPensionMonthly">Subject Pension ($/mo)
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1em" height="1em" fill="white"
-                        class="help-icon" onclick="showHelpToast(event, 'subjectPensionMonthly')" style="vertical-align: middle;">
-                        <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none" />
-                        <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2"
-                            fill="none" stroke-linecap="round" />
-                        <circle cx="12" cy="17" r="1" fill="white" />
-                    </svg>
-                </label>
-                <input id="subjectPensionMonthly" type="number" step="50" value="0" />
-            </div>
-            <div>
-                <label for="subjectPensionSurvivorship">Sub. Pension Survivorship ($/mo)
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1em" height="1em" fill="white"
-                        class="help-icon" onclick="showHelpToast(event, 'subjectPensionSurvivorship')" style="vertical-align: middle;">
-                        <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none" />
-                        <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2"
-                            fill="none" stroke-linecap="round" />
-                        <circle cx="12" cy="17" r="1" fill="white" />
-                    </svg>
-                </label>
-                <input id="subjectPensionSurvivorship" type="number" step="0.1" value="0" />
-            </div>
-            <div>
-                <label for="subjectPensionWithholdingRate">Withholding rate (%)
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1em" height="1em" fill="white"
-                        class="help-icon" onclick="showHelpToast(event, 'subjectPensionWithholdingRate')" style="vertical-align: middle;">
-                        <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none" />
-                        <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2" fill="none"
-                            stroke-linecap="round" />
-                        <circle cx="12" cy="17" r="1" fill="white" />
-                    </svg>
-                </label>
-                <input id="subjectPensionWithholdingRate" type="number" step="1" value="15" />
-            </div>
+            <labeled-input
+                input-id="subjectPensionStartAge" 
+                label="Subject Pension Start Age" 
+                help="subjectPensionStartAge"
+                type="number" min="55" max="70" step="1" value="65">
+            </labeled-input>
+            <labeled-input
+                input-id="partnerPensionStartAge" 
+                label="Partner Pension Start Age" 
+                help="partnerPensionStartAge"
+                type="number" min="55" max="70" step="1" value="65">
+            </labeled-input>
+            <labeled-input
+                input-id="subjectPensionMonthly" 
+                label="Subject Pension Monthly ($/mo)" 
+                help="subjectPensionMonthly"
+                type="number" step="0.1" value="2.0">
+            </labeled-input>
+            <labeled-input 
+                input-id="subjectPensionSurvivorship" 
+                label="Subject Pension Survivorship ($/mo)" 
+                help="subjectPensionSurvivorship"
+                type="number" step="0.1" value="2.0">
+            </labeled-input>
+            <labeled-input
+                input-id="subjectPensionWithholdingRate" 
+                label="Subject Pension Withholding Rate (%)" 
+                help="subjectPensionWithholdingRate"
+                type="number" step="1" value="15">
+            </labeled-input>
         </div>
         <div class="grid-3">
-            <div>
-                <label for="partnerPensionMonthly">Partner Pension ($/mo)
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1em" height="1em" fill="white"
-                        class="help-icon" onclick="showHelpToast(event, 'partnerPensionMonthly')"
-                        style="vertical-align: middle;">
-                        <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none" />
-                        <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2" fill="none"
-                            stroke-linecap="round" />
-                        <circle cx="12" cy="17" r="1" fill="white" />
-                    </svg>
-                </label>
-                <input id="partnerPensionMonthly" type="number" step="50" value="0" />
-            </div>
-            <div>
-                <label for="partnerPensionSurvivorship">Partner Pension Survivorship ($/mo)
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1em" height="1em" fill="white"
-                        class="help-icon" onclick="showHelpToast(event, 'partnerPensionSurvivorship')"
-                        style="vertical-align: middle;">
-                        <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none" />
-                        <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2" fill="none"
-                            stroke-linecap="round" />
-                        <circle cx="12" cy="17" r="1" fill="white" />
-                    </svg>
-                </label>
-                <input id="partnerPensionSurvivorship" type="number" step="0.1" value="0" />
-            </div>
-            <div>
-                <label for="partnerPensionWithholdingRate">Withholding rate (%)
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1em" height="1em" fill="white"
-                        class="help-icon" onclick="showHelpToast(event, 'partnerPensionWithholdingRate')"
-                        style="vertical-align: middle;">
-                        <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none" />
-                        <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2" fill="none"
-                            stroke-linecap="round" />
-                        <circle cx="12" cy="17" r="1" fill="white" />
-                    </svg>
-                </label>
-                <input id="partnerPensionWithholdingRate" type="number" step="1" value="15" />
-            </div>
+            <labeled-input
+                input-id="partnerPensionMonthly" 
+                label="Partner Pension ($/mo)" 
+                help="partnerPensionMonthly"
+                type="number" step="50" value="0">
+            </labeled-input>
+            <labeled-input
+                input-id="partnerPensionSurvivorship" 
+                label="Partner Pension Survivorship ($/mo)" 
+                help="partnerPensionSurvivorship"
+                type="number" step="0.1" value="0">
+            </labeled-input>
+            <labeled-input
+                input-id="partnerPensionWithholdingRate" 
+                label="Partner Pension Withholding Rate (%)" 
+                help="partnerPensionWithholdingRate"
+                type="number" step="1" value="15">
+            </labeled-input>
+
         </div>
     </div>
 </details>

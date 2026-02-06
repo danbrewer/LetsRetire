@@ -1,53 +1,35 @@
 <details data-key="annualSpending" >
     <summary>
         <span>🛒 Annual Spending</span>
-        <span class="chev">▶</span>
+        <span class="chev">▼</span>
     </summary>
     <div class="content">
         <div class="grid-2">
-            <div>
-                <label for="workingYearsSpending">Working years spending <br>(in today's $ / yr)
-                    <span class="help-icon-placeholder" data-field="workingYearsSpending"></span>
-                </label>
-                <input id="workingYearsSpending" type="number" step="1000" value="80000" />
-                <div class="hint">COLA will be applied annually.</div>
-            </div>
-            <div>
-                <label for="retirementYearsSpending">Retirement years spending <br> (in today's $ / yr)
-                    <span class="help-icon-placeholder" data-field="retirementYearsSpending"></span>
-                </label>
-                <input id="retirementYearsSpending" type="number" step="1000" value="80000" />
-                <div class="hint">COLA will be applied annually.</div>
-            </div>
-            
-            
+            <labeled-input input-id="currentYear" label="Current year" help="currentYear" type="number" min="2020" max="2100"
+                step="1" value="2024">
+            </labeled-input>
+            <labeled-input input-id="inflation" label="Inflation Rate (%)" help="inflation" type="number" step="0.1" value="2.5"
+                min="0">
+            </labeled-input>
         </div>
-        <div class="grid-3">
-            <div>
-                <label for="inflation"><br>Inflation Rate (%)
-                    <span class="help-icon-placeholder" data-field="inflation"></span>
-                </label>
-                <input id="inflation" type="number" step="0.1" value="2.5" min="0" />
-            </div>
-            <div>
-                <label for="spendingDecline">Annual spending decline in retirement (%)
-                    <span class="help-icon-placeholder" data-field="spendingDecline"></span>
-                </label>
-                <input id="spendingDecline" type="number" step="0.1" value="0" />
-                <div class="hint">Spending reduction each year (e.g., 2% = spending drops to 98%, then 96%, etc.)</div>
-            </div>
-            <div>
-                <label for="ssCola">Social Security COLA (%/yr)
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1em" height="1em" fill="white"
-                        class="help-icon" onclick="showHelpToast(event, 'ssCola')" style="vertical-align: middle;">
-                        <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none" />
-                        <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5v1" stroke="white" stroke-width="2" fill="none"
-                            stroke-linecap="round" />
-                        <circle cx="12" cy="17" r="1" fill="white" />
-                    </svg>
-                </label>
-                <input id="ssCola" type="number" step="0.1" value="2.0" />
-            </div>
+        <div class="grid-2">
+
+            <labeled-input 
+                input-id="retirementYearsSpending" 
+                label="Retirement years spending <br> (in today's $ / yr)" 
+                help="retirementYearsSpending"
+                type="number" step="1000" value="80000">
+            </labeled-input>
+        </div>
+        <div>
+            <!-- <labeled-input
+                input-id="targetYear" 
+                label="Target year for spending values" 
+                help="targetYear"
+                type="number" min="2024" max="2100" step="1" value="2046">
+            </labeled-input> -->
+
+
             <div class="hint">
 
                 <div style="display: flex; align-items: center; gap: 5px;">

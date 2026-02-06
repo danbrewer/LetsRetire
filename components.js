@@ -7,12 +7,35 @@ class LabeledInput extends HTMLElement {
 
   connectedCallback() {
     console.log("LabeledInput connected");
-    const id = this.getAttribute("input-id");
+    const id = this.getAttribute("input-id") ?? "";
     const label = this.getAttribute("label") ?? "";
     const help = this.getAttribute("help");
     const type = this.getAttribute("type") ?? "number";
     const step = this.getAttribute("step");
     const value = this.getAttribute("value");
+
+    /** @type {HTMLInputElement | HTMLSelectElement} */
+    let control;
+
+    if (type === "select") {
+      control = document.createElement("select");
+      control.id = id;
+
+      // Move declarative <option>s into the select
+      this.querySelectorAll("option").forEach((opt) => {
+        control.appendChild(opt);
+      });
+
+      if (value !== null) {
+        control.value = value;
+      }
+    } else {
+      control = document.createElement("input");
+      control.id = id;
+      control.type = type;
+      if (step) control.step = step;
+      if (value !== null) control.value = value;
+    }
 
     this.innerHTML = `
       <div>
@@ -25,12 +48,10 @@ class LabeledInput extends HTMLElement {
             <use href="#icon-help"></use>
           </svg>
         </div>
-        <input id="${id}"
-               type="${type}"
-               ${step ? `step="${step}"` : ""}
-               ${value !== null ? `value="${value}"` : ""} />
       </div>
     `;
+
+    this.querySelector("div")?.appendChild(control);
 
     if (help) {
       const icon = this.querySelector(".help-icon");
