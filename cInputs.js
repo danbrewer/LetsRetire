@@ -1,14 +1,12 @@
 import { ACCOUNT_TYPES } from "./cAccount.js";
 import { compoundedRate } from "./utils.js";
 
-
-
 /**
  * @typedef {Object} RetirementYearExtraSpending
  * @property {number} year - Year number relative to retirement (1 = first year of retirement)
  * @property {number} amount - Extra spending amount for that year
- * 
- * 
+ *
+ *
  * @typedef {Object} InputsOptions
  * @property {number} [startingYear]
  * @property {number} [initialAgeSubject]
@@ -27,11 +25,9 @@ import { compoundedRate } from "./utils.js";
  * @property {number} [partnerRetireAge]
  * @property {number} [partnerSsMonthly]
  * @property {number} [partnerSsStartAge]
- * @property {number} [partnerSsCola]
  * @property {number} [partnerPenMonthly]
  * @property {number} [partnerPenStartAge]
  * @property {number} [partner401kStartAge]
- * @property {number} [partnerPenCola]
  * @property {number} [partnerTaxSS]
  * @property {number} [partnerPensionWithholdings]
  *
@@ -43,8 +39,8 @@ import { compoundedRate } from "./utils.js";
  * @property {number} [partnerCareer401kContributionRate]
  * @property {number} [subjectRothContributionRate]
  * @property {number} [partnerRothContributionRate]
- * @property {number} [employer401kMatchRate]
- * @property {number} [subject401kMatchRate]
+ * @property {number} [subjectEmp401kMatchRate]
+ * @property {number} [subject401kContributionRate]
  *
  * @property {number} [subject401kStartingBalance]
  * @property {number} [subjectRothStartingBalance]
@@ -61,7 +57,6 @@ import { compoundedRate } from "./utils.js";
  * @property {number} [subjectSsMonthly]
  * @property {number} [ssCola]
  * @property {number} [subjectPensionMonthly]
- * @property {number} [penCola]
  *
  * @property {string} [filingStatus]
  * @property {boolean} [useRMD]
@@ -125,11 +120,9 @@ class Inputs {
       partnerRetireAge = 0,
       partnerSsMonthly = 0,
       partnerSsStartAge = 0,
-      partnerSsCola = 0,
       partnerPenMonthly = 0,
       partnerPenStartAge = 0,
       partner401kStartAge = 0,
-      partnerPenCola = 0,
       partnerTaxSS = 0,
       partnerPensionWithholdings = 0,
 
@@ -143,8 +136,8 @@ class Inputs {
       subjectRothContributionRate = 0,
       partnerRothContributionRate = 0,
       // taxablePct = 0,
-      employer401kMatchRate = 0,
-      subject401kMatchRate = 0,
+      subjectEmp401kMatchRate: employer401kMatchRate = 0,
+      subject401kContributionRate: subject401kMatchRate = 0,
       partnerCareerMonthlyPayrollDeductions = 1,
       subjectCareerMonthlyPayrollDeductions = 1,
       subjectPayPeriods = 26,
@@ -168,7 +161,6 @@ class Inputs {
       subjectSsMonthly = 0,
       ssCola = 0,
       subjectPensionMonthly = 0,
-      penCola = 0,
 
       // Taxes/settings
       filingStatus = "married",
@@ -225,7 +217,8 @@ class Inputs {
     this.endSubjectAge = endSubjectAge;
 
     /** @type {RetirementYearExtraSpending[]} */
-    this.retirementYearExtraSpending = options.retirementYearExtraSpending || [];
+    this.retirementYearExtraSpending =
+      options.retirementYearExtraSpending || [];
 
     /** @type {number} */
     this.inflationRate = inflationRate;
@@ -247,9 +240,6 @@ class Inputs {
     this.partnerSsStartAge = partnerSsStartAge;
 
     /** @type {number} */
-    this.partnerSsCola = partnerSsCola;
-
-    /** @type {number} */
     this.partnerPenMonthly = partnerPenMonthly;
 
     /** @type {number} */
@@ -257,9 +247,6 @@ class Inputs {
 
     /** @type {number} */
     this.partner401kStartAge = partner401kStartAge;
-
-    /** @type {number} */
-    this.partnerPenCola = partnerPenCola;
 
     /** @type {number} */
     this.partnerTaxSS = partnerTaxSS;
@@ -341,9 +328,6 @@ class Inputs {
 
     /** @type {number} */
     this.penMonthly = subjectPensionMonthly;
-
-    /** @type {number} */
-    this.penCola = penCola;
 
     // Tax rates and settings
     /** @type {string} */
@@ -571,10 +555,7 @@ class Inputs {
 
   get subjectPension() {
     if (this.subjectAge >= this.subjectPensionStartAge) {
-      return (this.penMonthly * 12).adjustedForInflation(
-        this.penCola,
-        this.subjectAge - this.subjectPensionStartAge
-      );
+      return (this.penMonthly * 12).asCurrency();
     }
     return 0;
   }
@@ -582,7 +563,7 @@ class Inputs {
   get partnerSs() {
     if (this.partnerAge >= this.partnerSsStartAge) {
       return (this.partnerSsMonthly * 12).adjustedForInflation(
-        this.partnerSsCola,
+        this.ssCola,
         this.partnerAge - this.partnerSsStartAge
       );
     }
@@ -591,10 +572,7 @@ class Inputs {
 
   get partnerPension() {
     if (this.partnerAge >= this.partnerPenStartAge) {
-      return (this.partnerPenMonthly * 12).adjustedForInflation(
-        this.partnerPenCola,
-        this.partnerAge - this.partnerPenStartAge
-      );
+      return (this.partnerPenMonthly * 12).asCurrency();
     }
     return 0;
   }
@@ -738,11 +716,9 @@ class Inputs {
       partnerRetireAge: this.partnerRetireAge,
       partnerSsMonthly: this.partnerSsMonthly,
       partnerSsStartAge: this.partnerSsStartAge,
-      partnerSsCola: this.partnerSsCola,
       partnerPenMonthly: this.partnerPenMonthly,
       partnerPenStartAge: this.partnerPenStartAge,
       partner401kStartAge: this.partner401kStartAge,
-      partnerPenCola: this.partnerPenCola,
       partnerTaxSS: this.partnerTaxSS,
       partnerPensionWithholdings: this.partnerTaxPension,
 
@@ -753,8 +729,8 @@ class Inputs {
       subjectCareer401kContributionRate: this.subjectCareer401kContributionRate,
       subjectRothContributionRate: this.subjectRothContributionRate,
       // taxablePct: this.taxablePct,
-      employer401kMatchRate: this.employer401kMatchRate,
-      subject401kMatchRate: this.subject401kMatchRate,
+      subjectEmp401kMatchRate: this.employer401kMatchRate,
+      subject401kContributionRate: this.subject401kMatchRate,
 
       subject401kStartingBalance: this.subject401kStartingBalance,
       subjectRothStartingBalance: this.subjectRothStartingBalance,
@@ -771,7 +747,6 @@ class Inputs {
       subjectSsMonthly: this.ssMonthly,
       ssCola: this.ssCola,
       subjectPensionMonthly: this.penMonthly,
-      penCola: this.penCola,
 
       filingStatus: this.filingStatus,
       useRMD: this.useRMD,

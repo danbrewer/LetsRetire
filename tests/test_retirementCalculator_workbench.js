@@ -52,8 +52,8 @@ function createInputs() {
     // partnerTaxSS: 0.1,
     subject401kStartAge: 62,
     partner401kStartAge: 62,
-    employer401kMatchRate: 0,
-    subject401kMatchRate: 0,
+    subjectEmp401kMatchRate: 0,
+    subject401kContributionRate: 0,
 
     // Pension
     subjectPensionStartAge: 65,
@@ -179,8 +179,8 @@ function createInputsNoFussNoMuss() {
     // partnerTaxSS: 0.1,
     subject401kStartAge: 62,
     partner401kStartAge: 62,
-    employer401kMatchRate: 0,
-    subject401kMatchRate: 0,
+    subjectEmp401kMatchRate: 0,
+    subject401kContributionRate: 0,
 
     // Pension
     subjectPensionStartAge: 65,

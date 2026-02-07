@@ -4,22 +4,24 @@
         <span class="chev">▼</span>
     </summary>
     <div class="content">
-        <div class="grid-2">
-            <labeled-input input-id="workingYearsSpending" label="Working years spending ($/yr)"
-                help="workingYearsSpending" type="number" step="1000" value="80000">
+            <labeled-input input-id="currentYear" label="Current year" help="currentYear" type="number" min="2020" max="2100"
+                step="1" value="2024">
+            </labeled-input>
+            <labeled-input input-id="workingYearsSpending" label="Working years spending ($/yr)" help="workingYearsSpending"
+                type="number" step="1000" value="80000">
             </labeled-input>
             <labeled-input input-id="retirementYearsSpending" label="Retirement years spending ($/yr)"
                 help="retirementYearsSpending" type="number" step="1000" value="80000">
             </labeled-input>
-        </div>
         <div class="grid-2">
-            <labeled-input input-id="currentYear" label="Current year" help="currentYear" type="number" min="2020" max="2100"
-                step="1" value="2024">
-            </labeled-input>
             <labeled-input input-id="inflation" label="Inflation Rate (%)" help="inflation" type="number" step="0.1" value="2.5"
                 min="0">
             </labeled-input>
+            <labeled-input input-id="spendingDecline" label="Spending taper (%/yr)" type="number" step="0.1" value="0">
+            </labeled-input>
+
         </div>
+
         <div>  
             <div class="hint">
                 <div style="display: flex; align-items: center; gap: 5px;">

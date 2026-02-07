@@ -6,22 +6,23 @@
     <div class="content">
         <div class="grid-3">
             <labeled-input
-                input-id="ssSubject" 
+                input-id="subjectSsMonthly" 
                 label="Subject ($/mo, first year)" 
-                help="ssSubject"
+                show-help
                 type="number" step="50" value="2800">
             </labeled-input>
             <labeled-input
-                input-id="ssPartner" 
+                input-id="partnerSsMonthly" 
                 label="Partner ($/mo, first year)" 
-                help="ssPartner"
+                show-help
                 type="number" step="50" value="2800">
             </labeled-input>
-            <labeled-input
-                input-id="ssWithholdingRate" 
-                label="Withholding rate (%)" 
-                help="ssWithholdingRate"
-                type="number" step="1" value="15">
+           
+        </div>
+        <div class="grid-2">
+            <labeled-input input-id="ssWithholdingRate" label="Withholding rate (%)" show-help type="number" step="1" value="15">
+            </labeled-input>
+            <labeled-input input-id="ssCola" label="Cost of Living Adjustment (%)" show-help type="number" step="1" value="2">
             </labeled-input>
         </div>
     </div>

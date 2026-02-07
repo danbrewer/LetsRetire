@@ -270,7 +270,7 @@ function showHelpToast(event, fieldId) {
    * @type {Record<string, HelpText>}
    */
   const helpTexts = {
-    currentAge: {
+    subjectCurrentAge: {
       title: "Current Age",
       body: "Enter your current age in years. This is used as the starting point for all retirement calculations and determines how many years you have until retirement.",
     },
@@ -2486,69 +2486,92 @@ function parseInputParameters() {
       ACCOUNT_TYPES.SUBJECT_ROTH_IRA,
     ];
   }
-// Subject information
+
+  // Subject information
   const subjectCurrentAge = num("subjectCurrentAge");
   const subjectRetireAge = num("subjectRetireAge");
   const subjectLifeSpan = num("subjectLifespan");
   const subject401kStartAge = num("subject401kStartAge");
   const subjectPensionStartAge = num("subjectPensionStartAge");
   const subjectSsStartAge = num("subjectSsStartAge");
- // Partner information
-  const partnerCurrentAge = num("partnerAge");
+  const subjectStartingSalary = num("subjectSalary");
+  const subjectSalaryGrowthRate = pct(num("subjectSalaryGrowth"));
+  const subjectSavingsMonthly = num("subjectSavingsMonthly");
+  const subjectRothMonthly = num("subjectRothMonthly");
+  const subject401kContributionRate = pct(num("subject401kContribution"));
+  const subjectEmp401kMatchRate = pct(num("subjectEmpMatchRate"));
+  const subjectEmpMatchCap = pct(num("subjectEmpMatchCap"));
+
+  // Partner information
+  const partnerCurrentAge = num("partnerCurrentAge");
   const partnerRetireAge = num("partnerRetireAge");
   const partnerLifeSpan = num("partnerLifespan");
   const partner401kStartAge = num("partner401kStartAge");
   const partnerPenStartAge = num("partnerPensionStartAge");
   const partnerSsStartAge = num("partnerSsStartAge");
-// Annual spending and growth rates
-  const startingYear = num("currentYear");
-  const inflationRate = pct(num("inflation"));
+
+  const partnerStartingSalary = num("partnerSalary");
+  const partnerSalaryGrowthRate = pct(num("partnerSalaryGrowth"));
+  const partnerRothMonthly = num("partnerRothMonthly");
+  const partner401kContributionRate = pct(num("partner401kContribution"));
+  const partnerEmpMatchRate = pct(num("partnerEmpMatchRate"));
+  const partnerEmpMatchCap = pct(num("partnerEmpMatchCap"));
+
+  // Annual spending and growth rates
   const workingYearsSpending = num("workingYearsSpending");
-  const initialSpendInRetirement = num("retiredYearsSpending");
+  const retirementSpending = num("retirementYearsSpending");
+  const currentYear = num("currentYear");
+  const inflationRate = pct(num("inflation"));
   const spendingDecline = pct(num("spendingDecline"));
+
+  // Balances and Returns
+
+  const savings = num("startingSavingsBalance");
+  const savingsReturnRate = pct(num("savingsReturnRate"));
+
+  const subject401kStartingBalance = num("subject401kBalance");
+  const subject401kReturnRate = pct(num("subject401kReturnRate"));
+  const partner401kStartingBalance = num("partner401kBalance");
+  const partner401kReturnRate = pct(num("partner401kReturnRate"));
+  const subjectRothBalance = pct(num("subjectRothBalance"));
+  const subjectRothReturnRate = pct(num("subjectRothReturnRate"));
+  const partnerRothBalance = pct(num("partnerRothBalance"));
+  const partnerRothReturnRate = pct(num("partnerRothReturnRate"));
+
+  // Social Security
+  const subjectSsMonthly = num("subjectSsMonthly");
+  const partnerSsMonthly = num("partnerSsMonthly");
+  const flatSsWithholdingRate = pct(num("ssWithholdingRate"));
   const ssCola = pct(num("ssCola"));
 
-  const savings = num("totalSavingsBalance");
-  const subject401kStartingBalance = num("subject401kBalance");
-  const subjectRothStartingBalance = num("subjectRothBalance");
-  const partner401kStartingBalance = 100000;
-  const partnerRothStartingBalance = 50000;
+  // Pensions
+  const subjectPensionMonthly = num("subjectPensionMonthly");
+  const subjectPensionWithholdingRate = pct(
+    num("subjectPensionWithholdingRate")
+  );
+  const subjectPensionSurvivorship = num("subjectPensionSurvivorship");
 
-  const partnerPenMonthly = num("partnerPenMonthly");
-  const partnerPenCola = pct(num("partnerPenCola"));
-  const partnerTaxSS = pct(num("partnerTaxSS"));
-  const partnerPensionWithholdings = pct(num("partnerTaxPension"));
-  const partnerSsMonthly = num("partnerSsMonthly");
-  const subjectStartingSalary = num("salary");
-  const partnerStartingSalary = num("partnerSalary");
-  const subjectSalaryGrowthRate = pct(num("salaryGrowth"));
-  const partnerSalaryGrowthRate = pct(num("partnerSalaryGrowth"));
-  const subject401kContributionRate = pct(num("subject401kContribution"));
-  const subjectRothContributionRate = pct(num("rothPct"));
-  // const taxablePct = pct(num("taxablePct"));
-  const matchCap = pct(num("matchCap"));
-  const matchRate = pct(num("matchRate"));
-  const subject401kReturnRate = pct(num("retPre"));
-  const subjectRothReturnRate = pct(num("retRoth"));
-  const retSavings = pct(num("retTax"));
-  const subjectSsMonthly = num("ssMonthly");
-  const penMonthly = num("penMonthly");
-  const penCola = pct(num("penCola"));
-  const useRMD = checkbox("useRMD")?.checked ?? false;
-  const order = withdrawalOrder;
-  const flatSsWithholdingRate = 0.07; // pct(num("flatSsWithholdingRate"));
-  const flatTrad401kWithholdingRate = 0.2; // pct(num("flatTrad401kWithholdingRate"));
-  const flatPensionWithholdingRate = 0.2; // pct(num("flatPensionWithholdingRate"));
-  const flatWageWithholdingRate = 0.22; // pct(num("flatWageWithholdingRate"));
+  const partnerPenMonthly = num("partnerPensionMonthly");
+  const partnerPensionWithholdings = pct(num("partnerPensionWithholdingRate"));
+    debugger;
+
+    
+  const partnerPensionSurvivorship = num("partnerPensionSurvivorship");
+
+  // Witholdings/Taxes
   const filingStatus = select("filingStatus")?.value || "single";
-
-  const partner401kReturnRate = 0.03;
-  const partnerRothReturnRate = 0.03;
+  const withholdingsDefaultRate = pct(num("withholdingsDefaultRate"));
+  const flatWageWithholdingRate = pct(num("withholdingsWages")); // pct(num("flatWageWithholdingRate"));
+  const withholdings401k = pct(num("withholdings401k"));
+  const withholdingsSs = pct(num("withholdingsSS"));
+  const withholdingsPension = pct(num("withholdingsPension"));
+  const useRMD = checkbox("useRMD")?.checked ?? false;
+  // const order = withdrawalOrder;
 
   /** @type {import("./cInputs.js").InputsOptions} */
   const inputArgs = {
     // Ages / timeline
-    startingYear: startingYear,
+    startingYear: currentYear,
     initialAgeSubject: subjectCurrentAge,
     initialAgePartner: partnerCurrentAge,
     subjectRetireAge: subjectRetireAge,
@@ -2566,12 +2589,10 @@ function parseInputParameters() {
     partnerRetireAge: partnerRetireAge,
     partnerSsMonthly: partnerSsMonthly,
     partnerSsStartAge: partnerSsStartAge,
-    partnerSsCola: partnerSsCola,
     partnerPenMonthly: partnerPenMonthly,
     partnerPenStartAge: partnerPenStartAge,
     partner401kStartAge: partner401kStartAge,
-    partnerPenCola: partnerPenCola,
-    partnerTaxSS: partnerTaxSS,
+    partnerTaxSS: withholdingsSs,
     partnerPensionWithholdings: partnerPensionWithholdings,
 
     // Employment and contributions
@@ -2580,40 +2601,39 @@ function parseInputParameters() {
     subjectSalaryGrowthRate: subjectSalaryGrowthRate,
     partnerSalaryGrowthRate: partnerSalaryGrowthRate,
     subjectCareer401kContributionRate: subject401kContributionRate,
-    subjectRothContributionRate: subjectRothContributionRate,
+    subjectRothContributionRate: subjectRothMonthly,
     // taxablePct: taxablePct,
-    employer401kMatchRate: matchCap,
-    subject401kMatchRate: matchRate,
+    subjectEmp401kMatchRate: subjectEmp401kMatchRate,
+    subject401kContributionRate: subject401kContributionRate,
 
     // Account balances and returns
     subject401kStartingBalance: subject401kStartingBalance,
-    subjectRothStartingBalance: subjectRothStartingBalance,
+    subjectRothStartingBalance: subjectRothBalance,
     partner401kStartingBalance: partner401kStartingBalance,
-    partnerRothStartingBalance: partnerRothStartingBalance,
+    partnerRothStartingBalance: partnerRothBalance,
     savingsStartingBalance: savings,
 
     subject401kInterestRate: subject401kReturnRate,
     subjectRothInterestRate: subjectRothReturnRate,
     partner401kInterestRate: partner401kReturnRate,
     partnerRothInterestRate: partnerRothReturnRate,
-    savingsInterestRate: retSavings,
+    savingsInterestRate: savingsReturnRate,
 
     // Income sources
     subjectSsMonthly: subjectSsMonthly,
     ssCola: ssCola,
-    subjectPensionMonthly: penMonthly,
-    penCola: penCola,
+    subjectPensionMonthly: subjectPensionMonthly,
 
     // Tax rates and settings
     filingStatus: filingStatus,
     useRMD: useRMD,
     flatSsWithholdingRate: flatSsWithholdingRate,
-    flatCareerTrad401kWithholdingRate: flatTrad401kWithholdingRate,
-    flatPensionWithholdingRate: flatPensionWithholdingRate,
+    flatCareerTrad401kWithholdingRate: withholdings401k,
+    flatPensionWithholdingRate: subjectPensionWithholdingRate,
     flatWageWithholdingRate: flatWageWithholdingRate,
 
     // Withdrawal order
-    order: order,
+    // order: order,
   };
 
   inputArgs.dump("inputArgs");
@@ -2694,7 +2714,7 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 function doCalculations() {
-  return; // for now
+  // return; // for now
   const calculations = new Calculations();
   calc(calculations, DefaultUI);
 }
@@ -3626,5 +3646,5 @@ export {
   initUI,
   resyncAllOpenDetails,
   detailsObservers,
-  showHelpToast
+  showHelpToast,
 };

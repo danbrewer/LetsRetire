@@ -7,7 +7,7 @@
         <labeled-input 
             input-id="filingStatus" 
             label="Tax filing status" 
-            help="filingStatus"
+            show-help
             type="select" 
             value="single">
 
@@ -15,32 +15,33 @@
             <option value="married">Married Filing Jointly</option>
         </labeled-input>
         <div>
-            <h5>Withholding Rates (%)</h5>
+            <strong>Withholding Rates (%)</strong>
         </div>
+        <labeled-input input-id="withholdingsDefaultRate" label="Default rate (%)" show-help type="number" step="0.5" value="15">
+        </labeled-input>
+
         <div class="grid-2">
+                        <labeled-input input-id="withholdingsWages" label="Wages (%)" show-help type="number" step="0.5" value="15">
+                        </labeled-input>
+
             <labeled-input
-                input-id="taxPre" 
-                label="401k withdrawals"
-                help="taxPre"
+                input-id="withholdings401k" 
+                label="401k/IRA (%)"
+                show-help
                 type="number" step="0.5" value="24">
             </labeled-input>
-            <labeled-input input-id="taxTaxable" 
-                label=">Misc. income" 
-                help="taxTaxable" 
-                type="number" step="0.5" value="24">
-            </labeled-input>        
         </div>
 
         <div class="grid-2">
             <labeled-input
-                input-id="taxSS" 
+                input-id="withholdingsSS" 
                 label="Social Security"
-                help="taxSS"
+                show-help
                 type="number" step="0.5" value="10">
             </labeled-input>
-            <labeled-input input-id="taxPension" 
+            <labeled-input input-id="withholdingsPension" 
                 label="Pension income"
-                help="taxPension"
+                show-help
                 type="number" step="0.5" value="20">
             </labeled-input>
         </div>

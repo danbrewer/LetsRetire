@@ -9,7 +9,9 @@ class LabeledInput extends HTMLElement {
     console.log("LabeledInput connected");
     const id = this.getAttribute("input-id") ?? "";
     const label = this.getAttribute("label") ?? "";
-    const help = this.getAttribute("help");
+    const help =
+      this.getAttribute("show-help") != null ||
+      this.getAttribute("help") != null;
     const type = this.getAttribute("type") ?? "number";
     const step = this.getAttribute("step");
     const value = this.getAttribute("value");
@@ -58,7 +60,7 @@ class LabeledInput extends HTMLElement {
       if (icon) {
         icon.addEventListener("click", (e) => {
           if (typeof this.onHelp === "function") {
-            this.onHelp(e, help);
+            this.onHelp(e, id);
           }
         });
       }
