@@ -71,6 +71,12 @@
             cursor: pointer;
             background: #475569;
             font-weight: 600;
+            user-select: none;
+        }
+
+        /* Disable native hiding — we animate manually */
+        details>.content {
+            display: block;
         }
 
         .content {
@@ -78,6 +84,17 @@
             background: #64748b;
             display: grid;
             gap: 12px;
+            overflow: hidden;
+        }
+
+        /* ---------- Animated baseline ---------- */
+        details:not([open]) .content {
+            height: 0;
+            opacity: 0;
+        }
+
+        details[open] .content {
+            opacity: 1;
         }
 
         /* ---------- Flexbox grid-3 ---------- */
@@ -96,14 +113,12 @@
             text-align: center;
         }
 
-        /* 2 columns */
         @container (max-width: 520px) {
             .flex-3>div {
                 flex-basis: calc(50% - 10px);
             }
         }
 
-        /* 1 column */
         @container (max-width: 340px) {
             .flex-3>div {
                 flex-basis: 100%;
@@ -146,16 +161,13 @@
 <body>
     <div class="app-shell">
 
-        <header>
-            HEADER (placeholder)
-        </header>
+        <header>HEADER (placeholder)</header>
 
         <main class="wrap">
 
             <!-- Inputs -->
             <section class="inputs-panel">
 
-                <!-- Section 1 -->
                 <details open>
                     <summary>Input Section 1</summary>
                     <div class="content">
@@ -172,7 +184,6 @@
                     </div>
                 </details>
 
-                <!-- Section 2 -->
                 <details>
                     <summary>Input Section 2</summary>
                     <div class="content">
@@ -189,7 +200,6 @@
                     </div>
                 </details>
 
-                <!-- Section 3 -->
                 <details>
                     <summary>Input Section 3</summary>
                     <div class="content">
@@ -206,7 +216,6 @@
                     </div>
                 </details>
 
-                <!-- Section 4 -->
                 <details>
                     <summary>Input Section 4</summary>
                     <div class="content">
@@ -223,7 +232,6 @@
                     </div>
                 </details>
 
-                <!-- Section 5 -->
                 <details>
                     <summary>Input Section 5</summary>
                     <div class="content">
@@ -242,10 +250,8 @@
 
             </section>
 
-            <!-- Splitter -->
             <div id="splitter"></div>
 
-            <!-- Results -->
             <section class="results">
                 <div class="block a">Results Block A</div>
                 <div class="block b">Results Block B</div>
@@ -255,6 +261,7 @@
         </main>
     </div>
 
+    <!-- ---------- Splitter JS ---------- -->
     <script>
         const DEFAULT_LEFT = 320;
         const MIN_LEFT = 220;
@@ -271,28 +278,36 @@
             document.documentElement.style.setProperty("--inputs-width", px + "px");
         }
 
+        /* 🔑 NEW: release height constraints on open sections */
+        function resyncOpenDetails(root = document) {
+            root.querySelectorAll("details[open] .content").forEach(content => {
+                content.getAnimations().forEach(a => a.cancel());
+                content.style.height = "auto";
+                content.style.opacity = "";
+            });
+        }
+
         setLeft(DEFAULT_LEFT);
 
-        splitter.addEventListener("mousedown", (e) => {
+        splitter.addEventListener("mousedown", e => {
             dragging = true;
             startX = e.clientX;
-
-            const cols = getComputedStyle(wrap).gridTemplateColumns.split(" ");
-            startLeft = parseFloat(cols[0]) || DEFAULT_LEFT;
-
+            startLeft = parseFloat(getComputedStyle(wrap).gridTemplateColumns);
             document.body.style.cursor = "col-resize";
             document.body.style.userSelect = "none";
             e.preventDefault();
         });
 
-        document.addEventListener("mousemove", (e) => {
+        document.addEventListener("mousemove", e => {
             if (!dragging) return;
 
             const delta = e.clientX - startX;
-            const wrapWidth = wrap.getBoundingClientRect().width;
-            const maxLeft = Math.max(MIN_LEFT, wrapWidth - MIN_RIGHT);
+            const maxLeft = wrap.clientWidth - MIN_RIGHT;
 
             setLeft(Math.min(Math.max(startLeft + delta, MIN_LEFT), maxLeft));
+
+            /* 🔑 THIS IS THE FIX */
+            resyncOpenDetails(document);
         });
 
         document.addEventListener("mouseup", () => {
@@ -300,10 +315,46 @@
             document.body.style.cursor = "";
             document.body.style.userSelect = "";
         });
+    </script>
 
-        splitter.addEventListener("dblclick", (e) => {
-            e.preventDefault();
-            setLeft(DEFAULT_LEFT);
+    <!-- ---------- Animated Details ---------- -->
+    <script>
+        document.querySelectorAll("details").forEach(details => {
+            const summary = details.querySelector("summary");
+            const content = details.querySelector(".content");
+
+            summary.addEventListener("click", e => {
+                e.preventDefault();
+
+                const opening = !details.hasAttribute("open");
+                content.getAnimations().forEach(a => a.cancel());
+
+                if (opening) {
+                    details.setAttribute("open", "");
+
+                    content.style.height = "auto";
+                    const h = content.scrollHeight;
+                    content.style.height = "0px";
+
+                    content.animate(
+                        [{ height: "0px", opacity: 0 }, { height: h + "px", opacity: 1 }],
+                        { duration: 260, easing: "ease-out", fill: "forwards" }
+                    ).onfinish = () => {
+                        content.style.height = "";
+                    };
+
+                } else {
+                    const h = content.scrollHeight;
+
+                    content.animate(
+                        [{ height: h + "px", opacity: 1 }, { height: "0px", opacity: 0 }],
+                        { duration: 220, easing: "ease-in", fill: "forwards" }
+                    ).onfinish = () => {
+                        details.removeAttribute("open");
+                        content.style.height = "0px";
+                    };
+                }
+            });
         });
     </script>
 
