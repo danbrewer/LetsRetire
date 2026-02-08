@@ -15,7 +15,7 @@ import { compoundedRate } from "./utils.js";
  * @property {number} [subjectSsStartAge]
  * @property {number} [subjectPensionStartAge]
  * @property {number} [subject401kStartAge]
- * @property {number} [endSubjectAge]
+ * @property {number} [subjectLifeSpan]
  * @property {RetirementYearExtraSpending[]} [retirementYearExtraSpending]
  *
  * @property {number} [inflationRate]
@@ -108,7 +108,7 @@ class Inputs {
       subjectSsStartAge = 0,
       subjectPensionStartAge = 0,
       subject401kStartAge = 0,
-      endSubjectAge = 0,
+      subjectLifeSpan = 0,
       retirementYearExtraSpending = [],
 
       // Inflation + spending
@@ -214,7 +214,7 @@ class Inputs {
     this.subject401kStartAge = subject401kStartAge;
 
     /** @type {number} */
-    this.endSubjectAge = endSubjectAge;
+    this.subjectLifeSpan = subjectLifeSpan;
 
     /** @type {RetirementYearExtraSpending[]} */
     this.retirementYearExtraSpending =
@@ -451,7 +451,7 @@ class Inputs {
 
     this.totalWorkingYears = this.subjectRetireAge - this.initialAgeSubject;
 
-    this.totalLivingYears = this.endSubjectAge - this.initialAgeSubject;
+    this.totalLivingYears = this.subjectLifeSpan - this.initialAgeSubject;
 
     this.spendAtRetire =
       this.spendingToday *
@@ -460,17 +460,18 @@ class Inputs {
 
   // Utility methods for input validation and analysis
   isValid() {
-    return (
-      this.subjectRetireAge <= this.initialAgeSubject ||
-      this.endSubjectAge <= this.subjectRetireAge
-    );
+    return true;
+    // return (
+    //   this.subjectRetireAge <= this.initialAgeSubject ||
+    //   this.endSubjectAge <= this.subjectRetireAge
+    // );
   }
 
   hasValidAges() {
     return (
       this.initialAgeSubject > 0 &&
       this.subjectRetireAge > this.initialAgeSubject &&
-      this.endSubjectAge > this.subjectRetireAge
+      this.subjectLifeSpan > this.subjectRetireAge
     );
   }
 
@@ -489,7 +490,7 @@ class Inputs {
   }
 
   getRetirementYearsRemaining() {
-    return Math.max(0, this.endSubjectAge - this.subjectRetireAge);
+    return Math.max(0, this.subjectLifeSpan - this.subjectRetireAge);
   }
 
   getTotalAccountBalance() {
@@ -518,7 +519,7 @@ class Inputs {
       personal: {
         currentAge: this.initialAgeSubject,
         retireAge: this.subjectRetireAge,
-        endAge: this.endSubjectAge,
+        endAge: this.subjectLifeSpan,
         hasPartner: this.hasPartner,
       },
       financial: {
@@ -706,7 +707,7 @@ class Inputs {
       subjectSsStartAge: this.subjectSsStartAge,
       subjectPensionStartAge: this.subjectPensionStartAge,
       subject401kStartAge: this.subject401kStartAge,
-      endSubjectAge: this.endSubjectAge,
+      subjectLifeSpan: this.subjectLifeSpan,
       retirementYearExtraSpending: this.retirementYearExtraSpending,
 
       inflationRate: this.inflationRate,

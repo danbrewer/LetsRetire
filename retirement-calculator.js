@@ -8,6 +8,7 @@ import { RetirementYearCalculator } from "./cRetirementYearCalculator.js";
 import { Transaction } from "./cTransaction.js";
 import { TransactionManager } from "./cTransactionManager.js";
 import { WorkingYearCalculator } from "./cWorkingYearCalculator.js";
+import { generateOutputAndSummary } from "./retirement-ui.js";
 
 /**
  * @typedef {object} RetirementUIFunctions
@@ -40,21 +41,21 @@ function calc(calculations, UI) {
   // Auto-regenerate spending override fields only if ages have changed
   if (
     inputs.subjectRetireAge > 0 &&
-    inputs.endSubjectAge > inputs.subjectRetireAge &&
+    inputs.subjectLifeSpan > inputs.subjectRetireAge &&
     (lastRetireAge !== inputs.subjectRetireAge ||
-      lastEndAge !== inputs.endSubjectAge)
+      lastEndAge !== inputs.subjectLifeSpan)
   ) {
     UI.regenerateSpendingFields();
     lastRetireAge = inputs.subjectRetireAge;
-    lastEndAge = inputs.endSubjectAge;
+    lastEndAge = inputs.subjectLifeSpan;
   }
 
   // Auto-regenerate income adjustment fields only if ages have changed
   if (
     inputs.initialAgeSubject > 0 &&
-    inputs.endSubjectAge > inputs.initialAgeSubject &&
+    inputs.subjectLifeSpan > inputs.initialAgeSubject &&
     (lastCurrentAge !== inputs.initialAgeSubject ||
-      lastEndAge !== inputs.endSubjectAge)
+      lastEndAge !== inputs.subjectLifeSpan)
   ) {
     UI.regenerateTaxableIncomeFields();
     UI.regenerateTaxFreeIncomeFields();
@@ -137,21 +138,21 @@ function calc(calculations, UI) {
     );
 
     try {
-      console.log(
-        `------ START OF RETIREMENT YEAR ` +
-          (TAX_BASE_YEAR + yearIndex) +
-          ` ------`
-      );
+      // console.log(
+      //   `------ START OF RETIREMENT YEAR ` +
+      //     (TAX_BASE_YEAR + yearIndex) +
+      //     ` ------`
+      // );
 
       const retirementYearData = calculator.processRetirementYearData();
 
       // retirementYearData.dump("retirement year");
 
-      console.log(
-        `------ END OF RETIREMENT YEAR ` +
-          (TAX_BASE_YEAR + yearIndex) +
-          ` ------`
-      );
+      // console.log(
+      //   `------ END OF RETIREMENT YEAR ` +
+      //     (TAX_BASE_YEAR + yearIndex) +
+      //     ` ------`
+      // );
       calculations.addCalculation(
         new Calculation(accountYear.taxYear, retirementYearData)
       );
@@ -164,13 +165,10 @@ function calc(calculations, UI) {
         console.error(new Error().stack);
       }
     }
-    //debugger;
   }
 
-  debugger;
-
   // Generate final output
-  //  generateOutputAndSummary(inputs, rows); //, totalTaxes, maxDrawdown);
+  generateOutputAndSummary(inputs, calculations); //, totalTaxes, maxDrawdown);
 }
 
 // Helper to generate dynamic input values for a given year index

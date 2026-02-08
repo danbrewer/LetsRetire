@@ -25,7 +25,7 @@ function createInputs() {
     startingYear: 2025,
     initialAgeSubject: 60,
     initialAgePartner: 56,
-    endSubjectAge: 80,
+    subjectLifeSpan: 80,
     retirementYearExtraSpending: [
       // { year: 1, amount: 20000 },
       // { year: 2, amount: 20000 },
@@ -138,7 +138,7 @@ function createInputsNoFussNoMuss() {
     startingYear: 2025,
     initialAgeSubject: 60,
     initialAgePartner: 60,
-    endSubjectAge: 80,
+    subjectLifeSpan: 80,
     retirementYearExtraSpending: [
       { year: 1, amount: 5000 },
       { year: 2, amount: 4000 },

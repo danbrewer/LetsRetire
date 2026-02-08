@@ -7,6 +7,7 @@ import { LabeledInput } from "./components.js";
 import { constsJS_FILING_STATUS } from "./consts.js";
 import { calc } from "./retirement-calculator.js";
 import * as DefaultUI from "./retirement-ui.js";
+import { UIField } from "./UIFields.js";
 
 /**
  * @typedef {Object} ChartPoint
@@ -2488,84 +2489,85 @@ function parseInputParameters() {
   }
 
   // Subject information
-  const subjectCurrentAge = num("subjectCurrentAge");
-  const subjectRetireAge = num("subjectRetireAge");
-  const subjectLifeSpan = num("subjectLifespan");
-  const subject401kStartAge = num("subject401kStartAge");
-  const subjectPensionStartAge = num("subjectPensionStartAge");
-  const subjectSsStartAge = num("subjectSsStartAge");
-  const subjectStartingSalary = num("subjectSalary");
-  const subjectSalaryGrowthRate = pct(num("subjectSalaryGrowth"));
-  const subjectSavingsMonthly = num("subjectSavingsMonthly");
-  const subjectRothMonthly = num("subjectRothMonthly");
-  const subject401kContributionRate = pct(num("subject401kContribution"));
-  const subjectEmp401kMatchRate = pct(num("subjectEmpMatchRate"));
-  const subjectEmpMatchCap = pct(num("subjectEmpMatchCap"));
+  const subjectCurrentAge = num(UIField.SUBJECT_CURRENT_AGE);
+  const subjectRetireAge = num(UIField.SUBJECT_RETIRE_AGE);
+  const subjectLifeSpan = num(UIField.SUBJECT_LIFESPAN);
+  const subject401kStartAge = num(UIField.SUBJECT_401K_START_AGE);
+  const subjectPensionStartAge = num(UIField.SUBJECT_PENSION_START_AGE);
+  const subjectSsStartAge = num(UIField.SUBJECT_SS_START_AGE);
+  const subjectStartingSalary = num(UIField.SUBJECT_SALARY);
+  const subjectSalaryGrowthRate = pct(num(UIField.SUBJECT_SALARY_GROWTH));
+  const subjectSavingsMonthly = num(UIField.SUBJECT_SAVINGS_MONTHLY);
+  const subjectRothMonthly = num(UIField.SUBJECT_ROTH_MONTHLY);
+  const subject401kContributionRate = pct(
+    num(UIField.SUBJECT_401K_CONTRIBUTION)
+  );
+  const subjectEmp401kMatchRate = pct(num(UIField.SUBJECT_EMP_MATCH_RATE));
+  const subjectEmpMatchCap = pct(num(UIField.SUBJECT_EMP_MATCH_CAP));
 
   // Partner information
-  const partnerCurrentAge = num("partnerCurrentAge");
-  const partnerRetireAge = num("partnerRetireAge");
-  const partnerLifeSpan = num("partnerLifespan");
-  const partner401kStartAge = num("partner401kStartAge");
-  const partnerPenStartAge = num("partnerPensionStartAge");
-  const partnerSsStartAge = num("partnerSsStartAge");
+  const partnerCurrentAge = num(UIField.PARTNER_CURRENT_AGE);
+  const partnerRetireAge = num(UIField.PARTNER_RETIRE_AGE);
+  const partnerLifeSpan = num(UIField.PARTNER_LIFESPAN);
+  const partner401kStartAge = num(UIField.PARTNER_401K_START_AGE);
+  const partnerPenStartAge = num(UIField.PARTNER_PENSION_START_AGE);
+  const partnerSsStartAge = num(UIField.PARTNER_SS_START_AGE);
 
-  const partnerStartingSalary = num("partnerSalary");
-  const partnerSalaryGrowthRate = pct(num("partnerSalaryGrowth"));
-  const partnerRothMonthly = num("partnerRothMonthly");
-  const partner401kContributionRate = pct(num("partner401kContribution"));
-  const partnerEmpMatchRate = pct(num("partnerEmpMatchRate"));
-  const partnerEmpMatchCap = pct(num("partnerEmpMatchCap"));
+  const partnerStartingSalary = num(UIField.PARTNER_SALARY);
+  const partnerSalaryGrowthRate = pct(num(UIField.PARTNER_SALARY_GROWTH));
+  const partnerRothMonthly = num(UIField.PARTNER_ROTH_MONTHLY);
+  const partner401kContributionRate = pct(
+    num(UIField.PARTNER_401K_CONTRIBUTION)
+  );
+  const partnerEmpMatchRate = pct(num(UIField.PARTNER_EMP_MATCH_RATE));
+  const partnerEmpMatchCap = pct(num(UIField.PARTNER_EMP_MATCH_CAP));
 
   // Annual spending and growth rates
-  const workingYearsSpending = num("workingYearsSpending");
-  const retirementSpending = num("retirementYearsSpending");
-  const currentYear = num("currentYear");
-  const inflationRate = pct(num("inflation"));
-  const spendingDecline = pct(num("spendingDecline"));
-
+  const workingYearsSpending = num(UIField.WORKING_YEARS_SPENDING);
+  const retirementSpending = num(UIField.RETIREMENT_YEARS_SPENDING);
+  const currentYear = num(UIField.CURRENT_YEAR);
+  const inflationRate = pct(num(UIField.INFLATION));
+  const spendingDecline = pct(num(UIField.SPENDING_DECLINE));
   // Balances and Returns
 
-  const savings = num("startingSavingsBalance");
-  const savingsReturnRate = pct(num("savingsReturnRate"));
-
-  const subject401kStartingBalance = num("subject401kBalance");
-  const subject401kReturnRate = pct(num("subject401kReturnRate"));
-  const partner401kStartingBalance = num("partner401kBalance");
-  const partner401kReturnRate = pct(num("partner401kReturnRate"));
-  const subjectRothBalance = pct(num("subjectRothBalance"));
-  const subjectRothReturnRate = pct(num("subjectRothReturnRate"));
-  const partnerRothBalance = pct(num("partnerRothBalance"));
-  const partnerRothReturnRate = pct(num("partnerRothReturnRate"));
+  const savings = num(UIField.SAVINGS_BALANCE);
+  const savingsReturnRate = pct(num(UIField.SAVINGS_RETURN));
+  const subject401kStartingBalance = num(UIField.SUBJECT_401K_BALANCE);
+  const subject401kReturnRate = pct(num(UIField.SUBJECT_401K_RETURN));
+  const partner401kStartingBalance = num(UIField.PARTNER_401K_BALANCE);
+  const partner401kReturnRate = pct(num(UIField.PARTNER_401K_RETURN));
+  const subjectRothBalance = pct(num(UIField.SUBJECT_ROTH_BALANCE));
+  const subjectRothReturnRate = pct(num(UIField.SUBJECT_ROTH_RETURN));
+  const partnerRothBalance = pct(num(UIField.PARTNER_ROTH_BALANCE));
+  const partnerRothReturnRate = pct(num(UIField.PARTNER_ROTH_RETURN));
 
   // Social Security
-  const subjectSsMonthly = num("subjectSsMonthly");
-  const partnerSsMonthly = num("partnerSsMonthly");
-  const flatSsWithholdingRate = pct(num("ssWithholdingRate"));
-  const ssCola = pct(num("ssCola"));
+  const subjectSsMonthly = num(UIField.SUBJECT_SS_MONTHLY);
+  const partnerSsMonthly = num(UIField.PARTNER_SS_MONTHLY);
+  const flatSsWithholdingRate = pct(num(UIField.SS_WITHHOLDING));
+  const ssCola = pct(num(UIField.SS_COLA));
 
   // Pensions
-  const subjectPensionMonthly = num("subjectPensionMonthly");
+  const subjectPensionMonthly = num(UIField.SUBJECT_PENSION_MONTHLY);
   const subjectPensionWithholdingRate = pct(
-    num("subjectPensionWithholdingRate")
+    num(UIField.SUBJECT_PENSION_WITHHOLDING)
   );
-  const subjectPensionSurvivorship = num("subjectPensionSurvivorship");
+  const subjectPensionSurvivorship = num(UIField.SUBJECT_PENSION_SURVIVORSHIP);
+  const partnerPenMonthly = num(UIField.PARTNER_PENSION_MONTHLY);
+  const partnerPensionWithholdings = pct(
+    num(UIField.PARTNER_PENSION_WITHHOLDING)
+  );
 
-  const partnerPenMonthly = num("partnerPensionMonthly");
-  const partnerPensionWithholdings = pct(num("partnerPensionWithholdingRate"));
-    debugger;
-
-    
-  const partnerPensionSurvivorship = num("partnerPensionSurvivorship");
+  const partnerPensionSurvivorship = num(UIField.PARTNER_PENSION_SURVIVORSHIP);
 
   // Witholdings/Taxes
-  const filingStatus = select("filingStatus")?.value || "single";
-  const withholdingsDefaultRate = pct(num("withholdingsDefaultRate"));
-  const flatWageWithholdingRate = pct(num("withholdingsWages")); // pct(num("flatWageWithholdingRate"));
-  const withholdings401k = pct(num("withholdings401k"));
-  const withholdingsSs = pct(num("withholdingsSS"));
-  const withholdingsPension = pct(num("withholdingsPension"));
-  const useRMD = checkbox("useRMD")?.checked ?? false;
+  const filingStatus = select(UIField.FILING_STATUS)?.value || "single";
+  const withholdingsDefaultRate = pct(num(UIField.WITHHOLDINGS_DEFAULT));
+  const flatWageWithholdingRate = pct(num(UIField.WITHHOLDINGS_WAGES)); // pct(num("flatWageWithholdingRate"));
+  const withholdings401k = pct(num(UIField.WITHHOLDINGS_401K));
+  const withholdingsSs = pct(num(UIField.WITHHOLDINGS_SS));
+  const withholdingsPension = pct(num(UIField.WITHHOLDINGS_PENSION));
+  const useRMD = checkbox(UIField.USE_RMD)?.checked ?? false;
   // const order = withdrawalOrder;
 
   /** @type {import("./cInputs.js").InputsOptions} */
@@ -2578,7 +2580,7 @@ function parseInputParameters() {
     subjectSsStartAge: subjectSsStartAge,
     subjectPensionStartAge: subjectPensionStartAge,
     subject401kStartAge: subject401kStartAge,
-    endSubjectAge: subjectLifeSpan,
+    subjectLifeSpan: subjectLifeSpan,
 
     // Spending
     inflationRate: inflationRate,
@@ -2721,11 +2723,11 @@ function doCalculations() {
 
 /**
  * Generate final summary, write table, and update KPIs
- * @param {{retireAge: number;endAge: number;currentAge: any;trad401k: any;rothIRA: any;savings: any;}} inputs
+ * @param {Inputs} inputs
  * @param {Calculations} calculations
- * @param {any} rows
  */
-function generateOutputAndSummary(inputs, calculations, rows) {
+function generateOutputAndSummary(inputs, calculations) {
+  //, rows) {
   // Write table
   const tbody = $("rows");
   if (!tbody) return;
@@ -2776,7 +2778,7 @@ function generateOutputAndSummary(inputs, calculations, rows) {
         }</td>
         <td class="income">${
           calculation.totalNetIncome
-            ? calculation.age >= inputs.retireAge
+            ? calculation.age >= inputs.subjectRetireAge
               ? `<span class="ss-link" onclick="showTotalNetBreakdown(${index})">${fmt(
                   calculation.totalNetIncome
                 )}</span>`
@@ -2814,7 +2816,7 @@ function generateOutputAndSummary(inputs, calculations, rows) {
         
         <!-- THE BREAKDOWN -->
         <td class="income">${
-          calculation.age >= inputs.retireAge
+          calculation.age >= inputs.subjectRetireAge
             ? `<span class="taxable-income-link" onclick="showTaxableIncomeBreakdown(${index})" title="Click to see breakdown">${fmt(
                 calculation.taxableIncome || 0
               )}</span>`
@@ -2859,7 +2861,7 @@ function generateOutputAndSummary(inputs, calculations, rows) {
           calculation.otherTaxes ? fmt(calculation.otherTaxes) : ""
         }</td>
         <td class="outgoing">${
-          calculation.age >= inputs.retireAge
+          calculation.age >= inputs.subjectRetireAge
             ? `<span class="total-taxes-link" onclick="showTotalTaxesBreakdown(${index})" title="Click to see breakdown">${fmt(
                 calculation.totalTaxes || 0
               )}</span>`
@@ -2904,7 +2906,7 @@ function generateOutputAndSummary(inputs, calculations, rows) {
   const kpiAge = divById("kpiAge");
   if (kpiAge) {
     kpiAge.innerHTML = `${fundedTo} <span class="pill ${
-      fundedTo >= inputs.endAge ? "ok" : "alert"
+      fundedTo >= inputs.subjectRetireAge ? "ok" : "alert"
     }">${fundedTo >= inputs.endAge ? "Fully funded" : "Shortfall"}</span>`;
   }
 
@@ -2933,7 +2935,7 @@ function generateOutputAndSummary(inputs, calculations, rows) {
   );
 
   // Save rows for export
-  win.__rows = rows;
+  // win.__rows = rows;
 }
 
 function updateTaxFreeIncomeFieldsDisplayMode() {
@@ -2941,8 +2943,8 @@ function updateTaxFreeIncomeFieldsDisplayMode() {
   if (!useTaxableCurrentYearValues)
     throw new Error("Checkbox useTaxFreeCurrentYearValues not found");
   const useCurrentYear = useTaxableCurrentYearValues.checked;
-  const currentAge = num("currentAge");
-  const endAge = num("endAge");
+  const currentAge = num(UIField.SUBJECT_CURRENT_AGE);
+  const endAge = num(UIField.SUBJECT_LIFESPAN);
 
   if (currentAge <= 0 || endAge <= currentAge) return;
 
@@ -3087,8 +3089,8 @@ function loadExample() {
 
 // Annual Spending Details Functions
 function regenerateSpendingFields() {
-  const retireAge = num("retireAge");
-  const endAge = num("endAge");
+  const retireAge = num(UIField.SUBJECT_RETIRE_AGE);
+  const endAge = num(UIField.SUBJECT_LIFESPAN);
 
   // Only generate if ages are valid
   if (retireAge <= 0 || endAge <= retireAge) {
@@ -3181,11 +3183,11 @@ function setSpendingFieldValue(age) {
  */
 function applyInflationToSpendingValue(currentYearValue, targetAge) {
   if (!currentYearValue) return 0;
-  const currentAgeField = inputText("currentAge");
+  const currentAgeField = inputText(UIField.SUBJECT_CURRENT_AGE);
   const currentAge = (currentAgeField && parseInt(currentAgeField.value)) || 0;
   const yearsFromNow = targetAge - currentAge;
 
-  const inflationField = inputText("inflation");
+  const inflationField = inputText(UIField.INFLATION);
   const inflationRate =
     (inflationField && parseFloat(inflationField.value) / 100) || 0.025;
 
@@ -3278,8 +3280,8 @@ function updateSpendingFieldsDisplayMode() {
 
 // Taxable Income Adjustments Functions
 function regenerateTaxableIncomeFields() {
-  const currentAge = num("currentAge");
-  const endAge = num("endAge");
+  const currentAge = num(UIField.SUBJECT_CURRENT_AGE);
+  const endAge = num(UIField.SUBJECT_LIFESPAN);
 
   // Only generate if ages are valid
   if (currentAge <= 0 || endAge <= currentAge) {
@@ -3388,11 +3390,13 @@ function handleTaxableIncomeFieldChange(age, event) {
 }
 
 function updateTaxableIncomeFieldsDisplayMode() {
-  const useTaxableCurrentYearValues = checkbox("useTaxableCurrentYearValues");
+  const useTaxableCurrentYearValues = checkbox(
+    UIField.USE_TAXABLE_CURRENT_YEAR_VALUES
+  );
   const useCurrentYear =
     useTaxableCurrentYearValues && useTaxableCurrentYearValues.checked;
-  const currentAge = num("currentAge");
-  const endAge = num("endAge");
+  const currentAge = num(UIField.SUBJECT_CURRENT_AGE);
+  const endAge = num(UIField.SUBJECT_LIFESPAN);
 
   if (currentAge <= 0 || endAge <= currentAge) return;
 
@@ -3438,8 +3442,8 @@ function updateTaxableIncomeFieldsDisplayMode() {
 
 // Tax-free Income Adjustments Functions
 function regenerateTaxFreeIncomeFields() {
-  const currentAge = num("currentAge");
-  const endAge = num("endAge");
+  const currentAge = num(UIField.SUBJECT_CURRENT_AGE);
+  const endAge = num(UIField.SUBJECT_LIFESPAN);
 
   // Only generate if ages are valid
   if (currentAge <= 0 || endAge <= currentAge) {
@@ -3552,12 +3556,12 @@ function handleTaxFreeIncomeFieldChange(age, event) {
 function applyInflationToIncomeValue(currentYearValue, targetAge) {
   if (!currentYearValue) return 0;
 
-  const currentAgeField = inputText("currentAge");
+  const currentAgeField = inputText(UIField.SUBJECT_CURRENT_AGE);
   if (!currentAgeField) return 0;
 
   const currentAge = parseInt(currentAgeField.value) || 0;
   const yearsFromNow = targetAge - currentAge;
-  const inflationField = inputText("inflation");
+  const inflationField = inputText(UIField.INFLATION);
   if (!inflationField) return 0;
   const inflationRate = parseFloat(inflationField.value) / 100 || 0.025;
   return currentYearValue * Math.pow(1 + inflationRate, yearsFromNow);
@@ -3647,4 +3651,5 @@ export {
   resyncAllOpenDetails,
   detailsObservers,
   showHelpToast,
+  generateOutputAndSummary,
 };
