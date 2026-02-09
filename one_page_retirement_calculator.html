@@ -19,6 +19,17 @@
 
     If scrolling breaks, check these first.
     */
+
+/* NOTE ON min-height: 0
+   ---------------------
+   Grid items and flex items default to min-height:auto,
+   which prevents scroll containers from shrinking.
+
+   Any element that:
+   - participates in grid/flex layout AND
+   - contains a scrollable descendant
+   MUST have min-height: 0.
+*/
     :root {
       --bg: #0b1220;
       --card: #121a2b;
@@ -37,6 +48,7 @@
       margin: 0;
       color: var(--text);
       background: radial-gradient(1200px 900px at 15% -10%, #1a2440, #0b1220 50%);
+      /* Body never scrolls — all scrolling is delegated to inner panels */
       min-height: 100vh;
       overflow: hidden;
     }
@@ -54,7 +66,14 @@
     .title small{ color: var(--muted); font-weight: 500; }
 
     .wrap {
-      min-height: 0;          /* 🔑 allow children to shrink */
+      /* Grid-based split layout:
+     [ inputs | splitter | results ] */
+
+      /* CRITICAL:
+        Allow grid children to be smaller than their content,
+        otherwise scroll containers inside will not work */     
+      min-height: 0;      
+      /* Prevent the grid itself from scrolling */    
       overflow: hidden;
       display: grid;
       grid-template-columns: var(--inputs-width) 6px 1fr;
@@ -69,10 +88,11 @@
     }
     
     .wrap > .card {
+      /* CRITICAL:
+        Grid items default to min-height:auto.
+        This forces them to shrink and lets inner scroll containers work. */
       min-height: 0;
     }
-
-    /* @media (max-width: 980px){ .wrap{ grid-template-columns: 1fr; } } */
 
     .card {
       background: linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.00));
@@ -127,9 +147,13 @@
     button:hover { transform: translateY(-1px); filter: brightness(1.07); }
 
     .results { 
+      /* Results panel scrolls independently from inputs */
+
       padding: 18px; 
       display: grid; 
       gap: 12px; 
+
+      /* Allow grid children (tables, charts) to overflow correctly */
       min-height: 0;
       overflow-y: auto;
     }
@@ -701,6 +725,8 @@
 }
 
     #splitter {
+      /* Visual + interaction separator between inputs and results */
+
       cursor: col-resize;
       background: linear-gradient(
         180deg,
@@ -709,8 +735,12 @@
       );
       border-left: 1px solid var(--border);
       border-right: 1px solid var(--border);
+
+      /* Must stretch full height of wrap */
       height: 100%;
       min-height: 0;
+
+      /* Positioned for hover/overlay effects only */
       position: relative;
     }
 
@@ -758,6 +788,7 @@
     /* ---------- Animated details ---------- */
 
  details {
+  /* Hide overflow so animated height transitions don’t leak */
   overflow: hidden;
 }
 
@@ -767,11 +798,13 @@ details > .content {
 }
 
 details:not([open]) .content {
+  /* Closed state — height collapsed for animation */
   height: 0;
   opacity: 0;
 }
 
 details[open] .content {
+  /* Open state — height resets to auto after animation */
   opacity: 1;
 }
 
@@ -784,15 +817,27 @@ details[open] .content {
     }
 
 .inputs-panel {
+  /* Flex column wrapper for inputs:
+     - Does NOT scroll
+     - Constrains height for the scroll container below */
   display: flex;
   flex-direction: column;
+
+  /* Required so child flex item can shrink */
   min-height: 0;
+
+  /* Prevent accidental scrolling here */
   overflow: hidden;
 }
 
 /* Scrollable content */
 .inputs-scroll {
+  /* THE ONLY vertical scroll container for inputs */
+
+  /* Fill remaining height of inputs-panel */ 
   flex: 1 1 auto;
+
+  /* Required so overflowing content can scroll instead of forcing height */
   min-height: 0;
   overflow-y: auto;
   padding: 18px;
@@ -861,9 +906,12 @@ details[open] .content {
 }
 
   .app-shell {
+  /* Two-row app shell:
+     - Row 1: header (auto height)
+     - Row 2: main content (fills remaining viewport) */
       display: grid;
       grid-template-rows: auto 1fr;
-      height: 100vh;
+      height: 100vh; /* Owns the viewport */
   }
 
   </style>
