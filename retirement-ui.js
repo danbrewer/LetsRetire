@@ -3627,9 +3627,10 @@ function resyncAllOpenDetails(root = document) {
 
     // Cancel any in-flight animations
     content.getAnimations().forEach((a) => a.cancel());
-
-    // 🔑 Force a real height recompute
-    content.style.height = content.scrollHeight + "px";
+    
+    // 🔑 RELEASE height back to layout engine
+    content.style.height = "auto";
+    content.style.opacity = "";
   });
 }
 

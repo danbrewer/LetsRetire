@@ -764,8 +764,12 @@
   overflow: hidden;
 }
 
-details .content {
+details > .content {
+  display: block;
   overflow: hidden;
+}
+
+details:not([open]) .content {
   height: 0;
   opacity: 0;
 }
@@ -843,25 +847,88 @@ details[open] .content {
   display: inline;
 }
 
+  .header-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.header-right {
+  display: flex;
+  gap: 10px;
+}
+
+/* ===============================
+   HAMBURGER MENU
+   =============================== */
+.hamburger {
+  font-size: 20px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: #0f1930;
+  border: 1px solid var(--border);
+  cursor: pointer;
+}
+
+.hamburger:hover {
+  filter: brightness(1.1);
+}
+
+/* Menu */
+.hamburger-menu {
+  position: fixed;
+  top: 64px;
+  left: 16px;
+  display: none;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  z-index: 1000;
+  box-shadow: 0 10px 30px rgba(0,0,0,.35);
+}
+
+.hamburger-menu.open {
+  display: flex;
+}
+
+.hamburger-menu button {
+  width: 180px;
+  text-align: left;
+}
+
+
 
   </style>
 </head>
 <body>
-  <header>
+<header>
+  <div class="header-left">
+    <button id="hamburgerBtn" class="hamburger" aria-label="Menu">
+      ☰
+    </button>
+
     <div class="title">
       <div style="font-size:20px">Retirement Calculator</div>
-      <small>Pre‑tax vs Roth vs Taxable • Social Security • Pension • Spouse benefits • Declining spending • Employer match</small>
-      <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; color: var(--text); font-size: 14px;">
-        <input type="checkbox" id="hideInputsCheckbox" style="cursor: pointer;">
+      <small>
+        Pre-tax vs Roth vs Taxable • Social Security • Pension • Spouse benefits • Declining spending • Employer match
+      </small>
+
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:14px;">
+        <input type="checkbox" id="hideInputsCheckbox">
         Hide Inputs
-      </label>   </div>
-    <div>
-      <input type="file" id="jsonFileInput" accept=".json" style="display: none;">
-      <button id="clearBtn">Reset</button>
-      <button id="calcBtn" class="primary" title="Calculate (Ctrl+Enter)">Calculate ▶</button>
- 
+      </label>
     </div>
-  </header>
+  </div>
+
+  <div class="header-right">
+    <button id="clearBtn">Reset</button>
+    <button id="calcBtn" class="primary" title="Calculate (Ctrl+Enter)">Calculate ▶</button>
+  </div>
+</header>
+
 
   <!-- SVG symbol definitions (define once) -->
     <svg xmlns="http://www.w3.org/2000/svg" 
@@ -887,6 +954,16 @@ details[open] .content {
     </symbol>
   </svg>
 
+  <div id="hamburgerMenu" class="hamburger-menu">
+    <button id="pdfBtn">PDF Report</button>
+    <button id="csvBtn">Export CSV</button>
+    <button id="exportJsonBtn">Export JSON</button>
+    <button id="importJsonBtn">Import JSON</button>
+  
+    <input type="file" id="jsonFileInputFile" accept=".json" style="display:none;">
+  </div>
+
+
   <main class="wrap">
     <!-- Inputs -->
     <section class="card inputs-panel">
@@ -904,13 +981,6 @@ details[open] .content {
         <div id="taxesSection"></div>
         <div id="taxableIncomeAdjustmentsSection"></div>
         <div id="taxfreeIncomeAdjustmentsSection"></div>
-      </div>
-      <div class="inputs-actions">
-        <button id="pdfBtn" title="Generate comprehensive PDF report">PDF Report</button>
-        <button id="csvBtn" title="Export yearly table">Export CSV</button>
-        <button id="exportJsonBtn" title="Export inputs as JSON file">Export JSON</button>
-        <button id="importJsonBtn" title="Import inputs from JSON file">Import JSON</button>
-        <input type="file" id="jsonFileInputFile" accept=".json" style="display: none;">
       </div>
     </section>
 
@@ -1009,18 +1079,6 @@ details[open] .content {
   
   window.resyncAllOpenDetails = resyncAllOpenDetails;
 
-  /**
-   * OBSERVER INVARIANT
-   * ------------------
-   * - Container queries control column count
-   * - `.inputs-scroll` is the container-query driver
-   * - `.content` height must track changes caused by container width
-   *
-   * Therefore:
-   * ❌ Do NOT observe `.content` only
-   * ✅ ALWAYS observe `.inputs-scroll`
-   */
-
   function persistDetailsState(root = document) {
       const STORAGE_PREFIX = 'details:';
 
@@ -1091,8 +1149,7 @@ details[open] .content {
                 ],
                 { duration: 260, easing: 'ease-out', fill: 'forwards' }
               ).onfinish = () => {
-                content.style.height = content.scrollHeight + 'px';
-                detailsObservers.set(details, syncOpenDetailsHeight(details, content));
+                content.style.height = ''; // Clear inline height to allow natural resizing"
               };
             });
           });
@@ -1326,11 +1383,7 @@ details[open] .content {
       window.layoutState.currentLeftWidth = newLeft;
       setInputsWidth(newLeft);
       
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          window.resyncAllOpenDetails?.();
-        });
-      });
+      window.resyncAllOpenDetails?.();
     });
 
     document.addEventListener('mouseup', () => {
@@ -1376,6 +1429,21 @@ details[open] .content {
   window.addEventListener("resize", () => {
       window.resyncAllOpenDetails?.();
     });
+</script>
+<script>
+  const hamburgerBtn = document.getElementById('hamburgerBtn');
+  const hamburgerMenu = document.getElementById('hamburgerMenu');
+
+  hamburgerBtn.addEventListener('click', () => {
+    hamburgerMenu.classList.toggle('open');
+  });
+
+  // Click outside to close
+  document.addEventListener('click', (e) => {
+    if (!hamburgerMenu.contains(e.target) && !hamburgerBtn.contains(e.target)) {
+      hamburgerMenu.classList.remove('open');
+    }
+  });
 </script>
 
 
