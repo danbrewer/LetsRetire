@@ -8,11 +8,16 @@
   <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script> -->
   <style>
     /*
-    Scroll strategy:
-    - Page never scrolls
-    - Inputs scroll inside inputs-scroll
-    - Results scroll inside .results
-    - Tables may scroll internally
+    LAYOUT CONTRACT (DO NOT BREAK):
+
+    - body does not scroll
+    - app-shell owns viewport height (100vh)
+    - wrap is a grid row (1fr)
+    - inputs-panel is a flex column
+    - inputs-scroll is the ONLY scroll container for inputs
+    - grid children MUST have min-height: 0
+
+    If scrolling breaks, check these first.
     */
     :root {
       --bg: #0b1220;
@@ -51,7 +56,6 @@
     .wrap {
       min-height: 0;          /* 🔑 allow children to shrink */
       overflow: hidden;
-      height: 100%;
       display: grid;
       grid-template-columns: var(--inputs-width) 6px 1fr;
         }
@@ -82,7 +86,6 @@
     details[open] summary { background: #0d172b; }
     summary { padding: 14px 14px; cursor: pointer; list-style: none; user-select: none; display:flex; align-items:center; justify-content:space-between; gap:8px; }
     summary::-webkit-details-marker{ display:none; }
-    .chev { transition: transform .4s; }
     details[open] .chev{ transform: rotate(180deg); }
     .content { padding: 14px; border-top: 1px dashed var(--border); background: rgba(255,255,255,.02); display:grid; gap:10px; }
 
@@ -114,12 +117,6 @@
       border-radius: 0 !important;
     }
     .hint { font-size: 12px; color: var(--muted); }
-
-    @media (max-width: 640px) {
-      .inputs-actions {
-        flex-direction: column;
-      }
-    }
 
     button {
       appearance: none; border: 1px solid var(--border); background: #0f1930; color: var(--text);
@@ -782,11 +779,6 @@ details[open] .content {
   transition: transform 650ms ease;
 }
 
-
-    details:not([open]) {
-      opacity: 0.92;
-    }
-
     details:focus-within {
       border-color: var(--accent);
     }
@@ -1062,15 +1054,14 @@ details[open] .content {
 
 
 <script type="module">
-  import { showHelpToast, loadPartial, initUI, resyncAllOpenDetails, detailsObservers } from './retirement-ui.js';
+  import { showHelpToast, loadPartial, initUI, resyncAllOpenDetails } from './retirement-ui.js';
   
-  window.resyncAllOpenDetails = function resyncAllOpenDetails(root = document) {
-      root.querySelectorAll('details[open] .content').forEach(content => {
-        content.getAnimations().forEach(a => a.cancel());
-        content.style.height = 'auto';
-        content.style.opacity = '';
-      });
-    };
+ window.resyncAllOpenDetails = () => {
+    document.querySelectorAll('details[open] .content').forEach(c => {
+      c.getAnimations().forEach(a => a.cancel());
+      c.style.height = '';
+    });
+  };
 
   function persistDetailsState(root = document) {
       const STORAGE_PREFIX = 'details:';
@@ -1108,10 +1099,6 @@ details[open] .content {
 
         if (isOpen) {
           // ----- CLOSE -----
-          const ro = detailsObservers.get(details);
-          if (ro) ro.disconnect();
-          detailsObservers.delete(details);
-
           const startHeight = content.offsetHeight;
 
           content.animate(
@@ -1151,58 +1138,6 @@ details[open] .content {
     });
   }
 
-  function syncOpenDetailsHeight(details, content) {
-    return null;
-
-    const inputsScroll = details.closest('.inputs-scroll');
-    if (!inputsScroll) {
-      console.warn('No inputs-scroll found for details', details);
-      return null;
-    }
-    let raf;
-
-    const ro = new ResizeObserver(() => {
-      if (!details.hasAttribute('open')) return;
-
-      cancelAnimationFrame(raf);
-      raf = requestAnimationFrame(() => {
-        content.style.height = content.scrollHeight + 'px';
-      });
-    });
-
-    // 🔑 Observe the container-query driver
-    if (inputsScroll) {
-      ro.observe(inputsScroll);
-    }
-
-    return ro;
-  }
-
-  function hydrateOpenDetails(root = document) {
-    return;
-
-      root.querySelectorAll('details[open]').forEach(details => {
-        const content = details.querySelector('.content');
-        if (!content) return;
-
-        // Cancel any stale animations
-        content.getAnimations().forEach(a => a.cancel());
-
-        // Force correct height
-        content.style.height = content.scrollHeight + 'px';
-        content.style.opacity = '1';
-
-        // Attach observer if missing
-        if (!detailsObservers.has(details)) {
-          const ro = syncOpenDetailsHeight(details, content);
-          if (ro) detailsObservers.set(details, ro);
-        }
-      });
-    }
-
-
-
-  
   const partials = [
     ['#subjectSection', './partials/subject.html'],
     ['#socialSecuritySection', './partials/socialSecurity.html'],
@@ -1233,10 +1168,6 @@ details[open] .content {
     });
   
   persistDetailsState(document);
-
-  // Ensure clean slate
-  detailsObservers.forEach(ro => ro.disconnect());
-  detailsObservers.clear();
 
   // Bind animations
   animateDetails(document);
@@ -1275,7 +1206,6 @@ details[open] .content {
 <script type="module" src="cRetirementAccountBreakdown.js"></script>
 <script type="module" src="cEmploymentInfo.js"></script>
 <script type="module" src="cWorkingYearIncome.js"></script>
-<script type="module" src="cEnum.js"></script>
 <script type="module" src="cGaap.js"></script>
 <script type="module" src="cGaapAnalyzer.js"></script>
 
