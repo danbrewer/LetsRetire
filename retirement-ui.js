@@ -2826,7 +2826,7 @@ function generateOutputAndSummary(inputs, calculations) {
         }</td>
         <td class="income">${
           calculation.nonTaxableIncome
-            ? calculation.age >= inputs.retireAge
+            ? calculation.age >= inputs.subjectLifeSpan
               ? `<span class="non-taxable-income-link" onclick="showNonTaxableIncomeBreakdown(${index})" title="Click to see breakdown">${fmt(
                   calculation.nonTaxableIncome
                 )}</span>`
@@ -2895,19 +2895,19 @@ function generateOutputAndSummary(inputs, calculations) {
   // Find the last age where there's still money, or endAge if money lasts throughout
   const fundedTo =
     calculation.total > 0
-      ? inputs.endAge
+      ? inputs.subjectLifeSpan
       : calculations
           .getAllCalculations()
           .reduce(
             (lastGoodAge, r) => (r.total > 0 ? r.age : lastGoodAge),
-            inputs.currentAge
+            inputs.subjectAge
           );
 
   const kpiAge = divById("kpiAge");
   if (kpiAge) {
     kpiAge.innerHTML = `${fundedTo} <span class="pill ${
       fundedTo >= inputs.subjectRetireAge ? "ok" : "alert"
-    }">${fundedTo >= inputs.endAge ? "Fully funded" : "Shortfall"}</span>`;
+    }">${fundedTo >= inputs.subjectLifeSpan ? "Fully funded" : "Shortfall"}</span>`;
   }
 
   const kpiEndBal = divById("kpiEndBal");
@@ -2917,12 +2917,12 @@ function generateOutputAndSummary(inputs, calculations) {
 
   const kpiDraw = divById("kpiDraw");
   if (kpiDraw) {
-    kpiDraw.textContent = `${inputs.retireAge}`;
+    kpiDraw.textContent = `${inputs.subjectRetireAge}`;
   }
 
   const kpiTax = divById("kpiTax");
   if (kpiTax) {
-    kpiTax.textContent = fmt(inputs.trad401k + inputs.rothIRA + inputs.savings);
+    // kpiTax.textContent = fmt(inputs.subjec + inputs.rothIRA + inputs.savings);
   }
 
   // Chart (total balance)
