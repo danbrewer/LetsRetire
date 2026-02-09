@@ -1077,7 +1077,13 @@ details[open] .content {
 <script type="module">
   import { showHelpToast, loadPartial, initUI, resyncAllOpenDetails, detailsObservers } from './retirement-ui.js';
   
-  window.resyncAllOpenDetails = resyncAllOpenDetails;
+  window.resyncAllOpenDetails = function resyncAllOpenDetails(root = document) {
+      root.querySelectorAll('details[open] .content').forEach(content => {
+        content.getAnimations().forEach(a => a.cancel());
+        content.style.height = 'auto';
+        content.style.opacity = '';
+      });
+    };
 
   function persistDetailsState(root = document) {
       const STORAGE_PREFIX = 'details:';
@@ -1159,6 +1165,8 @@ details[open] .content {
   }
 
   function syncOpenDetailsHeight(details, content) {
+    return null;
+
     const inputsScroll = details.closest('.inputs-scroll');
     if (!inputsScroll) {
       console.warn('No inputs-scroll found for details', details);
@@ -1184,6 +1192,8 @@ details[open] .content {
   }
 
   function hydrateOpenDetails(root = document) {
+    return;
+
       root.querySelectorAll('details[open]').forEach(details => {
         const content = details.querySelector('.content');
         if (!content) return;
@@ -1241,9 +1251,9 @@ details[open] .content {
   animateDetails(document);
 
   // 🔑 FINAL STEP: hydrate restored-open sections
-  requestAnimationFrame(() => {
-    hydrateOpenDetails(document);
-  });
+  // requestAnimationFrame(() => {
+  //   hydrateOpenDetails(document);
+  // });
 </script>
 
 <script>
