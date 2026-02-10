@@ -2739,6 +2739,8 @@ function generateOutputAndSummary(inputs, calculations) {
   tbody.innerHTML = calculations
     .getAllCalculations()
     .map((calculation, index) => {
+      // debugger;
+      calculation.dump();
       return `
         <tr>
         <td class="neutral">${calculation.year}</td>
@@ -2751,9 +2753,16 @@ function generateOutputAndSummary(inputs, calculations) {
         
         <!-- NET INCOME (what you actually receive) -->
         <td class="income">${
-          calculation.subjectSocialSecurity
+          calculation.salaryNet
+            ? `<span class="ss-link" onclick="showSalaryBreakdown(${index})">${fmt(
+                calculation.salaryNet
+              )}</span>`
+            : ""
+        }</td>
+        <td class="income">${
+          calculation.subjectSsNet
             ? `<span class="ss-link" onclick="showSsBreakdown(${index})">${fmt(
-                calculation.subjectSocialSecurity
+                calculation.subjectSsNet
               )}</span>`
             : ""
         }</td>
@@ -2792,13 +2801,13 @@ function generateOutputAndSummary(inputs, calculations) {
         
         <!-- GROSS INCOME (before taxes/deductions) -->
         <td class="income">${
-          calculation.salary ? fmt(calculation.salary) : ""
+          calculation.salaryGross ? fmt(calculation.salaryGross) : ""
         }</td>
         <td class="income">${
           calculation.taxableInterest ? fmt(calculation.taxableInterest) : ""
         }</td>
         <td class="income">${
-          calculation.subjectGrossSs ? fmt(calculation.subjectGrossSs) : ""
+          calculation.subjectSsGross ? fmt(calculation.subjectSsGross) : ""
         }</td>
         <td class="income">${
           calculation.subjectGrossPen ? fmt(calculation.subjectGrossPen) : ""

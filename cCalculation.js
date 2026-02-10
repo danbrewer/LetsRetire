@@ -1,4 +1,6 @@
+import { ACCOUNT_TYPES } from "./cAccount.js";
 import { RetirementYearData } from "./cRetirementYearData.js";
+import { TransactionCategory } from "./cTransaction.js";
 import { WorkingYearData } from "./cWorkingYearData.js";
 
 class Calculation {
@@ -38,12 +40,6 @@ class Calculation {
     return this.#yearData.accountYear;
   }
 
-  get subjectSocialSecurity() {
-    return this.#yearData instanceof RetirementYearData
-      ? 0 //this.#yearData.incomeStreams.subjectSocialSecurity
-      : 0;
-  }
-
   get subjectPension() {
     return this.#yearData instanceof RetirementYearData
       ? 0 // TODO: add pension to RetirementYearData
@@ -70,24 +66,81 @@ class Calculation {
     return null; // TODO: add totalNetIncome to WorkingYearData and RetirementYearData
   }
 
-  get salary() {
-    return null; // TODO: add salary to WorkingYearData
+  get salaryGross() {
+    const result =
+      this.#yearData.accountYear
+        .getDeposits(
+          ACCOUNT_TYPES.SUBJECT_WAGES,
+          TransactionCategory.IncomeGross
+        )
+        .asCurrency() +
+      this.#yearData.accountYear
+        .getDeposits(
+          ACCOUNT_TYPES.PARTNER_WAGES,
+          TransactionCategory.IncomeGross
+        )
+        .asCurrency(); // TODO: add salary to WorkingYearData
+
+    return result;
+  }
+
+  get salaryWithholdings() {
+    const result =
+      this.#yearData.accountYear
+        .getWithdrawals(
+          ACCOUNT_TYPES.SUBJECT_WAGES,
+          TransactionCategory.Withholdings
+        )
+        .asCurrency() +
+      this.#yearData.accountYear
+        .getWithdrawals(
+          ACCOUNT_TYPES.PARTNER_WAGES,
+          TransactionCategory.Withholdings
+        )
+        .asCurrency();
+    return result;
+  }
+
+  get salaryNet() {
+    return this.salaryGross - this.salaryWithholdings;
   }
 
   get taxableInterest() {
     return null; // TODO: add taxableInterest to WorkingYearData
   }
 
-  get subjectGrossSs() {
-    return null; // TODO: add subjectGrossSs to WorkingYearData
+  get subjectSsGross() {
+    const result = this.#yearData.accountYear
+      .getDeposits(
+        ACCOUNT_TYPES.SUBJECT_SOCIAL_SECURITY,
+        TransactionCategory.IncomeGross
+      )
+      .asCurrency();
+
+    return result;
   }
 
-  get subjectGrossPen() {
-    return null; // TODO: add subjectGrossPen to WorkingYearData
+  get subjectSsWithholdings() {
+    const result = this.#yearData.accountYear
+      .getWithdrawals(
+        ACCOUNT_TYPES.SUBJECT_SOCIAL_SECURITY,
+        TransactionCategory.Withholdings
+      )
+      .asCurrency();
+
+    return result;
+  }
+
+  get subjectSsNet() {
+    return this.subjectSsGross - this.subjectSsWithholdings;
   }
 
   get spouseGrossSs() {
     return null; // TODO: add spouseGrossSs to WorkingYearData
+  }
+
+  get subjectGrossPen() {
+    return null; // TODO: add subjectGrossPen to WorkingYearData
   }
 
   get spouseGrossPen() {
