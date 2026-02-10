@@ -551,7 +551,7 @@ function showToast(title, message, type = "info", duration = 5000) {
 }
 
 document.addEventListener("value-changed", () => {
-  doCalculations(); 
+  doCalculations();
 });
 
 // Event listeners for dismissing toast
@@ -2992,49 +2992,70 @@ function updateTaxFreeIncomeFieldsDisplayMode() {
 }
 
 function loadExample() {
+  // debugger;
   const ex = {
-    currentAge: 60,
-    retireAge: 62,
-    endAge: 90,
-    inflationRate: 0.0, //2.5,
-    spendingToday: 100000,
-    spendingDecline: 0.0,
-    partnerAge: 56,
+    subjectCurrentAge: 60,
+    subjectRetireAge: 62,
+    subjectLifeSpan: 90,
+    subject401kStartAge: 62,
+    subjectPensionStartAge: 65,
+    subjectSsStartAge: 62,
+    subjectSalary: 174500,
+    subjectSalaryGrowth: 2.0,
+    subjectSavingsMonthly: 0,
+    subjectRothMonthly: 0,
+    subject401kContribution: 0,
+    subjectEmpMatchRate: 0,
+    subjectEmpMatchCap: 0,
+
+    partnerCurrentAge: 56,
     partnerRetireAge: 62,
-    partnerSsMonthly: 1000,
-    partnerSsStartAge: 62,
-    partnerSsCola: 0.0,
-    partnerPenMonthly: 500,
-    partnerPenStartAge: 65,
+    partnerLifeSpan: 90,
     partner401kStartAge: 62,
-    partnerPenCola: 0,
-    partnerTaxSS: 10,
-    partnerTaxPension: 20,
-    salary: 174500,
-    salaryGrowth: 2.0,
-    pretaxPct: 0,
-    rothPct: 0,
-    taxablePct: 35,
-    matchCap: 0,
-    matchRate: 0,
-    balPre: 600000,
-    balRoth: 0,
-    balSavings: 500000,
-    retPre: 3.0,
-    retRoth: 0.0,
-    retTax: 3.0,
-    ssMonthly: 2500,
-    ssStart: 62,
+    partnerPensionStartAge: 65,
+    partnerSsStartAge: 62,
+    partnerSalary: 0,
+    partnerSalaryGrowth: 0,
+    partnerRothMonthly: 0,
+    partner401kContribution: 0,
+    partnerEmpMatchRate: 0,
+    partnerEmpMatchCap: 0,
+
+    currentYear: new Date().getFullYear(),
+    workingYearsSpending: 100000,
+    retirementYearsSpending: 100000,
+    inflation: 2.0, //2.5,
+    spendingDecline: 0.0,
+
+    startingSavingsBalance: 500000,
+    savingsReturnRate: 3.0,
+    subject401kStartingBalance: 600000,
+    subject401kReturnRate: 3.0,
+    partner401kStartingBalance: 0,
+    partner401kReturnRate: 0.0,
+    subjectRothBalance: 0,
+    subjectRothReturnRate: 0.0,
+    partnerRothBalance: 0,
+    partnerRothReturnRate: 0.0,
+
+    subjectSsMonthly: 2500,
+    partnerSsMonthly: 1000,
+    ssWithholdingRate: 15,
     ssCola: 2.5,
-    penMonthly: 3500,
-    penStart: 65,
-    penCola: 0,
-    order: "savings,pretax,roth",
+
+    subjectPensionMonthly: 3500,
+    subjectPensionWithholdingRate: 20,
+    subjectPensionSurvivorship: 50,
+    partnerPensionMonthly: 500,
+    partnerPensionWithholding: 20,
+    partnerPensionSurvivorship: 50,
+
     filingStatus: constsJS_FILING_STATUS.MARRIED_FILING_JOINTLY,
-    flatSsWithholdingRate: 0.07,
-    flatTrad401kWithholdingRate: 0.2,
-    flatPensionWithholdingRate: 0.2,
-    useRMD: true,
+    withholdingsDefaultRate: 15,
+    withholdingWages: 20,
+    withholdings401k: 20,
+    withholdingsSs: 10,
+    withholdingsPension: 20,
   };
   // const ex = {
   //   currentAge: 60,
@@ -3631,7 +3652,7 @@ function resyncAllOpenDetails(root = document) {
 
     // Cancel any in-flight animations
     content.getAnimations().forEach((a) => a.cancel());
-    
+
     // 🔑 RELEASE height back to layout engine
     content.style.height = "auto";
     content.style.opacity = "";
@@ -3657,5 +3678,5 @@ export {
   detailsObservers,
   showHelpToast,
   generateOutputAndSummary,
-  doCalculations
+  doCalculations,
 };
