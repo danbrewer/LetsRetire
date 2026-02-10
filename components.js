@@ -3,6 +3,9 @@ class LabeledInput extends HTMLElement {
     super();
     /** @type {((event: Event, helpKey: string) => void) | null} */
     this.onHelp = null;
+
+    /** @type {((event: Event, value: string, id: string) => void) | null} */
+    this.onChange = null;
   }
 
   connectedCallback() {
@@ -54,6 +57,34 @@ class LabeledInput extends HTMLElement {
     `;
 
     this.querySelector("div")?.appendChild(control);
+
+    // 🔔 COMMIT CHANGE (user is done editing)
+    const emitCommit = () => {
+      this.dispatchEvent(
+        new CustomEvent("value-changed", {
+          detail: {
+            id,
+            value: control.value,
+            type: control.type,
+          },
+          bubbles: true,
+        })
+      );
+    };
+
+    // Selects naturally use change
+    control.addEventListener("change", emitCommit);
+
+    // Inputs: blur + Enter key
+    if (control instanceof HTMLInputElement) {
+      control.addEventListener("blur", emitCommit);
+
+      control.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          control.blur(); // ensures single dispatch path
+        }
+      });
+    }
 
     if (help) {
       const icon = this.querySelector(".help-icon");

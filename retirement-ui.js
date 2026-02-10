@@ -550,6 +550,10 @@ function showToast(title, message, type = "info", duration = 5000) {
   toastTimer = setTimeout(() => hideToast(), duration);
 }
 
+document.addEventListener("value-changed", () => {
+  doCalculations(); 
+});
+
 // Event listeners for dismissing toast
 document.addEventListener("click", (e) => {
   if (!(e.target instanceof Element)) return;
@@ -3653,4 +3657,5 @@ export {
   detailsObservers,
   showHelpToast,
   generateOutputAndSummary,
+  doCalculations
 };
