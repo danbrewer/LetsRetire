@@ -1,3 +1,4 @@
+// @ts-ignore
 class LabeledInput extends HTMLElement {
   constructor() {
     super();

@@ -40,18 +40,60 @@ class Calculation {
     return this.#yearData.accountYear;
   }
 
-  get subjectPension() {
-    return this.#yearData instanceof RetirementYearData
-      ? 0 // TODO: add pension to RetirementYearData
-      : 0;
+  get subjectPensionGross() {
+    const result = this.#yearData.accountYear
+      .getDeposits(
+        ACCOUNT_TYPES.SUBJECT_PENSION,
+        TransactionCategory.IncomeGross
+      )
+      .asCurrency();
+
+    return result;
+  }
+
+  get subjectPensionWithholdings() {
+    const result = this.#yearData.accountYear
+      .getWithdrawals(
+        ACCOUNT_TYPES.SUBJECT_PENSION,
+        TransactionCategory.Withholdings
+      )
+      .asCurrency();
+
+    return result;
+  }
+
+  get subjectPensionNet() {
+    return this.subjectPensionGross - this.subjectPensionWithholdings;
   }
 
   get spouseSocialSecurity() {
     return null; // TODO: add spouse ss to RetirementYearData
   }
 
-  get spousePension() {
-    return null; // TODO: add spouse pension to RetirementYearData
+  get partnerPensionGross() {
+    const result = this.#yearData.accountYear
+      .getDeposits(
+        ACCOUNT_TYPES.PARTNER_PENSION,
+        TransactionCategory.IncomeGross
+      )
+      .asCurrency();
+
+    return result;
+  }
+
+  get partnerPensionWithholdings() {
+    const result = this.#yearData.accountYear
+      .getWithdrawals(
+        ACCOUNT_TYPES.PARTNER_PENSION,
+        TransactionCategory.Withholdings
+      )
+      .asCurrency();
+
+    return result;
+  }
+
+  get partnerPensionNet() {
+    return this.partnerPensionGross - this.partnerPensionWithholdings;
   }
 
   get trad401kNet() {
@@ -63,7 +105,13 @@ class Calculation {
   } // TODO: add tradRothNet to RetirementYearData
 
   get totalNetIncome() {
-    return null; // TODO: add totalNetIncome to WorkingYearData and RetirementYearData
+    return (
+      this.salaryNet +
+      this.subjectSsNet +
+      this.subjectPensionNet +
+      this.subject401kNet +
+      this.savingsWithdrawal
+    ); // TODO: add totalNetIncome to WorkingYearData and RetirementYearData
   }
 
   get salaryGross() {
@@ -120,6 +168,32 @@ class Calculation {
     return result;
   }
 
+  get partnerSsGross() {
+    const result = this.#yearData.accountYear
+      .getDeposits(
+        ACCOUNT_TYPES.PARTNER_SOCIAL_SECURITY,
+        TransactionCategory.IncomeGross
+      )
+      .asCurrency();
+
+    return result;
+  }
+
+  get partnerSsWithholdings() {
+    const result = this.#yearData.accountYear
+      .getWithdrawals(
+        ACCOUNT_TYPES.PARTNER_SOCIAL_SECURITY,
+        TransactionCategory.Withholdings
+      )
+      .asCurrency();
+
+    return result;
+  }
+
+  get partnerSsNet() {
+    return this.partnerSsGross - this.partnerSsWithholdings;
+  }
+
   get subjectSsWithholdings() {
     const result = this.#yearData.accountYear
       .getWithdrawals(
@@ -147,8 +221,35 @@ class Calculation {
     return null; // TODO: add spouseGrossPen to WorkingYearData
   }
 
-  get trad401kGross() {
-    return null; // TODO: add trad401kGross to RetirementYearData
+  get subject401kGross() {
+    const result = this.#yearData.accountYear
+      .getWithdrawals(ACCOUNT_TYPES.SUBJECT_401K, TransactionCategory.IncomeNet)
+      .asCurrency();
+
+    return result;
+  }
+
+  get subject401kWithholdings() {
+    const result = this.#yearData.accountYear
+      .getWithdrawals(
+        ACCOUNT_TYPES.SUBJECT_401K,
+        TransactionCategory.Withholdings
+      )
+      .asCurrency();
+
+    return result;
+  }
+
+  get subject401kNet() {
+    return this.subject401kGross - this.subject401kWithholdings;
+  }
+
+  get savingsWithdrawal() {
+    const result = this.#yearData.accountYear
+      .getWithdrawals(ACCOUNT_TYPES.SAVINGS, TransactionCategory.CashTransfer)
+      .asCurrency();
+
+    return result;
   }
 
   get totalGrossIncome() {

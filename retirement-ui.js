@@ -1,9 +1,8 @@
-// @ts-check
+// @ts-ignore
 
 import { ACCOUNT_TYPES } from "./cAccount.js";
 import { Calculation, Calculations } from "./cCalculation.js";
 import { Inputs } from "./cInputs.js";
-import { LabeledInput } from "./components.js";
 import { constsJS_FILING_STATUS } from "./consts.js";
 import { calc } from "./retirement-calculator.js";
 import * as DefaultUI from "./retirement-ui.js";
@@ -41,8 +40,8 @@ import { UIField } from "./UIFields.js";
  * }} WindowWithExtras
  */
 
-/** @type {WindowWithExtras} */
-const win = window;
+// /** @type {WindowWithExtras} */
+// const win = window;
 
 // /**
 //  * @param {string} id
@@ -2642,7 +2641,8 @@ function parseInputParameters() {
     // order: order,
   };
 
-  inputArgs.dump("inputArgs");
+  console.log(JSON.stringify(inputArgs, null, 2));
+  // inputArgs.dump("inputArgs");
 
   const inputs = new Inputs(inputArgs);
 
@@ -2722,13 +2722,14 @@ document.addEventListener("DOMContentLoaded", function () {
 function doCalculations() {
   // return; // for now
   const calculations = new Calculations();
-  calc(calculations, DefaultUI);
+  const result = calc(calculations, DefaultUI);
+  generateOutputAndSummary(result?.inputs, result?.calculations);
 }
 
 /**
  * Generate final summary, write table, and update KPIs
- * @param {Inputs} inputs
- * @param {Calculations} calculations
+ * @param {Inputs | undefined} inputs
+ * @param {Calculations | undefined } calculations
  */
 function generateOutputAndSummary(inputs, calculations) {
   //, rows) {
@@ -2736,11 +2737,21 @@ function generateOutputAndSummary(inputs, calculations) {
   const tbody = $("rows");
   if (!tbody) return;
 
+  if (!calculations) {
+    tbody.innerHTML = "<tr><td colspan='100%'>No calculations to display</td></tr>";
+    return;
+  }
+
+  if(!inputs) {
+    tbody.innerHTML = "<tr><td colspan='100%'>No input data available</td></tr>";
+    return;
+  }
+
   tbody.innerHTML = calculations
     .getAllCalculations()
     .map((calculation, index) => {
       // debugger;
-      calculation.dump();
+      // calculation.dump();
       return `
         <tr>
         <td class="neutral">${calculation.year}</td>
@@ -2766,28 +2777,32 @@ function generateOutputAndSummary(inputs, calculations) {
               )}</span>`
             : ""
         }</td>
-        <td class="income">${calculation.subjectPension ? fmt(calculation.subjectPension) : ""}</td>
+        <td class="income">${calculation.subjectPensionNet ? fmt(calculation.subjectPensionNet) : ""}</td>
         <td class="income">${
-          // TODO: FIX
-          ""
-          // calculation.partnerSocialSecurity
-          //   ? fmt(calculation.partnerSocialSecurity)
-          //   : ""
-        }</td>
-        <td class="income">${
-          // TODO: FIX
-          ""
-          //  calculation.partnerPension ? fmt(calculation.partnerPension) : ""
-        }</td>
-        <td class="income">${
-          calculation.trad401kNet
-            ? `<span class="withdrawal-net-link" onclick="showWithdrawalNetBreakdown(${index})">${fmt(
-                calculation.trad401kNet
+          calculation.partnerSsNet
+            ? `<span class="ss-link" onclick="showSsBreakdown(${index})">${fmt(
+                calculation.partnerSsNet
               )}</span>`
             : ""
         }</td>
         <td class="income">${
-          calculation.tradRothNet ? fmt(calculation.tradRothNet) : ""
+          calculation.partnerPensionNet
+            ? `<span class="ss-link" onclick="showSsBreakdown(${index})">${fmt(
+                calculation.partnerPensionNet
+              )}</span>`
+            : ""
+        }</td>
+        <td class="income">${
+          calculation.subject401kNet
+            ? `<span class="withdrawal-net-link" onclick="showWithdrawalNetBreakdown(${index})">${fmt(
+                calculation.subject401kNet
+              )}</span>`
+            : ""
+        }</td>
+        <td class="income">${
+          calculation.savingsWithdrawal
+            ? fmt(calculation.savingsWithdrawal)
+            : ""
         }</td>
         <td class="income">${
           calculation.totalNetIncome
@@ -2810,18 +2825,21 @@ function generateOutputAndSummary(inputs, calculations) {
           calculation.subjectSsGross ? fmt(calculation.subjectSsGross) : ""
         }</td>
         <td class="income">${
-          calculation.subjectGrossPen ? fmt(calculation.subjectGrossPen) : ""
+          calculation.subjectPensionGross
+            ? fmt(calculation.subjectPensionGross)
+            : ""
         }</td>
         <td class="income">${
-          ""
-          // calculation.partnerGrossSs ? fmt(calculation.partnerGrossSs) : ""
+          calculation.partnerPensionGross
+            ? fmt(calculation.partnerPensionGross)
+            : ""
         }</td>
         <td class="income">${
           ""
           // calculation.partnerGrossPen ? fmt(calculation.partnerGrossPen) : ""
         }</td>
         <td class="income">${
-          calculation.trad401kGross ? fmt(calculation.trad401kGross) : ""
+         "" //  calculation.trad401kGross ? fmt(calculation.trad401kGross) : ""
         }</td>
         <td class="income">${
           calculation.totalGrossIncome ? fmt(calculation.totalGrossIncome) : ""

@@ -16,6 +16,7 @@ const testTracker = new TestTracker("Retirement Calculator Workbench");
 // Canonical test scenario (mapped to constructor)
 //------------------------------------------------------------
 function createInputs() {
+  return createInputsMimicUIDefaults();
   return createInputsNoFussNoMuss();
   /** @type {import("../cInputs.js").InputsOptions} */
   const inputArgs = {
@@ -238,6 +239,61 @@ function createInputsNoFussNoMuss() {
 
   inputArgs.dump("inputs");
 
+  return new Inputs(inputArgs);
+}
+
+function createInputsMimicUIDefaults() {
+  /** @type {import("../cInputs.js").InputsOptions} */
+  const inputArgs = {
+    startingYear: 2026,
+    initialAgeSubject: 60,
+    initialAgePartner: 56,
+    subjectRetireAge: 62,
+    subjectSsStartAge: 62,
+    subjectPensionStartAge: 65,
+    subject401kStartAge: 62,
+    subjectLifeSpan: 95,
+    inflationRate: 0.02,
+    spendingToday: 100000,
+    spendingDecline: 0,
+    partnerRetireAge: 62,
+    partnerSsMonthly: 1000,
+    partnerSsStartAge: 62,
+    partnerPenMonthly: 500,
+    partnerPenStartAge: 65,
+    partner401kStartAge: 62,
+    partnerTaxSS: 0.1,
+    partnerPensionWithholdings: 0.15,
+    subjectStartingSalary: 174500,
+    partnerStartingSalary: 0,
+    subjectSalaryGrowthRate: 0.02,
+    partnerSalaryGrowthRate: 0,
+    subjectCareer401kContributionRate: 0,
+    subjectRothContributionRate: 0,
+    subjectEmp401kMatchRate: 0,
+    subject401kContributionRate: 0,
+    subject401kStartingBalance: 400000,
+    subjectRothStartingBalance: 0,
+    partner401kStartingBalance: 300000,
+    partnerRothStartingBalance: 0,
+    savingsStartingBalance: 500000,
+    subject401kInterestRate: 0.03,
+    subjectRothInterestRate: 0,
+    partner401kInterestRate: 0,
+    partnerRothInterestRate: 0,
+    savingsInterestRate: 0.03,
+    subjectSsMonthly: 2500,
+    ssCola: 0.025,
+    subjectPensionMonthly: 3500,
+    filingStatus: "married",
+    useRMD: true,
+    flatSsWithholdingRate: 0.15,
+    flatCareerTrad401kWithholdingRate: 0.2,
+    flatPensionWithholdingRate: 0.2,
+    flatWageWithholdingRate: 0.15,
+  };
+
+  inputArgs.dump("inputs");
   return new Inputs(inputArgs);
 }
 

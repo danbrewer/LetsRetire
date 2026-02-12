@@ -89,7 +89,7 @@ class WorkingYearCalculator {
     this.#generateReportData();
 
     // workingYearData.dump("working year data");
-    this.#reportingYear.ReportData.dump("ReportData");
+    // this.#reportingYear.ReportData.dump("ReportData");
     // debugger;
 
     const workingYearData = WorkingYearData.CreateUsing(

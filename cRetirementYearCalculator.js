@@ -579,6 +579,7 @@ class RetirementYearCalculator {
   // END COPIED FROM WORKING YEAR CALCULATOR
 
   processRetirementYearData() {
+    // debugger; 
     this.#processWagesAndCompensation();
     this.#processMiscIncome();
     this.#processTaxFreeIncome();

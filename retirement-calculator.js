@@ -8,7 +8,7 @@ import { RetirementYearCalculator } from "./cRetirementYearCalculator.js";
 import { Transaction } from "./cTransaction.js";
 import { TransactionManager } from "./cTransactionManager.js";
 import { WorkingYearCalculator } from "./cWorkingYearCalculator.js";
-import { generateOutputAndSummary } from "./retirement-ui.js";
+// import { generateOutputAndSummary } from "./retirement-ui.js";
 
 /**
  * @typedef {object} RetirementUIFunctions
@@ -94,16 +94,16 @@ function calc(calculations, UI) {
       accountYear,
       reportingYear
     );
-    console.log(
-      `------ START OF WORKING YEAR ` + (TAX_BASE_YEAR + yearIndex) + ` ------`
-    );
+    // console.log(
+    //   `------ START OF WORKING YEAR ` + (TAX_BASE_YEAR + yearIndex) + ` ------`
+    // );
 
     const workingYearData =
       workingYearIncomeCalculator.processWorkingYearData();
 
-    console.log(
-      `------ END OF WORKING YEAR ` + (TAX_BASE_YEAR + yearIndex) + ` ------`
-    );
+    // console.log(
+    //   `------ END OF WORKING YEAR ` + (TAX_BASE_YEAR + yearIndex) + ` ------`
+    // );
 
     calculations.addCalculation(
       new Calculation(accountYear.taxYear, workingYearData)
@@ -168,7 +168,8 @@ function calc(calculations, UI) {
   }
 
   // Generate final output
-  generateOutputAndSummary(inputs, calculations); //, totalTaxes, maxDrawdown);
+  // generateOutputAndSummary(inputs, calculations); //, totalTaxes, maxDrawdown);
+  return { inputs, calculations };
 }
 
 // Helper to generate dynamic input values for a given year index
