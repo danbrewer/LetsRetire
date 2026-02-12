@@ -62,7 +62,11 @@ class Calculation {
     return result;
   }
 
-  get subjectPensionNet() {
+  get totalPensionNet() {
+    return (
+      this.#yearData.reportData.income_subjectPensionTakehome +
+      this.#yearData.reportData.income_partnerPensionTakehome
+    ); // TODO: add totalPensionNet to RetirementYearDat
     return this.subjectPensionGross - this.subjectPensionWithholdings;
   }
 
@@ -105,11 +109,12 @@ class Calculation {
   } // TODO: add tradRothNet to RetirementYearData
 
   get totalNetIncome() {
+    return this.#yearData.reportData.income_total_net; // TODO: add totalNetIncome to RetirementYearData and WorkingYearDat
     return (
       this.salaryNet +
-      this.subjectSsNet +
-      this.subjectPensionNet +
-      this.subject401kNet +
+      this.totalSsNet +
+      this.totalPensionNet +
+      this.total401kNet +
       this.savingsWithdrawal
     ); // TODO: add totalNetIncome to WorkingYearData and RetirementYearData
   }
@@ -158,14 +163,7 @@ class Calculation {
   }
 
   get subjectSsGross() {
-    const result = this.#yearData.accountYear
-      .getDeposits(
-        ACCOUNT_TYPES.SUBJECT_SOCIAL_SECURITY,
-        TransactionCategory.IncomeGross
-      )
-      .asCurrency();
-
-    return result;
+    return this.totalSsNet + this.subjectSsWithholdings;
   }
 
   get partnerSsGross() {
@@ -180,12 +178,13 @@ class Calculation {
   }
 
   get partnerSsWithholdings() {
-    const result = this.#yearData.accountYear
-      .getWithdrawals(
-        ACCOUNT_TYPES.PARTNER_SOCIAL_SECURITY,
-        TransactionCategory.Withholdings
-      )
-      .asCurrency();
+    const result = this.#yearData.reportData.ss_partnerSsWithholdings;
+    //  accountYear
+    //   .getWithdrawals(
+    //     ACCOUNT_TYPES.PARTNER_SOCIAL_SECURITY,
+    //     TransactionCategory.Withholdings
+    //   )
+    //   .asCurrency();
 
     return result;
   }
@@ -205,8 +204,11 @@ class Calculation {
     return result;
   }
 
-  get subjectSsNet() {
-    return this.subjectSsGross - this.subjectSsWithholdings;
+  get totalSsNet() {
+    return (
+      this.#yearData.reportData.ss_subjectSsTakehome +
+      this.#yearData.reportData.ss_partnerSsTakehome
+    );
   }
 
   get spouseGrossSs() {
@@ -222,11 +224,7 @@ class Calculation {
   }
 
   get subject401kGross() {
-    const result = this.#yearData.accountYear
-      .getWithdrawals(ACCOUNT_TYPES.SUBJECT_401K, TransactionCategory.IncomeNet)
-      .asCurrency();
-
-    return result;
+    return this.total401kNet + this.subject401kWithholdings; // TODO: add subject401kGross to RetirementYearData
   }
 
   get subject401kWithholdings() {
@@ -240,14 +238,20 @@ class Calculation {
     return result;
   }
 
-  get subject401kNet() {
-    return this.subject401kGross - this.subject401kWithholdings;
+  get total401kNet() {
+    const result =
+      this.#yearData.reportData.income_subject401kTakehome +
+      this.#yearData.reportData.income_partner401kTakehome; // TODO: add subject401kNet to RetirementYearData
+
+    return result;
   }
 
   get savingsWithdrawal() {
-    const result = this.#yearData.accountYear
-      .getWithdrawals(ACCOUNT_TYPES.SAVINGS, TransactionCategory.CashTransfer)
-      .asCurrency();
+    const result = this.#yearData.reportData.savings_Withdrawals; // TODO: add savingsWithdrawal to RetirementYearData
+
+    // const result = this.#yearData.accountYear
+    //   .getWithdrawals(ACCOUNT_TYPES.SAVINGS, TransactionCategory.CashTransfer)
+    //   .asCurrency();
 
     return result;
   }

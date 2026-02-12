@@ -2738,12 +2738,14 @@ function generateOutputAndSummary(inputs, calculations) {
   if (!tbody) return;
 
   if (!calculations) {
-    tbody.innerHTML = "<tr><td colspan='100%'>No calculations to display</td></tr>";
+    tbody.innerHTML =
+      "<tr><td colspan='100%'>No calculations to display</td></tr>";
     return;
   }
 
-  if(!inputs) {
-    tbody.innerHTML = "<tr><td colspan='100%'>No input data available</td></tr>";
+  if (!inputs) {
+    tbody.innerHTML =
+      "<tr><td colspan='100%'>No input data available</td></tr>";
     return;
   }
 
@@ -2771,31 +2773,17 @@ function generateOutputAndSummary(inputs, calculations) {
             : ""
         }</td>
         <td class="income">${
-          calculation.subjectSsNet
+          calculation.totalSsNet
             ? `<span class="ss-link" onclick="showSsBreakdown(${index})">${fmt(
-                calculation.subjectSsNet
+                calculation.totalSsNet
               )}</span>`
             : ""
         }</td>
-        <td class="income">${calculation.subjectPensionNet ? fmt(calculation.subjectPensionNet) : ""}</td>
+        <td class="income">${calculation.totalPensionNet ? fmt(calculation.totalPensionNet) : ""}</td>
         <td class="income">${
-          calculation.partnerSsNet
-            ? `<span class="ss-link" onclick="showSsBreakdown(${index})">${fmt(
-                calculation.partnerSsNet
-              )}</span>`
-            : ""
-        }</td>
-        <td class="income">${
-          calculation.partnerPensionNet
-            ? `<span class="ss-link" onclick="showSsBreakdown(${index})">${fmt(
-                calculation.partnerPensionNet
-              )}</span>`
-            : ""
-        }</td>
-        <td class="income">${
-          calculation.subject401kNet
+          calculation.total401kNet
             ? `<span class="withdrawal-net-link" onclick="showWithdrawalNetBreakdown(${index})">${fmt(
-                calculation.subject401kNet
+                calculation.total401kNet
               )}</span>`
             : ""
         }</td>
@@ -2839,7 +2827,7 @@ function generateOutputAndSummary(inputs, calculations) {
           // calculation.partnerGrossPen ? fmt(calculation.partnerGrossPen) : ""
         }</td>
         <td class="income">${
-         "" //  calculation.trad401kGross ? fmt(calculation.trad401kGross) : ""
+          "" //  calculation.trad401kGross ? fmt(calculation.trad401kGross) : ""
         }</td>
         <td class="income">${
           calculation.totalGrossIncome ? fmt(calculation.totalGrossIncome) : ""

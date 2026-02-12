@@ -50,6 +50,8 @@ class WorkingYearCalculator {
       this.#inputs
     );
 
+    this.#reportingYear.ReportData.year = this.#fiscalData.taxYear;
+
     this.#reportingYear.ReportData.demographics_isMarriedFilingJointly =
       this.#demographics.hasPartner;
     this.#reportingYear.ReportData.demographics_subjectAge =
@@ -95,7 +97,8 @@ class WorkingYearCalculator {
     const workingYearData = WorkingYearData.CreateUsing(
       this.#demographics,
       this.#fiscalData,
-      this.#accountYear
+      this.#accountYear,
+      this.#reportingYear.ReportData
     );
 
     return workingYearData;

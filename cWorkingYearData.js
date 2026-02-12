@@ -7,6 +7,7 @@ import { Taxes } from "./cTaxes.js";
 import { Withdrawals } from "./cWithdrawals.js";
 import { WorkingYearIncome } from "./cWorkingYearIncome.js";
 import { BaseYearData } from "./cYearDataBase.js";
+import { ReportData } from "./rReportData.js";
 
 /**
  * Represents comprehensive working year calculation data including income, contributions,
@@ -34,6 +35,8 @@ class WorkingYearData extends BaseYearData {
   #withdrawals = null;
   /** @type {string | undefined} */
   #description;
+  /** @type {ReportData} */
+  #reportData;
 
   /**
    * Creates a new WorkingYearData instance with comprehensive working year financial data.
@@ -41,9 +44,11 @@ class WorkingYearData extends BaseYearData {
    * @param {Demographics} demographics - Demographic information including age,
    * @param {FiscalData} fiscalData - Fiscal data for the working year
    * @param {AccountingYear} accountYear - View of accounts for fiscal year
+   * @param {ReportData} reportData
    */
-  constructor(demographics, fiscalData, accountYear) {
+  constructor(demographics, fiscalData, accountYear, reportData) {
     super(demographics, fiscalData, accountYear);
+    this.#reportData = reportData;
     // this.#workingYearIncome = /** @type {WorkingYearIncome} */ (Object.freeze(workingYearIncome));
   }
 
@@ -69,6 +74,11 @@ class WorkingYearData extends BaseYearData {
   /** @returns {AccountingYear} */
   get accountYear() {
     return super.accountYear;
+  }
+
+  // @returns {ReportData}
+  get reportData() {
+    return this.#reportData;
   }
 
   // get wagesAndCompensation() {
@@ -132,9 +142,10 @@ class WorkingYearData extends BaseYearData {
    * @param {Demographics} demographics
    * @param {FiscalData} fiscalData
    * @param {AccountingYear} accountYear
+   * @param {ReportData} reportData
    */
-  static CreateUsing(demographics, fiscalData, accountYear) {
-    return new WorkingYearData(demographics, fiscalData, accountYear);
+  static CreateUsing(demographics, fiscalData, accountYear, reportData) {
+    return new WorkingYearData(demographics, fiscalData, accountYear, reportData);
   }
 
   /**

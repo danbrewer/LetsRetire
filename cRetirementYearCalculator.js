@@ -79,6 +79,8 @@ class RetirementYearCalculator {
       this.#accountYear
     );
 
+    this.#reportingYear.ReportData.year = this.#fiscalData.taxYear;
+
     this.#reportingYear.ReportData.demographics_isMarriedFilingJointly =
       this.#demographics.hasPartner;
     this.#reportingYear.ReportData.demographics_subjectAge =
@@ -579,7 +581,7 @@ class RetirementYearCalculator {
   // END COPIED FROM WORKING YEAR CALCULATOR
 
   processRetirementYearData() {
-    // debugger; 
+    // debugger;
     this.#processWagesAndCompensation();
     this.#processMiscIncome();
     this.#processTaxFreeIncome();
@@ -608,8 +610,8 @@ class RetirementYearCalculator {
 
     this.#generateReportData();
 
-    // this.#reportingYear.ReportData.dump("ReportData");
-
+    this.#reportingYear.ReportData.dump("ReportData");
+    // debugger;
     // const balances = {
     //   year: this.#fiscalData.taxYear,
     //   spend: this.#reportingYear.ReportData.spend,
@@ -650,15 +652,15 @@ class RetirementYearCalculator {
       this.#reportingYear.ReportData
     );
 
-    const temp = {
-      subjectAge: retirementYearData.subjectAge,
-      year: retirementYearData.fiscalYear,
-      ask: retirementYearData.ask,
-      spend: retirementYearData.spend,
-      balances: retirementYearData.accountBalances.total,
-      income: retirementYearData.cashFlowBreakdown.income.total,
-      withdrawals: retirementYearData.cashFlowBreakdown.withdrawals.total,
-    };
+    // const temp = {
+    //   subjectAge: retirementYearData.subjectAge,
+    //   year: retirementYearData.fiscalYear,
+    //   ask: retirementYearData.ask,
+    //   spend: retirementYearData.spend,
+    //   balances: retirementYearData.accountBalances.total,
+    //   income: retirementYearData.cashFlowBreakdown.income.total,
+    //   withdrawals: retirementYearData.cashFlowBreakdown.withdrawals.total,
+    // };
 
     // temp.dump();
 
@@ -1275,7 +1277,8 @@ class RetirementYearCalculator {
       memo
     );
 
-    this.#reportingYear.ReportData.income_subject401kGross = grossAmount;
+    this.#reportingYear.ReportData.income_subject401kGross =
+      grossAmount.asCurrency();
     this.#reportingYear.ReportData.income_subject401kWithholdings =
       withholdingAmount.asCurrency();
     this.#reportingYear.ReportData.income_subject401kTakehome =
@@ -1312,10 +1315,12 @@ class RetirementYearCalculator {
       memo
     );
 
-    this.#reportingYear.ReportData.income_partner401kGross = grossAmount;
+    this.#reportingYear.ReportData.income_partner401kGross =
+      grossAmount.asCurrency();
     this.#reportingYear.ReportData.income_partner401kWithholdings +=
-      withholdingAmount;
-    this.#reportingYear.ReportData.income_partner401kTakehome += actualAmount;
+      withholdingAmount.asCurrency();
+    this.#reportingYear.ReportData.income_partner401kTakehome +=
+      actualAmount.asCurrency();
   }
 
   // #applyRothInterest() {
@@ -1370,7 +1375,7 @@ class RetirementYearCalculator {
       );
 
       this.#reportingYear.ReportData.retirementAcct_subjectRothWithdrawals +=
-        subjectShareAmount;
+        subjectShareAmount.asCurrency();
     }
 
     const partnerShareAmount = Math.max(

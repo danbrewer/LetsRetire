@@ -60,6 +60,10 @@ class ReportData extends BaseReports {
     "income_subjectSsTakehome",
     "income_partnerSsTakehome",
 
+    "income_total_net",
+    "income_total_gross",
+    "income_total_withholdings",
+
     "savings_OpeningBalance",
     "savings_Withdrawals",
     "savings_Deposits",
@@ -133,9 +137,13 @@ class ReportData extends BaseReports {
     "retirementAcct_partnerRothWithdrawals",
     "retirementAcct_partnerRothBalance",
     "retirementAcct_partnerRothInterest",
+    "year"
   ];
   constructor() {
     super();
+
+    // FISCAL
+    this.year = 0;
 
     // DEMOGRAPHICS
     this.demographics_subjectAge = 0;
@@ -334,6 +342,45 @@ class ReportData extends BaseReports {
 
   get income_partnerSsTakehome() {
     return this.ss_partnerSsTakehome;
+  }
+
+  get income_total_net() {
+    return (
+      this.income_subjectTakehomeWages +
+      this.income_partnerTakehomeWages +
+      this.income_miscIncomeTakehome +
+      this.income_subject401kTakehome +
+      this.income_partner401kTakehome +
+      this.income_subjectPensionTakehome +
+      this.income_partnerPensionTakehome +
+      this.income_subjectSsTakehome +
+      this.income_partnerSsTakehome +
+      this.savings_Withdrawals
+    ).asCurrency();
+  }
+
+  get income_total_gross() {
+    const result =
+      this.income_subjectGrossWages +
+      this.income_partnerGrossWages +
+      this.income_miscIncomeGross +
+      this.income_subject401kGross +
+      this.income_partner401kGross +
+      this.income_subjectPensionGross +
+      this.income_partnerPensionGross +
+      this.ss_totalSsGross;
+
+    return result.asCurrency();
+  }
+
+  get income_total_withholdings() {
+    const result =
+      this.income_subjectEstimatedWithholdings +
+      this.income_partnerEstimatedWithholdings +
+      this.income_subject401kWithholdings +
+      this.income_partner401kWithholdings;
+
+    return result.asCurrency();
   }
 }
 export { ReportData };
