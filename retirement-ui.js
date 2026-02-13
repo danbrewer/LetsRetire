@@ -7,6 +7,8 @@ import { constsJS_FILING_STATUS } from "./consts.js";
 import { calc } from "./retirement-calculator.js";
 import * as DefaultUI from "./retirement-ui.js";
 import { UIField } from "./UIFields.js";
+// import * as popups from "./retirement-popups.js";
+import { popupActions } from "./retirement-popups.js";
 
 /**
  * @typedef {Object} ChartPoint
@@ -2767,16 +2769,19 @@ function generateOutputAndSummary(inputs, calculations) {
         <!-- NET INCOME (what you actually receive) -->
         <td class="income">${
           calculation.salaryNet
-            ? `<span class="ss-link" onclick="showSalaryBreakdown(${index})">${fmt(
+            ? `<span class="ss-link" onclick="popups.showSalaryBreakdown(${index})">${fmt(
                 calculation.salaryNet
               )}</span>`
             : ""
         }</td>
         <td class="income">${
           calculation.totalSsNet
-            ? `<span class="ss-link" onclick="showSsBreakdown(${index})">${fmt(
-                calculation.totalSsNet
-              )}</span>`
+            ? `<span 
+                  class="calc-link ss-link" 
+                  data-index="${index}" 
+                  data-action="showSsBreakdown">
+                  ${fmt(calculation.totalSsNet)}
+                </span>`
             : ""
         }</td>
         <td class="income">${calculation.totalPensionNet ? fmt(calculation.totalPensionNet) : ""}</td>
@@ -2908,6 +2913,29 @@ function generateOutputAndSummary(inputs, calculations) {
         </tr>`;
     })
     .join("");
+
+  const allCalcs = calculations.getAllCalculations();
+
+  tbody.addEventListener("click", (e) => {
+    const target = /** @type {HTMLElement|null} */ (
+      e.target instanceof HTMLElement ? e.target.closest(".calc-link") : null
+    );
+    if (!target) return;
+
+    const index = Number(target.dataset.index);
+    const action = target.dataset.action;
+    if (!action) return;
+
+    const calcObj = allCalcs[index];
+    if (!calcObj) return;
+
+    const fn = popupActions[action];
+    if (typeof fn === "function") {
+      fn(calcObj.reportData);
+    } else {
+      console.warn(`Popup action '${action}' not registered`);
+    }
+  });
 
   // KPIs
   const calculation = calculations.getLastCalculation();

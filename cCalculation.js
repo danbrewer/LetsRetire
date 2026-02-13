@@ -2,9 +2,10 @@ import { ACCOUNT_TYPES } from "./cAccount.js";
 import { RetirementYearData } from "./cRetirementYearData.js";
 import { TransactionCategory } from "./cTransaction.js";
 import { WorkingYearData } from "./cWorkingYearData.js";
+import { ReportData } from "./rReportData.js";
 
 class Calculation {
-  /** @type {WorkingYearData | RetirementYearData} */
+  /** @type {Readonly<WorkingYearData | RetirementYearData>} */
   #yearData;
 
   /**
@@ -17,11 +18,16 @@ class Calculation {
     }
 
     this.taxYear = taxYear;
-    this.#yearData = yearData;
+    this.#yearData = Object.freeze(yearData);
   }
 
   get year() {
     return this.taxYear;
+  }
+
+  /** @returns {Readonly<ReportData>} */
+  get reportData(){
+    return this.#yearData.reportData;
   }
 
   get age() {
