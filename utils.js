@@ -22,6 +22,18 @@ Number.prototype.asCurrency = function () {
 
 /**
  * @this {number}
+ * @returns {string}
+ */
+Number.prototype.asWholeDollars = function () {
+  return this.toLocaleString(undefined, {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 0,
+  });
+};
+
+/**
+ * @this {number}
  * @param {number} value
  * @returns {number}
  */

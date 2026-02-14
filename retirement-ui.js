@@ -215,12 +215,12 @@ function num(id) {
 // };
 
 const pct = (/** @type {number} */ v) => (isNaN(v) ? 0 : Number(v) / 100);
-const fmt = (/** @type {number} */ n) =>
-  n.toLocaleString(undefined, {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 0,
-  });
+// const fmt = (/** @type {number} */ n) =>
+//   n.toLocaleString(undefined, {
+//     style: "currency",
+//     currency: "USD",
+//     maximumFractionDigits: 0,
+//   });
 
 // Global variable to store calculations for popup access
 
@@ -727,7 +727,7 @@ function drawChartContent(
     ctx.moveTo(pad.l, y);
     ctx.lineTo(width - pad.r, y);
     ctx.stroke();
-    ctx.fillText(fmt(v), pad.l - 8 * dpr, y + 4 * dpr);
+    ctx.fillText(v.asWholeDollars(), pad.l - 8 * dpr, y + 4 * dpr);
   }
 
   // Line
@@ -797,7 +797,7 @@ function drawChartContent(
       if (!yearDiv || !balanceDiv) return;
 
       yearDiv.textContent = `Year ${point.x} (Age ${point.age})`;
-      balanceDiv.textContent = `Balance: ${fmt(point.y)}`;
+      balanceDiv.textContent = `Balance: ${point.y.asWholeDollars()}`;
 
       e.style.left = x + "px";
       e.style.top = y + "px";
@@ -1021,7 +1021,7 @@ function drawStaticChartElements(
     ctx.moveTo(pad.l, y);
     ctx.lineTo(width - pad.r, y);
     ctx.stroke();
-    ctx.fillText(fmt(v), pad.l - 8 * dpr, y + 4 * dpr);
+    ctx.fillText(v.asWholeDollars(), pad.l - 8 * dpr, y + 4 * dpr);
   }
 
   // X labels
@@ -1132,7 +1132,7 @@ function setupChartTooltips(c) {
       if (!yearDiv || !balanceDiv) return;
 
       yearDiv.textContent = `Year ${point.x} (Age ${point.age})`;
-      balanceDiv.textContent = `Balance: ${fmt(point.y)}`;
+      balanceDiv.textContent = `Balance: ${point.y.asWholeDollars()}`;
 
       e.style.left = x + "px";
       e.style.top = y + "px";
@@ -2766,14 +2766,12 @@ function generateOutputAndSummary(inputs, calculations) {
         <td class="neutral">${reportData.demographics_subjectAge}</td>
         
         <!-- THE NEED -->
-        <td class="outgoing">${reportData.ask ? fmt(reportData.ask) : ""}</td>
+        <td class="outgoing">${reportData.ask ? reportData.ask.asWholeDollars() : ""}</td>
         
         <!-- NET INCOME (what you actually receive) -->
         <td class="income">${
           reportData.income_combinedWagesNet
-            ? `<span class="ss-link" onclick="popups.showSalaryBreakdown(${index})">${fmt(
-                reportData.income_combinedWagesNet
-              )}</span>`
+            ? `<span class="ss-link" onclick="popups.showSalaryBreakdown(${index})">${reportData.income_combinedWagesNet.asWholeDollars()}</span>`
             : ""
         }</td>
         <td class="income">${
@@ -2782,29 +2780,25 @@ function generateOutputAndSummary(inputs, calculations) {
                   class="calc-link ss-link" 
                   data-index="${index}" 
                   data-action="showSsBreakdown">
-                  ${fmt(reportData.ss_combinedTakehome)}
+                  ${reportData.ss_combinedTakehome.asWholeDollars()}
                 </span>`
             : ""
         }</td>
-        <td class="income">${reportData.income_combinedPensionTakehome ? fmt(reportData.income_combinedPensionTakehome) : ""}</td>
+        <td class="income">${reportData.income_combinedPensionTakehome ? reportData.income_combinedPensionTakehome.asWholeDollars() : ""}</td>
         <td class="income">${
           reportData.income_combined401kTakehome
-            ? `<span class="withdrawal-net-link" onclick="showWithdrawalNetBreakdown(${index})">${fmt(
-                reportData.income_combined401kTakehome
-              )}</span>`
+            ? `<span class="withdrawal-net-link" onclick="showWithdrawalNetBreakdown(${index})">${reportData.income_combined401kTakehome.asWholeDollars()}</span>`
             : ""
         }</td>
         <td class="income">${
           reportData.savings_Withdrawals
-            ? fmt(reportData.savings_Withdrawals)
+            ? reportData.savings_Withdrawals.asWholeDollars()
             : ""
         }</td>
         <td class="income">${
           reportData.income_total_net
             ? // ? calculation.age >= inputs.subjectRetireAge
-              `<span class="ss-link" onclick="showTotalNetBreakdown(${index})">${fmt(
-                reportData.income_total_net
-              )}</span>`
+              `<span class="ss-link" onclick="showTotalNetBreakdown(${index})">${reportData.income_total_net.asWholeDollars()}</span>`
             : // : fmt(reportData.income_total_net)
               ""
         }</td>
@@ -2812,35 +2806,35 @@ function generateOutputAndSummary(inputs, calculations) {
         <!-- GROSS INCOME (before taxes/deductions) -->
         <td class="income">${
           reportData.income_combinedWagesGross
-            ? fmt(reportData.income_combinedWagesGross)
+            ? reportData.income_combinedWagesGross.asWholeDollars()
             : ""
         }</td>
         <td class="income">${
           reportData.income_savingsInterest
-            ? fmt(reportData.income_savingsInterest)
+            ? reportData.income_savingsInterest.asWholeDollars()
             : ""
         }</td>
         <td class="income">${
-          reportData.ss_combinedGross ? fmt(reportData.ss_combinedGross) : ""
+          reportData.ss_combinedGross ? reportData.ss_combinedGross.asWholeDollars() : ""
         }</td>
         <td class="income">${
           reportData.income_combinedPensionGross
-            ? fmt(reportData.income_combinedPensionGross)
+            ? reportData.income_combinedPensionGross.asWholeDollars()
             : ""
         }</td>
         <!--
         <td class="income">${
           reportData.income_combined401kGross
-            ? fmt(reportData.income_combined401kGross)
+            ? reportData.income_combined401kGross.asWholeDollars()
             : ""
         }</td> -->
         <td class="income">${
           reportData.income_combined401kGross
-            ? fmt(reportData.income_combined401kGross)
+            ? reportData.income_combined401kGross.asWholeDollars()
             : ""
         }</td>
         <td class="income">${
-          reportData.income_total_gross ? fmt(reportData.income_total_gross) : ""
+          reportData.income_total_gross ? reportData.income_total_gross.asWholeDollars() : ""
         }</td> `;
         
         // <!-- THE BREAKDOWN -->
@@ -2908,14 +2902,14 @@ function generateOutputAndSummary(inputs, calculations) {
         <!-- THE RESULT -->
         <td class="neutral">${
           reportData.savings_Balance
-            ? `<span class="savings-balance-link" onclick="showSavingsBreakdown(${index})" title="Click to see savings changes">${fmt(
-                reportData.savings_Balance
-              )}</span>`
+            ? `<span class="savings-balance-link" 
+                  onclick="showSavingsBreakdown(${index})" 
+                  title="Click to see savings changes">${reportData.savings_Balance.asWholeDollars()}</span>`
             : ""
         }</td>
-        <td class="neutral">${fmt(reportData.balances_combined401k)}</td>
-        <td class="neutral">${fmt(reportData.balances_combinedRoth)}</td>
-        <td class="neutral">${fmt(reportData.balances_total)}</td>
+        <td class="neutral">${reportData.balances_combined401k.asWholeDollars()}</td>
+        <td class="neutral">${reportData.balances_combinedRoth.asWholeDollars()}</td>
+        <td class="neutral">${reportData.balances_total.asWholeDollars()}</td>
         </tr>`;
 
         return result;
@@ -2967,7 +2961,7 @@ function generateOutputAndSummary(inputs, calculations) {
 
   const kpiEndBal = divById("kpiEndBal");
   if (kpiEndBal) {
-    kpiEndBal.textContent = fmt(Math.max(0, calculation.total));
+    kpiEndBal.textContent = Math.max(0, calculation.total).asWholeDollars();
   }
 
   const kpiDraw = divById("kpiDraw");

@@ -111,12 +111,14 @@ export function ensurePopup(id, defaultTitle) {
     show() {
       registerEscapeHandler();
       root?.classList.add("show"); // ✅ THIS matches your CSS
-      activePopups.add(root);
+      if (root)
+        activePopups.add(root);
     },
 
     hide() {
       root?.classList.remove("show");
-      activePopups.delete(root);
+      if (root)
+        activePopups.delete(root);
     },
   };
 }
