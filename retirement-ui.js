@@ -883,270 +883,6 @@ function doCalculations() {
   generateOutputAndSummary(result?.inputs, result?.calculations);
 }
 
-/**
- * Generate final summary, write table, and update KPIs
- * @param {Inputs | undefined} inputs
- * @param {Calculations | undefined } calculations
- */
-function generateOutputAndSummary(inputs, calculations) {
-  //, rows) {
-  // Write table
-  const tbody = $("rows");
-  if (!tbody) return;
-
-  if (!calculations) {
-    tbody.innerHTML =
-      "<tr><td colspan='100%'>No calculations to display</td></tr>";
-    return;
-  }
-
-  if (!inputs) {
-    tbody.innerHTML =
-      "<tr><td colspan='100%'>No input data available</td></tr>";
-    return;
-  }
-
-  tbody.innerHTML = calculations
-    .getAllCalculations()
-    .map((calculation, index) => {
-      // debugger;
-      // calculation.dump();
-      /** @type {ReportData} */
-      const reportData = calculation.reportData;
-
-      let result = `
-        <tr>
-        <td class="neutral">${reportData.year}</td>
-        <td class="neutral">${reportData.demographics_subjectAge}</td>
-        
-        <!-- THE NEED -->
-        <td class="outgoing">${reportData.ask ? reportData.ask.asWholeDollars() : ""}</td>
-        
-        <!-- NET INCOME (what you actually receive) -->
-        <td class="income">${
-          reportData.income_combinedWagesNet
-            ? `<span class="ss-link" onclick="popups.showSalaryBreakdown(${index})">${reportData.income_combinedWagesNet.asWholeDollars()}</span>`
-            : ""
-        }</td>
-        <td class="income">${
-          reportData.ss_combinedTakehome
-            ? `<span 
-                  class="calc-link ss-link" 
-                  data-index="${index}" 
-                  data-action="showSsBreakdown">
-                  ${reportData.ss_combinedTakehome.asWholeDollars()}
-                </span>`
-            : ""
-        }</td>
-        <td class="income">${reportData.income_combinedPensionTakehome ? reportData.income_combinedPensionTakehome.asWholeDollars() : ""}</td>
-        <td class="income">${
-          reportData.income_combined401kTakehome
-            ? `<span class="withdrawal-net-link" onclick="showWithdrawalNetBreakdown(${index})">${reportData.income_combined401kTakehome.asWholeDollars()}</span>`
-            : ""
-        }</td>
-        <td class="income">${
-          reportData.savings_Withdrawals
-            ? reportData.savings_Withdrawals.asWholeDollars()
-            : ""
-        }</td>
-        <td class="income">${
-          reportData.income_total_net
-            ? // ? calculation.age >= inputs.subjectRetireAge
-              `<span class="ss-link" onclick="showTotalNetBreakdown(${index})">${reportData.income_total_net.asWholeDollars()}</span>`
-            : // : fmt(reportData.income_total_net)
-              ""
-        }</td>
-        
-        <!-- GROSS INCOME (before taxes/deductions) -->
-        <td class="income">${
-          reportData.income_combinedWagesGross
-            ? reportData.income_combinedWagesGross.asWholeDollars()
-            : ""
-        }</td>
-        <td class="income">${
-          reportData.income_savingsInterest
-            ? reportData.income_savingsInterest.asWholeDollars()
-            : ""
-        }</td>
-        <td class="income">${
-          reportData.ss_combinedGross
-            ? reportData.ss_combinedGross.asWholeDollars()
-            : ""
-        }</td>
-        <td class="income">${
-          reportData.income_combinedPensionGross
-            ? reportData.income_combinedPensionGross.asWholeDollars()
-            : ""
-        }</td>
-        <!--
-        <td class="income">${
-          reportData.income_combined401kGross
-            ? reportData.income_combined401kGross.asWholeDollars()
-            : ""
-        }</td> -->
-        <td class="income">${
-          reportData.income_combined401kGross
-            ? reportData.income_combined401kGross.asWholeDollars()
-            : ""
-        }</td>
-        <td class="income">${
-          reportData.income_total_gross
-            ? reportData.income_total_gross.asWholeDollars()
-            : ""
-        }</td> `;
-
-      // <!-- THE BREAKDOWN -->
-      // <td class="income">${
-      //   calculation.age >= inputs.subjectRetireAge
-      //     ? `<span class="taxable-income-link" onclick="showTaxableIncomeBreakdown(${index})" title="Click to see breakdown">${fmt(
-      //         calculation.taxableIncome || 0
-      //       )}</span>`
-      //     : calculation.taxableIncome
-      //       ? fmt(calculation.taxableIncome)
-      //       : ""
-      // }</td>
-      // <td class="income">${
-      //   calculation.nonTaxableIncome
-      //     ? calculation.age >= inputs.subjectLifeSpan
-      //       ? `<span class="non-taxable-income-link" onclick="showNonTaxableIncomeBreakdown(${index})" title="Click to see breakdown">${fmt(
-      //           calculation.nonTaxableIncome
-      //         )}</span>`
-      //       : fmt(calculation.nonTaxableIncome)
-      //     : ""
-      // }</td>
-      // <td class="income">${
-      //   calculation.provisionalIncome && calculation.provisionalIncome > 0
-      //     ? `<span class="provisional-income-link" onclick="showProvisionalIncomeBreakdown(${index})" title="Click to see breakdown">${fmt(
-      //         calculation.provisionalIncome
-      //       )}</span>`
-      //     : calculation.provisionalIncome
-      //       ? fmt(calculation.provisionalIncome)
-      //       : ""
-      // }</td>
-
-      // <!-- TAX INFORMATION -->
-      // <td class="neutral">${
-      //   calculation.standardDeduction
-      //     ? fmt(calculation.standardDeduction)
-      //     : ""
-      // }</td>
-      // <td class="neutral">${
-      //   calculation.taxableIncome ? fmt(calculation.taxableIncome) : ""
-      // }</td>
-      // <td class="outgoing">${
-      //   calculation.ssTaxes !== undefined && calculation.ssTaxes !== null
-      //     ? fmt(calculation.ssTaxes)
-      //     : ""
-      // }</td>
-      // <td class="outgoing">${
-      //   calculation.otherTaxes ? fmt(calculation.otherTaxes) : ""
-      // }</td>
-      // <td class="outgoing">${
-      //   calculation.age >= inputs.subjectRetireAge
-      //     ? `<span class="total-taxes-link" onclick="showTotalTaxesBreakdown(${index})" title="Click to see breakdown">${fmt(
-      //         calculation.totalTaxes || 0
-      //       )}</span>`
-      //     : calculation.totalTaxes
-      //       ? fmt(calculation.totalTaxes)
-      //       : ""
-      // }</td>
-      // <td class="neutral">${
-      //   calculation.effectiveTaxRate
-      //     ? calculation.effectiveTaxRate.toFixed(1) + "%"
-      //     : ""
-      // }</td>
-
-      result += `
-        <!-- THE RESULT -->
-        <td class="neutral">${
-          reportData.savings_Balance
-            ? `<span class="savings-balance-link" 
-                  onclick="showSavingsBreakdown(${index})" 
-                  title="Click to see savings changes">${reportData.savings_Balance.asWholeDollars()}</span>`
-            : ""
-        }</td>
-        <td class="neutral">${reportData.balances_combined401k.asWholeDollars()}</td>
-        <td class="neutral">${reportData.balances_combinedRoth.asWholeDollars()}</td>
-        <td class="neutral">${reportData.balances_total.asWholeDollars()}</td>
-        </tr>`;
-
-      return result;
-    })
-    .join("");
-
-  const allCalcs = calculations.getAllCalculations();
-
-  tbody.addEventListener("click", (e) => {
-    const target = /** @type {HTMLElement|null} */ (
-      e.target instanceof HTMLElement ? e.target.closest(".calc-link") : null
-    );
-    if (!target) return;
-
-    const index = Number(target.dataset.index);
-    const action = target.dataset.action;
-    if (!action) return;
-
-    const calcObj = allCalcs[index];
-    if (!calcObj) return;
-
-    const fn = popupActions[action];
-    if (typeof fn === "function") {
-      fn(calcObj.reportData);
-    } else {
-      console.warn(`Popup action '${action}' not registered`);
-    }
-  });
-
-  // KPIs (Key Performance Indicators)
-  const calculation = calculations.getLastCalculation();
-  // Find the last age where there's still money, or endAge if money lasts throughout
-  const fundedTo =
-    calculation.reportData.balances_total > 0
-      ? inputs.subjectLifeSpan
-      : calculations
-          .getAllCalculations()
-          .reduce(
-            (lastGoodAge, r) => (r.reportData.balances_total > 0 ? r.age : lastGoodAge),
-            inputs.subjectAge
-          );
-
-  const kpiAge = divById("kpiAge");
-  if (kpiAge) {
-    kpiAge.innerHTML = `${fundedTo} <span class="pill ${
-      fundedTo >= inputs.subjectLifeSpan ? "ok" : "alert"
-    }">${fundedTo >= inputs.subjectLifeSpan ? "Fully funded" : "Shortfall"}</span>`;
-  }
-
-  const kpiEndBal = divById("kpiEndBal");
-  if (kpiEndBal) {
-    kpiEndBal.textContent = Math.max(0, calculation.reportData.balances_total).asWholeDollars();
-  }
-
-  const kpiDraw = divById("kpiDraw");
-  if (kpiDraw) {
-    kpiDraw.textContent = `${inputs.subjectRetireAge}`;
-  }
-
-  const firstCalculation = calculations.getAllCalculations()[0];
-  const kpiTax = divById("kpiTax");
-  if (firstCalculation && kpiTax) {
-    kpiTax.textContent = `${firstCalculation.reportData.balances_total.asWholeDollars()}`;
-  }
-
-  // debugger;
-  // Chart (total balance)
-  drawChart(
-    calculations.getAllCalculations().map((calculation) => ({
-      x: calculation.year,
-      y: calculation.reportData.balances_total,
-      age: calculation.age,
-    }))
-  );
-
-  // Save rows for export
-  // win.__rows = rows;
-}
-
 function updateTaxFreeIncomeFieldsDisplayMode() {
   const useTaxableCurrentYearValues = checkbox("useTaxFreeCurrentYearValues");
   if (!useTaxableCurrentYearValues)
@@ -1835,6 +1571,270 @@ function resyncAllOpenDetails(root = document) {
     content.style.height = "auto";
     content.style.opacity = "";
   });
+}
+
+/**
+ * Generate final summary, write table, and update KPIs
+ * @param {Inputs | undefined} inputs
+ * @param {Calculations | undefined } calculations
+ */
+function generateOutputAndSummary(inputs, calculations) {
+  //, rows) {
+  // Write table
+  const tbody = $("rows");
+  if (!tbody) return;
+
+  if (!calculations) {
+    tbody.innerHTML =
+      "<tr><td colspan='100%'>No calculations to display</td></tr>";
+    return;
+  }
+
+  if (!inputs) {
+    tbody.innerHTML =
+      "<tr><td colspan='100%'>No input data available</td></tr>";
+    return;
+  }
+
+  tbody.innerHTML = calculations
+    .getAllCalculations()
+    .map((calculation, index) => {
+      // debugger;
+      // calculation.dump();
+      /** @type {ReportData} */
+      const reportData = calculation.reportData;
+
+      let result = `
+        <tr>
+        <td class="neutral">${reportData.year}</td>
+        <td class="neutral">${reportData.demographics_subjectAge}</td>
+        
+        <!-- THE NEED -->
+        <td class="outgoing">${reportData.ask ? reportData.ask.asWholeDollars() : ""}</td>
+        
+        <!-- NET INCOME (what you actually receive) -->
+        <td class="income">${
+          reportData.income_combinedWagesNet
+            ? `<span class="ss-link" onclick="popups.showSalaryBreakdown(${index})">${reportData.income_combinedWagesNet.asWholeDollars()}</span>`
+            : ""
+        }</td>
+        <td class="income">${
+          reportData.ss_combinedTakehome
+            ? `<span 
+                  class="calc-link ss-link" 
+                  data-index="${index}" 
+                  data-action="showSsBreakdown">
+                  ${reportData.ss_combinedTakehome.asWholeDollars()}
+                </span>`
+            : ""
+        }</td>
+        <td class="income">${reportData.income_combinedPensionTakehome ? reportData.income_combinedPensionTakehome.asWholeDollars() : ""}</td>
+        <td class="income">${
+          reportData.income_combined401kTakehome
+            ? `<span class="withdrawal-net-link" onclick="showWithdrawalNetBreakdown(${index})">${reportData.income_combined401kTakehome.asWholeDollars()}</span>`
+            : ""
+        }</td>
+        <td class="income">${
+          reportData.savings_Withdrawals
+            ? reportData.savings_Withdrawals.asWholeDollars()
+            : ""
+        }</td>
+        <td class="income">${
+          reportData.income_total_net
+            ? // ? calculation.age >= inputs.subjectRetireAge
+              `<span class="ss-link" onclick="showTotalNetBreakdown(${index})">${reportData.income_total_net.asWholeDollars()}</span>`
+            : // : fmt(reportData.income_total_net)
+              ""
+        }</td>
+        
+        <!-- GROSS INCOME (before taxes/deductions) -->
+        <td class="income">${
+          reportData.income_combinedWagesGross
+            ? reportData.income_combinedWagesGross.asWholeDollars()
+            : ""
+        }</td>
+        <td class="income">${
+          reportData.income_savingsInterest
+            ? reportData.income_savingsInterest.asWholeDollars()
+            : ""
+        }</td>
+        <td class="income">${
+          reportData.ss_combinedGross
+            ? reportData.ss_combinedGross.asWholeDollars()
+            : ""
+        }</td>
+        <td class="income">${
+          reportData.income_combinedPensionGross
+            ? reportData.income_combinedPensionGross.asWholeDollars()
+            : ""
+        }</td>
+        <!--
+        <td class="income">${
+          reportData.income_combined401kGross
+            ? reportData.income_combined401kGross.asWholeDollars()
+            : ""
+        }</td> -->
+        <td class="income">${
+          reportData.income_combined401kGross
+            ? reportData.income_combined401kGross.asWholeDollars()
+            : ""
+        }</td>
+        <td class="income">${
+          reportData.income_total_gross
+            ? reportData.income_total_gross.asWholeDollars()
+            : ""
+        }</td> `;
+
+      // <!-- THE BREAKDOWN -->
+      // <td class="income">${
+      //   calculation.age >= inputs.subjectRetireAge
+      //     ? `<span class="taxable-income-link" onclick="showTaxableIncomeBreakdown(${index})" title="Click to see breakdown">${fmt(
+      //         calculation.taxableIncome || 0
+      //       )}</span>`
+      //     : calculation.taxableIncome
+      //       ? fmt(calculation.taxableIncome)
+      //       : ""
+      // }</td>
+      // <td class="income">${
+      //   calculation.nonTaxableIncome
+      //     ? calculation.age >= inputs.subjectLifeSpan
+      //       ? `<span class="non-taxable-income-link" onclick="showNonTaxableIncomeBreakdown(${index})" title="Click to see breakdown">${fmt(
+      //           calculation.nonTaxableIncome
+      //         )}</span>`
+      //       : fmt(calculation.nonTaxableIncome)
+      //     : ""
+      // }</td>
+      // <td class="income">${
+      //   calculation.provisionalIncome && calculation.provisionalIncome > 0
+      //     ? `<span class="provisional-income-link" onclick="showProvisionalIncomeBreakdown(${index})" title="Click to see breakdown">${fmt(
+      //         calculation.provisionalIncome
+      //       )}</span>`
+      //     : calculation.provisionalIncome
+      //       ? fmt(calculation.provisionalIncome)
+      //       : ""
+      // }</td>
+
+      // <!-- TAX INFORMATION -->
+      // <td class="neutral">${
+      //   calculation.standardDeduction
+      //     ? fmt(calculation.standardDeduction)
+      //     : ""
+      // }</td>
+      // <td class="neutral">${
+      //   calculation.taxableIncome ? fmt(calculation.taxableIncome) : ""
+      // }</td>
+      // <td class="outgoing">${
+      //   calculation.ssTaxes !== undefined && calculation.ssTaxes !== null
+      //     ? fmt(calculation.ssTaxes)
+      //     : ""
+      // }</td>
+      // <td class="outgoing">${
+      //   calculation.otherTaxes ? fmt(calculation.otherTaxes) : ""
+      // }</td>
+      // <td class="outgoing">${
+      //   calculation.age >= inputs.subjectRetireAge
+      //     ? `<span class="total-taxes-link" onclick="showTotalTaxesBreakdown(${index})" title="Click to see breakdown">${fmt(
+      //         calculation.totalTaxes || 0
+      //       )}</span>`
+      //     : calculation.totalTaxes
+      //       ? fmt(calculation.totalTaxes)
+      //       : ""
+      // }</td>
+      // <td class="neutral">${
+      //   calculation.effectiveTaxRate
+      //     ? calculation.effectiveTaxRate.toFixed(1) + "%"
+      //     : ""
+      // }</td>
+
+      result += `
+        <!-- THE RESULT -->
+        <td class="neutral">${
+          reportData.savings_Balance
+            ? `<span class="savings-balance-link" 
+                  onclick="showSavingsBreakdown(${index})" 
+                  title="Click to see savings changes">${reportData.savings_Balance.asWholeDollars()}</span>`
+            : ""
+        }</td>
+        <td class="neutral">${reportData.balances_combined401k.asWholeDollars()}</td>
+        <td class="neutral">${reportData.balances_combinedRoth.asWholeDollars()}</td>
+        <td class="neutral">${reportData.balances_total.asWholeDollars()}</td>
+        </tr>`;
+
+      return result;
+    })
+    .join("");
+
+  const allCalcs = calculations.getAllCalculations();
+
+  tbody.addEventListener("click", (e) => {
+    const target = /** @type {HTMLElement|null} */ (
+      e.target instanceof HTMLElement ? e.target.closest(".calc-link") : null
+    );
+    if (!target) return;
+
+    const index = Number(target.dataset.index);
+    const action = target.dataset.action;
+    if (!action) return;
+
+    const calcObj = allCalcs[index];
+    if (!calcObj) return;
+
+    const fn = popupActions[action];
+    if (typeof fn === "function") {
+      fn(calcObj.reportData);
+    } else {
+      console.warn(`Popup action '${action}' not registered`);
+    }
+  });
+
+  // KPIs (Key Performance Indicators)
+  const calculation = calculations.getLastCalculation();
+  // Find the last age where there's still money, or endAge if money lasts throughout
+  const fundedTo =
+    calculation.reportData.balances_total > 0
+      ? inputs.subjectLifeSpan
+      : calculations
+          .getAllCalculations()
+          .reduce(
+            (lastGoodAge, r) => (r.reportData.balances_total > 0 ? r.age : lastGoodAge),
+            inputs.subjectAge
+          );
+
+  const kpiAge = divById("kpiAge");
+  if (kpiAge) {
+    kpiAge.innerHTML = `${fundedTo} <span class="pill ${
+      fundedTo >= inputs.subjectLifeSpan ? "ok" : "alert"
+    }">${fundedTo >= inputs.subjectLifeSpan ? "Fully funded" : "Shortfall"}</span>`;
+  }
+
+  const kpiEndBal = divById("kpiEndBal");
+  if (kpiEndBal) {
+    kpiEndBal.textContent = Math.max(0, calculation.reportData.balances_total).asWholeDollars();
+  }
+
+  const kpiDraw = divById("kpiDraw");
+  if (kpiDraw) {
+    kpiDraw.textContent = `${inputs.subjectRetireAge}`;
+  }
+
+  const firstCalculation = calculations.getAllCalculations()[0];
+  const kpiTax = divById("kpiTax");
+  if (firstCalculation && kpiTax) {
+    kpiTax.textContent = `${firstCalculation.reportData.balances_total.asWholeDollars()}`;
+  }
+
+  // debugger;
+  // Chart (total balance)
+  drawChart(
+    calculations.getAllCalculations().map((calculation) => ({
+      x: calculation.year,
+      y: calculation.reportData.balances_total,
+      age: calculation.age,
+    }))
+  );
+
+  // Save rows for export
+  // win.__rows = rows;
 }
 
 export {
