@@ -9,6 +9,7 @@ import * as DefaultUI from "./retirement-ui.js";
 import { UIField } from "./UIFields.js";
 // import * as popups from "./retirement-popups.js";
 import { popupActions } from "./retirement-popups.js";
+import { ReportData } from "./rReportData.js";
 
 /**
  * @typedef {Object} ChartPoint
@@ -2756,54 +2757,55 @@ function generateOutputAndSummary(inputs, calculations) {
     .map((calculation, index) => {
       // debugger;
       // calculation.dump();
+      /** @type {ReportData} */
+      const reportData = calculation.reportData;
+
       return `
         <tr>
-        <td class="neutral">${calculation.year}</td>
-        <td class="neutral">${calculation.age}</td>
+        <td class="neutral">${reportData.year}</td>
+        <td class="neutral">${reportData.demographics_subjectAge}</td>
         
         <!-- THE NEED -->
-        <td class="outgoing">${
-          calculation.fiscalData.spend ? fmt(calculation.fiscalData.spend) : ""
-        }</td>
+        <td class="outgoing">${reportData.ask ? fmt(reportData.ask) : ""}</td>
         
         <!-- NET INCOME (what you actually receive) -->
         <td class="income">${
-          calculation.salaryNet
+          reportData.income_combinedWagesNet
             ? `<span class="ss-link" onclick="popups.showSalaryBreakdown(${index})">${fmt(
-                calculation.salaryNet
+                reportData.income_combinedWagesNet
               )}</span>`
             : ""
         }</td>
         <td class="income">${
-          calculation.totalSsNet
+          reportData.ss_combinedTakehome
             ? `<span 
                   class="calc-link ss-link" 
                   data-index="${index}" 
                   data-action="showSsBreakdown">
-                  ${fmt(calculation.totalSsNet)}
+                  ${fmt(reportData.ss_combinedTakehome)}
                 </span>`
             : ""
         }</td>
-        <td class="income">${calculation.totalPensionNet ? fmt(calculation.totalPensionNet) : ""}</td>
+        <td class="income">${reportData.income_combinedPensionTakehome ? fmt(reportData.income_combinedPensionTakehome) : ""}</td>
         <td class="income">${
-          calculation.total401kNet
+          reportData.income_combined401kTakehome
             ? `<span class="withdrawal-net-link" onclick="showWithdrawalNetBreakdown(${index})">${fmt(
-                calculation.total401kNet
+                reportData.income_combined401kTakehome
               )}</span>`
             : ""
         }</td>
         <td class="income">${
-          calculation.savingsWithdrawal
-            ? fmt(calculation.savingsWithdrawal)
+          reportData.savings_Withdrawals
+            ? fmt(reportData.savings_Withdrawals)
             : ""
         }</td>
         <td class="income">${
-          calculation.totalNetIncome
-            ? calculation.age >= inputs.subjectRetireAge
-              ? `<span class="ss-link" onclick="showTotalNetBreakdown(${index})">${fmt(
-                  calculation.totalNetIncome
+          reportData.income_total_net ?
+            // ? calculation.age >= inputs.subjectRetireAge
+               `<span class="ss-link" onclick="showTotalNetBreakdown(${index})">${fmt(
+                  reportData.income_total_net
                 )}</span>`
-              : fmt(calculation.totalNetIncome)
+              // : fmt(reportData.income_total_net)
             : ""
         }</td>
         

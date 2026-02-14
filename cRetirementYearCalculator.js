@@ -666,7 +666,7 @@ class RetirementYearCalculator {
 
     // retirementYearData.dump("retirementYearData");
 
-    if (this.#fiscalData.taxYear === 2031){
+    if (this.#fiscalData.taxYear === 2031) {
       this.#reportingYear.ReportData.dump("ReportData at 2031");
     }
 
@@ -713,8 +713,9 @@ class RetirementYearCalculator {
     );
 
     this.#reportingYear.ReportData.ss_subjectSsGross +=
-      this.#fixedIncomeStreams.subjectSsGross ?? 0; 
-    this.#reportingYear.ReportData.ss_witholdingRate = this.#inputs.flatSsWithholdingRate;
+      this.#fixedIncomeStreams.subjectSsGross ?? 0;
+    this.#reportingYear.ReportData.ss_witholdingRate =
+      this.#inputs.flatSsWithholdingRate;
     this.#reportingYear.ReportData.ss_subjectSsWithholdings +=
       this.#fixedIncomeStreams.subjectSsWithholdings ?? 0;
     this.#reportingYear.ReportData.ss_subjectSsTakehome +=

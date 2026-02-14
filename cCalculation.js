@@ -116,13 +116,13 @@ class Calculation {
 
   get totalNetIncome() {
     return this.#yearData.reportData.income_total_net; // TODO: add totalNetIncome to RetirementYearData and WorkingYearDat
-    return (
-      this.salaryNet +
-      this.totalSsNet +
-      this.totalPensionNet +
-      this.total401kNet +
-      this.savingsWithdrawal
-    ); // TODO: add totalNetIncome to WorkingYearData and RetirementYearData
+    // return (
+    //   this.salaryNet +
+    //   this.totalSsNet +
+    //   this.totalPensionNet +
+    //   this.total401kNet +
+    //   this.savingsWithdrawal
+    // ); // TODO: add totalNetIncome to WorkingYearData and RetirementYearData
   }
 
   get salaryGross() {
@@ -168,9 +168,9 @@ class Calculation {
     return null; // TODO: add taxableInterest to WorkingYearData
   }
 
-  get subjectSsGross() {
-    return this.totalSsNet + this.subjectSsWithholdings;
-  }
+  // get subjectSsGross() {
+  //   return this.totalSsNet + this.subjectSsWithholdings;
+  // }
 
   get partnerSsGross() {
     const result = this.#yearData.accountYear
@@ -210,12 +210,12 @@ class Calculation {
     return result;
   }
 
-  get totalSsNet() {
-    return (
-      this.#yearData.reportData.ss_subjectSsTakehome +
-      this.#yearData.reportData.ss_partnerSsTakehome
-    );
-  }
+  // get totalSsNet() {
+  //   return (
+  //     this.#yearData.reportData.ss_subjectSsTakehome1 +
+  //     this.#yearData.reportData.ss_partnerSsTakehome1
+  //   );
+  // }
 
   get spouseGrossSs() {
     return null; // TODO: add spouseGrossSs to WorkingYearData

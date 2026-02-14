@@ -142,7 +142,7 @@ class RetirementYearData extends BaseYearData {
     return this.#reportData;
   }
 
-  get ask(){
+  get ask() {
     return this.#reportData.ask;
   }
 

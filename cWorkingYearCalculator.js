@@ -373,107 +373,109 @@ class WorkingYearCalculator {
     this.#reportingYear.ReportData.income_subjectGrossWages =
       this.#fixedIncomeStreams.career.subjectWagesAndCompensationGross;
 
-    this.#accountYear.processAsPeriodicTransfers(
-      ACCOUNT_TYPES.SUBJECT_WAGES,
-      ACCOUNT_TYPES.SUBJECT_401K,
-      this.#fixedIncomeStreams.career.subjectAllowed401kContribution,
-      PERIODIC_FREQUENCY.MONTHLY,
-      TransactionCategory.RetirementContribution
-    );
+    if (this.#fixedIncomeStreams.career.subjectWagesAndCompensationGross > 0) {
+      this.#accountYear.processAsPeriodicTransfers(
+        ACCOUNT_TYPES.SUBJECT_WAGES,
+        ACCOUNT_TYPES.SUBJECT_401K,
+        this.#fixedIncomeStreams.career.subjectAllowed401kContribution,
+        PERIODIC_FREQUENCY.MONTHLY,
+        TransactionCategory.RetirementContribution
+      );
 
-    this.#reportingYear.ReportData.income_subject401kDisburements =
-      this.#fixedIncomeStreams.career.subjectAllowed401kContribution;
+      this.#reportingYear.ReportData.income_subject401kContribution =
+        this.#fixedIncomeStreams.career.subjectAllowed401kContribution;
 
-    this.#accountYear.processAsPeriodicTransfers(
-      ACCOUNT_TYPES.SUBJECT_WAGES,
-      ACCOUNT_TYPES.TAXES,
-      this.#fixedIncomeStreams.career
-        .subjectWagesAndCompensationEstimatedWithholdings,
-      PERIODIC_FREQUENCY.MONTHLY,
-      TransactionCategory.Withholdings
-    );
+      this.#accountYear.processAsPeriodicTransfers(
+        ACCOUNT_TYPES.SUBJECT_WAGES,
+        ACCOUNT_TYPES.TAXES,
+        this.#fixedIncomeStreams.career
+          .subjectWagesAndCompensationEstimatedWithholdings,
+        PERIODIC_FREQUENCY.MONTHLY,
+        TransactionCategory.Withholdings
+      );
 
-    this.#reportingYear.ReportData.income_subjectEstimatedWithholdings =
-      this.#fixedIncomeStreams.career.subjectWagesAndCompensationEstimatedWithholdings;
+      this.#reportingYear.ReportData.income_subjectEstimatedWithholdings =
+        this.#fixedIncomeStreams.career.subjectWagesAndCompensationEstimatedWithholdings;
 
-    this.#accountYear.processAsPeriodicTransfers(
-      ACCOUNT_TYPES.SUBJECT_WAGES,
-      ACCOUNT_TYPES.SUBJECT_PAYROLL_DEDUCTIONS,
-      this.#fixedIncomeStreams.career.subjectPayrollDeductions,
-      PERIODIC_FREQUENCY.MONTHLY,
-      TransactionCategory.PayrollDeductions
-    );
+      this.#accountYear.processAsPeriodicTransfers(
+        ACCOUNT_TYPES.SUBJECT_WAGES,
+        ACCOUNT_TYPES.SUBJECT_PAYROLL_DEDUCTIONS,
+        this.#fixedIncomeStreams.career.subjectPayrollDeductions,
+        PERIODIC_FREQUENCY.MONTHLY,
+        TransactionCategory.PayrollDeductions
+      );
 
-    this.#reportingYear.ReportData.income_subjectPayrollDeductions =
-      this.#fixedIncomeStreams.career.subjectPayrollDeductions;
+      this.#reportingYear.ReportData.income_subjectPayrollDeductions =
+        this.#fixedIncomeStreams.career.subjectPayrollDeductions;
 
-    this.#accountYear.processAsPeriodicTransfers(
-      ACCOUNT_TYPES.SUBJECT_WAGES,
-      ACCOUNT_TYPES.CASH,
-      this.#fixedIncomeStreams.career.subjectWagesAndCompensationActualIncome,
-      PERIODIC_FREQUENCY.MONTHLY,
-      TransactionCategory.IncomeNet
-    );
+      this.#accountYear.processAsPeriodicTransfers(
+        ACCOUNT_TYPES.SUBJECT_WAGES,
+        ACCOUNT_TYPES.CASH,
+        this.#fixedIncomeStreams.career.subjectWagesAndCompensationActualIncome,
+        PERIODIC_FREQUENCY.MONTHLY,
+        TransactionCategory.IncomeNet
+      );
 
-    this.#reportingYear.ReportData.income_subjectTakehomeWages =
-      this.#fixedIncomeStreams.career.subjectWagesAndCompensationActualIncome;
-
+      this.#reportingYear.ReportData.income_subjectTakehomeWages =
+        this.#fixedIncomeStreams.career.subjectWagesAndCompensationActualIncome;
+    }
     // Partner wages and compensation
 
-    this.#accountYear.processAsPeriodicDeposits(
-      ACCOUNT_TYPES.PARTNER_WAGES,
-      TransactionCategory.IncomeGross,
-      TransactionRoutes.External,
-      this.#fixedIncomeStreams.career.partnerWagesAndCompensationGross,
-      PERIODIC_FREQUENCY.MONTHLY
-    );
+    if (this.#fixedIncomeStreams.career.partnerWagesAndCompensationGross > 0) {
+      this.#accountYear.processAsPeriodicDeposits(
+        ACCOUNT_TYPES.PARTNER_WAGES,
+        TransactionCategory.IncomeGross,
+        TransactionRoutes.External,
+        this.#fixedIncomeStreams.career.partnerWagesAndCompensationGross,
+        PERIODIC_FREQUENCY.MONTHLY
+      );
 
-    this.#reportingYear.ReportData.income_partnerGrossWages =
-      this.#fixedIncomeStreams.career.partnerWagesAndCompensationGross;
+      this.#reportingYear.ReportData.income_partnerGrossWages =
+        this.#fixedIncomeStreams.career.partnerWagesAndCompensationGross;
 
-    this.#accountYear.processAsPeriodicTransfers(
-      ACCOUNT_TYPES.PARTNER_WAGES,
-      ACCOUNT_TYPES.PARTNER_401K,
-      this.#fixedIncomeStreams.career.partnerAllowed401kContribution,
-      PERIODIC_FREQUENCY.MONTHLY,
-      TransactionCategory.RetirementContribution
-    );
-    this.#reportingYear.ReportData.income_partner401kContribution =
-      this.#fixedIncomeStreams.career.partnerAllowed401kContribution;
+      this.#accountYear.processAsPeriodicTransfers(
+        ACCOUNT_TYPES.PARTNER_WAGES,
+        ACCOUNT_TYPES.PARTNER_401K,
+        this.#fixedIncomeStreams.career.partnerAllowed401kContribution,
+        PERIODIC_FREQUENCY.MONTHLY,
+        TransactionCategory.RetirementContribution
+      );
+      this.#reportingYear.ReportData.income_partner401kContribution =
+        this.#fixedIncomeStreams.career.partnerAllowed401kContribution;
 
-    this.#accountYear.processAsPeriodicTransfers(
-      ACCOUNT_TYPES.PARTNER_WAGES,
-      ACCOUNT_TYPES.PARTNER_PAYROLL_DEDUCTIONS,
-      this.#fixedIncomeStreams.career.partnerNonTaxableSalaryDeductions,
-      PERIODIC_FREQUENCY.MONTHLY,
-      TransactionCategory.PayrollDeductions
-    );
-    this.#reportingYear.ReportData.income_partnerPayrollDeductions =
-      this.#fixedIncomeStreams.career.partnerNonTaxableSalaryDeductions;
+      this.#accountYear.processAsPeriodicTransfers(
+        ACCOUNT_TYPES.PARTNER_WAGES,
+        ACCOUNT_TYPES.PARTNER_PAYROLL_DEDUCTIONS,
+        this.#fixedIncomeStreams.career.partnerNonTaxableSalaryDeductions,
+        PERIODIC_FREQUENCY.MONTHLY,
+        TransactionCategory.PayrollDeductions
+      );
+      this.#reportingYear.ReportData.income_partnerPayrollDeductions =
+        this.#fixedIncomeStreams.career.partnerNonTaxableSalaryDeductions;
 
-    this.#accountYear.processAsPeriodicTransfers(
-      ACCOUNT_TYPES.PARTNER_WAGES,
-      ACCOUNT_TYPES.TAXES,
-      this.#fixedIncomeStreams.career
-        .partnerWagesAndCompensationEstimatedWithholdings,
-      PERIODIC_FREQUENCY.MONTHLY,
-      TransactionCategory.Withholdings
-    );
+      this.#accountYear.processAsPeriodicTransfers(
+        ACCOUNT_TYPES.PARTNER_WAGES,
+        ACCOUNT_TYPES.TAXES,
+        this.#fixedIncomeStreams.career
+          .partnerWagesAndCompensationEstimatedWithholdings,
+        PERIODIC_FREQUENCY.MONTHLY,
+        TransactionCategory.Withholdings
+      );
 
-    this.#reportingYear.ReportData.income_partnerEstimatedWithholdings =
-      this.#fixedIncomeStreams.career.partnerWagesAndCompensationEstimatedWithholdings;
+      this.#reportingYear.ReportData.income_partnerEstimatedWithholdings =
+        this.#fixedIncomeStreams.career.partnerWagesAndCompensationEstimatedWithholdings;
 
-    this.#accountYear.processAsPeriodicTransfers(
-      ACCOUNT_TYPES.PARTNER_WAGES,
-      ACCOUNT_TYPES.CASH,
-      this.#fixedIncomeStreams.career.partnerWagesAndCompensationActualIncome,
-      PERIODIC_FREQUENCY.MONTHLY,
-      TransactionCategory.IncomeNet
-    );
+      this.#accountYear.processAsPeriodicTransfers(
+        ACCOUNT_TYPES.PARTNER_WAGES,
+        ACCOUNT_TYPES.CASH,
+        this.#fixedIncomeStreams.career.partnerWagesAndCompensationActualIncome,
+        PERIODIC_FREQUENCY.MONTHLY,
+        TransactionCategory.IncomeNet
+      );
 
-    this.#reportingYear.ReportData.income_partnerTakehomeWages =
-      this.#fixedIncomeStreams.career.partnerWagesAndCompensationActualIncome;
-
+      this.#reportingYear.ReportData.income_partnerTakehomeWages =
+        this.#fixedIncomeStreams.career.partnerWagesAndCompensationActualIncome;
+    }
     // this.#reportingYear.ReportData.dump("Wages and Compensation Report");
     // debugger;
   }
