@@ -19,6 +19,33 @@
 /** @type {Map<string, PopupInstance>} */
 const popupRegistry = new Map();
 
+/** @type {Set<HTMLElement>} */
+const activePopups = new Set();
+
+/** Ensure Escape handler registered only once */
+let escapeHandlerRegistered = false;
+
+function registerEscapeHandler() {
+  if (escapeHandlerRegistered) return;
+  escapeHandlerRegistered = true;
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape") return;
+
+    // Close most recently opened popup
+    const popupArray = Array.from(activePopups);
+
+    if (popupArray.length === 0) return;
+
+    const topPopup = popupArray[popupArray.length - 1];
+
+    if (topPopup) {
+      topPopup.classList.remove("show");
+      activePopups.delete(topPopup);
+    }
+  });
+}
+
 /**
  * Ensure popup exists.
  * Creates it if necessary.
@@ -82,15 +109,17 @@ export function ensurePopup(id, defaultTitle) {
     },
 
     show() {
+      registerEscapeHandler();
       root?.classList.add("show"); // ✅ THIS matches your CSS
+      activePopups.add(root);
     },
 
     hide() {
       root?.classList.remove("show");
+      activePopups.delete(root);
     },
   };
 }
-
 
 /**
  * Close all popups
