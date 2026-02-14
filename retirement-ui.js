@@ -3083,7 +3083,7 @@ function loadExample() {
 
     subjectSsMonthly: 2500,
     partnerSsMonthly: 1000,
-    ssWithholdingRate: 15,
+    ssWithholdingRate: 20,
     ssCola: 2.5,
 
     subjectPensionMonthly: 3500,

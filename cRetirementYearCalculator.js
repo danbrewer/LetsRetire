@@ -264,7 +264,7 @@ class RetirementYearCalculator {
       TransactionCategory.RetirementContribution
     );
 
-    this.#reportingYear.ReportData.income_subject401kContribution =
+    this.#reportingYear.ReportData.income_subject401kDisburements =
       this.#fixedIncomeStreams.retirement.subjectAllowed401kContribution;
 
     this.#accountYear.processAsPeriodicTransfers(
@@ -610,7 +610,7 @@ class RetirementYearCalculator {
 
     this.#generateReportData();
 
-    this.#reportingYear.ReportData.dump("ReportData");
+    // this.#reportingYear.ReportData.dump("ReportData");
     // debugger;
     // const balances = {
     //   year: this.#fiscalData.taxYear,
@@ -666,6 +666,10 @@ class RetirementYearCalculator {
 
     // retirementYearData.dump("retirementYearData");
 
+    if (this.#fiscalData.taxYear === 2031){
+      this.#reportingYear.ReportData.dump("ReportData at 2031");
+    }
+
     return retirementYearData;
   }
   determineRetirementAccountWithdrawalPortions() {
@@ -709,7 +713,8 @@ class RetirementYearCalculator {
     );
 
     this.#reportingYear.ReportData.ss_subjectSsGross +=
-      this.#fixedIncomeStreams.subjectSsGross ?? 0;
+      this.#fixedIncomeStreams.subjectSsGross ?? 0; 
+    this.#reportingYear.ReportData.ss_witholdingRate = this.#inputs.flatSsWithholdingRate;
     this.#reportingYear.ReportData.ss_subjectSsWithholdings +=
       this.#fixedIncomeStreams.subjectSsWithholdings ?? 0;
     this.#reportingYear.ReportData.ss_subjectSsTakehome +=

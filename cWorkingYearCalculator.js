@@ -381,13 +381,14 @@ class WorkingYearCalculator {
       TransactionCategory.RetirementContribution
     );
 
-    this.#reportingYear.ReportData.income_subject401kContribution =
+    this.#reportingYear.ReportData.income_subject401kDisburements =
       this.#fixedIncomeStreams.career.subjectAllowed401kContribution;
 
     this.#accountYear.processAsPeriodicTransfers(
       ACCOUNT_TYPES.SUBJECT_WAGES,
       ACCOUNT_TYPES.TAXES,
-      this.#fixedIncomeStreams.career.subjectWagesAndCompensationEstimatedWithholdings,
+      this.#fixedIncomeStreams.career
+        .subjectWagesAndCompensationEstimatedWithholdings,
       PERIODIC_FREQUENCY.MONTHLY,
       TransactionCategory.Withholdings
     );
@@ -453,7 +454,8 @@ class WorkingYearCalculator {
     this.#accountYear.processAsPeriodicTransfers(
       ACCOUNT_TYPES.PARTNER_WAGES,
       ACCOUNT_TYPES.TAXES,
-      this.#fixedIncomeStreams.career.partnerWagesAndCompensationEstimatedWithholdings,
+      this.#fixedIncomeStreams.career
+        .partnerWagesAndCompensationEstimatedWithholdings,
       PERIODIC_FREQUENCY.MONTHLY,
       TransactionCategory.Withholdings
     );
@@ -477,7 +479,8 @@ class WorkingYearCalculator {
   }
 
   #processRothIraContributions() {
-    if (this.#fixedIncomeStreams.career.subjectAllowedRothContribution <= 0) return;
+    if (this.#fixedIncomeStreams.career.subjectAllowedRothContribution <= 0)
+      return;
 
     this.#accountYear.processAsPeriodicTransfers(
       ACCOUNT_TYPES.CASH,

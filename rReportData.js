@@ -213,6 +213,7 @@ class ReportData extends BaseReports {
     this.taxes_federalIncomeTaxOwed = 0;
 
     // SOCIAL SECURITY
+    this.ss_witholdingRate = 0;
     this.ss_subjectSsGross = 0;
     this.ss_subjectSsWithholdings = 0;
     this.ss_subjectSsTakehome = 0;
@@ -314,8 +315,12 @@ class ReportData extends BaseReports {
       this.income_partner401kContribution -
       this.income_partnerPayrollDeductions +
       this.income_miscIncomeGross +
-      this.savings_Interest
-    );
+      this.savings_Interest +
+      this.income_subject401kGross +
+      this.income_partner401kGross +
+      this.income_subjectPensionGross +
+      this.income_partnerPensionGross 
+    ).asCurrency();
   }
 
   get income_wagesTaxable() {
