@@ -373,6 +373,9 @@ class WorkingYearCalculator {
     this.#reportingYear.ReportData.income_subjectGrossWages =
       this.#fixedIncomeStreams.career.subjectWagesAndCompensationGross;
 
+    this.#reportingYear.ReportData.income_wagesWithholdingRate =
+      this.#fixedIncomeStreams.career.wagesAndCompensationWithholdingRate;
+
     if (this.#fixedIncomeStreams.career.subjectWagesAndCompensationGross > 0) {
       this.#accountYear.processAsPeriodicTransfers(
         ACCOUNT_TYPES.SUBJECT_WAGES,
@@ -405,6 +408,7 @@ class WorkingYearCalculator {
         TransactionCategory.PayrollDeductions
       );
 
+      // debugger;
       this.#reportingYear.ReportData.income_subjectPayrollDeductions =
         this.#fixedIncomeStreams.career.subjectPayrollDeductions;
 

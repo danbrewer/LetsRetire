@@ -20,6 +20,7 @@ export class UIField {
   static SUBJECT_SS_START_AGE = "subjectSsStartAge";
 
   static SUBJECT_SALARY = "subjectSalary";
+  static SUBJECT_PAYROLL_DEDUCTIONS = "subjectPayrollDeductions";
   static SUBJECT_SALARY_GROWTH = "subjectSalaryGrowth";
   static SUBJECT_SAVINGS_MONTHLY = "subjectSavingsMonthly";
   static SUBJECT_ROTH_MONTHLY = "subjectRothMonthly";

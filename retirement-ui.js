@@ -19,26 +19,6 @@ import {
 } from "./import-export.js";
 import { drawChart } from "./chart.js";
 
-
-
-// /** @type {WindowWithExtras} */
-// const win = window;
-
-// /**
-//  * @param {string} id
-//  * @returns {HTMLInputElement}
-//  * @throws {Error} if element is missing or not an input
-//  */
-// function input(id) {
-//   const el = $(id);
-
-//   if (!(el instanceof HTMLInputElement)) {
-//     throw new Error(`Element '${id}' is not an <input>`);
-//   }
-
-//   return el;
-// }
-
 /**
  * @param {string} id
  * @returns {HTMLInputElement | null}
@@ -105,8 +85,6 @@ function checkbox(id) {
   }
   return el;
 }
-
-
 
 /**
  * @param {string} id
@@ -545,7 +523,6 @@ document.addEventListener("keydown", (e) => {
   }
 });
 
-
 // Events
 $("calcBtn")?.addEventListener("click", doCalculations);
 $("pdfBtn")?.addEventListener("click", generatePDFReport);
@@ -656,6 +633,7 @@ function parseInputParameters() {
   const subjectPensionStartAge = num(UIField.SUBJECT_PENSION_START_AGE);
   const subjectSsStartAge = num(UIField.SUBJECT_SS_START_AGE);
   const subjectStartingSalary = num(UIField.SUBJECT_SALARY);
+  const subjectMonthlyPayrollDeductions = num(UIField.SUBJECT_PAYROLL_DEDUCTIONS);
   const subjectSalaryGrowthRate = pct(num(UIField.SUBJECT_SALARY_GROWTH));
   const subjectSavingsMonthly = num(UIField.SUBJECT_SAVINGS_MONTHLY);
   const subjectRothMonthly = num(UIField.SUBJECT_ROTH_MONTHLY);
@@ -759,6 +737,7 @@ function parseInputParameters() {
 
     // Employment and contributions
     subjectStartingSalary: subjectStartingSalary,
+    subjectCareerMonthlyPayrollDeductions: subjectMonthlyPayrollDeductions,
     partnerStartingSalary: partnerStartingSalary,
     subjectSalaryGrowthRate: subjectSalaryGrowthRate,
     partnerSalaryGrowthRate: partnerSalaryGrowthRate,
@@ -1614,8 +1593,12 @@ function generateOutputAndSummary(inputs, calculations) {
         
         <!-- NET INCOME (what you actually receive) -->
         <td class="income">${
-          reportData.income_combinedWagesNet
-            ? `<span class="ss-link" onclick="popups.showSalaryBreakdown(${index})">${reportData.income_combinedWagesNet.asWholeDollars()}</span>`
+          reportData.income_combinedTakehomeWages
+            ? `<span class="calc-link ss-link" 
+                    data-index="${index}"
+                    data-action="showSalaryBreakdown">
+                  ${reportData.income_combinedTakehomeWages.asWholeDollars()}
+                  </span>`
             : ""
         }</td>
         <td class="income">${
@@ -1796,7 +1779,8 @@ function generateOutputAndSummary(inputs, calculations) {
       : calculations
           .getAllCalculations()
           .reduce(
-            (lastGoodAge, r) => (r.reportData.balances_total > 0 ? r.age : lastGoodAge),
+            (lastGoodAge, r) =>
+              r.reportData.balances_total > 0 ? r.age : lastGoodAge,
             inputs.subjectAge
           );
 
@@ -1809,7 +1793,10 @@ function generateOutputAndSummary(inputs, calculations) {
 
   const kpiEndBal = divById("kpiEndBal");
   if (kpiEndBal) {
-    kpiEndBal.textContent = Math.max(0, calculation.reportData.balances_total).asWholeDollars();
+    kpiEndBal.textContent = Math.max(
+      0,
+      calculation.reportData.balances_total
+    ).asWholeDollars();
   }
 
   const kpiDraw = divById("kpiDraw");

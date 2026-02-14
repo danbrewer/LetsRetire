@@ -151,6 +151,7 @@ class ReportData extends BaseReports {
 
     // WAGES AND COMPENSATION
     this.income_subjectGrossWages = 0;
+    this.income_wagesWithholdingRate = 0;
     this.income_subject401kContribution = 0;
     this.income_subjectEstimatedWithholdings = 0;
     this.income_subjectPayrollDeductions = 0;
@@ -339,19 +340,28 @@ class ReportData extends BaseReports {
     ).asCurrency();
   }
 
-  get income_combinedWagesNet(){
+  get income_combinedTakehomeWages() {
     return this.income_subjectTakehomeWages + this.income_partnerTakehomeWages;
   }
 
-  get income_combinedWagesWithholdings(){
-    return this.income_subjectEstimatedWithholdings + this.income_partnerEstimatedWithholdings;
+  get income_combinedWagesWithholdings() {
+    return (
+      this.income_subjectEstimatedWithholdings +
+      this.income_partnerEstimatedWithholdings
+    );
   }
 
-  get income_combinedWagesGross(){
+  get income_combinedWagesGross() {
     return this.income_subjectGrossWages + this.income_partnerGrossWages;
   }
-  
-  get ss_combinedGross(){
+
+  get income_combinedPayrollDeductions() {
+    return (
+      this.income_subjectPayrollDeductions + this.income_partnerPayrollDeductions
+    );
+  }
+
+  get ss_combinedGross() {
     return this.ss_subjectSsGross + this.ss_partnerSsGross;
   }
 
@@ -359,47 +369,62 @@ class ReportData extends BaseReports {
     return this.ss_subjectSsWithholdings + this.ss_partnerSsWithholdings;
   }
 
-  get ss_combinedTakehome(){
+  get ss_combinedTakehome() {
     return this.ss_subjectSsTakehome + this.ss_partnerSsTakehome;
   }
 
-  get income_combinedPensionGross(){
+  get income_combinedPensionGross() {
     return this.income_subjectPensionGross + this.income_partnerPensionGross;
   }
 
-  get income_combinedPensionWithholdings(){
-    return this.income_subjectPensionWithholdings + this.income_partnerPensionWithholdings;
+  get income_combinedPensionWithholdings() {
+    return (
+      this.income_subjectPensionWithholdings +
+      this.income_partnerPensionWithholdings
+    );
   }
 
-  get income_combinedPensionTakehome(){
-    return this.income_subjectPensionTakehome + this.income_partnerPensionTakehome;
+  get income_combinedPensionTakehome() {
+    return (
+      this.income_subjectPensionTakehome + this.income_partnerPensionTakehome
+    );
   }
 
-  get income_combined401kGross(){
+  get income_combined401kGross() {
     return this.income_subject401kGross + this.income_partner401kGross;
   }
 
-  get income_combined401kWithholdings(){
-    return this.income_subject401kWithholdings + this.income_partner401kWithholdings;
+  get income_combined401kWithholdings() {
+    return (
+      this.income_subject401kWithholdings + this.income_partner401kWithholdings
+    );
   }
 
-  get income_combined401kTakehome(){
+  get income_combined401kTakehome() {
     return this.income_subject401kTakehome + this.income_partner401kTakehome;
   }
 
-  get balances_combined401k(){
-    return this.retirementAcct_subject401kBalance + this.retirementAcct_partner401kBalance;
+  get balances_combined401k() {
+    return (
+      this.retirementAcct_subject401kBalance +
+      this.retirementAcct_partner401kBalance
+    );
   }
 
-  get balances_combinedRoth(){
-    return this.retirementAcct_subjectRothBalance + this.retirementAcct_partnerRothBalance;
+  get balances_combinedRoth() {
+    return (
+      this.retirementAcct_subjectRothBalance +
+      this.retirementAcct_partnerRothBalance
+    );
   }
 
-  get balances_total(){
-    return this.balances_combined401k + this.balances_combinedRoth + this.savings_Balance;
+  get balances_total() {
+    return (
+      this.balances_combined401k +
+      this.balances_combinedRoth +
+      this.savings_Balance
+    );
   }
-
-
 
   // get ss_subjectSsTakehome() {
   //   return this.ss_subjectSsTakehome1;

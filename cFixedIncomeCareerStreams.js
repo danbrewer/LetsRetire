@@ -190,6 +190,10 @@ class FixedIncomeCareerStreams {
     ).asCurrency();
   }
 
+  get wagesAndCompensationWithholdingRate(){
+    return this.#inputs.flatWageWithholdingRate;
+  }
+
   get subjectWagesAndCompensationEstimatedWithholdings() {
     return (
       this.#inputs.flatWageWithholdingRate *
