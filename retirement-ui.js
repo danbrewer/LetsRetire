@@ -1097,29 +1097,29 @@ function generateOutputAndSummary(inputs, calculations) {
     }
   });
 
-  // KPIs
+  // KPIs (Key Performance Indicators)
   const calculation = calculations.getLastCalculation();
   // Find the last age where there's still money, or endAge if money lasts throughout
   const fundedTo =
-    calculation.total > 0
+    calculation.reportData.balances_total > 0
       ? inputs.subjectLifeSpan
       : calculations
           .getAllCalculations()
           .reduce(
-            (lastGoodAge, r) => (r.total > 0 ? r.age : lastGoodAge),
+            (lastGoodAge, r) => (r.reportData.balances_total > 0 ? r.age : lastGoodAge),
             inputs.subjectAge
           );
 
   const kpiAge = divById("kpiAge");
   if (kpiAge) {
     kpiAge.innerHTML = `${fundedTo} <span class="pill ${
-      fundedTo >= inputs.subjectRetireAge ? "ok" : "alert"
+      fundedTo >= inputs.subjectLifeSpan ? "ok" : "alert"
     }">${fundedTo >= inputs.subjectLifeSpan ? "Fully funded" : "Shortfall"}</span>`;
   }
 
   const kpiEndBal = divById("kpiEndBal");
   if (kpiEndBal) {
-    kpiEndBal.textContent = Math.max(0, calculation.total).asWholeDollars();
+    kpiEndBal.textContent = Math.max(0, calculation.reportData.balances_total).asWholeDollars();
   }
 
   const kpiDraw = divById("kpiDraw");
@@ -1127,9 +1127,10 @@ function generateOutputAndSummary(inputs, calculations) {
     kpiDraw.textContent = `${inputs.subjectRetireAge}`;
   }
 
+  const firstCalculation = calculations.getAllCalculations()[0];
   const kpiTax = divById("kpiTax");
-  if (kpiTax) {
-    // kpiTax.textContent = fmt(inputs.subjec + inputs.rothIRA + inputs.savings);
+  if (firstCalculation && kpiTax) {
+    kpiTax.textContent = `${firstCalculation.reportData.balances_total.asWholeDollars()}`;
   }
 
   // debugger;
