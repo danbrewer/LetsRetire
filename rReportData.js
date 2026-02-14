@@ -419,7 +419,8 @@ class ReportData extends BaseReports {
       this.income_partner401kGross +
       this.income_subjectPensionGross +
       this.income_partnerPensionGross +
-      this.ss_totalSsGross;
+      this.ss_totalSsGross +
+      this.income_savingsInterest;
 
     return result.asCurrency();
   }
