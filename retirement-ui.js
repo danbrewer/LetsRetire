@@ -2907,16 +2907,18 @@ function generateOutputAndSummary(inputs, calculations) {
         result += `
         <!-- THE RESULT -->
         <td class="neutral">${
-          calculation.balSavings
+          reportData.savings_Balance
             ? `<span class="savings-balance-link" onclick="showSavingsBreakdown(${index})" title="Click to see savings changes">${fmt(
-                calculation.balSavings
+                reportData.savings_Balance
               )}</span>`
             : ""
         }</td>
-        <td class="neutral">${fmt(calculation.balTran401k)}</td>
-        <td class="neutral">${fmt(calculation.balRoth)}</td>
-        <td class="neutral">${fmt(calculation.balTotal)}</td>
+        <td class="neutral">${fmt(reportData.balances_combined401k)}</td>
+        <td class="neutral">${fmt(reportData.balances_combinedRoth)}</td>
+        <td class="neutral">${fmt(reportData.balances_total)}</td>
         </tr>`;
+
+        return result;
     })
     .join("");
 

@@ -387,6 +387,20 @@ class ReportData extends BaseReports {
     return this.income_subject401kTakehome + this.income_partner401kTakehome;
   }
 
+  get balances_combined401k(){
+    return this.retirementAcct_subject401kBalance + this.retirementAcct_partner401kBalance;
+  }
+
+  get balances_combinedRoth(){
+    return this.retirementAcct_subjectRothBalance + this.retirementAcct_partnerRothBalance;
+  }
+
+  get balances_total(){
+    return this.balances_combined401k + this.balances_combinedRoth + this.savings_Balance;
+  }
+
+
+
   // get ss_subjectSsTakehome() {
   //   return this.ss_subjectSsTakehome1;
   // }

@@ -264,7 +264,7 @@ class RetirementYearCalculator {
       TransactionCategory.RetirementContribution
     );
 
-    this.#reportingYear.ReportData.income_subject401kDisburements =
+    this.#reportingYear.ReportData.income_subject401kContribution =
       this.#fixedIncomeStreams.retirement.subjectAllowed401kContribution;
 
     this.#accountYear.processAsPeriodicTransfers(
@@ -666,9 +666,9 @@ class RetirementYearCalculator {
 
     // retirementYearData.dump("retirementYearData");
 
-    if (this.#fiscalData.taxYear === 2031) {
-      this.#reportingYear.ReportData.dump("ReportData at 2031");
-    }
+    // if (this.#fiscalData.taxYear === 2031) {
+    //   this.#reportingYear.ReportData.dump("ReportData at 2031");
+    // }
 
     return retirementYearData;
   }
