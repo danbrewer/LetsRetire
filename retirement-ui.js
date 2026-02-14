@@ -2542,9 +2542,9 @@ function parseInputParameters() {
   const subject401kReturnRate = pct(num(UIField.SUBJECT_401K_RETURN));
   const partner401kStartingBalance = num(UIField.PARTNER_401K_BALANCE);
   const partner401kReturnRate = pct(num(UIField.PARTNER_401K_RETURN));
-  const subjectRothBalance = pct(num(UIField.SUBJECT_ROTH_BALANCE));
+  const subjectRothBalance = num(UIField.SUBJECT_ROTH_BALANCE);
   const subjectRothReturnRate = pct(num(UIField.SUBJECT_ROTH_RETURN));
-  const partnerRothBalance = pct(num(UIField.PARTNER_ROTH_BALANCE));
+  const partnerRothBalance = num(UIField.PARTNER_ROTH_BALANCE);
   const partnerRothReturnRate = pct(num(UIField.PARTNER_ROTH_RETURN));
 
   // Social Security
@@ -2815,7 +2815,9 @@ function generateOutputAndSummary(inputs, calculations) {
             : ""
         }</td>
         <td class="income">${
-          reportData.ss_combinedGross ? reportData.ss_combinedGross.asWholeDollars() : ""
+          reportData.ss_combinedGross
+            ? reportData.ss_combinedGross.asWholeDollars()
+            : ""
         }</td>
         <td class="income">${
           reportData.income_combinedPensionGross
@@ -2834,71 +2836,73 @@ function generateOutputAndSummary(inputs, calculations) {
             : ""
         }</td>
         <td class="income">${
-          reportData.income_total_gross ? reportData.income_total_gross.asWholeDollars() : ""
+          reportData.income_total_gross
+            ? reportData.income_total_gross.asWholeDollars()
+            : ""
         }</td> `;
-        
-        // <!-- THE BREAKDOWN -->
-        // <td class="income">${
-        //   calculation.age >= inputs.subjectRetireAge
-        //     ? `<span class="taxable-income-link" onclick="showTaxableIncomeBreakdown(${index})" title="Click to see breakdown">${fmt(
-        //         calculation.taxableIncome || 0
-        //       )}</span>`
-        //     : calculation.taxableIncome
-        //       ? fmt(calculation.taxableIncome)
-        //       : ""
-        // }</td>
-        // <td class="income">${
-        //   calculation.nonTaxableIncome
-        //     ? calculation.age >= inputs.subjectLifeSpan
-        //       ? `<span class="non-taxable-income-link" onclick="showNonTaxableIncomeBreakdown(${index})" title="Click to see breakdown">${fmt(
-        //           calculation.nonTaxableIncome
-        //         )}</span>`
-        //       : fmt(calculation.nonTaxableIncome)
-        //     : ""
-        // }</td>
-        // <td class="income">${
-        //   calculation.provisionalIncome && calculation.provisionalIncome > 0
-        //     ? `<span class="provisional-income-link" onclick="showProvisionalIncomeBreakdown(${index})" title="Click to see breakdown">${fmt(
-        //         calculation.provisionalIncome
-        //       )}</span>`
-        //     : calculation.provisionalIncome
-        //       ? fmt(calculation.provisionalIncome)
-        //       : ""
-        // }</td>
-        
-        // <!-- TAX INFORMATION -->
-        // <td class="neutral">${
-        //   calculation.standardDeduction
-        //     ? fmt(calculation.standardDeduction)
-        //     : ""
-        // }</td>
-        // <td class="neutral">${
-        //   calculation.taxableIncome ? fmt(calculation.taxableIncome) : ""
-        // }</td>
-        // <td class="outgoing">${
-        //   calculation.ssTaxes !== undefined && calculation.ssTaxes !== null
-        //     ? fmt(calculation.ssTaxes)
-        //     : ""
-        // }</td>
-        // <td class="outgoing">${
-        //   calculation.otherTaxes ? fmt(calculation.otherTaxes) : ""
-        // }</td>
-        // <td class="outgoing">${
-        //   calculation.age >= inputs.subjectRetireAge
-        //     ? `<span class="total-taxes-link" onclick="showTotalTaxesBreakdown(${index})" title="Click to see breakdown">${fmt(
-        //         calculation.totalTaxes || 0
-        //       )}</span>`
-        //     : calculation.totalTaxes
-        //       ? fmt(calculation.totalTaxes)
-        //       : ""
-        // }</td>
-        // <td class="neutral">${
-        //   calculation.effectiveTaxRate
-        //     ? calculation.effectiveTaxRate.toFixed(1) + "%"
-        //     : ""
-        // }</td>
-        
-        result += `
+
+      // <!-- THE BREAKDOWN -->
+      // <td class="income">${
+      //   calculation.age >= inputs.subjectRetireAge
+      //     ? `<span class="taxable-income-link" onclick="showTaxableIncomeBreakdown(${index})" title="Click to see breakdown">${fmt(
+      //         calculation.taxableIncome || 0
+      //       )}</span>`
+      //     : calculation.taxableIncome
+      //       ? fmt(calculation.taxableIncome)
+      //       : ""
+      // }</td>
+      // <td class="income">${
+      //   calculation.nonTaxableIncome
+      //     ? calculation.age >= inputs.subjectLifeSpan
+      //       ? `<span class="non-taxable-income-link" onclick="showNonTaxableIncomeBreakdown(${index})" title="Click to see breakdown">${fmt(
+      //           calculation.nonTaxableIncome
+      //         )}</span>`
+      //       : fmt(calculation.nonTaxableIncome)
+      //     : ""
+      // }</td>
+      // <td class="income">${
+      //   calculation.provisionalIncome && calculation.provisionalIncome > 0
+      //     ? `<span class="provisional-income-link" onclick="showProvisionalIncomeBreakdown(${index})" title="Click to see breakdown">${fmt(
+      //         calculation.provisionalIncome
+      //       )}</span>`
+      //     : calculation.provisionalIncome
+      //       ? fmt(calculation.provisionalIncome)
+      //       : ""
+      // }</td>
+
+      // <!-- TAX INFORMATION -->
+      // <td class="neutral">${
+      //   calculation.standardDeduction
+      //     ? fmt(calculation.standardDeduction)
+      //     : ""
+      // }</td>
+      // <td class="neutral">${
+      //   calculation.taxableIncome ? fmt(calculation.taxableIncome) : ""
+      // }</td>
+      // <td class="outgoing">${
+      //   calculation.ssTaxes !== undefined && calculation.ssTaxes !== null
+      //     ? fmt(calculation.ssTaxes)
+      //     : ""
+      // }</td>
+      // <td class="outgoing">${
+      //   calculation.otherTaxes ? fmt(calculation.otherTaxes) : ""
+      // }</td>
+      // <td class="outgoing">${
+      //   calculation.age >= inputs.subjectRetireAge
+      //     ? `<span class="total-taxes-link" onclick="showTotalTaxesBreakdown(${index})" title="Click to see breakdown">${fmt(
+      //         calculation.totalTaxes || 0
+      //       )}</span>`
+      //     : calculation.totalTaxes
+      //       ? fmt(calculation.totalTaxes)
+      //       : ""
+      // }</td>
+      // <td class="neutral">${
+      //   calculation.effectiveTaxRate
+      //     ? calculation.effectiveTaxRate.toFixed(1) + "%"
+      //     : ""
+      // }</td>
+
+      result += `
         <!-- THE RESULT -->
         <td class="neutral">${
           reportData.savings_Balance
@@ -2912,7 +2916,7 @@ function generateOutputAndSummary(inputs, calculations) {
         <td class="neutral">${reportData.balances_total.asWholeDollars()}</td>
         </tr>`;
 
-        return result;
+      return result;
     })
     .join("");
 
@@ -3078,10 +3082,10 @@ function loadExample() {
     subject401kReturnRate: 3.0,
     partner401kStartingBalance: 0,
     partner401kReturnRate: 0.0,
-    subjectRothBalance: 0,
-    subjectRothReturnRate: 0.0,
-    partnerRothBalance: 0,
-    partnerRothReturnRate: 0.0,
+    subjectRothBalance: 1000,
+    subjectRothReturnRate: 3.0,
+    partnerRothBalance: 1000,
+    partnerRothReturnRate: 3.0,
 
     subjectSsMonthly: 2500,
     partnerSsMonthly: 1000,
