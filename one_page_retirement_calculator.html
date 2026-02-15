@@ -1101,7 +1101,8 @@ details[open] .content {
 
 
 <script type="module">
-  import { showHelpToast, loadPartial, initUI } from './retirement-ui.js';
+  import { loadPartial, initUI } from './retirement-ui.js';
+  import {showHelpToast} from './retirement-ui-toast.js';
   
  window.resyncAllOpenDetails = () => {
     document.querySelectorAll('details[open] .content').forEach(c => {
