@@ -19,7 +19,7 @@ const fmt = (/** @type {number} */ n) =>
 export const popupActions = {
   showSalaryBreakdown,
   showSsBreakdown,
-  // showTotalTaxesBreakdown,
+  showPensionBreakdown,
 };
 
 // SS Breakdown Popup Functions
@@ -204,31 +204,15 @@ function showSsBreakdown(data) {
   //   popup.classList.add("show");
 }
 
-// SS Breakdown Popup Functions
 /**
  * @param {ReportData} data
  */
 function showSalaryBreakdown(data) {
   if (!data) {
-    return; // No SS data to show
+    return; // No data to show
   }
 
   const popup = ensurePopup("salary", "Salary Breakdown");
-  // const content = document.getElementById("ssBreakdownContent");
-
-  // const combinedSalary =
-  //   (data.income_partnerTakehomeWages || 0) + (data.salary_partnerSSalary || 0);
-  // const combinedSalaryTaxable =
-  //   (data.salary_subjectSalaryTaxable || 0) + (data.salary_partnerSalaryTaxable || 0);
-  // const combinedSalaryNonTaxable =
-  //   (data.salary_subjectSalaryNonTaxable || 0) + (data.salary_partnerSalaryNonTaxable || 0);
-  // const combinedSsWithholdings =
-  //   (data.ss_subjectSsWithholdings || 0) + (data.ss_partnerSsWithholdings || 0);
-  // const combinedSsTakehome =
-  //   (data.ss_subjectSsTakehome || 0) + (data.ss_partnerSsTakehome || 0);
-  // Get the breakdown data from the calculation
-  // const ssBreakdown = calculation.accountYear || {};
-  // const details = ssBreakdown.calculationDetails || {};
 
   // Build the breakdown content
   let breakdownHtml = `
@@ -263,131 +247,39 @@ function showSalaryBreakdown(data) {
         <span class="ss-breakdown-label">Net (Take Home):</span>
         <span class="ss-breakdown-value">${data.income_combinedTakehomeWages.asWholeDollars()}</span>
     </div>
+    </div>
     `;
-
-  // Add detailed calculation steps based on method
-  // if (details.method === "irs-rules") {
-  // debugger;
-  // breakdownHtml += `
-  //       <div style="margin: 16px 0; padding: 12px; background: rgba(110, 168, 254, 0.1); border-radius: 8px;">
-  //       <strong style="color: var(--accent);">IRS SS Taxation Calculation:</strong>
-  //       <div style="margin-top: 8px;">
-  //           <div class="ss-breakdown-item" style="border: none; padding: 4px 0;">
-  //           <span class="ss-breakdown-label">Other Taxable Income:</span>
-  //           <span class="ss-breakdown-value">${fmt(
-  //             data.income_taxableIncome || 0
-  //           )}</span>
-  //           </div>
-  //           <div class="ss-breakdown-item" style="border: none; padding: 4px 0;">
-  //           <span class="ss-breakdown-label">+ 50% of SS Benefits:</span>
-  //           <span class="ss-breakdown-value">${fmt(
-  //             combinedSsGross * 0.5
-  //           )}</span>
-  //           </div>
-  //           <div class="ss-breakdown-item" style="border: none; padding: 4px 0; font-weight: 600; border-top: 1px solid var(--border); margin-top: 4px;">
-  //           <span class="ss-breakdown-label">= Provisional Income:</span>
-  //           <span class="ss-breakdown-value">${fmt(
-  //             data.ss_provisionalIncome
-  //           )}</span>
-  //           </div>
-  //       </div>
-        
-  //       <div style="margin-top: 12px;">
-  //           <div style="font-size: 12px; color: var(--muted); margin-bottom: 8px;">
-  //           <strong>Thresholds (${
-  //             "Filing Status: " +
-  //             (data.demographics_isMarriedFilingJointly ? "Married" : "Single")
-  //           }):</strong><br/>
-  //           • Tier 1: $${data.ss_threshold1?.toLocaleString()} (0% → 50% taxable)<br/>
-  //           • Tier 2: $${data.ss_threshold2?.toLocaleString()} (50% → 85% taxable)
-  //           </div>
-  //   `;
-
-  // if (data.ss_provisionalIncome <= data.ss_threshold1) {
-  //   breakdownHtml += `
-  //           <div style="color: var(--good);">
-  //           ✓ Provisional income ≤ $${data.ss_threshold1.toLocaleString()}<br/>
-  //           → 0% of SS benefits are taxable
-  //           </div>
-  //       `;
-  // } else if (data.ss_provisionalIncome <= data.ss_threshold2) {
-  //   breakdownHtml += `
-  //           <div style="color: var(--warn);">
-  //           ⚠ Provisional income between $${data.ss_threshold1.toLocaleString()} and $${data.ss_threshold2.toLocaleString()}<br/>
-  //           → Up to 50% of SS benefits may be taxable<br/>
-  //           <div style="margin-top: 4px; font-size: 11px;">
-  //               Excess over threshold: ${fmt(data.ss_provisionalIncome - data.ss_threshold1)}<br/>
-  //               Taxable amount: min(50% of SS, 50% of excess) = ${fmt(
-  //                 data.ss_tier1TaxableAmount
-  //               )}
-  //           </div>
-  //           </div>
-  //       `;
-  // } else {
-  //   breakdownHtml += `
-  //           <div style="color: var(--bad);">
-  //           ⚠ Provisional income > $${data.ss_threshold2.toLocaleString()}<br/>
-  //           → Up to 85% of SS benefits may be taxable<br/>
-  //           <div style="margin-top: 4px; font-size: 11px;">
-  //               Tier 1 (50%): ${fmt(data.ss_tier1TaxableAmount)}<br/>
-  //               Tier 2 (85% of excess over $${data.ss_threshold2.toLocaleString()}): .85 x (${fmt(data.ss_provisionalIncome)} - ${fmt(data.ss_threshold2)}) = ${fmt(
-  //                 data.ss_tier2TaxableAmount
-  //               )}<br/>
-  //               85% of SS benefits: ${fmt(combinedSsGross * 0.85)}<br/>
-  //               Total taxable: min(85% of SS, Tier 1 + Tier 2) = ${fmt(
-  //                 combinedSsTaxable
-  //               )}
-  //           </div>
-  //           </div>
-  //       `;
-  // }
-
-  breakdownHtml += `</div>`;
-  // } else if (details.method === "simplified") {
-  //   breakdownHtml += `
-  //       <div style="margin: 16px 0; padding: 12px; background: rgba(110, 168, 254, 0.1); border-radius: 8px;">
-  //       <strong style="color: var(--accent);">Simplified SS Taxation:</strong>
-  //       <div style="margin-top: 8px; font-size: 12px; color: var(--muted);">
-  //           Using simplified assumption that 85% of SS benefits are taxable.
-  //       </div>
-  //       </div>
-  //   `;
-  // }
-
-  // breakdownHtml += `
-  //   <div class="ss-breakdown-item">
-  //       <span class="ss-breakdown-label">Taxable Amount:</span>
-  //       <span class="ss-breakdown-value">${fmt(combinedSsTaxable)}</span>
-  //   </div>
-  //   <div class="ss-breakdown-item">
-  //       <span class="ss-breakdown-label">Non-Taxable Amount:</span>
-  //       <span class="ss-breakdown-value">${fmt(combinedSsNonTaxable)}</span>
-  //   </div>
-  //   <div class="ss-breakdown-item">
-  //       <span class="ss-breakdown-label">Effective Tax Rate:</span>
-  //       <span class="ss-breakdown-value">${
-  //         combinedSsGross
-  //           ? (combinedSsTaxable / combinedSsGross).toFixed(1) + "%"
-  //           : "N/A"
-  //       }</span>
-  //   </div>
-  //   `;
-
-  // // Add taxation method explanation
-  // // const inputs = parseInputParameters();
-  // breakdownHtml += `
-  //       <div style="margin-top: 16px; padding: 12px; background: rgba(110, 168, 254, 0.1); border-radius: 8px; font-size: 12px; color: var(--muted);">
-  //       <strong>About IRS SS Rules:</strong><br/>
-  //       Social Security taxation is based on "provisional income" which includes your taxable income plus 50% of your SS benefits. The percentage of SS benefits that become taxable depends on income thresholds that vary by filing status.
-  //       </div>
-  //   `;
 
   popup.setContent(breakdownHtml);
   popup.show();
-  // if (content)
-  //   content.innerHTML = breakdownHtml;
-  // if (popup)
-  //   popup.classList.add("show");
+}
+
+/**
+ * @param {ReportData} data
+ */
+function showPensionBreakdown(data) {
+  if (!data) {
+    return; // No data to show
+  }
+
+  const popup = ensurePopup("pension", "Pension Breakdown");
+
+  // Build the breakdown content
+  let breakdownHtml = `
+    <div class="ss-breakdown-item">
+        <span class="ss-breakdown-label">Year:</span>
+        <span class="ss-breakdown-value">${data.year}</span>
+    </div>
+    <!-- <div class="ss-breakdown-item">
+        <span class="ss-breakdown-label">Age:</span>
+        <span class="ss-breakdown-value">${data.demographics_subjectAge}</span>
+    </div>
+   
+    </div>
+    `;
+
+  popup.setContent(breakdownHtml);
+  popup.show();
 }
 
 function closeSsPopup() {
