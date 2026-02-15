@@ -14,7 +14,6 @@ import {
   handleJSONFile,
   importJSON,
 } from "./import-export.js";
-import { drawChart } from "./chart.js";
 import { generateOutputAndSummary } from "./retirement-summaryrenderer.js";
 
 /**
@@ -630,7 +629,9 @@ function parseInputParameters() {
   const subjectPensionStartAge = num(UIField.SUBJECT_PENSION_START_AGE);
   const subjectSsStartAge = num(UIField.SUBJECT_SS_START_AGE);
   const subjectStartingSalary = num(UIField.SUBJECT_SALARY);
-  const subjectMonthlyPayrollDeductions = num(UIField.SUBJECT_PAYROLL_DEDUCTIONS);
+  const subjectMonthlyPayrollDeductions = num(
+    UIField.SUBJECT_PAYROLL_DEDUCTIONS
+  );
   const subjectSalaryGrowthRate = pct(num(UIField.SUBJECT_SALARY_GROWTH));
   const subjectSavingsMonthly = num(UIField.SUBJECT_SAVINGS_MONTHLY);
   const subjectRothMonthly = num(UIField.SUBJECT_ROTH_MONTHLY);
@@ -842,8 +843,6 @@ function resetAll() {
   if (kpiTax) {
     kpiTax.textContent = "—";
   }
-
-  drawChart([]);
 }
 
 // Initialize when DOM is loaded
@@ -1584,14 +1583,14 @@ function resyncAllOpenDetails(root = document) {
 //         <tr>
 //         <td class="neutral">${reportData.year}</td>
 //         <td class="neutral">${reportData.demographics_subjectAge}</td>
-        
+
 //         <!-- THE NEED -->
 //         <td class="outgoing">${reportData.ask ? reportData.ask.asWholeDollars() : ""}</td>
-        
+
 //         <!-- NET INCOME (what you actually receive) -->
 //         <td class="income">${
 //           reportData.income_combinedTakehomeWages
-//             ? `<span class="calc-link ss-link" 
+//             ? `<span class="calc-link ss-link"
 //                     data-index="${index}"
 //                     data-action="showSalaryBreakdown">
 //                   ${reportData.income_combinedTakehomeWages.asWholeDollars()}
@@ -1600,9 +1599,9 @@ function resyncAllOpenDetails(root = document) {
 //         }</td>
 //         <td class="income">${
 //           reportData.ss_combinedTakehome
-//             ? `<span 
-//                   class="calc-link ss-link" 
-//                   data-index="${index}" 
+//             ? `<span
+//                   class="calc-link ss-link"
+//                   data-index="${index}"
 //                   data-action="showSsBreakdown">
 //                   ${reportData.ss_combinedTakehome.asWholeDollars()}
 //                 </span>`
@@ -1626,7 +1625,7 @@ function resyncAllOpenDetails(root = document) {
 //             : // : fmt(reportData.income_total_net)
 //               ""
 //         }</td>
-        
+
 //         <!-- GROSS INCOME (before taxes/deductions) -->
 //         <td class="income">${
 //           reportData.income_combinedWagesGross
@@ -1730,8 +1729,8 @@ function resyncAllOpenDetails(root = document) {
 //         <!-- THE RESULT -->
 //         <td class="neutral">${
 //           reportData.savings_Balance
-//             ? `<span class="savings-balance-link" 
-//                   onclick="showSavingsBreakdown(${index})" 
+//             ? `<span class="savings-balance-link"
+//                   onclick="showSavingsBreakdown(${index})"
 //                   title="Click to see savings changes">${reportData.savings_Balance.asWholeDollars()}</span>`
 //             : ""
 //         }</td>
@@ -1820,8 +1819,6 @@ function resyncAllOpenDetails(root = document) {
 //   // Save rows for export
 //   // win.__rows = rows;
 // }
-
-  
 
 export {
   parseInputParameters,
