@@ -188,9 +188,10 @@ function money(className, moneyObj, options = {}) {
   // If action exists, index should exist too. Make that explicit for TS.
   const index = options.index ?? 0;
 
+  // Modifier is an optional extra class for styling (e.g. "breakdown-link" for Social Security cells)
   const spanClass = options.modifier
     ? `calc-link ${options.modifier}`
-    : "calc-link";
+    : "calc-link breakdown-link";
 
   return td(
     className,
@@ -224,26 +225,29 @@ function buildSummaryRow(calculation, index) {
     money("income", r.income_combinedTakehomeWages, {
       index,
       action: "showSalaryBreakdown",
-      modifier: "ss-link",
     }),
 
     money("income", r.ss_combinedTakehome, {
       index,
       action: "showSsBreakdown",
-      modifier: "ss-link",
     }),
 
     money("income", r.income_combinedPensionTakehome, {
       index,
       action: "showPensionBreakdown",
-      modifier: "ss-link",
     }),
-    money("income", r.income_combined401kTakehome),
-    money("income", r.savings_Withdrawals),
+    money("income", r.income_combined401kTakehome, {
+      index,
+      action: "show401kBreakdown",
+    }),
+    money("income", r.savings_Withdrawals, {
+      index,
+      action: "showTotalCashBreakdown",
+    }),
 
     money("income", r.income_total_net, {
       index,
-      action: "showTotalNetBreakdown",
+      action: "showTotalCashBreakdown",
     }),
 
     money("income", r.income_combinedWagesGross),
@@ -390,9 +394,9 @@ function generateOutputAndSummary(inputs, calculations) {
       firstCalculation.reportData.balances_total.asWholeDollars();
   }
 
-//   /////////////////////////////////////////////////////////////
-//   // CHART UPDATE
-//   /////////////////////////////////////////////////////////////
+  //   /////////////////////////////////////////////////////////////
+  //   // CHART UPDATE
+  //   /////////////////////////////////////////////////////////////
 
   drawChart(
     allCalcs.map((calc) => ({
@@ -403,6 +407,4 @@ function generateOutputAndSummary(inputs, calculations) {
   );
 }
 
-export {
-  generateOutputAndSummary
-}
+export { generateOutputAndSummary };

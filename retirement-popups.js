@@ -20,6 +20,9 @@ export const popupActions = {
   showSalaryBreakdown,
   showSsBreakdown,
   showPensionBreakdown,
+  show401kBreakdown,
+  showSavingsRothBreakdown,
+  showTotalCashBreakdown,
 };
 
 // SS Breakdown Popup Functions
@@ -282,10 +285,94 @@ function showPensionBreakdown(data) {
   popup.show();
 }
 
-function closeSsPopup() {
-  const popup = document.getElementById("ssPopup");
-  popup?.classList.remove("show");
+/**
+ * @param {ReportData} data
+ */
+function showSavingsRothBreakdown(data) {
+  if (!data) {
+    return; // No data to show
+  }
+
+  const popup = ensurePopup("savingsRoth", "Savings/Roth Breakdown");
+
+  // Build the breakdown content
+  let breakdownHtml = `
+    <div class="ss-breakdown-item">
+        <span class="ss-breakdown-label">Year:</span>
+        <span class="ss-breakdown-value">${data.year}</span>
+    </div>
+    <!-- <div class="ss-breakdown-item">
+        <span class="ss-breakdown-label">Age:</span>
+        <span class="ss-breakdown-value">${data.demographics_subjectAge}</span>
+    </div>
+   
+    </div>
+    `;
+
+  popup.setContent(breakdownHtml);
+  popup.show();
 }
+
+/**
+ * @param {ReportData} data
+ */
+function show401kBreakdown(data) {
+  if (!data) {
+    return; // No data to show
+  }
+
+  const popup = ensurePopup("401k", "401(k) Breakdown");
+
+  // Build the breakdown content
+  let breakdownHtml = `
+    <div class="ss-breakdown-item">
+        <span class="ss-breakdown-label">Year:</span>
+        <span class="ss-breakdown-value">${data.year}</span>
+    </div>
+    <!-- <div class="ss-breakdown-item">
+        <span class="ss-breakdown-label">Age:</span>
+        <span class="ss-breakdown-value">${data.demographics_subjectAge}</span>
+    </div>
+   
+    </div>
+    `;
+
+  popup.setContent(breakdownHtml);
+  popup.show();
+}
+
+/**
+ * @param {ReportData} data
+ */
+function showTotalCashBreakdown(data) {
+  if (!data) {
+    return; // No data to show
+  }
+
+  const popup = ensurePopup("totalNet", "Total Cash Breakdown");
+
+  // Build the breakdown content
+  let breakdownHtml = `
+    <div class="ss-breakdown-item">
+        <span class="ss-breakdown-label">Year:</span>
+        <span class="ss-breakdown-value">${data.year}</span>
+    </div>
+    <!-- <div class="ss-breakdown-item">
+        <span class="ss-breakdown-label">Age:</span>
+        <span class="ss-breakdown-value">${data.demographics_subjectAge}</span>
+    </div>
+   
+    </div>
+    `;
+
+  popup.setContent(breakdownHtml);
+  popup.show();
+}
+
+// function closeSsPopup() {
+//   const popup = document.getElementById("ssPopup");
+//   popup?.classList.remove("show");
+// }
 
 // // SS Breakdown Popup Functions
 // /**
@@ -1922,7 +2009,7 @@ function closeSsPopup() {
 
 //     // Don't close if clicking on popup trigger links
 //     const isPopupTrigger = event.target.closest(
-//       ".ss-link, .withdrawal-net-link, .savings-balance-link, .taxable-income-link, .non-taxable-income-link, .total-taxes-link, .provisional-income-link"
+//       ".breakdown-link, .withdrawal-net-link, .savings-balance-link, .taxable-income-link, .non-taxable-income-link, .total-taxes-link, .provisional-income-link"
 //     );
 
 //     if (
