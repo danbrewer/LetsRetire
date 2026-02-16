@@ -1,4 +1,3 @@
-
 /**
  * @param {string} id
  * @returns {HTMLDivElement | null}
@@ -17,7 +16,6 @@ function divById(id) {
 
   return el;
 }
-
 
 /**
  * @param {ParentNode} parent
@@ -193,12 +191,24 @@ function drawAnimatedChart(ctx, series, width, height, dpr, c) {
   const ys = series.map((/** @type {{ y: any; }} */ p) => p.y);
   const xmin = Math.min(...xs),
     xmax = Math.max(...xs);
-  const ymin = 0,
-    ymax = Math.max(...ys) * 1.1;
+  // const ymin = 0,
+  //   ymax = Math.max(...ys) * 1.1;
+
+  const ymin = 0;
+  const rawMax = Math.max(...ys) * 1.1;
+
+  const { niceMin, niceMax, increment } = computeNiceYAxis(ymin, rawMax, 5);
+
+  const yTo = (/** @type {number} */ y) =>
+    height -
+    pad.b -
+    ((y - niceMin) / (niceMax - niceMin)) * (height - pad.t - pad.b);
+
+
   const xTo = (/** @type {number} */ x) =>
     pad.l + ((x - xmin) / (xmax - xmin)) * (width - pad.l - pad.r);
-  const yTo = (/** @type {number} */ y) =>
-    height - pad.b - ((y - ymin) / (ymax - ymin)) * (height - pad.t - pad.b);
+  // const yTo = (/** @type {number} */ y) =>
+  //   height - pad.b - ((y - ymin) / (ymax - ymin)) * (height - pad.t - pad.b);
 
   // Store final chart data for tooltips
   c.chartData = {
@@ -236,7 +246,8 @@ function drawAnimatedChart(ctx, series, width, height, dpr, c) {
       pad,
       xTo,
       yTo,
-      ymax,
+      niceMax,
+      increment,
       series
     );
 
@@ -257,6 +268,55 @@ function drawAnimatedChart(ctx, series, width, height, dpr, c) {
 }
 
 /**
+ * @param {number} min
+ * @param {number} max
+ */
+function computeNiceYAxis(min, max, targetTicks = 5) {
+  const range = max - min;
+
+  if (range <= 0) {
+    return {
+      niceMin: min,
+      niceMax: max,
+      increment: 1,
+      tickCount: 1,
+    };
+  }
+
+  // Base magnitude (power of 10)
+  const magnitude = Math.pow(10, Math.floor(Math.log10(range)));
+
+  // Candidate increments (financial-friendly)
+  const candidates = [1, 2, 2.5, 5, 10].map(
+    (n) => (n * magnitude) / targetTicks
+  );
+
+  // Choose increment closest to target tick count
+  let bestIncrement = candidates[0];
+  let bestScore = Infinity;
+
+  for (const inc of candidates) {
+    const ticks = Math.ceil(range / inc);
+    const score = Math.abs(targetTicks - ticks);
+    if (score < bestScore) {
+      bestScore = score;
+      bestIncrement = inc;
+    }
+  }
+
+  const niceMin = Math.floor(min / bestIncrement) * bestIncrement;
+  const niceMax = Math.ceil(max / bestIncrement) * bestIncrement;
+  const tickCount = Math.round((niceMax - niceMin) / bestIncrement);
+
+  return {
+    niceMin,
+    niceMax,
+    increment: bestIncrement,
+    tickCount,
+  };
+}
+
+/**
  * @param {CanvasRenderingContext2D} ctx
  * @param {number} width
  * @param {number} height
@@ -264,7 +324,8 @@ function drawAnimatedChart(ctx, series, width, height, dpr, c) {
  * @param {{ l: any; r: any; t: any; b: any; }} pad
  * @param {{ (x: any): number; (arg0: any): any; }} xTo
  * @param {{ (y: any): number; (arg0: number): any; }} yTo
- * @param {number} ymax
+ * @param {number} niceMax
+ * @param {number} increment
  * @param {string | any[]} series
  */
 function drawStaticChartElements(
@@ -275,7 +336,8 @@ function drawStaticChartElements(
   pad,
   xTo,
   yTo,
-  ymax,
+  niceMax,
+  increment,
   series
 ) {
   // Axes
@@ -293,27 +355,91 @@ function drawStaticChartElements(
   ctx.font = `${12 * dpr}px system-ui`;
   ctx.textAlign = "right";
   const steps = 4;
-  for (let i = 0; i <= steps; i++) {
-    const v = (ymax / steps) * i;
-    const y = yTo(v);
-    ctx.strokeStyle = "rgba(34,48,77,.4)";
-    ctx.beginPath();
-    ctx.moveTo(pad.l, y);
-    ctx.lineTo(width - pad.r, y);
-    ctx.stroke();
-    ctx.fillText(v.asWholeDollars(), pad.l - 8 * dpr, y + 4 * dpr);
-  }
+for (let v = 0; v <= niceMax; v += increment) {
+  const y = yTo(v);
 
-  // X labels
+  ctx.strokeStyle = "rgba(34,48,77,.4)";
+  ctx.beginPath();
+  ctx.moveTo(pad.l, y);
+  ctx.lineTo(width - pad.r, y);
+  ctx.stroke();
+
+  if (v === 0) continue;
+
   ctx.fillStyle = "#7c8db5";
-  ctx.textAlign = "center";
+  ctx.font = `${12 * dpr}px system-ui`;
+  ctx.textAlign = "right";
+
+  ctx.fillText(v.asWholeDollars(), pad.l - 8 * dpr, y + 4 * dpr);
+}
+
+  drawXAxisLabels(ctx, series, xTo, width, height, dpr, pad, 8);
+
+  // // X labels
+  // ctx.fillStyle = "#7c8db5";
+  // ctx.textAlign = "center";
+  // ctx.font = `${11 * dpr}px system-ui`;
+  // const years = [
+  //   series[0].x,
+  //   series[Math.floor(series.length / 2)].x,
+  //   series[series.length - 1].x,
+  // ];
+  // years.forEach((x) => ctx.fillText(String(x), xTo(x), height - 6 * dpr));
+}
+
+/**
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {string | any[]} series
+ * @param {(arg0: any) => number} xTo
+ * @param {number} width
+ * @param {number} height
+ * @param {number} dpr
+ * @param {{ l: number; r: number; t: number; b: number }} pad
+ * @param {number} desiredCount
+ */
+function drawXAxisLabels(
+  ctx,
+  series,
+  xTo,
+  width,
+  height,
+  dpr,
+  pad,
+  desiredCount = 5
+) {
+  ctx.fillStyle = "#7c8db5";
   ctx.font = `${11 * dpr}px system-ui`;
-  const years = [
-    series[0].x,
-    series[Math.floor(series.length / 2)].x,
-    series[series.length - 1].x,
-  ];
-  years.forEach((x) => ctx.fillText(String(x), xTo(x), height - 6 * dpr));
+  ctx.textAlign = "center";
+  ctx.textBaseline = "top";
+
+  // CRITICAL FIX: use plot width, not canvas width
+  const plotWidth = width - pad.l - pad.r;
+
+  const labelWidth = ctx.measureText("0000").width;
+  const spacing = labelWidth + 12 * dpr;
+
+  const maxLabels = Math.max(2, Math.floor(plotWidth / spacing));
+
+  const labelCount = Math.min(desiredCount, maxLabels);
+
+  const used = new Set();
+
+  const years = Array.from({ length: labelCount }, (_, i) => {
+    const index = Math.round((i * (series.length - 1)) / (labelCount - 1));
+    const x = series[index].x;
+
+    if (used.has(x)) return null;
+    used.add(x);
+    return x;
+  }).filter(Boolean);
+
+  years.forEach((x) => {
+    ctx.fillText(
+      String(x),
+      xTo(x), // already includes pad.l
+      height - pad.b + 4 * dpr
+    );
+  });
 }
 
 /**
@@ -403,7 +529,7 @@ function setupChartTooltips(c) {
      * @param {ChartPoint | null} point
      */
     function showTooltip(e, x, y, point) {
-    //   if (c.hasTooltipHandlers) return;
+      //   if (c.hasTooltipHandlers) return;
       if (!point) return;
 
       const yearDiv = div(e, ".year");
