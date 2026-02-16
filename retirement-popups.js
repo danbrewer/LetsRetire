@@ -26,6 +26,7 @@ export const popupActions = {
   showTotalCashBreakdown,
   showSsGrossBreakdown,
   showAccountBalances,
+  showSavingsBalanceBreakdown,
 };
 
 // SS Breakdown Popup Functions
@@ -301,7 +302,7 @@ function showPensionBreakdown(data) {
 
   const popup = ensurePopup("pension", "Pension Breakdown");
 
- let breakdownHtml = `
+  let breakdownHtml = `
     <div style="margin: 16px 0; padding: 12px; background: rgba(110, 168, 254, 0.1); border-radius: 8px;">
         <strong style="color: var(--accent);">Subject:</strong>
       <div class="ss-breakdown-item">
@@ -319,8 +320,8 @@ function showPensionBreakdown(data) {
     </div>
     `;
 
- if (data.demographics_isMarriedFilingJointly) {
-   breakdownHtml += `
+  if (data.demographics_isMarriedFilingJointly) {
+    breakdownHtml += `
 <div style="margin: 16px 0; padding: 12px; background: rgba(110, 168, 254, 0.1); border-radius: 8px;">
         <strong style="color: var(--accent);">Partner:</strong>
       <div class="ss-breakdown-item">
@@ -337,15 +338,14 @@ function showPensionBreakdown(data) {
       </div>
     </div>
       `;
- }
+  }
 
- breakdownHtml += `
+  breakdownHtml += `
       <div class="ss-breakdown-item breakdown-accent">
           <span class="ss-breakdown-label">Total (takehome):</span>
           <span class="ss-breakdown-value">${data.income_combinedPensionTakehome.asWholeDollars()}</span>
       </div>
   `;
-
 
   popup.setContent(breakdownHtml);
   popup.show();
@@ -361,7 +361,7 @@ function showPensionGrossBreakdown(data) {
 
   const popup = ensurePopup("pension", "Pension Breakdown");
 
- let breakdownHtml = `
+  let breakdownHtml = `
     <div style="margin: 16px 0; padding: 12px; background: rgba(110, 168, 254, 0.1); border-radius: 8px;">
         <strong style="color: var(--accent);">Subject:</strong>
       <div class="ss-breakdown-item">
@@ -371,8 +371,8 @@ function showPensionGrossBreakdown(data) {
     </div>
     `;
 
- if (data.demographics_isMarriedFilingJointly) {
-   breakdownHtml += `
+  if (data.demographics_isMarriedFilingJointly) {
+    breakdownHtml += `
 <div style="margin: 16px 0; padding: 12px; background: rgba(110, 168, 254, 0.1); border-radius: 8px;">
         <strong style="color: var(--accent);">Partner:</strong>
       <div class="ss-breakdown-item">
@@ -381,15 +381,14 @@ function showPensionGrossBreakdown(data) {
       </div>
     </div>
       `;
- }
+  }
 
- breakdownHtml += `
+  breakdownHtml += `
       <div class="ss-breakdown-item breakdown-accent">
           <span class="ss-breakdown-label">Total (gross):</span>
           <span class="ss-breakdown-value">${data.income_combinedPensionGross.asWholeDollars()}</span>
       </div>
   `;
-
 
   popup.setContent(breakdownHtml);
   popup.show();
@@ -422,6 +421,57 @@ function showSavingsRothBreakdown(data) {
         <div class="ss-breakdown-item breakdown-accent">
         <span class="ss-breakdown-label">Subject Roth withdrawal:</span>
         <span class="ss-breakdown-value">${(data.savings_Withdrawals + data.income_combinedRothTakehome).asWholeDollars()}</span>
+    </div>
+    `;
+
+  popup.setContent(breakdownHtml);
+  popup.show();
+}
+
+/**
+ * @param {ReportData} data
+ */
+function showSavingsBalanceBreakdown(data) {
+  if (!data) {
+    return; // No data to show
+  }
+
+  const popup = ensurePopup("savingsBalance", "Savings Balance Breakdown");
+
+  const deposits =
+    data.retirementAcct_subjectSavingsContributions +
+    data.retirementAcct_partnerSavingsContributions +
+    data.spending_surplus;
+
+  // Build the breakdown content
+  let breakdownHtml = `
+    <div class="ss-breakdown-item">
+      <span class="ss-breakdown-label">Opening balance</span>
+      <span class="ss-breakdown-value">${data.savings_OpeningBalance.asWholeDollars()}</span>
+    </div>
+    <div class="ss-breakdown-item">
+        <span class="ss-breakdown-label">Withdrawals:</span>
+        <span class="ss-breakdown-value">${data.savings_Withdrawals.asWholeDollars()}</span>
+    </div>
+    <div class="ss-breakdown-item">
+        <span class="ss-breakdown-label">Deposits:</span>
+        <span class="ss-breakdown-value">${deposits.asWholeDollars()}</span>
+    </div>
+     <div class="ss-breakdown-item">
+        <span class="ss-breakdown-label">Interest earned:</span>
+        <span class="ss-breakdown-value">${data.savings_Interest.asWholeDollars()}</span>
+    </div>
+    <div class="ss-breakdown-item">
+        <span class="ss-breakdown-label">Tax refund:</span>
+        <span class="ss-breakdown-value">${data.taxes_overPayment.asWholeDollars()}</span>
+    </div>
+    <div class="ss-breakdown-item">
+        <span class="ss-breakdown-label">Taxes owed:</span>
+        <span class="ss-breakdown-value">${data.taxes_underPayment.asWholeDollars()}</span>
+    </div>
+    <div class="ss-breakdown-item breakdown-accent">
+        <span class="ss-breakdown-label">Closing balance:</span>
+        <span class="ss-breakdown-value">${data.savings_Balance.asWholeDollars()}</span>
     </div>
     `;
 
@@ -471,7 +521,6 @@ function showAccountBalances(data) {
   popup.show();
 }
 
-
 /**
  * @param {ReportData} data
  */
@@ -491,7 +540,7 @@ function show401kBreakdown(data) {
         <span class="ss-breakdown-value">${data.income_subject401kGross.asWholeDollars()}</span>
       </div>
       <div class="ss-breakdown-item">
-          <span class="ss-breakdown-label">Withholdings:</span>
+          <span class="ss-breakdown-label">Withholdings (${data.taxes_401kWithholdingRate * 100}%):</span>
           <span class="ss-breakdown-value">${data.income_subject401kWithholdings.asWholeDollars()}</span>
       </div>
       <div class="ss-breakdown-item breakdown-accent">
@@ -501,8 +550,8 @@ function show401kBreakdown(data) {
     </div>
     `;
 
-    if (data.demographics_isMarriedFilingJointly){
-      breakdownHtml += `
+  if (data.demographics_isMarriedFilingJointly) {
+    breakdownHtml += `
 <div style="margin: 16px 0; padding: 12px; background: rgba(110, 168, 254, 0.1); border-radius: 8px;">
         <strong style="color: var(--accent);">Partner:</strong>
       <div class="ss-breakdown-item">
@@ -510,7 +559,7 @@ function show401kBreakdown(data) {
         <span class="ss-breakdown-value">${data.income_partner401kGross.asWholeDollars()}</span>
       </div>
       <div class="ss-breakdown-item">
-          <span class="ss-breakdown-label">Withholdings:</span>
+          <span class="ss-breakdown-label">Withholdings (${data.taxes_401kWithholdingRate * 100}%):</span>
           <span class="ss-breakdown-value">${data.income_partner401kWithholdings.asWholeDollars()}</span>
       </div>
       <div class="ss-breakdown-item breakdown-accent">
@@ -519,7 +568,7 @@ function show401kBreakdown(data) {
       </div>
     </div>
       `;
-    }
+  }
 
   breakdownHtml += `
       <div class="ss-breakdown-item breakdown-accent">

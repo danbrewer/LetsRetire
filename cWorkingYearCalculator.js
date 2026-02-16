@@ -194,9 +194,9 @@ class WorkingYearCalculator {
 
     this.#reportingYear.ReportData.savings_OpeningBalance =
       this.#accountYear.getStartingBalance(ACCOUNT_TYPES.SAVINGS);
-    this.#reportingYear.ReportData.savings_Deposits = this.#accountYear
-      .getDeposits(ACCOUNT_TYPES.SAVINGS)
-      .asCurrency();
+    // this.#reportingYear.ReportData.savings_Deposits = this.#accountYear
+    //   .getDeposits(ACCOUNT_TYPES.SAVINGS)
+    //   .asCurrency();
     this.#reportingYear.ReportData.savings_Withdrawals = this.#accountYear
       .getWithdrawals(ACCOUNT_TYPES.SAVINGS)
       .asCurrency();
@@ -333,6 +333,8 @@ class WorkingYearCalculator {
       "Combined contrib."
     );
 
+    // this.#reportingYear.ReportData.savings_Deposits += actualTransferAmount;
+
     this.#reportingYear.ReportData.retirementAcct_subjectSavingsContributions +=
       actualTransferAmount;
 
@@ -355,6 +357,8 @@ class WorkingYearCalculator {
     this.#reportingYear.ReportData.retirementAcct_partnerSavingsContributions +=
       actualPartnerTransferAmount;
 
+    // this.#reportingYear.ReportData.savings_Deposits += actualPartnerTransferAmount;
+
     // this.#accountYear.analyzers[ACCOUNT_TYPES.CASH].dumpAccountActivity("");
 
     // debugger;
@@ -369,6 +373,9 @@ class WorkingYearCalculator {
       this.#fixedIncomeStreams.career.subjectWagesAndCompensationGross,
       PERIODIC_FREQUENCY.MONTHLY
     );
+
+    this.#reportingYear.ReportData.taxes_401kWithholdingRate = 
+       this.#fiscalData.flatTrad401kWithholdingRate;
 
     this.#reportingYear.ReportData.income_subjectGrossWages =
       this.#fixedIncomeStreams.career.subjectWagesAndCompensationGross;

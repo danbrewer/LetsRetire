@@ -939,9 +939,9 @@ class RetirementYearCalculator {
 
     this.#reportingYear.ReportData.savings_OpeningBalance =
       this.#accountYear.getStartingBalance(ACCOUNT_TYPES.SAVINGS);
-    this.#reportingYear.ReportData.savings_Deposits = this.#accountYear
-      .getDeposits(ACCOUNT_TYPES.SAVINGS)
-      .asCurrency();
+    // this.#reportingYear.ReportData.savings_Deposits = this.#accountYear
+    //   .getDeposits(ACCOUNT_TYPES.SAVINGS)
+    //   .asCurrency();
     this.#reportingYear.ReportData.savings_Withdrawals = this.#accountYear
       .getWithdrawals(ACCOUNT_TYPES.SAVINGS)
       .asCurrency();
@@ -1213,6 +1213,9 @@ class RetirementYearCalculator {
   // }
 
   #draw401kPortions() {
+    this.#reportingYear.ReportData.taxes_401kWithholdingRate =
+      this.#fiscalData.flatTrad401kWithholdingRate;
+
     const portionedGrossAmountCombined =
       this.#accountPortioner?.trad401kAccountPortions
         ?.combinedFinalWithdrawalGross ?? 0;

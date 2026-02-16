@@ -574,9 +574,9 @@ function loadExample() {
     inflation: 2.0, //2.5,
     spendingDecline: 0.0,
 
-    startingSavingsBalance: 500000,
+    startingSavingsBalance: 530000,
     savingsReturnRate: 3.0,
-    subject401kStartingBalance: 500000,
+    subject401kStartingBalance: 520000,
     subject401kReturnRate: 3.0,
     partner401kBalance: 125000,
     partner401kReturnRate: 0.0,
@@ -585,12 +585,12 @@ function loadExample() {
     partnerRothBalance: 1000,
     partnerRothReturnRate: 3.0,
 
-    subjectSsMonthly: 2500,
+    subjectSsMonthly: 2750,
     partnerSsMonthly: 1000,
     ssWithholdingRate: 20,
     ssCola: 2.5,
 
-    subjectPensionMonthly: 3500,
+    subjectPensionMonthly: 3700,
     subjectPensionWithholdingRate: 20,
     subjectPensionSurvivorship: 50,
     partnerPensionMonthly: 500,
@@ -599,10 +599,10 @@ function loadExample() {
 
     filingStatus: constsJS_FILING_STATUS.MARRIED_FILING_JOINTLY,
     withholdingsDefaultRate: 15,
-    withholdingsWages: 20,
-    withholdings401k: 20,
+    withholdingsWages: 15,
+    withholdings401k: 18,
     withholdingsSS: 15,
-    withholdingsPension: 20,
+    withholdingsPension: 18,
   };
   // const ex = {
   //   currentAge: 60,

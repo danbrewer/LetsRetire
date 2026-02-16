@@ -189,7 +189,7 @@ class ReportData extends BaseReports {
     this.income_partnerPensionTakehome = 0;
 
     this.savings_OpeningBalance = 0;
-    this.savings_Deposits = 0;
+    // this.savings_Deposits = 0;
     this.savings_Withdrawals = 0;
     this.savings_Balance = 0;
 
@@ -210,6 +210,8 @@ class ReportData extends BaseReports {
     this.taxes_overPayment = 0;
     this.taxes_underPayment = 0;
     this.taxes_federalIncomeTaxOwed = 0;
+
+    this.taxes_401kWithholdingRate = 0;
 
     // SOCIAL SECURITY
     this.ss_witholdingRate = 0;
