@@ -29,7 +29,7 @@ export class UIField {
   static SUBJECT_EMP_MATCH_RATE = "subjectEmpMatchRate";
   static SUBJECT_EMP_MATCH_CAP = "subjectEmpMatchCap";
 
-  static SUBJECT_401K_BALANCE = "subject401kBalance";
+  static SUBJECT_401K_BALANCE = "subject401kStartingBalance";
   static SUBJECT_401K_RETURN = "subject401kReturnRate";
   static SUBJECT_ROTH_BALANCE = "subjectRothBalance";
   static SUBJECT_ROTH_RETURN = "subjectRothReturnRate";
@@ -100,7 +100,7 @@ export class UIField {
   static USE_RMD = "useRMD";
 
   // ─────────────────────────
-    // Taxable Income Adjustments
-    // ─────────────────────────
-    static USE_TAXABLE_CURRENT_YEAR_VALUES = "useTaxableCurrentYearValues";
+  // Taxable Income Adjustments
+  // ─────────────────────────
+  static USE_TAXABLE_CURRENT_YEAR_VALUES = "useTaxableCurrentYearValues";
 }

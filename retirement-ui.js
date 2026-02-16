@@ -543,7 +543,7 @@ function loadExample() {
   const ex = {
     subjectCurrentAge: 60,
     subjectRetireAge: 62,
-    subjectLifeSpan: 90,
+    subjectLifespan: 95,
     subject401kStartAge: 62,
     subjectPensionStartAge: 65,
     subjectSsStartAge: 62,
@@ -557,7 +557,7 @@ function loadExample() {
 
     partnerCurrentAge: 56,
     partnerRetireAge: 62,
-    partnerLifeSpan: 90,
+    partnerLifespan: 98,
     partner401kStartAge: 62,
     partnerPensionStartAge: 65,
     partnerSsStartAge: 62,
@@ -576,9 +576,9 @@ function loadExample() {
 
     startingSavingsBalance: 500000,
     savingsReturnRate: 3.0,
-    subject401kStartingBalance: 600000,
+    subject401kStartingBalance: 500000,
     subject401kReturnRate: 3.0,
-    partner401kStartingBalance: 0,
+    partner401kBalance: 125000,
     partner401kReturnRate: 0.0,
     subjectRothBalance: 1000,
     subjectRothReturnRate: 3.0,
@@ -594,14 +594,14 @@ function loadExample() {
     subjectPensionWithholdingRate: 20,
     subjectPensionSurvivorship: 50,
     partnerPensionMonthly: 500,
-    partnerPensionWithholding: 20,
+    partnerPensionWithholdingRate: 20,
     partnerPensionSurvivorship: 50,
 
     filingStatus: constsJS_FILING_STATUS.MARRIED_FILING_JOINTLY,
     withholdingsDefaultRate: 15,
-    withholdingWages: 20,
+    withholdingsWages: 20,
     withholdings401k: 20,
-    withholdingsSs: 10,
+    withholdingsSS: 15,
     withholdingsPension: 20,
   };
   // const ex = {
@@ -655,6 +655,9 @@ function loadExample() {
       el.value = String(v);
     } else if (el instanceof HTMLSelectElement) {
       el.value = String(v);
+    }
+    else{
+      console.warn(`Element with id '${k}' not found or not an input/select`);
     }
   }
 }

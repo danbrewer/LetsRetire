@@ -252,14 +252,20 @@ function buildSummaryRow(calculation, index) {
 
     money("income", r.income_combinedWagesGross),
     money("income", r.income_savingsInterest),
-    money("income", r.ss_combinedGross),
-    money("income", r.income_combinedPensionGross),
+    money("income", r.ss_combinedGross, {
+      index,
+      action: "showSsGrossBreakdown",
+    }),
+    money("income", r.income_combinedPensionGross, {
+      index,
+      action: "showPensionGrossBreakdown",
+    }),
     money("income", r.income_combined401kGross),
     money("income", r.income_total_gross),
 
     money("neutral", r.savings_Balance, {
       index,
-      action: "showSavingsBreakdown",
+      action: "showAccountBalances",
       modifier: "savings-balance-link",
     }),
 
