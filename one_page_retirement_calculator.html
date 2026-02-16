@@ -450,13 +450,13 @@
       border-bottom: 1px solid var(--border);
     }
     
-    .ss-breakdown-item:last-child {
+    /* .ss-breakdown-item:last-child {
       border-bottom: none;
       font-weight: 600;
       padding-top: 12px;
       margin-top: 8px;
       border-top: 2px solid var(--border);
-    }
+    } */
     
     .ss-breakdown-label {
       color: var(--muted);
@@ -490,8 +490,18 @@
       border-bottom: 2px solid var(--border);
     }
     
-    .ss-breakdown-item:last-child .ss-breakdown-label,
+    /* .ss-breakdown-item:last-child .ss-breakdown-label,
     .ss-breakdown-item:last-child .ss-breakdown-value {
+      color: var(--accent);
+    } */
+
+    .breakdown-accent {
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .breakdown-accent .ss-breakdown-label,
+    .breakdown-accent .ss-breakdown-value {
       color: var(--accent);
     }
     

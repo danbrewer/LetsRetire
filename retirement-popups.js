@@ -57,22 +57,11 @@ function showSsBreakdown(data) {
         <span class="ss-breakdown-label">Year:</span>
         <span class="ss-breakdown-value">${data.year}</span>
     </div>
-    <!-- <div class="ss-breakdown-item">
-        <span class="ss-breakdown-label">Age:</span>
-        <span class="ss-breakdown-value">${data.demographics_subjectAge}</span>
-    </div>
-    -->
-    <!-- 
-    <div class="ss-breakdown-item">
-        <span class="ss-breakdown-label">SS Gross (Monthly):</span>
-        <span class="ss-breakdown-value">${fmt(combinedSsGross / 12)}</span>
-    </div>
-    -->
     <div class="ss-breakdown-item">
         <span class="ss-breakdown-label">SS Gross (Annual):</span>
         <span class="ss-breakdown-value">${fmt(combinedSsGross)}</span>
     </div>
-        <div class="ss-breakdown-item">
+    <div class="ss-breakdown-item">
         <span class="ss-breakdown-label">Withholdings (${data.ss_witholdingRate * 100}%):</span>
         <span class="ss-breakdown-value">${fmt(combinedSsWithholdings)}</span>
     </div>
@@ -246,7 +235,7 @@ function showSalaryBreakdown(data) {
         <span class="ss-breakdown-label">Withholdings (${data.income_wagesWithholdingRate * 100}%):</span>
         <span class="ss-breakdown-value">${data.income_combinedWagesWithholdings.asWholeDollars()}</span>
     </div>
-    <div class="ss-breakdown-item">
+    <div class="ss-breakdown-item breakdown-accent">
         <span class="ss-breakdown-label">Net (Take Home):</span>
         <span class="ss-breakdown-value">${data.income_combinedTakehomeWages.asWholeDollars()}</span>
     </div>
@@ -298,14 +287,20 @@ function showSavingsRothBreakdown(data) {
   // Build the breakdown content
   let breakdownHtml = `
     <div class="ss-breakdown-item">
-        <span class="ss-breakdown-label">Year:</span>
-        <span class="ss-breakdown-value">${data.year}</span>
+      <span class="ss-breakdown-label">Savings withdrawal:</span>
+      <span class="ss-breakdown-value">${data.savings_Withdrawals.asWholeDollars()}</span>
     </div>
-    <!-- <div class="ss-breakdown-item">
-        <span class="ss-breakdown-label">Age:</span>
-        <span class="ss-breakdown-value">${data.demographics_subjectAge}</span>
+    <div class="ss-breakdown-item">
+        <span class="ss-breakdown-label">Subject Roth withdrawal:</span>
+        <span class="ss-breakdown-value">${data.retirementAcct_subjectRothWithdrawals.asWholeDollars()}</span>
     </div>
-   
+    <div class="ss-breakdown-item">
+        <span class="ss-breakdown-label">Partner Roth withdrawal:</span>
+        <span class="ss-breakdown-value">${data.retirementAcct_partnerRothWithdrawals.asWholeDollars()}</span>
+    </div>
+        <div class="ss-breakdown-item breakdown-accent">
+        <span class="ss-breakdown-label">Subject Roth withdrawal:</span>
+        <span class="ss-breakdown-value">${(data.savings_Withdrawals + data.income_combinedRothTakehome).asWholeDollars()}</span>
     </div>
     `;
 
@@ -325,17 +320,49 @@ function show401kBreakdown(data) {
 
   // Build the breakdown content
   let breakdownHtml = `
-    <div class="ss-breakdown-item">
-        <span class="ss-breakdown-label">Year:</span>
-        <span class="ss-breakdown-value">${data.year}</span>
-    </div>
-    <!-- <div class="ss-breakdown-item">
-        <span class="ss-breakdown-label">Age:</span>
-        <span class="ss-breakdown-value">${data.demographics_subjectAge}</span>
-    </div>
-   
+    <div style="margin: 16px 0; padding: 12px; background: rgba(110, 168, 254, 0.1); border-radius: 8px;">
+        <strong style="color: var(--accent);">Subject:</strong>
+      <div class="ss-breakdown-item">
+        <span class="ss-breakdown-label">401k gross withdrawal:</span>
+        <span class="ss-breakdown-value">${data.income_subject401kGross.asWholeDollars()}</span>
+      </div>
+      <div class="ss-breakdown-item">
+          <span class="ss-breakdown-label">Withholdings:</span>
+          <span class="ss-breakdown-value">${data.income_subject401kWithholdings.asWholeDollars()}</span>
+      </div>
+      <div class="ss-breakdown-item breakdown-accent">
+          <span class="ss-breakdown-label">Net (takehome):</span>
+          <span class="ss-breakdown-value">${data.income_subject401kTakehome.asWholeDollars()}</span>
+      </div>
     </div>
     `;
+
+    if (data.demographics_isMarriedFilingJointly){
+      breakdownHtml += `
+<div style="margin: 16px 0; padding: 12px; background: rgba(110, 168, 254, 0.1); border-radius: 8px;">
+        <strong style="color: var(--accent);">Partner:</strong>
+      <div class="ss-breakdown-item">
+        <span class="ss-breakdown-label">401k gross withdrawal:</span>
+        <span class="ss-breakdown-value">${data.income_partner401kGross.asWholeDollars()}</span>
+      </div>
+      <div class="ss-breakdown-item">
+          <span class="ss-breakdown-label">Withholdings:</span>
+          <span class="ss-breakdown-value">${data.income_partner401kWithholdings.asWholeDollars()}</span>
+      </div>
+      <div class="ss-breakdown-item breakdown-accent">
+          <span class="ss-breakdown-label">Net (takehome):</span>
+          <span class="ss-breakdown-value">${data.income_partner401kTakehome.asWholeDollars()}</span>
+      </div>
+    </div>
+      `;
+    }
+
+  breakdownHtml += `
+      <div class="ss-breakdown-item breakdown-accent">
+          <span class="ss-breakdown-label">Total (takehome):</span>
+          <span class="ss-breakdown-value">${data.income_combined401kTakehome.asWholeDollars()}</span>
+      </div>
+  `;
 
   popup.setContent(breakdownHtml);
   popup.show();
@@ -351,17 +378,38 @@ function showTotalCashBreakdown(data) {
 
   const popup = ensurePopup("totalNet", "Total Cash Breakdown");
 
-  // Build the breakdown content
   let breakdownHtml = `
     <div class="ss-breakdown-item">
         <span class="ss-breakdown-label">Year:</span>
         <span class="ss-breakdown-value">${data.year}</span>
     </div>
-    <!-- <div class="ss-breakdown-item">
-        <span class="ss-breakdown-label">Age:</span>
-        <span class="ss-breakdown-value">${data.demographics_subjectAge}</span>
+    <div class="ss-breakdown-item">
+        <span class="ss-breakdown-label">Combined Salaries:</span>
+        <span class="ss-breakdown-value">${data.income_combinedTakehomeWages.asWholeDollars()}</span>
     </div>
-   
+    <div class="ss-breakdown-item">
+        <span class="ss-breakdown-label">Combined Social Security:</span>
+        <span class="ss-breakdown-value">${data.ss_combinedTakehome.asWholeDollars()}</span>
+    </div>
+    <div class="ss-breakdown-item">
+        <span class="ss-breakdown-label">Combined Pension:</span>
+        <span class="ss-breakdown-value">${data.income_combinedPensionTakehome.asWholeDollars()}</span>
+    </div>
+    <div class="ss-breakdown-item">
+        <span class="ss-breakdown-label">Combined 401(k):</span>
+        <span class="ss-breakdown-value">${data.income_combined401kTakehome.asWholeDollars()}</span>
+    </div>
+    <div class="ss-breakdown-item">
+        <span class="ss-breakdown-label">Savings:</span>
+        <span class="ss-breakdown-value">${data.savings_Withdrawals.asWholeDollars()}</span>
+    </div>
+    <div class="ss-breakdown-item">
+        <span class="ss-breakdown-label">Roth Withdrawals:</span>
+        <span class="ss-breakdown-value">${data.income_combinedRothTakehome.asWholeDollars()}</span>
+    </div>
+    <div class="ss-breakdown-item breakdown-accent">
+        <span class="ss-breakdown-label">Total:</span>
+        <span class="ss-breakdown-value">${data.income_total_net.asWholeDollars()}</span>
     </div>
     `;
 

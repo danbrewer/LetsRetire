@@ -357,7 +357,8 @@ class ReportData extends BaseReports {
 
   get income_combinedPayrollDeductions() {
     return (
-      this.income_subjectPayrollDeductions + this.income_partnerPayrollDeductions
+      this.income_subjectPayrollDeductions +
+      this.income_partnerPayrollDeductions
     );
   }
 
@@ -411,6 +412,13 @@ class ReportData extends BaseReports {
     );
   }
 
+  get income_combinedRothTakehome() {
+    return (
+      this.retirementAcct_subjectRothWithdrawals +
+      this.retirementAcct_partnerRothWithdrawals
+    );
+  }
+
   get balances_combinedRoth() {
     return (
       this.retirementAcct_subjectRothBalance +
@@ -445,7 +453,9 @@ class ReportData extends BaseReports {
       this.income_partnerPensionTakehome +
       this.ss_subjectSsTakehome +
       this.ss_partnerSsTakehome +
-      this.savings_Withdrawals
+      this.savings_Withdrawals +
+      this.retirementAcct_partnerRothWithdrawals +
+      this.retirementAcct_subjectRothWithdrawals
     ).asCurrency();
   }
 

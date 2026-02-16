@@ -240,9 +240,9 @@ function buildSummaryRow(calculation, index) {
       index,
       action: "show401kBreakdown",
     }),
-    money("income", r.savings_Withdrawals, {
+    money("income", r.savings_Withdrawals + r.income_combinedRothTakehome, {
       index,
-      action: "showTotalCashBreakdown",
+      action: "showSavingsRothBreakdown",
     }),
 
     money("income", r.income_total_net, {
