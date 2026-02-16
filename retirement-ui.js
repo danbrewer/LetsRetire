@@ -571,7 +571,7 @@ function loadExample() {
 
     currentYear: new Date().getFullYear(),
     workingYearsSpending: 100000,
-    retirementYearsSpending: 100000,
+    retirementYearsSpending: 120000,
     inflation: 2.0, //2.5,
     spendingDecline: 0.0,
 

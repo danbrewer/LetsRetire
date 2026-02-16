@@ -216,8 +216,10 @@ function money(className, moneyObj, options = {}) {
 function buildSummaryRow(calculation, index) {
   const r = calculation.reportData;
 
-  const age = r.demographics_partnerAge > 0 ?
-  `${r.demographics_subjectAge} / ${r.demographics_partnerAge}` : r.demographics_subjectAge;
+  const age =
+    r.demographics_partnerAge > 0
+      ? `${r.demographics_subjectAge} / ${r.demographics_partnerAge}`
+      : r.demographics_subjectAge;
 
   return tr(
     textTd("neutral", r.year),
@@ -358,14 +360,18 @@ function generateOutputAndSummary(inputs, calculations) {
 
   const lastCalculation = calculations.getLastCalculation();
 
-  const fundedTo =
-    lastCalculation.reportData.balances_total > 0
-      ? inputs.subjectLifeSpan
-      : allCalcs.reduce(
-          (lastGoodAge, calc) =>
-            calc.reportData.balances_total > 0 ? calc.age : lastGoodAge,
-          inputs.subjectAge
-        );
+  let fundedTo = inputs.subjectAge;
+
+  // debugger;
+  for (const calc of allCalcs) {
+    const totalNet = calc.reportData.income_total_net;
+    const ask = calc.reportData.ask;
+
+    if (totalNet < ask) {
+      break; // stop immediately
+    }
+    fundedTo = calc.age;
+  }
 
   const kpiAge = divById("kpiAge");
 
