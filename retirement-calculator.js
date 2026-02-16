@@ -113,7 +113,7 @@ function calc(calculations, UI) {
   // Retirement years
   for (
     let yearIndex = inputs.totalWorkingYears;
-    yearIndex < inputs.totalLivingYears;
+    yearIndex <= inputs.totalLivingYears;
     yearIndex++
   ) {
     const retirementYearInputs = initializeInputsForRetirementYear(

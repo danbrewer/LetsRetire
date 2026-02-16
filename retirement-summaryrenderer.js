@@ -361,13 +361,14 @@ function generateOutputAndSummary(inputs, calculations) {
   const lastCalculation = calculations.getLastCalculation();
 
   let fundedTo = inputs.subjectAge;
+  let fullyFunded = true;
 
-  // debugger;
   for (const calc of allCalcs) {
     const totalNet = calc.reportData.income_total_net;
     const ask = calc.reportData.ask;
 
     if (totalNet < ask) {
+      fullyFunded = false;
       break; // stop immediately
     }
     fundedTo = calc.age;
@@ -382,10 +383,9 @@ function generateOutputAndSummary(inputs, calculations) {
       el(
         "span",
         {
-          className:
-            "pill " + (fundedTo >= inputs.subjectLifeSpan ? "ok" : "alert"),
+          className: "pill " + (fullyFunded ? "ok" : "alert"),
         },
-        fundedTo >= inputs.subjectLifeSpan ? "Fully funded" : "Shortfall"
+        fullyFunded ? "Fully funded" : "Shortfall"
       )
     );
   }
