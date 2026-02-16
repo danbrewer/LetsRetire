@@ -271,15 +271,16 @@ function buildSummaryRow(calculation, index) {
     money("neutral", r.savings_Balance, {
       index,
       action: "showSavingsBalanceBreakdown",
-      modifier: "savings-balance-link",
     }),
 
-    money("neutral", r.balances_combined401k),
+    money("neutral", r.balances_combined401k, {
+      index,
+      action: "show401kBalanceBreakdown",
+    }),
     money("neutral", r.balances_combinedRoth),
     money("neutral", r.balances_total, {
       index,
       action: "showAccountBalances",
-      modifier: "savings-balance-link",
     })
   );
 }

@@ -577,10 +577,10 @@ function loadExample() {
 
     startingSavingsBalance: 530000,
     savingsReturnRate: 3.0,
-    subject401kStartingBalance: 520000,
+    subject401kStartingBalance: 500000,
     subject401kReturnRate: 3.0,
-    partner401kBalance: 125000,
-    partner401kReturnRate: 0.0,
+    partner401kBalance: 115000,
+    partner401kReturnRate: 3.0,
     subjectRothBalance: 1000,
     subjectRothReturnRate: 3.0,
     partnerRothBalance: 1000,
