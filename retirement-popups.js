@@ -27,6 +27,7 @@ export const popupActions = {
   showSsGrossBreakdown,
   showAccountBalances,
   showSavingsBalanceBreakdown,
+  show401kBalanceBreakdown,
 };
 
 // SS Breakdown Popup Functions
@@ -474,6 +475,84 @@ function showSavingsBalanceBreakdown(data) {
         <span class="ss-breakdown-value">${data.savings_Balance.asWholeDollars()}</span>
     </div>
     `;
+
+  popup.setContent(breakdownHtml);
+  popup.show();
+}
+
+/**
+ * @param {ReportData} data
+ */
+function show401kBalanceBreakdown(data) {
+  if (!data) {
+    return; // No data to show
+  }
+
+  const popup = ensurePopup("401kBalance", "401k Balance Breakdown");
+
+  const total401kBalance = data.retirementAcct_subject401kBalance + data.retirementAcct_partner401kBalance;
+
+  // Build the breakdown content
+  let breakdownHtml = `
+    <div style="margin: 16px 0; padding: 12px; background: rgba(110, 168, 254, 0.1); border-radius: 8px;">
+      <strong style="color: var(--accent);">Subject:</strong>
+      <div class="ss-breakdown-item">
+        <span class="ss-breakdown-label">Opening balance</span>
+        <span class="ss-breakdown-value">${data.retirementAcct_subject401kOpenBalance.asWholeDollars()}</span>
+      </div>
+      <div class="ss-breakdown-item">
+          <span class="ss-breakdown-label">Withdrawals:</span>
+          <span class="ss-breakdown-value">${data.retirementAcct_subject401kWithdrawals.asWholeDollars()}</span>
+      </div>
+      <div class="ss-breakdown-item">
+          <span class="ss-breakdown-label">Deposits:</span>
+          <span class="ss-breakdown-value">${data.income_subject401kContribution.asWholeDollars()}</span>
+      </div>
+      <div class="ss-breakdown-item">
+          <span class="ss-breakdown-label">Interest earned:</span>
+          <span class="ss-breakdown-value">${data.retirementAcct_subject401kInterest.asWholeDollars()}</span>
+      </div>
+      <div class="ss-breakdown-item">
+          <span class="ss-breakdown-label">Closing balance:</span>
+          <span class="ss-breakdown-value">${data.retirementAcct_subject401kBalance.asWholeDollars()}</span>
+      </div>
+    </div>
+    `;
+
+  if (data.demographics_isMarriedFilingJointly) {
+    breakdownHtml += `
+    <div style="margin: 16px 0; padding: 12px; background: rgba(110, 168, 254, 0.1); border-radius: 8px;">
+      <strong style="color: var(--accent);">Partner:</strong>
+      <div class="ss-breakdown-item">
+        <span class="ss-breakdown-label">Opening balance</span>
+        <span class="ss-breakdown-value">${data.retirementAcct_partner401kOpenBalance.asWholeDollars()}</span>
+      </div>
+      <div class="ss-breakdown-item">
+          <span class="ss-breakdown-label">Withdrawals:</span>
+          <span class="ss-breakdown-value">${data.retirementAcct_partner401kWithdrawals.asWholeDollars()}</span>
+      </div>
+      <div class="ss-breakdown-item">
+          <span class="ss-breakdown-label">Deposits:</span> 
+          <span class="ss-breakdown-value">${data.income_partner401kContribution.asWholeDollars()}</span>
+      </div>
+      <div class="ss-breakdown-item">
+          <span class="ss-breakdown-label">Interest earned:</span>
+          <span class="ss-breakdown-value">${data.retirementAcct_partner401kInterest.asWholeDollars()}</span>
+      </div>
+      <div class="ss-breakdown-item">
+          <span class="ss-breakdown-label">Closing balance:</span>
+          <span class="ss-breakdown-value">${data.retirementAcct_partner401kBalance.asWholeDollars()}</span>
+      </div>
+    </div>
+      `;
+  }
+
+  breakdownHtml += `
+    <div class="ss-breakdown-item breakdown-accent">
+        <span class="ss-breakdown-label">Total:</span>
+        <span class="ss-breakdown-value">${total401kBalance.asWholeDollars()}</span>
+    </div>
+  `;
 
   popup.setContent(breakdownHtml);
   popup.show();
