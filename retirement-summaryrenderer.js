@@ -3,7 +3,7 @@
 ///////////////////////////////////////////////////////////////
 
 import { Calculation, Calculations } from "./cCalculation.js";
-import { drawChart } from "./chart.js";
+import { drawChart } from "./retirement-ui-chart.js";
 import { Inputs } from "./cInputs.js";
 import { popupActions } from "./retirement-popups.js";
 
