@@ -216,9 +216,12 @@ function money(className, moneyObj, options = {}) {
 function buildSummaryRow(calculation, index) {
   const r = calculation.reportData;
 
+  const age = r.demographics_partnerAge > 0 ?
+  `${r.demographics_subjectAge} / ${r.demographics_partnerAge}` : r.demographics_subjectAge;
+
   return tr(
     textTd("neutral", r.year),
-    textTd("neutral", r.demographics_subjectAge),
+    textTd("neutral", age),
 
     money("outgoing", r.ask),
 
