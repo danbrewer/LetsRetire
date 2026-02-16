@@ -61,6 +61,7 @@ class FiscalData {
    * @param {number} newYearIndex
    */
   updateForNextYear(newSpend, newYearIndex) {
+    debugger;
     this.spend = newSpend;
     this.yearIndex = newYearIndex;
     this.taxYear = this.taxYear + (newYearIndex - this.yearIndex);

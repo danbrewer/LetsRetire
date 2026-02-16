@@ -20,6 +20,7 @@ import { compoundedRate } from "./utils.js";
  *
  * @property {number} [inflationRate]
  * @property {number} [spendingToday]
+ * @property {number} [spendingRetirement]
  * @property {number} [spendingDecline]
  *
  * @property {number} [partnerRetireAge]
@@ -114,6 +115,7 @@ class Inputs {
       // Inflation + spending
       inflationRate = 0,
       spendingToday = 0,
+      spendingRetirement = 0,
       spendingDecline = 0,
 
       // Partner info
@@ -225,6 +227,9 @@ class Inputs {
 
     /** @type {number} */
     this.spendingToday = spendingToday;
+
+    /** @type {number} */
+    this.spendingRetirement = spendingRetirement;
 
     /** @type {number} */
     this.spendingDecline = spendingDecline;
@@ -424,8 +429,8 @@ class Inputs {
     /** @type {number} */
     this.totalLivingYears = 0;
 
-    /** @type {number} */
-    this.spendAtRetire = 0;
+    // /** @type {number} */
+    // this.spendingRetirement = 0;
 
     /** @type {boolean} */
     this.hasPartner = false;
@@ -453,9 +458,9 @@ class Inputs {
 
     this.totalLivingYears = this.subjectLifeSpan - this.initialAgeSubject;
 
-    this.spendAtRetire =
-      this.spendingToday *
-      compoundedRate(this.inflationRate, this.totalWorkingYears);
+    // this.spendAtRetire =
+    //   this.spendingToday *
+    //   compoundedRate(this.inflationRate, this.totalWorkingYears);
   }
 
   // Utility methods for input validation and analysis
@@ -579,17 +584,30 @@ class Inputs {
   }
 
   get spend() {
-    let result = this.spendingToday
-      .adjustedForInflation(this.inflationRate, this.yearIndex)
-      .asCurrency();
-
     if (this.#isRetired) {
+      let result = this.spendingRetirement
+        .adjustedForInflation(this.inflationRate, this.yearIndex)
+        .asCurrency();
       result = result.adjustedForInflation(
         -this.spendingDecline,
         this.#retirementYearIndex
       );
       result += this.retirementYearExtraSpend;
+
+      return result;
     }
+
+    let result = this.spendingToday
+      .adjustedForInflation(this.inflationRate, this.yearIndex)
+      .asCurrency();
+
+    // if (this.#isRetired) {
+    //   result = result.adjustedForInflation(
+    //     -this.spendingDecline,
+    //     this.#retirementYearIndex
+    //   );
+    //   result += this.retirementYearExtraSpend;
+    // }
 
     return result;
   }
@@ -712,6 +730,7 @@ class Inputs {
 
       inflationRate: this.inflationRate,
       spendingToday: this.spendingToday,
+      spendingRetirement: this.spendingRetirement,
       spendingDecline: this.spendingDecline,
 
       partnerRetireAge: this.partnerRetireAge,

@@ -352,6 +352,7 @@ function parseInputParameters() {
     // Spending
     inflationRate: inflationRate,
     spendingToday: workingYearsSpending,
+    spendingRetirement: retirementSpending,
     spendingDecline: spendingDecline,
 
     // Partner information
