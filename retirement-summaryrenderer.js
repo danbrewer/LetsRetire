@@ -133,8 +133,6 @@ function el(tag, props = {}, ...children) {
   return node;
 }
 
-
-
 /**
  * td helper
  * @param {string} className
@@ -269,19 +267,19 @@ function buildTableHead() {
           },
 
           ondragenter: /** @param {DragEvent} e */ (e) => {
-             const target = e.currentTarget;
+            const target = e.currentTarget;
 
-             if (!(target instanceof HTMLElement)) return;
+            if (!(target instanceof HTMLElement)) return;
 
-             target.classList.add("drag-over");
+            target.classList.add("drag-over");
           },
 
           ondragleave: /** @param {DragEvent} e */ (e) => {
-             const target = e.currentTarget;
+            const target = e.currentTarget;
 
-             if (!(target instanceof HTMLElement)) return;
+            if (!(target instanceof HTMLElement)) return;
 
-             target.classList.remove("drag-over");
+            target.classList.remove("drag-over");
           },
 
           ondragover: /** @param {DragEvent} e */ (e) => {
@@ -343,8 +341,6 @@ function reorderGroups(draggedId, targetId) {
   buildColumnMenu();
 }
 
-
-
 function buildColumnMenu() {
   const container = document.getElementById("columnVisibilityContainer");
 
@@ -389,7 +385,6 @@ function saveColumnLayout() {
   );
 }
 
-
 function loadColumnLayout() {
   const data = localStorage.getItem("columnLayout");
   if (!data) return;
@@ -405,7 +400,6 @@ function loadColumnLayout() {
     group.order = s.order;
   }
 }
-
 
 /** @type {Inputs | undefined} */
 let currentInputs;
@@ -432,12 +426,43 @@ function regenerateTable() {
  * @property {string} label
  * @property {string} className
  * @property {boolean} visible
- * @property {number} order 
+ * @property {number} order
  * @property {ColumnDefinition[]} columns
  */
 
 /** @type {ColumnGroup[]} */
 const columnGroups = [
+  {
+    id: "taxes",
+    label: "Taxes",
+    className: "taxes-header",
+    visible: true,
+    order: 4,
+    columns: [
+      {
+        label: "Withholdings",
+        render: (calc, _) =>
+          money("outgoing", calc.reportData.income_total_withholdings),
+      },
+      {
+        label: "Taxes Due",
+        render: (calc, index) =>
+          money("outgoing", calc.reportData.taxes_federalIncomeTaxOwed, {
+            index,
+            action: "showTaxesBreakdown",
+          }),
+      },
+      {
+        label: "Shortfall",
+        render: (calc, _) =>
+          money("outgoing", calc.reportData.taxes_underPayment),
+      },
+      {
+        label: "Refund",
+        render: (calc, _) => money("income", calc.reportData.taxes_overPayment),
+      },
+    ],
+  },
   {
     id: "spend",
     label: "Annual Spend",
@@ -572,7 +597,7 @@ const columnGroups = [
     label: "Account Balances",
     className: "balance-header",
     visible: true,
-    order: 50,
+    order: 40,
     columns: [
       {
         label: "Savings Bal",

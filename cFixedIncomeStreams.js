@@ -205,6 +205,14 @@ class FixedIncomeStreams {
     return result.asCurrency();
   }
 
+  get nonTaxableIncome(){
+    const result =
+      this.taxFreeIncomeAdjustment +
+      this.#careerStreams.combinedWagesAndCompensationNonTaxable +
+      this.#retirementStreams.combinedWagesAndCompensationNonTaxable;
+    return result.asCurrency();
+  }
+
   get combinedSsGross() {
     const result = this.subjectSsGross + this.partnerSsGross;
     return result.asCurrency();

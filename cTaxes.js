@@ -21,6 +21,7 @@ class Taxes {
    * @param {number} adjustedGrossIncome - Gross income after adjustments (if any)
    * @param {number} standardDeduction - Standard deduction amount based on filing status and year
    * @param {number}  taxableIncome - Income subject to federal taxation after deductions
+   * @param {number} nonTaxableIncome - Portion of income that is not subject to federal tax
    * @param {number} federalTaxesOwed - Federal tax liability based on taxable income
    * @param {number} otherTaxes - Additional taxes (state, local, FICA, etc.)
    * @param {string} [description="Taxes"] - Descriptive label for this tax calculation
@@ -30,11 +31,13 @@ class Taxes {
     adjustedGrossIncome,
     standardDeduction,
     taxableIncome,
+    nonTaxableIncome,
     federalTaxesOwed,
     otherTaxes,
     description = "Taxes"
   ) {
     this._description = description;
+    this.nonTaxableIncome = nonTaxableIncome;
     this.totalTaxableIncome = totalTaxableIncome;
     this.adjustedGrossIncome = adjustedGrossIncome; // Placeholder for future adjustments
     this.standardDeduction = standardDeduction;
@@ -139,12 +142,14 @@ class Taxes {
   /**
    * @param {Number} grossIncome
    * @param {Number} adjustedGrossIncome
+   * @param {Number} nonTaxableIncome
    * @param {FiscalData} fiscalData
    * @param {Demographics} demographics
    */
   static CreateFromTaxableIncome(
     grossIncome,
     adjustedGrossIncome,
+    nonTaxableIncome,
     fiscalData,
     demographics
   ) {
@@ -166,6 +171,7 @@ class Taxes {
       adjustedGrossIncome,
       standardDeduction,
       taxableIncome,
+      nonTaxableIncome,
       federalIncomeTaxOwed, // federalTaxesOwed
       0, // otherTaxes - for future development
       "Taxes"

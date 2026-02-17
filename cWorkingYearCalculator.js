@@ -643,6 +643,7 @@ class WorkingYearCalculator {
     const actualTaxes = Taxes.CreateFromTaxableIncome(
       this.#fixedIncomeStreams.grossTaxableIncome,
       this.#fixedIncomeStreams.taxableIncome,
+      this.#fixedIncomeStreams.nonTaxableIncome,
       this.#fiscalData,
       this.#demographics
     );
@@ -660,7 +661,8 @@ class WorkingYearCalculator {
       actualTaxes.standardDeduction.asCurrency();
     this.#reportingYear.ReportData.taxes_taxableIncome =
       actualTaxes.taxableIncome.asCurrency();
-    actualTaxes.totalTaxableIncome;
+    this.#reportingYear.ReportData.taxes_nonTaxableIncome = 
+    actualTaxes.nonTaxableIncome.asCurrency();
 
     const withholdings = Math.max(
       this.#accountYear.getAnnualRevenues(

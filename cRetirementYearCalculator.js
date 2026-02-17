@@ -44,7 +44,7 @@ class RetirementYearCalculator {
   /** @type {SocialSecurityBreakdown} */
   #ssBreakdown = new SocialSecurityBreakdown(0, 0, 0, false);
   /** @type {Taxes} */
-  #taxes = new Taxes(0, 0, 0, 0, 0, 0);
+  #taxes = new Taxes(0, 0, 0, 0, 0, 0, 0);
   /** @type {ReportingYear} */
   #reportingYear;
   // /** @type {IncomeBreakdown} */
@@ -426,6 +426,7 @@ class RetirementYearCalculator {
     this.#taxes = Taxes.CreateFromTaxableIncome(
       grossIncome,
       taxableIncome,
+      this.#fixedIncomeStreams.nonTaxableIncome,
       this.#fiscalData,
       this.#demographics
     );
@@ -443,7 +444,8 @@ class RetirementYearCalculator {
       this.#taxes.standardDeduction.asCurrency();
     this.#reportingYear.ReportData.taxes_taxableIncome =
       this.#taxes.taxableIncome.asCurrency();
-    this.#taxes.totalTaxableIncome;
+    this.#reportingYear.ReportData.taxes_nonTaxableIncome =
+      this.#ssBreakdown.nonTaxableAmount.asCurrency();
 
     const withholdings = Math.max(
       this.#accountYear.getAnnualRevenues(

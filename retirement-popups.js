@@ -28,6 +28,7 @@ export const popupActions = {
   showAccountBalances,
   showSavingsBalanceBreakdown,
   show401kBalanceBreakdown,
+  showTaxesBreakdown,
 };
 
 // SS Breakdown Popup Functions
@@ -241,6 +242,136 @@ function showSsGrossBreakdown(data) {
   //   content.innerHTML = breakdownHtml;
   // if (popup)
   //   popup.classList.add("show");
+}
+
+/**
+ * @param {ReportData} data
+ */
+function showTaxesBreakdown(data) {
+  if (!data) {
+    return; // No data to show
+  }
+
+  const popup = ensurePopup("taxes", "Taxes Breakdown");
+
+  // Build the breakdown content
+  let breakdownHtml = `
+    <div class="ss-breakdown-item">
+        <span class="ss-breakdown-label">Year:</span>
+        <span class="ss-breakdown-value">${data.year}</span>
+    </div>
+    <div class="ss-breakdown-item">
+      <span class="ss-breakdown-label">Filing Status:</span>
+      <span class="ss-breakdown-value">${data.demographics_isMarriedFilingJointly ? "Married Filing Jointly" : "Single"}</span>
+    </div>
+
+    <div class="ss-breakdown-item breakdown-accent">
+        <span class="ss-breakdown-label">Taxable Gross Income:</span>
+        <span class="ss-breakdown-value">${data.income_total_gross.asWholeDollars()}</span>
+    </div>
+    <div class="ss-breakdown-item">
+        <span class="ss-breakdown-label">Nontaxable income:</span>
+        <span class="ss-breakdown-value">${data.taxes_nonTaxableIncome.asWholeDollars()}</span>
+    </div>
+    <div class="ss-breakdown-item">
+        <span class="ss-breakdown-label">Deductions:</span>
+        <span class="ss-breakdown-value">${data.taxes_standardDeduction.asWholeDollars()}</span>
+    </div>
+     <div class="ss-breakdown-item">
+        <span class="ss-breakdown-label">Taxable income:</span>
+        <span class="ss-breakdown-value">${data.taxes_taxableIncome.asWholeDollars()}</span>
+    </div>
+    <div class="ss-breakdown-item">
+        <span class="ss-breakdown-label">Withholdings:</span>
+        <span class="ss-breakdown-value">${data.income_total_withholdings.asWholeDollars()}</span>
+    </div>
+    <div class="ss-breakdown-item breakdown-accent">
+        <span class="ss-breakdown-label">Federal Income Tax:</span>
+        <span class="ss-breakdown-value">${data.taxes_federalIncomeTaxOwed.asWholeDollars()}</span>
+    </div>
+    `;
+
+  if (data.taxes_underPayment > 0) {
+    breakdownHtml += `
+      <div class="ss-breakdown-item">
+          <span class="ss-breakdown-label">Taxes due:</span>
+          <span class="ss-breakdown-value">${data.taxes_underPayment.asWholeDollars()}</span>
+      </div>
+    `;
+  }
+
+  if (data.taxes_overPayment > 0) {
+    breakdownHtml += `
+      <div class="ss-breakdown-item">
+          <span class="ss-breakdown-label">Refund:</span>
+          <span class="ss-breakdown-value">${data.taxes_overPayment.asWholeDollars()}</span>
+      </div>
+    `;
+  }
+
+  breakdownHtml += `
+    <div class="ss-breakdown-item breakdown-accent">
+        <span class="ss-breakdown-label">Effective Tax Rate:</span>
+        <span class="ss-breakdown-value">${data.taxes_effectiveTaxRate}%</span>
+    </div>
+    `;
+
+
+  popup.setContent(breakdownHtml);
+  popup.show();
+}
+
+/**
+ * @param {ReportData} data
+ */
+function showWithholdingsBreakdown(data) {
+  if (!data) {
+    return; // No data to show
+  }
+
+  const popup = ensurePopup("taxes", "Taxes Breakdown");
+
+  // Build the breakdown content
+  let breakdownHtml = `
+    <div class="ss-breakdown-item">
+        <span class="ss-breakdown-label">Year:</span>
+        <span class="ss-breakdown-value">${data.year}</span>
+    </div>
+    <div class="ss-breakdown-item">
+      <span class="ss-breakdown-label">Filing Status:</span>
+      <span class="ss-breakdown-value">${data.demographics_isMarriedFilingJointly ? "Married Filing Jointly" : "Single"}</span>
+    </div>
+    <div class="ss-breakdown-item">
+        <span class="ss-breakdown-label">Withholdings:</span>
+        <span class="ss-breakdown-value">${data.income_total_withholdings.asWholeDollars()}</span>
+    </div>
+    <div class="ss-breakdown-item">
+        <span class="ss-breakdown-label">Federal Income Tax:</span>
+        <span class="ss-breakdown-value">${data.taxes_federalIncomeTaxOwed.asWholeDollars()}</span>
+    </div>
+    `;
+
+  if (data.taxes_underPayment > 0) {
+    breakdownHtml += `
+      <div class="ss-breakdown-item">
+          <span class="ss-breakdown-label">Taxes due:</span>
+          <span class="ss-breakdown-value">${data.taxes_underPayment.asWholeDollars()}</span>
+      </div>
+    `;
+  }
+
+  if (data.taxes_overPayment > 0) {
+    breakdownHtml += `
+      <div class="ss-breakdown-item">
+          <span class="ss-breakdown-label">Refund:</span>
+          <span class="ss-breakdown-value">${data.taxes_overPayment.asWholeDollars()}</span>
+      </div>
+    `;
+  }
+
+
+  popup.setContent(breakdownHtml);
+  popup.show();
 }
 
 /**
@@ -490,7 +621,9 @@ function show401kBalanceBreakdown(data) {
 
   const popup = ensurePopup("401kBalance", "401k Balance Breakdown");
 
-  const total401kBalance = data.retirementAcct_subject401kBalance + data.retirementAcct_partner401kBalance;
+  const total401kBalance =
+    data.retirementAcct_subject401kBalance +
+    data.retirementAcct_partner401kBalance;
 
   // Build the breakdown content
   let breakdownHtml = `

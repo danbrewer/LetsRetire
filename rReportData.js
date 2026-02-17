@@ -205,6 +205,7 @@ class ReportData extends BaseReports {
     this.taxes_adjustedGrossIncome = 0;
     this.taxes_standardDeduction = 0;
     this.taxes_taxableIncome = 0;
+    this.taxes_nonTaxableIncome = 0;
 
     this.taxes_totalWithholdings = 0;
     this.taxes_overPayment = 0;
@@ -481,9 +482,19 @@ class ReportData extends BaseReports {
       this.income_subjectEstimatedWithholdings +
       this.income_partnerEstimatedWithholdings +
       this.income_subject401kWithholdings +
-      this.income_partner401kWithholdings;
+      this.income_partner401kWithholdings +
+      this.income_subjectPensionWithholdings +
+      this.income_partnerPensionWithholdings +
+      this.ss_subjectSsWithholdings +
+      this.ss_partnerSsWithholdings +
+      this.income_additionalWithholdings;
 
     return result.asCurrency();
+  }
+
+  get taxes_effectiveTaxRate(){
+    if(this.income_total_gross === 0) return 0;
+    return ((this.taxes_federalIncomeTaxOwed) / this.income_total_gross * 100).toFixed(1);
   }
 }
 export { ReportData };
