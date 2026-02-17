@@ -53,6 +53,13 @@ function divById(id) {
  * @property {(ev: Event) => void} [onchange]
  * @property {(ev: Event) => void} [oninput]
  * @property {(ev: Event) => void} [onkeydown]
+ * @property {string} [type]
+ * @property {boolean} [checked]
+ * @property {string} [value]
+ * @property {string} [id]
+ * @property {string} [name]
+ * @property {string | number} [colspan]
+ * @property {string | number} [rowspan]
  */
 
 /**
@@ -75,17 +82,32 @@ function el(tag, props = {}, ...children) {
     if (key === "className") {
       node.className = /** @type {string} */ (value);
     } else if (key === "dataset") {
-      // dataset values must be strings
-      Object.assign(
-        node.dataset,
-        /** @type {Record<string, string>} */ (value)
-      );
+      Object.assign(node.dataset, /** @type {Record<string,string>} */ (value));
     } else if (key.startsWith("on") && typeof value === "function") {
-      // onclick -> "click"
       node.addEventListener(
         key.substring(2),
         /** @type {(ev: Event) => void} */ (value)
       );
+    } else if (key === "checked") {
+      if (node instanceof HTMLInputElement) {
+        node.checked = Boolean(value);
+      }
+    } else if (key === "value") {
+      if (
+        node instanceof HTMLInputElement ||
+        node instanceof HTMLSelectElement ||
+        node instanceof HTMLTextAreaElement
+      ) {
+        node.value = String(value);
+      }
+    } else if (key === "colspan") {
+      if (node instanceof HTMLTableCellElement) {
+        node.colSpan = Number(value);
+      }
+    } else if (key === "rowspan") {
+      if (node instanceof HTMLTableCellElement) {
+        node.rowSpan = Number(value);
+      }
     } else {
       node.setAttribute(key, String(value));
     }
@@ -101,6 +123,8 @@ function el(tag, props = {}, ...children) {
 
   return node;
 }
+
+
 
 /**
  * td helper
@@ -251,7 +275,7 @@ function buildColumnMenu() {
         el("input", {
           type: "checkbox",
 
-          checked: group.visible ? "checked" : null,
+          checked: group.visible, // ? "checked" : null,
 
           onchange: () => {
             group.visible = !group.visible;
@@ -281,7 +305,9 @@ function saveColumnLayout() {
 }
 
 function loadColumnLayout() {
-  const saved = JSON.parse(localStorage.getItem("columnLayout"));
+  const data = localStorage.getItem("columnLayout");
+  if (!data) return;
+  const saved = JSON.parse(data);
 
   if (!saved) return;
 
@@ -292,21 +318,36 @@ function loadColumnLayout() {
   }
 }
 
+/** @type {Inputs | undefined} */
 let currentInputs;
+/** @type {Calculations | undefined} */
 let currentCalculations;
 
 function regenerateTable() {
   generateOutputAndSummary(currentInputs, currentCalculations);
 }
 
-
-
 ///////////////////////////////////////////////////////////////
 // COLUMN GROUP DEFINITIONS
 ///////////////////////////////////////////////////////////////
 
-const columnGroups = [
+/**
+ * @typedef {object} ColumnDefinition
+ * @property {string} label
+ * @property {(calc: Calculation, index: number) => HTMLTableCellElement} render
+ */
 
+/**
+ * @typedef {object} ColumnGroup
+ * @property {string} id
+ * @property {string} label
+ * @property {string} className
+ * @property {boolean} visible
+ * @property {ColumnDefinition[]} columns
+ */
+
+/** @type {ColumnGroup[]} */
+const columnGroups = [
   {
     id: "spend",
     label: "Annual Spend",
@@ -315,10 +356,9 @@ const columnGroups = [
     columns: [
       {
         label: "Annual Spend",
-        render: (calc, index) =>
-          money("outgoing", calc.reportData.ask)
-      }
-    ]
+        render: (calc, _) => money("outgoing", calc.reportData.ask),
+      },
+    ],
   },
 
   {
@@ -327,56 +367,62 @@ const columnGroups = [
     className: "income-header",
     visible: true,
     columns: [
-
       {
         label: "Salary (Net)",
         render: (calc, index) =>
-          money("income",
-            calc.reportData.income_combinedTakehomeWages,
-            { index, action: "showSalaryBreakdown" })
+          money("income", calc.reportData.income_combinedTakehomeWages, {
+            index,
+            action: "showSalaryBreakdown",
+          }),
       },
 
       {
         label: "SS (Net)",
         render: (calc, index) =>
-          money("income",
-            calc.reportData.ss_combinedTakehome,
-            { index, action: "showSsBreakdown" })
+          money("income", calc.reportData.ss_combinedTakehome, {
+            index,
+            action: "showSsBreakdown",
+          }),
       },
 
       {
         label: "Pension (Net)",
         render: (calc, index) =>
-          money("income",
-            calc.reportData.income_combinedPensionTakehome,
-            { index, action: "showPensionBreakdown" })
+          money("income", calc.reportData.income_combinedPensionTakehome, {
+            index,
+            action: "showPensionBreakdown",
+          }),
       },
 
       {
         label: "401k (Net)",
         render: (calc, index) =>
-          money("income",
-            calc.reportData.income_combined401kTakehome,
-            { index, action: "show401kBreakdown" })
+          money("income", calc.reportData.income_combined401kTakehome, {
+            index,
+            action: "show401kBreakdown",
+          }),
       },
 
       {
         label: "Savings/Roth",
         render: (calc, index) =>
-          money("income",
+          money(
+            "income",
             calc.reportData.savings_Withdrawals +
-            calc.reportData.income_combinedRothTakehome,
-            { index, action: "showSavingsRothBreakdown" })
+              calc.reportData.income_combinedRothTakehome,
+            { index, action: "showSavingsRothBreakdown" }
+          ),
       },
 
       {
         label: "Total Net",
         render: (calc, index) =>
-          money("income",
-            calc.reportData.income_total_net,
-            { index, action: "showTotalCashBreakdown" })
-      }
-    ]
+          money("income", calc.reportData.income_total_net, {
+            index,
+            action: "showTotalCashBreakdown",
+          }),
+      },
+    ],
   },
 
   {
@@ -385,51 +431,47 @@ const columnGroups = [
     className: "gross-income-header",
     visible: true,
     columns: [
-
       {
         label: "Salary",
         render: (calc) =>
-          money("income",
-            calc.reportData.income_combinedWagesGross)
+          money("income", calc.reportData.income_combinedWagesGross),
       },
 
       {
         label: "Taxable Interest",
         render: (calc) =>
-          money("income",
-            calc.reportData.income_savingsInterest)
+          money("income", calc.reportData.income_savingsInterest),
       },
 
       {
         label: "SS Gross",
         render: (calc, index) =>
-          money("income",
-            calc.reportData.ss_combinedGross,
-            { index, action: "showSsGrossBreakdown" })
+          money("income", calc.reportData.ss_combinedGross, {
+            index,
+            action: "showSsGrossBreakdown",
+          }),
       },
 
       {
         label: "Pension Gross",
         render: (calc, index) =>
-          money("income",
-            calc.reportData.income_combinedPensionGross,
-            { index, action: "showPensionGrossBreakdown" })
+          money("income", calc.reportData.income_combinedPensionGross, {
+            index,
+            action: "showPensionGrossBreakdown",
+          }),
       },
 
       {
         label: "401k Gross",
         render: (calc) =>
-          money("income",
-            calc.reportData.income_combined401kGross)
+          money("income", calc.reportData.income_combined401kGross),
       },
 
       {
         label: "Total Gross",
-        render: (calc) =>
-          money("income",
-            calc.reportData.income_total_gross)
-      }
-    ]
+        render: (calc) => money("income", calc.reportData.income_total_gross),
+      },
+    ],
   },
 
   {
@@ -438,40 +480,40 @@ const columnGroups = [
     className: "balance-header",
     visible: true,
     columns: [
-
       {
         label: "Savings Bal",
         render: (calc, index) =>
-          money("neutral",
-            calc.reportData.savings_Balance,
-            { index, action: "showSavingsBalanceBreakdown" })
+          money("neutral", calc.reportData.savings_Balance, {
+            index,
+            action: "showSavingsBalanceBreakdown",
+          }),
       },
 
       {
         label: "401k Bal",
         render: (calc, index) =>
-          money("neutral",
-            calc.reportData.balances_combined401k,
-            { index, action: "show401kBalanceBreakdown" })
+          money("neutral", calc.reportData.balances_combined401k, {
+            index,
+            action: "show401kBalanceBreakdown",
+          }),
       },
 
       {
         label: "Roth Bal",
         render: (calc) =>
-          money("neutral",
-            calc.reportData.balances_combinedRoth)
+          money("neutral", calc.reportData.balances_combinedRoth),
       },
 
       {
         label: "Total Bal",
         render: (calc, index) =>
-          money("neutral",
-            calc.reportData.balances_total,
-            { index, action: "showAccountBalances" })
-      }
-    ]
-  }
-
+          money("neutral", calc.reportData.balances_total, {
+            index,
+            action: "showAccountBalances",
+          }),
+      },
+    ],
+  },
 ];
 
 ///////////////////////////////////////////////////////////////
@@ -484,7 +526,6 @@ const columnGroups = [
  * @returns {HTMLTableRowElement}
  */
 function buildSummaryRow(calculation, index) {
-
   const r = calculation.reportData;
 
   const age =
@@ -492,30 +533,18 @@ function buildSummaryRow(calculation, index) {
       ? `${r.demographics_subjectAge} / ${r.demographics_partnerAge}`
       : r.demographics_subjectAge;
 
-  const cells = [
-
-    textTd("neutral", r.year),
-    textTd("neutral", age)
-
-  ];
+  const cells = [textTd("neutral", r.year), textTd("neutral", age)];
 
   for (const group of columnGroups) {
-
     if (!group.visible) continue;
 
     for (const column of group.columns) {
-
-      cells.push(
-        column.render(calculation, index)
-      );
-
+      cells.push(column.render(calculation, index));
     }
   }
 
   return tr(...cells);
 }
-
-
 
 ///////////////////////////////////////////////////////////////
 // ROW BUILDER
@@ -613,7 +642,6 @@ function buildSummaryRowOld(calculation, index) {
  * @param {Calculations | undefined} calculations
  */
 function generateOutputAndSummary(inputs, calculations) {
-
   currentInputs = inputs;
   currentCalculations = calculations;
 
@@ -746,4 +774,10 @@ function generateOutputAndSummary(inputs, calculations) {
   );
 }
 
-export { generateOutputAndSummary, loadColumnLayout, saveColumnLayout, regenerateTable , buildColumnMenu};
+export {
+  generateOutputAndSummary,
+  loadColumnLayout,
+  saveColumnLayout,
+  regenerateTable,
+  buildColumnMenu,
+};
