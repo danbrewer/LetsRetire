@@ -936,6 +936,31 @@ details[open] .content {
   text-align: left;
 }
 
+/* Column visibility menu rows */
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  padding: 6px 8px;
+  cursor: pointer;
+
+  color: var(--text);
+  font-size: 14px;
+}
+
+.menu-item input {
+  margin: 0;
+  width: auto;
+  cursor: pointer;
+}
+
+.menu-item:hover {
+  background: rgba(255,255,255,.05);
+  border-radius: 8px;
+}
+
+
   .app-shell {
   /* Two-row app shell:
      - Row 1: header (auto height)
@@ -1024,58 +1049,7 @@ details[open] .content {
           </div>
           <div class="card" style="padding:0; overflow:auto; max-height: 50vh;">
             <table>
-              <thead>
-                <!-- Main section headers -->
-                <tr class="section-headers">
-                  <th rowspan="2" class="timeline-header">Year</th>
-                  <th rowspan="2" class="timeline-header">Age</th>
-                  <th rowspan="2" class="need-header">Annual Spend</th>
-                  <th colspan="6" class="income-header">Cash Sources</th>
-                  <th colspan="6" class="gross-income-header">Gross Income</th>
-                  <!-- <th colspan="3" class="breakdown-header">Income Breakdown</th> -->
-                  <!-- <th colspan="6" class="tax-header">Tax Information</th> -->
-                  <th colspan="4" class="balance-header">Account Balances</th>
-                </tr>
-                <!-- Sub-headers for individual columns -->
-                <tr class="column-headers">
-                  <!-- Net Income (what you actually receive) -->
-                  <th>Salary (Net)</th>
-                  <th>SS (Net)</th>
-                  <th>Pension (Net)</th>
-                  <!-- <th>Spouse SS (Net)</th>
-                  <th>Spouse Pen (Net)</th> -->
-                  <th>401k (Net)</th>
-                  <th>Savings/Roth</th>
-                  <th>Total Net</th>
-
-                  <!-- Gross Income (before taxes/deductions) -->
-                  <th>Salary</th>
-                  <th>Taxable Interest</th>
-                  <th>SS Gross</th>
-                  <th>Pension Gross</th>
-                  <th>401k Gross</th>
-                  <th>Total Gross</th>
-
-                  <!-- Income Breakdown -->
-                  <!-- <th>Taxable Income</th>
-                  <th>Non-Taxable Income</th>
-                  <th>Provisional Income</th> -->
-
-                  <!-- Tax Information -->
-                  <!-- <th>Standard Deduction</th>
-                  <th>Taxable Income</th>
-                  <th>SS Taxes</th>
-                  <th>Other Taxes</th>
-                  <th>Total Taxes</th>
-                  <th>Effective Tax Rate</th> -->
-
-                  <!-- Account Balances -->
-                  <th>Savings Bal</th>
-                  <th>401k Bal</th>
-                  <th>Roth Bal</th>
-                  <th>Total Bal</th>
-                </tr>
-              </thead>
+              <thead id="tableHead"></thead>
               <tbody id="rows"></tbody>
             </table>
           </div>
@@ -1120,6 +1094,15 @@ details[open] .content {
     <button id="importJsonBtn">Import JSON</button>
   
     <input type="file" id="jsonFileInputFile" accept=".json" style="display:none;">
+<hr style="border-color: var(--border); width:100%;">
+
+<div style="font-size:12px;color:var(--muted);padding:4px 8px;">
+  Table Columns
+</div>
+
+<div id="columnVisibilityContainer"></div>
+
+<input type="file" id="jsonFileInputFile" accept=".json" style="display:none;">
   </div>
 
 

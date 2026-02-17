@@ -14,7 +14,7 @@ import {
   handleJSONFile,
   importJSON,
 } from "./import-export.js";
-import { generateOutputAndSummary } from "./retirement-summaryrenderer.js";
+import { buildColumnMenu, generateOutputAndSummary, loadColumnLayout } from "./retirement-summaryrenderer.js";
 import { createHelpIcon } from "./retirement-ui-help.js";
 import { showToast } from "./retirement-ui-toast.js";
 
@@ -1154,6 +1154,8 @@ async function loadPartial(hostSelector, url) {
 }
 
 function initUI() {
+  loadColumnLayout();
+  buildColumnMenu();
   initializeHelpIcons();
   loadExample();
   doCalculations();

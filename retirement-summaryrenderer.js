@@ -204,6 +204,319 @@ function money(className, moneyObj, options = {}) {
   );
 }
 
+function buildTableHead() {
+  const thead = document.getElementById("tableHead");
+
+  if (!thead) return;
+
+  const sectionRow = el("tr", { className: "section-headers" });
+  const columnRow = el("tr", { className: "column-headers" });
+
+  sectionRow.appendChild(el("th", { rowspan: "2" }, "Year"));
+  sectionRow.appendChild(el("th", { rowspan: "2" }, "Age"));
+
+  for (const group of columnGroups) {
+    if (!group.visible) continue;
+
+    sectionRow.appendChild(
+      el(
+        "th",
+        {
+          colspan: group.columns.length,
+          className: group.className,
+        },
+        group.label
+      )
+    );
+
+    for (const column of group.columns) {
+      columnRow.appendChild(el("th", {}, column.label));
+    }
+  }
+
+  thead.replaceChildren(sectionRow, columnRow);
+}
+
+function buildColumnMenu() {
+  const container = document.getElementById("columnVisibilityContainer");
+
+  if (!container) return;
+
+  container.replaceChildren(
+    ...columnGroups.map((group) =>
+      el(
+        "label",
+        { className: "menu-item" },
+
+        el("input", {
+          type: "checkbox",
+
+          checked: group.visible ? "checked" : null,
+
+          onchange: () => {
+            group.visible = !group.visible;
+
+            saveColumnLayout();
+
+            regenerateTable();
+          },
+        }),
+
+        group.label
+      )
+    )
+  );
+}
+
+function saveColumnLayout() {
+  localStorage.setItem(
+    "columnLayout",
+    JSON.stringify(
+      columnGroups.map((g) => ({
+        id: g.id,
+        visible: g.visible,
+      }))
+    )
+  );
+}
+
+function loadColumnLayout() {
+  const saved = JSON.parse(localStorage.getItem("columnLayout"));
+
+  if (!saved) return;
+
+  for (const s of saved) {
+    const group = columnGroups.find((g) => g.id === s.id);
+
+    if (group) group.visible = s.visible;
+  }
+}
+
+let currentInputs;
+let currentCalculations;
+
+function regenerateTable() {
+  generateOutputAndSummary(currentInputs, currentCalculations);
+}
+
+
+
+///////////////////////////////////////////////////////////////
+// COLUMN GROUP DEFINITIONS
+///////////////////////////////////////////////////////////////
+
+const columnGroups = [
+
+  {
+    id: "spend",
+    label: "Annual Spend",
+    className: "need-header",
+    visible: true,
+    columns: [
+      {
+        label: "Annual Spend",
+        render: (calc, index) =>
+          money("outgoing", calc.reportData.ask)
+      }
+    ]
+  },
+
+  {
+    id: "cashSources",
+    label: "Cash Sources",
+    className: "income-header",
+    visible: true,
+    columns: [
+
+      {
+        label: "Salary (Net)",
+        render: (calc, index) =>
+          money("income",
+            calc.reportData.income_combinedTakehomeWages,
+            { index, action: "showSalaryBreakdown" })
+      },
+
+      {
+        label: "SS (Net)",
+        render: (calc, index) =>
+          money("income",
+            calc.reportData.ss_combinedTakehome,
+            { index, action: "showSsBreakdown" })
+      },
+
+      {
+        label: "Pension (Net)",
+        render: (calc, index) =>
+          money("income",
+            calc.reportData.income_combinedPensionTakehome,
+            { index, action: "showPensionBreakdown" })
+      },
+
+      {
+        label: "401k (Net)",
+        render: (calc, index) =>
+          money("income",
+            calc.reportData.income_combined401kTakehome,
+            { index, action: "show401kBreakdown" })
+      },
+
+      {
+        label: "Savings/Roth",
+        render: (calc, index) =>
+          money("income",
+            calc.reportData.savings_Withdrawals +
+            calc.reportData.income_combinedRothTakehome,
+            { index, action: "showSavingsRothBreakdown" })
+      },
+
+      {
+        label: "Total Net",
+        render: (calc, index) =>
+          money("income",
+            calc.reportData.income_total_net,
+            { index, action: "showTotalCashBreakdown" })
+      }
+    ]
+  },
+
+  {
+    id: "grossIncome",
+    label: "Gross Income",
+    className: "gross-income-header",
+    visible: true,
+    columns: [
+
+      {
+        label: "Salary",
+        render: (calc) =>
+          money("income",
+            calc.reportData.income_combinedWagesGross)
+      },
+
+      {
+        label: "Taxable Interest",
+        render: (calc) =>
+          money("income",
+            calc.reportData.income_savingsInterest)
+      },
+
+      {
+        label: "SS Gross",
+        render: (calc, index) =>
+          money("income",
+            calc.reportData.ss_combinedGross,
+            { index, action: "showSsGrossBreakdown" })
+      },
+
+      {
+        label: "Pension Gross",
+        render: (calc, index) =>
+          money("income",
+            calc.reportData.income_combinedPensionGross,
+            { index, action: "showPensionGrossBreakdown" })
+      },
+
+      {
+        label: "401k Gross",
+        render: (calc) =>
+          money("income",
+            calc.reportData.income_combined401kGross)
+      },
+
+      {
+        label: "Total Gross",
+        render: (calc) =>
+          money("income",
+            calc.reportData.income_total_gross)
+      }
+    ]
+  },
+
+  {
+    id: "balances",
+    label: "Account Balances",
+    className: "balance-header",
+    visible: true,
+    columns: [
+
+      {
+        label: "Savings Bal",
+        render: (calc, index) =>
+          money("neutral",
+            calc.reportData.savings_Balance,
+            { index, action: "showSavingsBalanceBreakdown" })
+      },
+
+      {
+        label: "401k Bal",
+        render: (calc, index) =>
+          money("neutral",
+            calc.reportData.balances_combined401k,
+            { index, action: "show401kBalanceBreakdown" })
+      },
+
+      {
+        label: "Roth Bal",
+        render: (calc) =>
+          money("neutral",
+            calc.reportData.balances_combinedRoth)
+      },
+
+      {
+        label: "Total Bal",
+        render: (calc, index) =>
+          money("neutral",
+            calc.reportData.balances_total,
+            { index, action: "showAccountBalances" })
+      }
+    ]
+  }
+
+];
+
+///////////////////////////////////////////////////////////////
+// ROW BUILDER (FIXED VERSION — USES columnGroups)
+///////////////////////////////////////////////////////////////
+
+/**
+ * @param {Calculation} calculation
+ * @param {number} index
+ * @returns {HTMLTableRowElement}
+ */
+function buildSummaryRow(calculation, index) {
+
+  const r = calculation.reportData;
+
+  const age =
+    r.demographics_partnerAge > 0
+      ? `${r.demographics_subjectAge} / ${r.demographics_partnerAge}`
+      : r.demographics_subjectAge;
+
+  const cells = [
+
+    textTd("neutral", r.year),
+    textTd("neutral", age)
+
+  ];
+
+  for (const group of columnGroups) {
+
+    if (!group.visible) continue;
+
+    for (const column of group.columns) {
+
+      cells.push(
+        column.render(calculation, index)
+      );
+
+    }
+  }
+
+  return tr(...cells);
+}
+
+
+
 ///////////////////////////////////////////////////////////////
 // ROW BUILDER
 ///////////////////////////////////////////////////////////////
@@ -213,7 +526,7 @@ function money(className, moneyObj, options = {}) {
  * @param {number} index
  * @returns {HTMLTableRowElement}
  */
-function buildSummaryRow(calculation, index) {
+function buildSummaryRowOld(calculation, index) {
   const r = calculation.reportData;
 
   const age =
@@ -300,6 +613,12 @@ function buildSummaryRow(calculation, index) {
  * @param {Calculations | undefined} calculations
  */
 function generateOutputAndSummary(inputs, calculations) {
+
+  currentInputs = inputs;
+  currentCalculations = calculations;
+
+  buildTableHead();
+
   /** @type {TBodyWithFlags | null} */
   const tbody = /** @type {any} */ ($("rows"));
   if (!tbody) return;
@@ -427,4 +746,4 @@ function generateOutputAndSummary(inputs, calculations) {
   );
 }
 
-export { generateOutputAndSummary };
+export { generateOutputAndSummary, loadColumnLayout, saveColumnLayout, regenerateTable , buildColumnMenu};
