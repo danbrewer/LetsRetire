@@ -30,8 +30,8 @@ class TaxCalculations {
   static getTaxBrackets(fiscalData, demographics) {
     // The year passed is the actual tax year (e.g., 2025, 2026, 2052, etc.)
     // The adjustedForInflation expects years from the base (2025)
-    const yearsFromBase = fiscalData.taxYear - TAX_BASE_YEAR;
 
+    const yearsFromBase = fiscalData.taxYear - TAX_BASE_YEAR;
     if (
       demographics.filingStatus ===
       constsJS_FILING_STATUS.MARRIED_FILING_JOINTLY

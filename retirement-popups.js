@@ -266,18 +266,22 @@ function showTaxesBreakdown(data) {
     </div>
 
     <div class="ss-breakdown-item breakdown-accent">
-        <span class="ss-breakdown-label">Taxable Gross Income:</span>
+        <span class="ss-breakdown-label">Gross Income:</span>
         <span class="ss-breakdown-value">${data.income_total_gross.asWholeDollars()}</span>
     </div>
     <div class="ss-breakdown-item">
         <span class="ss-breakdown-label">Nontaxable income:</span>
         <span class="ss-breakdown-value">${data.taxes_nonTaxableIncome.asWholeDollars()}</span>
     </div>
+    <div class="ss-breakdown-item breakdown-accent">
+      <span class="ss-breakdown-label">Adjusted Gross Income:</span>
+      <span class="ss-breakdown-value">${data.taxes_adjustedGrossIncome.asWholeDollars()}</span>
+    </div>
     <div class="ss-breakdown-item">
-        <span class="ss-breakdown-label">Deductions:</span>
+        <span class="ss-breakdown-label">Deductions (Standard/Itemized):</span>
         <span class="ss-breakdown-value">${data.taxes_standardDeduction.asWholeDollars()}</span>
     </div>
-     <div class="ss-breakdown-item">
+     <div class="ss-breakdown-item breakdown-accent">
         <span class="ss-breakdown-label">Taxable income:</span>
         <span class="ss-breakdown-value">${data.taxes_taxableIncome.asWholeDollars()}</span>
     </div>
@@ -315,7 +319,6 @@ function showTaxesBreakdown(data) {
         <span class="ss-breakdown-value">${data.taxes_effectiveTaxRate}%</span>
     </div>
     `;
-
 
   popup.setContent(breakdownHtml);
   popup.show();
@@ -368,7 +371,6 @@ function showWithholdingsBreakdown(data) {
       </div>
     `;
   }
-
 
   popup.setContent(breakdownHtml);
   popup.show();
