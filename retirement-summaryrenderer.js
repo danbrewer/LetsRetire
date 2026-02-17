@@ -7,6 +7,9 @@ import { drawChart } from "./retirement-ui-chart.js";
 import { Inputs } from "./cInputs.js";
 import { popupActions } from "./retirement-popups.js";
 
+/** @type {string | null} */
+let draggedGroupId = null;
+
 /**
  * @template {HTMLElement} T
  * @param {string} id
@@ -53,11 +56,17 @@ function divById(id) {
  * @property {(ev: Event) => void} [onchange]
  * @property {(ev: Event) => void} [oninput]
  * @property {(ev: Event) => void} [onkeydown]
+ * @property {(ev: DragEvent) => void} [ondragover]
+ * @property {(ev: DragEvent) => void} [ondrop]
+ * @property {(ev: DragEvent) => void} [ondragstart]
+ * @property {(ev: DragEvent) => void} [ondragenter]
+ * @property {(ev: DragEvent) => void} [ondragleave]
  * @property {string} [type]
  * @property {boolean} [checked]
  * @property {string} [value]
  * @property {string} [id]
  * @property {string} [name]
+ * @property {string} [draggable]
  * @property {string | number} [colspan]
  * @property {string | number} [rowspan]
  */
@@ -143,6 +152,10 @@ function td(className, ...children) {
  */
 function tr(...children) {
   return el("tr", {}, ...children);
+}
+
+function getOrderedGroups() {
+  return columnGroups.slice().sort((a, b) => a.order - b.order);
 }
 
 /**
@@ -239,7 +252,7 @@ function buildTableHead() {
   sectionRow.appendChild(el("th", { rowspan: "2" }, "Year"));
   sectionRow.appendChild(el("th", { rowspan: "2" }, "Age"));
 
-  for (const group of columnGroups) {
+  for (const group of getOrderedGroups()) {
     if (!group.visible) continue;
 
     sectionRow.appendChild(
@@ -248,6 +261,47 @@ function buildTableHead() {
         {
           colspan: group.columns.length,
           className: group.className,
+          draggable: "true",
+
+          ondragstart: /** @param {DragEvent} e */ (e) => {
+            draggedGroupId = group.id;
+            if (e.dataTransfer) e.dataTransfer.effectAllowed = "move";
+          },
+
+          ondragenter: /** @param {DragEvent} e */ (e) => {
+             const target = e.currentTarget;
+
+             if (!(target instanceof HTMLElement)) return;
+
+             target.classList.add("drag-over");
+          },
+
+          ondragleave: /** @param {DragEvent} e */ (e) => {
+             const target = e.currentTarget;
+
+             if (!(target instanceof HTMLElement)) return;
+
+             target.classList.remove("drag-over");
+          },
+
+          ondragover: /** @param {DragEvent} e */ (e) => {
+            e.preventDefault();
+          },
+
+          ondrop: /** @param {DragEvent} e */ (e) => {
+            e.preventDefault();
+            const target = e.currentTarget;
+
+            if (!(target instanceof HTMLElement)) return;
+
+            target.classList.remove("drag-over");
+
+            if (!draggedGroupId) return;
+
+            reorderGroups(draggedGroupId, group.id);
+
+            draggedGroupId = null;
+          },
         },
         group.label
       )
@@ -261,13 +315,43 @@ function buildTableHead() {
   thead.replaceChildren(sectionRow, columnRow);
 }
 
+/**
+ * @param {string} draggedId
+ * @param {string} targetId
+ */
+function reorderGroups(draggedId, targetId) {
+  if (draggedId === targetId) return;
+
+  const ordered = getOrderedGroups();
+
+  const draggedIndex = ordered.findIndex((g) => g.id === draggedId);
+  const targetIndex = ordered.findIndex((g) => g.id === targetId);
+
+  if (draggedIndex === -1 || targetIndex === -1) return;
+
+  const [dragged] = ordered.splice(draggedIndex, 1);
+
+  ordered.splice(targetIndex, 0, dragged);
+
+  // rewrite order values
+  ordered.forEach((g, i) => {
+    g.order = (i + 1) * 10;
+  });
+
+  saveColumnLayout();
+  regenerateTable();
+  buildColumnMenu();
+}
+
+
+
 function buildColumnMenu() {
   const container = document.getElementById("columnVisibilityContainer");
 
   if (!container) return;
 
   container.replaceChildren(
-    ...columnGroups.map((group) =>
+    ...getOrderedGroups().map((group) =>
       el(
         "label",
         { className: "menu-item" },
@@ -299,24 +383,29 @@ function saveColumnLayout() {
       columnGroups.map((g) => ({
         id: g.id,
         visible: g.visible,
+        order: g.order, // NEW
       }))
     )
   );
 }
 
+
 function loadColumnLayout() {
   const data = localStorage.getItem("columnLayout");
   if (!data) return;
-  const saved = JSON.parse(data);
 
-  if (!saved) return;
+  const saved = JSON.parse(data);
 
   for (const s of saved) {
     const group = columnGroups.find((g) => g.id === s.id);
 
-    if (group) group.visible = s.visible;
+    if (!group) continue;
+
+    group.visible = s.visible;
+    group.order = s.order;
   }
 }
+
 
 /** @type {Inputs | undefined} */
 let currentInputs;
@@ -343,6 +432,7 @@ function regenerateTable() {
  * @property {string} label
  * @property {string} className
  * @property {boolean} visible
+ * @property {number} order 
  * @property {ColumnDefinition[]} columns
  */
 
@@ -353,6 +443,7 @@ const columnGroups = [
     label: "Annual Spend",
     className: "need-header",
     visible: true,
+    order: 10,
     columns: [
       {
         label: "Annual Spend",
@@ -366,6 +457,7 @@ const columnGroups = [
     label: "Cash Sources",
     className: "income-header",
     visible: true,
+    order: 20,
     columns: [
       {
         label: "Salary (Net)",
@@ -430,6 +522,7 @@ const columnGroups = [
     label: "Gross Income",
     className: "gross-income-header",
     visible: true,
+    order: 30,
     columns: [
       {
         label: "Salary",
@@ -479,6 +572,7 @@ const columnGroups = [
     label: "Account Balances",
     className: "balance-header",
     visible: true,
+    order: 50,
     columns: [
       {
         label: "Savings Bal",
@@ -535,7 +629,7 @@ function buildSummaryRow(calculation, index) {
 
   const cells = [textTd("neutral", r.year), textTd("neutral", age)];
 
-  for (const group of columnGroups) {
+  for (const group of getOrderedGroups()) {
     if (!group.visible) continue;
 
     for (const column of group.columns) {
