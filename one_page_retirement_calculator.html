@@ -148,6 +148,18 @@
     #pdfBtn { background: linear-gradient(180deg, #d63384, #b02a5b); border-color: #9a2456; color: white; }
     button:hover { transform: translateY(-1px); filter: brightness(1.07); }
 
+    /* Dirty state pulse animation */
+    @keyframes calcPulse {
+      0%   { box-shadow: 0 0 0 0 rgba(110,168,254,.7); }
+      70%  { box-shadow: 0 0 0 10px rgba(110,168,254,0); }
+      100% { box-shadow: 0 0 0 0 rgba(110,168,254,0); }
+    }
+
+    .calc-dirty {
+      animation: calcPulse 1.6s infinite;
+      filter: brightness(1.15);
+    }
+
     .results { 
       /* Results panel scrolls independently from inputs */
 
@@ -1127,7 +1139,7 @@ details[open] .content {
 <script type="module">
   import { loadPartial, initUI } from './retirement-ui.js';
   import {showHelpToast} from './retirement-ui-toast.js';
-  
+
  window.resyncAllOpenDetails = () => {
     document.querySelectorAll('details[open] .content').forEach(c => {
       c.getAnimations().forEach(a => a.cancel());
@@ -1228,6 +1240,7 @@ details[open] .content {
   );
 
   initUI();
+  attachDirtyTracking();
 
    document.querySelectorAll("labeled-input").forEach((el) => {
       el.onHelp = (event, helpKey) => {

@@ -138,7 +138,7 @@ let calculations = [];
 
 
 document.addEventListener("value-changed", () => {
-  doCalculations();
+  markDirty();// doCalculations();
 });
 
 
@@ -484,10 +484,28 @@ document.addEventListener("DOMContentLoaded", function () {
   // initUI();
 });
 
+let isDirty = false;
+
+export function markDirty() {
+  if (isDirty) return;
+  isDirty = true;
+  $("calcBtn")?.classList.add("calc-dirty");
+}
+
+export function clearDirty() {
+  isDirty = false;
+  $("calcBtn")?.classList.remove("calc-dirty");
+}
+
+export function getDirty() {
+  return isDirty;
+}
+
 function doCalculations() {
   // return; // for now
   const calculations = new Calculations();
   const result = calc(calculations, DefaultUI);
+  clearDirty();
   generateOutputAndSummary(result?.inputs, result?.calculations);
 }
 
@@ -1154,12 +1172,30 @@ async function loadPartial(hostSelector, url) {
   host.insertAdjacentHTML("beforeend", html);
 }
 
+  function attachDirtyTracking(root = document) {
+    root.querySelectorAll("input, select, textarea").forEach((el) => {
+      // Store initial value
+      el.dataset.prevValue = el.value;
+
+      el.addEventListener("blur", () => {
+        if (el.value !== el.dataset.prevValue) {
+          el.dataset.prevValue = el.value;
+
+          markDirty();
+        }
+      });
+    });
+  }
+
+
+
 function initUI() {
   loadColumnLayout();
   buildColumnMenu();
   initializeHelpIcons();
   loadExample();
   doCalculations();
+  attachDirtyTracking();
 }
 
 /** @type {Map<HTMLElement, ResizeObserver>} */
