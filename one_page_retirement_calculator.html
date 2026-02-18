@@ -184,47 +184,52 @@
     }
 
 
- #calcBtn {
-  position: relative;
-  overflow: hidden;
+    #calcBtn {
+      position: relative;
+      overflow: hidden;
 
-  z-index: 0; /* establish stacking context */
+      z-index: 0; /* establish stacking context */
 
-  background: linear-gradient(180deg, #2b63ff, hsl(227, 71%, 48%));
-  border-color: #1f3fb8;
+      background: linear-gradient(180deg, #2b63ff, hsl(227, 71%, 48%));
+      border-color: #1f3fb8;
 
-  transition: filter 220ms ease;
-  /* width: 25%; */
-  min-width: 180px;
-}
+      transition: filter 220ms ease;
+      /* width: 25%; */
+      min-width: 180px;
+    }
 
-/* Red overlay layer */
-#calcBtn::before {
-  content: "";
-  position: absolute;
-  inset: 0;
+    /* Red overlay layer */
+    #calcBtn::before {
+      content: "";
+      position: absolute;
+      inset: 0;
 
-  background: linear-gradient(180deg, #ff4d4d, #cc0000);
+      background: linear-gradient(180deg, #ff4d4d, #cc0000);
 
-  opacity: 0;
+      opacity: 0;
 
-  z-index: -1; /* behind text, above base background */
+      z-index: -1; /* behind text, above base background */
 
-  border-radius: inherit;
+      border-radius: inherit;
 
-  transition: opacity 220ms ease;
-}
-/* 
-#calcBtn.calc-dirty {
-  animation: calcBreath 1.8s ease-in-out infinite;
-} */
+      transition: opacity 220ms ease;
+    }
+    /* 
+    #calcBtn.calc-dirty {
+      animation: calcBreath 1.8s ease-in-out infinite;
+    } */
 
 
-/* Dirty state activates overlay + pulse */
-#calcBtn.calc-dirty::before {
-  opacity: 1;
-  animation: calcPulseFadeOverlay 1.8s ease-in-out infinite;
-}
+    /* Dirty state activates overlay + pulse */
+    #calcBtn.calc-dirty::before {
+      opacity: 1;
+      animation: calcPulseFadeOverlay 1.8s ease-in-out infinite;
+    }
+
+    .input-dirty {
+      border-color: #ff4d4d !important;
+      box-shadow: 0 0 0 2px rgba(255,77,77,.25);
+    }
 
 
 

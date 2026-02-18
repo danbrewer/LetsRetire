@@ -140,17 +140,21 @@ const pct = (/** @type {number} */ v) => (isNaN(v) ? 0 : Number(v) / 100);
 /** @type {Calculation[]} */
 let calculations = [];
 
-document.addEventListener("value-changed", () => {
+document.addEventListener("value-changed", (e) => {
+    if (!(e instanceof CustomEvent)) return;
+
   markDirty(); // doCalculations();
+   const input = document.getElementById(e.detail.id);
+   input?.classList.add("input-dirty");
 });
 
-// document.addEventListener("keydown", (e) => {
-//   // Calculate button shortcut: Ctrl+Enter (or Cmd+Enter on Mac)
-//   if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
-//     e.preventDefault();
-//     doCalculations();
-//   }
-// });
+document.addEventListener("keydown", (e) => {
+  // Calculate button shortcut: Ctrl+Enter (or Cmd+Enter on Mac)
+  if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+    e.preventDefault();
+    doCalculations();
+  }
+});
 
 // Events
 $("calcBtn")?.addEventListener("click", doCalculations);
@@ -497,6 +501,10 @@ export function markDirty() {
 export function clearDirty() {
   isDirty = false;
   $("calcBtn")?.classList.remove("calc-dirty");
+
+  document
+    .querySelectorAll(".input-dirty")
+    .forEach((el) => el.classList.remove("input-dirty"));
 }
 
 export function getDirty() {
