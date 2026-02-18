@@ -594,7 +594,6 @@ function loadExample() {
     subjectLifespan: 95,
     subject401kStartAge: 62,
     subjectPensionStartAge: 65,
-    subjectSsStartAge: 62,
     subjectSalary: 174500,
     subjectSalaryGrowth: 2.0,
     subjectSavingsMonthly: 0,
@@ -608,7 +607,6 @@ function loadExample() {
     partnerLifespan: 98,
     partner401kStartAge: 62,
     partnerPensionStartAge: 65,
-    partnerSsStartAge: 62,
     partnerSalary: 0,
     partnerSalaryGrowth: 0,
     partnerRothMonthly: 0,
@@ -633,8 +631,12 @@ function loadExample() {
     partnerRothBalance: 1000,
     partnerRothReturnRate: 3.0,
 
+    subjectSsStartAge: 62,
     subjectSsMonthly: 2750,
-    partnerSsMonthly: 1000,
+
+    partnerSsStartAge: 62,
+    partnerSsMonthly: 1133,
+
     ssWithholdingRate: 20,
     ssCola: 2.5,
 
