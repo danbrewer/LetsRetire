@@ -33,27 +33,13 @@
         </div>
 
         <div class="grid-2">
-            <labeled-input
-                input-id="withholdingsSS" 
-                label="Social Security"
-                show-help
-                type="number" step="0.5" value="10">
-            </labeled-input>
             <labeled-input input-id="withholdingsPension" 
                 label="Pension income"
                 show-help
                 type="number" step="0.5" value="20">
             </labeled-input>
-        </div>
-       
-        <div style="margin-top: 10px;">
-            <div style="display: flex; align-items: center; gap: 5px;">
-                <input type="checkbox" id="useRMD" checked style="width: auto;" />
-                <label for="useRMD">
-                    Apply Required Minimum Distribution (RMD) rules
-                    <span class="help-icon-placeholder" data-field="useRMD"></span>
-                </label>
-            </div>
+                        <labeled-input input-id="ssWithholdingRate" label="Social Security (%)" show-help type="number" step="1" value="15">
+                        </labeled-input>
         </div>
     </div>
 </details>

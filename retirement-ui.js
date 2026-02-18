@@ -332,8 +332,8 @@ function parseInputParameters() {
   const withholdingsDefaultRate = pct(num(UIField.WITHHOLDINGS_DEFAULT));
   const flatWageWithholdingRate = pct(num(UIField.WITHHOLDINGS_WAGES)); // pct(num("flatWageWithholdingRate"));
   const withholdings401k = pct(num(UIField.WITHHOLDINGS_401K));
-  const withholdingsSs = pct(num(UIField.WITHHOLDINGS_SS));
-  const withholdingsPension = pct(num(UIField.WITHHOLDINGS_PENSION));
+  // const withholdingsSs = pct(num(UIField.WITHHOLDINGS_SS));
+  // const withholdingsPension = pct(num(UIField.WITHHOLDINGS_PENSION));
   const useRMD = checkbox(UIField.USE_RMD)?.checked ?? false;
   // const order = withdrawalOrder;
 
@@ -362,7 +362,7 @@ function parseInputParameters() {
     partnerPenMonthly: partnerPenMonthly,
     partnerPenStartAge: partnerPenStartAge,
     partner401kStartAge: partner401kStartAge,
-    partnerTaxSS: withholdingsSs,
+    // partnerTaxSS: withholdingsSs,
     partnerPensionWithholdings: partnerPensionWithholdings,
 
     // Employment and contributions
@@ -602,7 +602,7 @@ function loadExample() {
     withholdingsDefaultRate: 15,
     withholdingsWages: 15,
     withholdings401k: 18,
-    withholdingsSS: 15,
+    // withholdingsSS: 15,
     withholdingsPension: 18,
   };
   // const ex = {

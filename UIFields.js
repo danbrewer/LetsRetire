@@ -95,7 +95,7 @@ export class UIField {
   static WITHHOLDINGS_DEFAULT = "withholdingsDefaultRate";
   static WITHHOLDINGS_WAGES = "withholdingsWages";
   static WITHHOLDINGS_401K = "withholdings401k";
-  static WITHHOLDINGS_SS = "withholdingsSS";
+  // static WITHHOLDINGS_SS = "withholdingsSS";
   static WITHHOLDINGS_PENSION = "withholdingsPension";
   static USE_RMD = "useRMD";
 

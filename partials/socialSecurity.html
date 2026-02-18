@@ -4,12 +4,17 @@
         <span class="chev">▼</span>
     </summary>
     <div class="content">
-        <div class="grid-3">
-            <labeled-input
-                input-id="subjectSsMonthly" 
-                label="Subject ($/mo, first year)" 
-                show-help
-                type="number" step="50" value="2800">
+        <div class="grid-2">
+            <labeled-input input-id="subjectSsStartAge" label="Start age for Subject" help="subjectSsStartAge" type="number"
+                min="62" max="110" step="1" value="62">
+            </labeled-input>
+            <labeled-input input-id="subjectSsMonthly" label="Subject ($/mo, first year)" show-help type="number" step="50"
+                value="2800">
+            </labeled-input>
+        </div>
+        <div class="grid-2">
+            <labeled-input input-id="partnerSsStartAge" label="Start age for Partner" help="partnerSsStartAge" type="number"
+                min="62" max="110" step="1" value="62">
             </labeled-input>
             <labeled-input
                 input-id="partnerSsMonthly" 
@@ -17,13 +22,20 @@
                 show-help
                 type="number" step="50" value="2800">
             </labeled-input>
-           
         </div>
         <div class="grid-2">
-            <labeled-input input-id="ssWithholdingRate" label="Withholding rate (%)" show-help type="number" step="1" value="15">
-            </labeled-input>
+
             <labeled-input input-id="ssCola" label="Cost of Living Adjustment (%)" show-help type="number" step="1" value="2">
             </labeled-input>
+        </div>
+        <div style="margin-top: 10px;">
+            <div style="display: flex; align-items: center; gap: 5px;">
+                <input type="checkbox" id="useRMD" checked style="width: auto;" />
+                <label for="useRMD">
+                    Apply Required Minimum Distribution (RMD) rules
+                    <span class="help-icon-placeholder" data-field="useRMD"></span>
+                </label>
+            </div>
         </div>
     </div>
 </details>
