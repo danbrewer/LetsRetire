@@ -240,6 +240,7 @@ function initializeHelpIcons() {
 function parseInputParameters() {
   // Basic parameters
   // Parse withdrawal order
+  // debugger;
   let withdrawalOrder = select("order")
     ?.value.split(",")
     .map((/** @type {string} */ s) => s.trim())
