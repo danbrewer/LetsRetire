@@ -14,7 +14,11 @@ import {
   handleJSONFile,
   importJSON,
 } from "./import-export.js";
-import { buildColumnMenu, generateOutputAndSummary, loadColumnLayout } from "./retirement-summaryrenderer.js";
+import {
+  buildColumnMenu,
+  generateOutputAndSummary,
+  loadColumnLayout,
+} from "./retirement-summaryrenderer.js";
 import { createHelpIcon } from "./retirement-ui-help.js";
 import { showToast } from "./retirement-ui-toast.js";
 
@@ -136,11 +140,9 @@ const pct = (/** @type {number} */ v) => (isNaN(v) ? 0 : Number(v) / 100);
 /** @type {Calculation[]} */
 let calculations = [];
 
-
 document.addEventListener("value-changed", () => {
-  markDirty();// doCalculations();
+  markDirty(); // doCalculations();
 });
-
 
 // document.addEventListener("keydown", (e) => {
 //   // Calculate button shortcut: Ctrl+Enter (or Cmd+Enter on Mac)
@@ -675,8 +677,7 @@ function loadExample() {
       el.value = String(v);
     } else if (el instanceof HTMLSelectElement) {
       el.value = String(v);
-    }
-    else{
+    } else {
       console.warn(`Element with id '${k}' not found or not an input/select`);
     }
   }
@@ -1172,9 +1173,13 @@ async function loadPartial(hostSelector, url) {
   host.insertAdjacentHTML("beforeend", html);
 }
 
-  function attachDirtyTracking(root = document) {
-    root.querySelectorAll("input, select, textarea").forEach((el) => {
-      // Store initial value
+function attachDirtyTracking(root = document) {
+  root.querySelectorAll("input, select, textarea").forEach((el) => {
+    if (
+      el instanceof HTMLInputElement ||
+      el instanceof HTMLSelectElement ||
+      el instanceof HTMLTextAreaElement
+    ) {
       el.dataset.prevValue = el.value;
 
       el.addEventListener("blur", () => {
@@ -1184,10 +1189,9 @@ async function loadPartial(hostSelector, url) {
           markDirty();
         }
       });
-    });
-  }
-
-
+    }
+  });
+}
 
 function initUI() {
   loadColumnLayout();

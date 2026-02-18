@@ -148,34 +148,84 @@
     #pdfBtn { background: linear-gradient(180deg, #d63384, #b02a5b); border-color: #9a2456; color: white; }
     button:hover { transform: translateY(-1px); filter: brightness(1.07); }
 
-    /* Dirty state pulse animation */
-    @keyframes calcPulseFade {
+    @keyframes calcPulseFadeOverlay {
 
       0% {
-        box-shadow: 0 0 0 0 rgba(110,168,254,.75);
+        box-shadow: 0 0 0 0 rgba(255, 80, 80, .75);
         opacity: 1;
       }
 
-      40% {
-        box-shadow: 0 0 0 10px rgba(110,168,254,0);
-        opacity: .55;
-      }
-
-      60% {
-        box-shadow: 0 0 0 0 rgba(110,168,254,0);
-        opacity: .55;
+      50% {
+        box-shadow: 0 0 0 12px rgba(255, 80, 80, 0);
+        opacity: 0;
       }
 
       100% {
-        box-shadow: 0 0 0 0 rgba(110,168,254,0);
+        box-shadow: 0 0 0 0 rgba(255, 80, 80, 0);
         opacity: 1;
       }
 
     }
 
-    #calcBtn.calc-dirty {
-      animation: calcPulseFade 1.8s ease-in-out infinite;
+    @keyframes calcBreath {
+
+      0% {
+        transform: scale(1);
+      }
+
+      50% {
+        transform: scale(1.045);
+      }
+
+      100% {
+        transform: scale(1);
+      }
+
     }
+
+
+ #calcBtn {
+  position: relative;
+  overflow: hidden;
+
+  z-index: 0; /* establish stacking context */
+
+  background: linear-gradient(180deg, #2b63ff, hsl(227, 71%, 48%));
+  border-color: #1f3fb8;
+
+  transition: filter 220ms ease;
+  /* width: 25%; */
+  min-width: 180px;
+}
+
+/* Red overlay layer */
+#calcBtn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+
+  background: linear-gradient(180deg, #ff4d4d, #cc0000);
+
+  opacity: 0;
+
+  z-index: -1; /* behind text, above base background */
+
+  border-radius: inherit;
+
+  transition: opacity 220ms ease;
+}
+/* 
+#calcBtn.calc-dirty {
+  animation: calcBreath 1.8s ease-in-out infinite;
+} */
+
+
+/* Dirty state activates overlay + pulse */
+#calcBtn.calc-dirty::before {
+  opacity: 1;
+  animation: calcPulseFadeOverlay 1.8s ease-in-out infinite;
+}
+
 
 
     .results { 
