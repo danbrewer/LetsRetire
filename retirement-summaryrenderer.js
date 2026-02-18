@@ -239,6 +239,59 @@ function money(className, moneyObj, options = {}) {
   );
 }
 
+/**
+ * @typedef {Object} PercentCellOptions
+ * @property {number} [decimals]   // default = 1
+ * @property {boolean} [isRatio]   // true if value is 0.052 → 5.2%
+ * @property {string} [action]
+ * @property {number} [index]
+ * @property {string} [modifier]
+ */
+
+/**
+ * Unified percentage cell helper
+ * @param {string} className
+ * @param {number | null | undefined} value
+ * @param {PercentCellOptions} [options]
+ * @returns {HTMLTableCellElement}
+ */
+function percent(className, value, options = {}) {
+  if (value == null) return td(className, "");
+
+  const decimals = options.decimals ?? 1;
+  const isRatio = options.isRatio ?? false;
+
+  const percentValue = isRatio ? value * 100 : value;
+
+  const text =
+    percentValue.toLocaleString(undefined, {
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals,
+    }) + "%";
+
+  // Plain cell
+  if (!options.action) {
+    return td(className, text);
+  }
+
+  const index = options.index ?? 0;
+
+  const spanClass = options.modifier
+    ? `calc-link ${options.modifier}`
+    : "calc-link breakdown-link";
+
+  return td(
+    className,
+    calcLink({
+      className: spanClass,
+      index,
+      action: options.action,
+      text,
+    })
+  );
+}
+
+
 function buildTableHead() {
   const thead = document.getElementById("tableHead");
 
@@ -432,37 +485,7 @@ function regenerateTable() {
 
 /** @type {ColumnGroup[]} */
 const columnGroups = [
-  {
-    id: "taxes",
-    label: "Taxes",
-    className: "taxes-header",
-    visible: true,
-    order: 4,
-    columns: [
-      {
-        label: "Withholdings",
-        render: (calc, _) =>
-          money("outgoing", calc.reportData.income_total_withholdings),
-      },
-      {
-        label: "Taxes Due",
-        render: (calc, index) =>
-          money("outgoing", calc.reportData.taxes_federalIncomeTaxOwed, {
-            index,
-            action: "showTaxesBreakdown",
-          }),
-      },
-      {
-        label: "Shortfall",
-        render: (calc, _) =>
-          money("outgoing", calc.reportData.taxes_underPayment),
-      },
-      {
-        label: "Refund",
-        render: (calc, _) => money("income", calc.reportData.taxes_overPayment),
-      },
-    ],
-  },
+  // Spend group (NEW)
   {
     id: "spend",
     label: "Annual Spend",
@@ -476,7 +499,7 @@ const columnGroups = [
       },
     ],
   },
-
+  // Cash sources group (NEW)
   {
     id: "cashSources",
     label: "Cash Sources",
@@ -541,7 +564,7 @@ const columnGroups = [
       },
     ],
   },
-
+  // Gross income group (NEW)
   {
     id: "grossIncome",
     label: "Gross Income",
@@ -591,7 +614,47 @@ const columnGroups = [
       },
     ],
   },
-
+  // Taxes group (NEW)
+  {
+    id: "taxes",
+    label: "Taxes",
+    className: "taxes-header",
+    visible: true,
+    order: 4,
+    columns: [
+      {
+        label: "Withholdings",
+        render: (calc, index) =>
+          money("outgoing", calc.reportData.income_total_withholdings,{
+              index,
+              action: "showWithholdingsBreakdown"
+          }),
+      },
+      {
+        label: "Taxes Due",
+        render: (calc, index) =>
+          money("outgoing", calc.reportData.taxes_federalIncomeTaxOwed, {
+            index,
+            action: "showTaxesBreakdown",
+          }),
+      },
+      {
+        label: "Shortfall",
+        render: (calc, _) =>
+          money("outgoing", calc.reportData.taxes_underPayment),
+      },
+      {
+        label: "Refund",
+        render: (calc, _) => money("income", calc.reportData.taxes_overPayment),
+      },
+      {
+        label: "Effective Tax Rate",
+        render: (calc, _) =>
+          percent("income", calc.reportData.taxes_effectiveTaxRate),
+      },
+    ],
+  },
+  // Account balances group (NEW)
   {
     id: "balances",
     label: "Account Balances",

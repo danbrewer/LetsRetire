@@ -29,6 +29,7 @@ export const popupActions = {
   showSavingsBalanceBreakdown,
   show401kBalanceBreakdown,
   showTaxesBreakdown,
+  showWithholdingsBreakdown,
 };
 
 // SS Breakdown Popup Functions
@@ -332,45 +333,76 @@ function showWithholdingsBreakdown(data) {
     return; // No data to show
   }
 
-  const popup = ensurePopup("taxes", "Taxes Breakdown");
+  const popup = ensurePopup("withholdings", "Withholdings Breakdown");
+  /*
+      this.income_subjectWagesWithholdings +
+      this.income_subject401kWithholdings +
+      this.income_subjectPensionWithholdings +
+      this.ss_subjectSsWithholdings +
 
+      this.income_partnerWagesWithholdings +
+      this.income_partner401kWithholdings +
+      this.income_partnerPensionWithholdings +
+      this.ss_partnerSsWithholdings +
+
+      this.income_additionalWithholdings;
+*/
   // Build the breakdown content
   let breakdownHtml = `
     <div class="ss-breakdown-item">
         <span class="ss-breakdown-label">Year:</span>
         <span class="ss-breakdown-value">${data.year}</span>
     </div>
-    <div class="ss-breakdown-item">
-      <span class="ss-breakdown-label">Filing Status:</span>
-      <span class="ss-breakdown-value">${data.demographics_isMarriedFilingJointly ? "Married Filing Jointly" : "Single"}</span>
+    <div style="margin: 16px 0; padding: 12px; background: rgba(110, 168, 254, 0.1); border-radius: 8px;">
+        <strong style="color: var(--accent);">Subject:</strong>
+      <div class="ss-breakdown-item">
+          <span class="ss-breakdown-label">Wages (${data.income_wagesWithholdingRate * 100}%):</span>
+          <span class="ss-breakdown-value">${data.income_subjectWagesWithholdings.asWholeDollars()}</span>
+      </div>
+      <div class="ss-breakdown-item">
+          <span class="ss-breakdown-label">401k (${data.taxes_401kWithholdingRate * 100}%):</span>
+          <span class="ss-breakdown-value">${data.income_subject401kWithholdings.asWholeDollars()}</span>
+      </div>
+      <div class="ss-breakdown-item">
+          <span class="ss-breakdown-label">Pension (${data.taxes_pensionWithholdingRate * 100}%):</span>
+          <span class="ss-breakdown-value">${data.income_subjectPensionWithholdings.asWholeDollars()}</span>
+      </div>
+      <div class="ss-breakdown-item">
+          <span class="ss-breakdown-label">Social Security (${data.taxes_ssWithholdingRate * 100}%):</span>
+          <span class="ss-breakdown-value">${data.ss_subjectSsWithholdings.asWholeDollars()}</span>
+      </div>
     </div>
-    <div class="ss-breakdown-item">
+    `;
+  if (data.demographics_isMarriedFilingJointly) {
+    breakdownHtml += `
+    <div style="margin: 16px 0; padding: 12px; background: rgba(110, 168, 254, 0.1); border-radius: 8px;">
+        <strong style="color: var(--accent);">Partner:</strong>
+      <div class="ss-breakdown-item">
+          <span class="ss-breakdown-label">Wages (${data.income_wagesWithholdingRate * 100}%):</span>
+          <span class="ss-breakdown-value">${data.income_partnerWagesWithholdings.asWholeDollars()}</span>
+      </div>
+      <div class="ss-breakdown-item">
+          <span class="ss-breakdown-label">401k (${data.taxes_401kWithholdingRate * 100}%):</span>
+          <span class="ss-breakdown-value">${data.income_partner401kWithholdings.asWholeDollars()}</span>
+      </div>
+      <div class="ss-breakdown-item">
+          <span class="ss-breakdown-label">Pension (${data.taxes_pensionWithholdingRate * 100}%):</span>
+          <span class="ss-breakdown-value">${data.income_partnerPensionWithholdings.asWholeDollars()}</span>
+      </div>
+      <div class="ss-breakdown-item">
+          <span class="ss-breakdown-label">Social Security (${data.taxes_ssWithholdingRate * 100}%):</span>
+          <span class="ss-breakdown-value">${data.ss_partnerSsWithholdings.asWholeDollars()}</span>
+      </div>
+    </div>
+    `;
+  }
+
+  breakdownHtml += `
+    <div class="ss-breakdown-item breakdown-accent">
         <span class="ss-breakdown-label">Withholdings:</span>
         <span class="ss-breakdown-value">${data.income_total_withholdings.asWholeDollars()}</span>
     </div>
-    <div class="ss-breakdown-item">
-        <span class="ss-breakdown-label">Federal Income Tax:</span>
-        <span class="ss-breakdown-value">${data.taxes_federalIncomeTaxOwed.asWholeDollars()}</span>
-    </div>
     `;
-
-  if (data.taxes_underPayment > 0) {
-    breakdownHtml += `
-      <div class="ss-breakdown-item">
-          <span class="ss-breakdown-label">Taxes due:</span>
-          <span class="ss-breakdown-value">${data.taxes_underPayment.asWholeDollars()}</span>
-      </div>
-    `;
-  }
-
-  if (data.taxes_overPayment > 0) {
-    breakdownHtml += `
-      <div class="ss-breakdown-item">
-          <span class="ss-breakdown-label">Refund:</span>
-          <span class="ss-breakdown-value">${data.taxes_overPayment.asWholeDollars()}</span>
-      </div>
-    `;
-  }
 
   popup.setContent(breakdownHtml);
   popup.show();

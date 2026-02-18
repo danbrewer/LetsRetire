@@ -374,8 +374,8 @@ class WorkingYearCalculator {
       PERIODIC_FREQUENCY.MONTHLY
     );
 
-    this.#reportingYear.ReportData.taxes_401kWithholdingRate = 
-       this.#fiscalData.flatTrad401kWithholdingRate;
+    this.#reportingYear.ReportData.taxes_401kWithholdingRate =
+      this.#fiscalData.flatTrad401kWithholdingRate;
 
     this.#reportingYear.ReportData.income_subjectGrossWages =
       this.#fixedIncomeStreams.career.subjectWagesAndCompensationGross;
@@ -404,7 +404,7 @@ class WorkingYearCalculator {
         TransactionCategory.Withholdings
       );
 
-      this.#reportingYear.ReportData.income_subjectEstimatedWithholdings =
+      this.#reportingYear.ReportData.income_subjectWagesWithholdings =
         this.#fixedIncomeStreams.career.subjectWagesAndCompensationEstimatedWithholdings;
 
       this.#accountYear.processAsPeriodicTransfers(
@@ -473,7 +473,7 @@ class WorkingYearCalculator {
         TransactionCategory.Withholdings
       );
 
-      this.#reportingYear.ReportData.income_partnerEstimatedWithholdings =
+      this.#reportingYear.ReportData.income_partnerWagesWithholdings =
         this.#fixedIncomeStreams.career.partnerWagesAndCompensationEstimatedWithholdings;
 
       this.#accountYear.processAsPeriodicTransfers(
@@ -661,8 +661,8 @@ class WorkingYearCalculator {
       actualTaxes.standardDeduction.asCurrency();
     this.#reportingYear.ReportData.taxes_taxableIncome =
       actualTaxes.taxableIncome.asCurrency();
-    this.#reportingYear.ReportData.taxes_nonTaxableIncome = 
-    actualTaxes.nonTaxableIncome.asCurrency();
+    this.#reportingYear.ReportData.taxes_nonTaxableIncome =
+      actualTaxes.nonTaxableIncome.asCurrency();
 
     const withholdings = Math.max(
       this.#accountYear.getAnnualRevenues(

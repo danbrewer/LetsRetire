@@ -153,14 +153,14 @@ class ReportData extends BaseReports {
     this.income_subjectGrossWages = 0;
     this.income_wagesWithholdingRate = 0;
     this.income_subject401kContribution = 0;
-    this.income_subjectEstimatedWithholdings = 0;
+    this.income_subjectWagesWithholdings = 0;
     this.income_subjectPayrollDeductions = 0;
     this.income_subjectTakehomeWages = 0;
 
     this.income_partnerGrossWages = 0;
     this.income_partner401kContribution = 0;
     this.income_partnerPayrollDeductions = 0;
-    this.income_partnerEstimatedWithholdings = 0;
+    this.income_partnerWagesWithholdings = 0;
     this.income_partnerTakehomeWages = 0;
 
     this.income_miscIncomeGross = 0;
@@ -213,9 +213,11 @@ class ReportData extends BaseReports {
     this.taxes_federalIncomeTaxOwed = 0;
 
     this.taxes_401kWithholdingRate = 0;
+    this.taxes_pensionWithholdingRate = 0;
+    this.taxes_ssWithholdingRate = 0;
 
     // SOCIAL SECURITY
-    this.ss_witholdingRate = 0;
+    this.ss_withholdingRate = 0;
     this.ss_subjectSsGross = 0;
     this.ss_subjectSsWithholdings = 0;
     this.ss_subjectSsTakehome = 0;
@@ -293,10 +295,10 @@ class ReportData extends BaseReports {
   }
 
   get taxes_subjectWagesWithholdings() {
-    return this.income_subjectEstimatedWithholdings;
+    return this.income_subjectWagesWithholdings;
   }
   get taxes_partnerWagesWithholdings() {
-    return this.income_partnerEstimatedWithholdings;
+    return this.income_partnerWagesWithholdings;
   }
   get taxes_subject401kWithholdings() {
     return this.income_subject401kWithholdings;
@@ -329,8 +331,8 @@ class ReportData extends BaseReports {
     return (
       this.income_subjectTakehomeWages +
       this.income_partnerTakehomeWages +
-      this.income_subjectEstimatedWithholdings +
-      this.income_partnerEstimatedWithholdings
+      this.income_subjectWagesWithholdings +
+      this.income_partnerWagesWithholdings
     ).asCurrency();
   }
 
@@ -349,8 +351,8 @@ class ReportData extends BaseReports {
 
   get income_combinedWagesWithholdings() {
     return (
-      this.income_subjectEstimatedWithholdings +
-      this.income_partnerEstimatedWithholdings
+      this.income_subjectWagesWithholdings +
+      this.income_partnerWagesWithholdings
     );
   }
 
@@ -479,8 +481,8 @@ class ReportData extends BaseReports {
 
   get income_total_withholdings() {
     const result =
-      this.income_subjectEstimatedWithholdings +
-      this.income_partnerEstimatedWithholdings +
+      this.income_subjectWagesWithholdings +
+      this.income_partnerWagesWithholdings +
       this.income_subject401kWithholdings +
       this.income_partner401kWithholdings +
       this.income_subjectPensionWithholdings +
@@ -492,9 +494,9 @@ class ReportData extends BaseReports {
     return result.asCurrency();
   }
 
-  get taxes_effectiveTaxRate(){
-    if(this.income_total_gross === 0) return 0;
-    return ((this.taxes_federalIncomeTaxOwed) / this.income_total_gross * 100).toFixed(1);
+  get taxes_effectiveTaxRate() {
+    if (this.income_total_gross === 0) return 0;
+    return (this.taxes_federalIncomeTaxOwed / this.income_total_gross) * 100;
   }
 }
 export { ReportData };

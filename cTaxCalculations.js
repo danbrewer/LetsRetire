@@ -40,7 +40,7 @@ class TaxCalculations {
         rate: bracket.rate,
         upTo: bracket.upTo.adjustedForInflation(
           fiscalData.inflationRate,
-          yearsFromBase
+          0 //yearsFromBase
         ),
       }));
     } else {
@@ -112,7 +112,11 @@ class TaxCalculations {
       return 0;
     }
 
+    // debugger;
     const taxBrackets = this.getTaxBrackets(fiscalData, demographics);
+    console.log(`Brackets for year: ${fiscalData.taxYear}`);
+    console.log(JSON.stringify(taxBrackets, null, 2));
+    // taxBrackets.dump("Calculating federal income tax with brackets:");
     for (const { upTo, rate } of taxBrackets) {
       const slice = Math.min(taxableIncome, upTo) - prev;
       if (slice > 0) tax += slice * rate;

@@ -276,7 +276,7 @@ class RetirementYearCalculator {
       TransactionCategory.Withholdings
     );
 
-    this.#reportingYear.ReportData.income_subjectEstimatedWithholdings =
+    this.#reportingYear.ReportData.income_subjectWagesWithholdings =
       this.#fixedIncomeStreams.retirement.subjectWagesAndCompensationEstimatedWithholdings;
 
     this.#accountYear.processAsPeriodicTransfers(
@@ -344,7 +344,7 @@ class RetirementYearCalculator {
       TransactionCategory.Withholdings
     );
 
-    this.#reportingYear.ReportData.income_partnerEstimatedWithholdings =
+    this.#reportingYear.ReportData.income_partnerWagesWithholdings =
       this.#fixedIncomeStreams.retirement.partnerWagesAndCompensationEstimatedWithholdings;
 
     this.#accountYear.processAsPeriodicTransfers(
@@ -714,10 +714,11 @@ class RetirementYearCalculator {
       this.#adjustableIncomeStreams
     );
 
+    this.#reportingYear.ReportData.taxes_ssWithholdingRate =
+      this.#inputs.flatSsWithholdingRate;
+    
     this.#reportingYear.ReportData.ss_subjectSsGross +=
       this.#fixedIncomeStreams.subjectSsGross ?? 0;
-    this.#reportingYear.ReportData.ss_witholdingRate =
-      this.#inputs.flatSsWithholdingRate;
     this.#reportingYear.ReportData.ss_subjectSsWithholdings +=
       this.#fixedIncomeStreams.subjectSsWithholdings ?? 0;
     this.#reportingYear.ReportData.ss_subjectSsTakehome +=
@@ -898,6 +899,9 @@ class RetirementYearCalculator {
       this.#accountYear.getDeposits(ACCOUNT_TYPES.PARTNER_401K).asCurrency();
     this.#reportingYear.ReportData.retirementAcct_partner401kBalance =
       this.#accountYear.getEndingBalance(ACCOUNT_TYPES.PARTNER_401K);
+
+    this.#reportingYear.ReportData.taxes_pensionWithholdingRate = 
+      this.#inputs.flatPensionWithholdingRate;
 
     this.#reportingYear.ReportData.income_subjectPensionGross =
       this.#fixedIncomeStreams?.subjectPensionGross ?? 0;
