@@ -69,7 +69,7 @@ function showSsBreakdown(data) {
         <span class="ss-breakdown-value">${fmt(combinedSsGross)}</span>
     </div>
     <div class="ss-breakdown-item">
-        <span class="ss-breakdown-label">Withholdings (${data.ss_witholdingRate * 100}%):</span>
+        <span class="ss-breakdown-label">Withholdings (${data.taxes_ssWithholdingRate * 100}%):</span>
         <span class="ss-breakdown-value">${fmt(combinedSsWithholdings)}</span>
     </div>
     <div class="ss-breakdown-item">
@@ -138,7 +138,7 @@ function showSsBreakdown(data) {
         `;
   } else {
     breakdownHtml += `
-            <div style="color: var(--bad);">
+          <div style="color: var(--bad);">
             ⚠ Provisional income > $${data.ss_threshold2.toLocaleString()}<br/>
             → Up to 85% of SS benefits may be taxable<br/>
             <div style="margin-top: 4px; font-size: 11px;">
@@ -151,21 +151,11 @@ function showSsBreakdown(data) {
                   combinedSsTaxable
                 )}
             </div>
-            </div>
+          </div>
         `;
   }
 
   breakdownHtml += `</div>`;
-  // } else if (details.method === "simplified") {
-  //   breakdownHtml += `
-  //       <div style="margin: 16px 0; padding: 12px; background: rgba(110, 168, 254, 0.1); border-radius: 8px;">
-  //       <strong style="color: var(--accent);">Simplified SS Taxation:</strong>
-  //       <div style="margin-top: 8px; font-size: 12px; color: var(--muted);">
-  //           Using simplified assumption that 85% of SS benefits are taxable.
-  //       </div>
-  //       </div>
-  //   `;
-  // }
 
   breakdownHtml += `
     <div class="ss-breakdown-item">
@@ -177,10 +167,10 @@ function showSsBreakdown(data) {
         <span class="ss-breakdown-value">${fmt(combinedSsNonTaxable)}</span>
     </div>
     <div class="ss-breakdown-item">
-        <span class="ss-breakdown-label">Effective Tax Rate:</span>
+        <span class="ss-breakdown-label">Percent Taxable:</span>
         <span class="ss-breakdown-value">${
           combinedSsGross
-            ? (combinedSsTaxable / combinedSsGross).toFixed(1) + "%"
+            ? (combinedSsTaxable / combinedSsGross * 100).toFixed(0) + "%"
             : "N/A"
         }</span>
     </div>
