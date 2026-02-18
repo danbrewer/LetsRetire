@@ -149,16 +149,34 @@
     button:hover { transform: translateY(-1px); filter: brightness(1.07); }
 
     /* Dirty state pulse animation */
-    @keyframes calcPulse {
-      0%   { box-shadow: 0 0 0 0 rgba(110,168,254,.7); }
-      70%  { box-shadow: 0 0 0 10px rgba(110,168,254,0); }
-      100% { box-shadow: 0 0 0 0 rgba(110,168,254,0); }
+    @keyframes calcPulseFade {
+
+      0% {
+        box-shadow: 0 0 0 0 rgba(110,168,254,.75);
+        opacity: 1;
+      }
+
+      40% {
+        box-shadow: 0 0 0 10px rgba(110,168,254,0);
+        opacity: .55;
+      }
+
+      60% {
+        box-shadow: 0 0 0 0 rgba(110,168,254,0);
+        opacity: .55;
+      }
+
+      100% {
+        box-shadow: 0 0 0 0 rgba(110,168,254,0);
+        opacity: 1;
+      }
+
     }
 
-    .calc-dirty {
-      animation: calcPulse 1.6s infinite;
-      filter: brightness(1.15);
+    #calcBtn.calc-dirty {
+      animation: calcPulseFade 1.8s ease-in-out infinite;
     }
+
 
     .results { 
       /* Results panel scrolls independently from inputs */
@@ -1240,7 +1258,6 @@ details[open] .content {
   );
 
   initUI();
-  attachDirtyTracking();
 
    document.querySelectorAll("labeled-input").forEach((el) => {
       el.onHelp = (event, helpKey) => {
