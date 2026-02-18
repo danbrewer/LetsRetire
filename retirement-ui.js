@@ -22,6 +22,12 @@ import {
 import { createHelpIcon } from "./retirement-ui-help.js";
 import { showToast } from "./retirement-ui-toast.js";
 
+
+const STORAGE_KEY = "retirement-calculator-inputs";
+/** @type {Record<string, string>} */
+let persistedInputs = {};
+
+
 /**
  * @param {string} id
  * @returns {HTMLInputElement | null}
@@ -141,12 +147,20 @@ const pct = (/** @type {number} */ v) => (isNaN(v) ? 0 : Number(v) / 100);
 let calculations = [];
 
 document.addEventListener("value-changed", (e) => {
-    if (!(e instanceof CustomEvent)) return;
+  if (!(e instanceof CustomEvent)) return;
 
-  markDirty(); // doCalculations();
-   const input = document.getElementById(e.detail.id);
-   input?.classList.add("input-dirty");
+  const { id, value } = e.detail;
+
+  // Persist value
+  persistedInputs[id] = value;
+  savePersistedInputs();
+
+  markDirty();
+
+  const input = document.getElementById(id);
+  input?.classList.add("input-dirty");
 });
+
 
 document.addEventListener("keydown", (e) => {
   // Calculate button shortcut: Ctrl+Enter (or Cmd+Enter on Mac)
@@ -431,57 +445,61 @@ function parseInputParameters() {
 }
 
 function resetAll() {
-  document
-    .querySelectorAll("input")
-    .forEach((i) => (i.value = i.defaultValue ?? ""));
+  localStorage.removeItem(STORAGE_KEY);
+  persistedInputs = {};
 
-  const order = select("order");
-  if (order) {
-    order.value = "taxable,pretax,roth";
-  }
+  loadExample();
 
-  const filingStatus = select("filingStatus");
-  if (filingStatus) {
-    filingStatus.value = "single";
-  }
+  // const order = select("order");
+  // if (order) {
+  //   order.value = "taxable,pretax,roth";
+  // }
 
-  // Clear spending override fields
-  const grid = divById("spendingDetailsGrid");
-  if (grid) {
-    grid.innerHTML = "";
-  }
-  // Clear income adjustment fields
-  const taxableGrid = divById("taxableIncomeDetailsGrid");
-  if (taxableGrid) {
-    taxableGrid.innerHTML = "";
-  }
-  const taxFreeGrid = divById("taxFreeIncomeDetailsGrid");
-  if (taxFreeGrid) {
-    taxFreeGrid.innerHTML = "";
-  }
-  const rows = divById("rows");
-  if (rows) {
-    rows.innerHTML = "";
-  }
-  const kpiAge = divById("kpiAge");
-  if (kpiAge) {
-    kpiAge.textContent = "—";
-  }
+  // const filingStatus = select("filingStatus");
+  // if (filingStatus) {
+  //   filingStatus.value = "single";
+  // }
+  doCalculations();
 
-  const kpiEndBal = divById("kpiEndBal");
-  if (kpiEndBal) {
-    kpiEndBal.textContent = "—";
-  }
+  // // Clear spending override fields
+  // const grid = divById("spendingDetailsGrid");
+  // if (grid) {
+  //   grid.innerHTML = "";
+  // }
+  // // Clear income adjustment fields
+  // const taxableGrid = divById("taxableIncomeDetailsGrid");
+  // if (taxableGrid) {
+  //   taxableGrid.innerHTML = "";
+  // }
+  // const taxFreeGrid = divById("taxFreeIncomeDetailsGrid");
+  // if (taxFreeGrid) {
+  //   taxFreeGrid.innerHTML = "";
+  // }
+  // const rows = divById("rows");
+  // if (rows) {
+  //   rows.innerHTML = "";
+  // }
+  // const kpiAge = divById("kpiAge");
+  // if (kpiAge) {
+  //   kpiAge.textContent = "—";
+  // }
 
-  const kpiDraw = divById("kpiDraw");
-  if (kpiDraw) {
-    kpiDraw.textContent = "—";
-  }
+  // const kpiEndBal = divById("kpiEndBal");
+  // if (kpiEndBal) {
+  //   kpiEndBal.textContent = "—";
+  // }
 
-  const kpiTax = divById("kpiTax");
-  if (kpiTax) {
-    kpiTax.textContent = "—";
-  }
+  // const kpiDraw = divById("kpiDraw");
+  // if (kpiDraw) {
+  //   kpiDraw.textContent = "—";
+  // }
+
+  // const kpiTax = divById("kpiTax");
+  // if (kpiTax) {
+  //   kpiTax.textContent = "—";
+  // }
+
+  
 }
 
 // Initialize when DOM is loaded
@@ -1201,11 +1219,41 @@ function attachDirtyTracking(root = document) {
   });
 }
 
+function loadPersistedInputs() {
+  try {
+    const json = localStorage.getItem(STORAGE_KEY);
+    persistedInputs = json ? JSON.parse(json) : {};
+  } catch {
+    persistedInputs = {};
+  }
+}
+
+function savePersistedInputs() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(persistedInputs));
+}
+
+function restorePersistedInputs(root = document) {
+  Object.entries(persistedInputs).forEach(([id, value]) => {
+    const el = document.getElementById(id);
+
+    if (
+      el instanceof HTMLInputElement ||
+      el instanceof HTMLSelectElement ||
+      el instanceof HTMLTextAreaElement
+    ) {
+      el.value = value;
+    }
+  });
+}
+
+
 function initUI() {
+  loadPersistedInputs(); // ← ADD THIS FIRST
   loadColumnLayout();
   buildColumnMenu();
   initializeHelpIcons();
   loadExample();
+  restorePersistedInputs(); // ← ADD THIS AFTER UI EXISTS
   doCalculations();
   attachDirtyTracking();
 }
