@@ -770,11 +770,27 @@ function regenerateSpendingFields() {
       field.value = persistedInputs[id];
     }
 
+    // mark dirty on change
+    field.addEventListener("input", () => {
+      field.dispatchEvent(
+        new CustomEvent("value-changed", {
+          bubbles: true,
+          detail: {
+            id: field.id,
+            value: field.value,
+          },
+        })
+      );
+    });
+
     
     field.addEventListener("blur", (event) =>
       handleSpendingFieldChange(age, event)
     );
   }
+
+  attachDirtyTracking(grid);
+
 }
 
 // /**
@@ -892,7 +908,7 @@ function handleSpendingFieldChange(age, event) {
   );
 
   // Trigger recalculation
-  doCalculations();
+  // doCalculations();
 }
 
 function updateSpendingFieldsDisplayMode() {
@@ -1245,6 +1261,9 @@ async function loadPartial(hostSelector, url) {
   host.insertAdjacentHTML("beforeend", html);
 }
 
+/**
+ * @param {ParentNode} [root=document]
+ */
 function attachDirtyTracking(root = document) {
   root.querySelectorAll("input, select, textarea").forEach((el) => {
     if (
