@@ -1,7 +1,6 @@
 import {
   getTaxableIncomeOverride,
   getTaxFreeIncomeOverride,
-  getSpendingOverride,
 } from "../retirement-ui.js";
 
 // Simple test to verify the UI function defaults are working
@@ -31,21 +30,8 @@ if (typeof getTaxFreeIncomeOverride !== "undefined") {
   }
 } else {
   console.log("❌ getTaxFreeIncomeOverride is not defined");
+
 }
 
-// Test getSpendingOverride function
-if (typeof getSpendingOverride !== "undefined") {
-  const result = getSpendingOverride(62);
-  console.log("✅ getSpendingOverride(62) returns:", result);
-  if (result !== null && isNaN(result)) {
-    console.log("❌ getSpendingOverride returned NaN!");
-  } else {
-    console.log(
-      "✅ getSpendingOverride returned a valid value (null or number)"
-    );
-  }
-} else {
-  console.log("❌ getSpendingOverride is not defined");
-}
 
 console.log("All UI function default tests completed.");

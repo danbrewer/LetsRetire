@@ -273,6 +273,7 @@ class FixedIncomeStreams {
     if (retirementYearIndex < 1) {
       return 0;
     } 
+
     const retirementYearExtraSpending = this.#inputs.retirementYearExtraSpending.find(
       (item) => item.year === retirementYearIndex
     );

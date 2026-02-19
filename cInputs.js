@@ -360,8 +360,8 @@ class Inputs {
     /** @type {number} */
     this.yearIndex = 0;
 
-    /** @type {number} */
-    this.additionalSpending = 0;
+    // /** @type {number} */
+    // this.additionalSpending = 0;
 
     /** @type {number} */
     this.savingsUseAge = this.subjectRetireAge;

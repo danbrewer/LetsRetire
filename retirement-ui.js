@@ -358,6 +358,29 @@ function parseInputParameters() {
   const useRMD = checkbox(UIField.USE_RMD)?.checked ?? false;
   // const order = withdrawalOrder;
 
+  /** @type {import("./cInputs.js").RetirementYearExtraSpending[]} */
+  const retirementYearExtraSpending = [];
+
+  for (let age = subjectRetireAge; age <= subjectLifeSpan; age++) {
+    const field = inputText(`spending_${age}`);
+    if (!field) continue;
+
+    const raw = parseFloat(field.value);
+    if (!raw || isNaN(raw)) continue;
+
+    const useCurrentYearValues =
+      checkbox("useCurrentYearValues")?.checked ?? false;
+
+    const amount = useCurrentYearValues
+      ? applyInflationToSpendingValue(raw, age)
+      : raw;
+
+    retirementYearExtraSpending.push({
+      year: age - subjectRetireAge + 1,
+      amount: amount,
+    });
+  }
+
   /** @type {import("./cInputs.js").InputsOptions} */
   const inputArgs = {
     // Ages / timeline
@@ -369,6 +392,8 @@ function parseInputParameters() {
     subjectPensionStartAge: subjectPensionStartAge,
     subject401kStartAge: subject401kStartAge,
     subjectLifeSpan: subjectLifeSpan,
+
+    retirementYearExtraSpending: retirementYearExtraSpending, // This can be populated from dynamic UI fields for extra spending in specific retirement years
 
     // Spending
     inflationRate: inflationRate,
@@ -735,61 +760,70 @@ function regenerateSpendingFields() {
     grid.appendChild(div);
 
     // Add event listener for inflation adjustment
-    const field = $(`spending_${age}`);
+    const field = inputText(`spending_${age}`);
     if (!field) continue;
+
+    const id = `spending_${age}`;
+
+        // ✅ RESTORE persisted value
+    if (persistedInputs[id] !== undefined && persistedInputs[id] !== null && field) {
+      field.value = persistedInputs[id];
+    }
+
+    
     field.addEventListener("blur", (event) =>
       handleSpendingFieldChange(age, event)
     );
   }
 }
 
-/**
- * @param {any} age
- */
-function getSpendingOverride(age) {
-  let result = 0;
+// /**
+//  * @param {any} age
+//  */
+// function getSpendingOverride(age) {
+//   let result = 0;
 
-  const field = inputText(`spending_${age}`);
-  if (field && field.value) {
-    const value = parseFloat(field.value);
-    if (isNaN(value)) {
-      // console.log(`getSpendingOverride(${age}): Invalid number in field`);
-      setSpendingFieldValue(age);
-      return result;
-    }
-    const useCurrentYearValues = checkbox("useCurrentYearValues");
-    const useCurrentYear = useCurrentYearValues && useCurrentYearValues.checked;
-    const fieldValue = Number(field.value);
+//   const field = inputText(`spending_${age}`);
+//   if (field && field.value) {
+//     const value = parseFloat(field.value);
+//     if (isNaN(value)) {
+//       // console.log(`getSpendingOverride(${age}): Invalid number in field`);
+//       setSpendingFieldValue(age);
+//       return result;
+//     }
+//     const useCurrentYearValues = checkbox("useCurrentYearValues");
+//     const useCurrentYear = useCurrentYearValues && useCurrentYearValues.checked;
+//     const fieldValue = Number(field.value);
 
-    if (useCurrentYear) {
-      // If in current year mode, check if we have a stored current year value
-      const storedCurrentYearValue = field.getAttribute(
-        "data-current-year-value"
-      );
-      const value = parseFloat(storedCurrentYearValue ?? "0");
-      if (storedCurrentYearValue && !isNaN(value)) {
-        // Use the stored current year value and apply inflation
-        const inflatedValue = applyInflationToSpendingValue(
-          Number(storedCurrentYearValue),
-          age
-        );
-        // console.log(`  Using stored current year value ${storedCurrentYearValue} → inflated ${inflatedValue}`);
-        result = inflatedValue;
-      } else {
-        // Treat the field value as current year value and apply inflation
-        const inflatedValue = applyInflationToSpendingValue(fieldValue, age);
-        // console.log(`  Using field value as current year ${fieldValue} → inflated ${inflatedValue}`);
-        result = inflatedValue;
-      }
-    } else {
-      // Return the field value as-is (already in future dollars)
-      // console.log(`  Using field value as future dollars: ${fieldValue}`);
-      result = fieldValue;
-    }
-  }
-  setSpendingFieldValue(age);
-  return result.asCurrency();
-}
+//     if (useCurrentYear) {
+//       // If in current year mode, check if we have a stored current year value
+//       const storedCurrentYearValue = field.getAttribute(
+//         "data-current-year-value"
+//       );
+//       const value = parseFloat(storedCurrentYearValue ?? "0");
+//       if (storedCurrentYearValue && !isNaN(value)) {
+//         // Use the stored current year value and apply inflation
+//         const inflatedValue = applyInflationToSpendingValue(
+//           Number(storedCurrentYearValue),
+//           age
+//         );
+//         // console.log(`  Using stored current year value ${storedCurrentYearValue} → inflated ${inflatedValue}`);
+//         result = inflatedValue;
+//       } else {
+//         // Treat the field value as current year value and apply inflation
+//         const inflatedValue = applyInflationToSpendingValue(fieldValue, age);
+//         // console.log(`  Using field value as current year ${fieldValue} → inflated ${inflatedValue}`);
+//         result = inflatedValue;
+//       }
+//     } else {
+//       // Return the field value as-is (already in future dollars)
+//       // console.log(`  Using field value as future dollars: ${fieldValue}`);
+//       result = fieldValue;
+//     }
+//   }
+//   setSpendingFieldValue(age);
+//   return result.asCurrency();
+// }
 
 /**
  * @param {any} age
@@ -846,6 +880,16 @@ function handleSpendingFieldChange(age, event) {
     target.removeAttribute("data-current-year-value");
     target.removeAttribute("title");
   }
+
+  target.dispatchEvent(
+    new CustomEvent("value-changed", {
+      bubbles: true,
+      detail: {
+        id: target.id,
+        value: target.value,
+      },
+    })
+  );
 
   // Trigger recalculation
   doCalculations();
@@ -1234,7 +1278,7 @@ function savePersistedInputs() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(persistedInputs));
 }
 
-function restorePersistedInputs(root = document) {
+function restorePersistedInputs() {
   Object.entries(persistedInputs).forEach(([id, value]) => {
     const el = document.getElementById(id);
 
@@ -1255,6 +1299,7 @@ function initUI() {
   buildColumnMenu();
   initializeHelpIcons();
   loadExample();
+  regenerateSpendingFields();
   restorePersistedInputs(); // ← ADD THIS AFTER UI EXISTS
   doCalculations();
   attachDirtyTracking();
@@ -1294,7 +1339,7 @@ export {
   updateTaxFreeIncomeFieldsDisplayMode,
   regenerateSpendingFields,
   updateSpendingFieldsDisplayMode,
-  getSpendingOverride,
+  // getSpendingOverride,
   getTaxFreeIncomeOverride,
   getTaxableIncomeOverride,
   loadPartial,

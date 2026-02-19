@@ -14,7 +14,6 @@ import { WorkingYearCalculator } from "./cWorkingYearCalculator.js";
  * @typedef {object} RetirementUIFunctions
  * @property {() => Inputs|null} parseInputParameters
  * @property {() => void} regenerateSpendingFields
- * @property {(age:number) => number} getSpendingOverride
  * @property {(age:number) => number} getTaxableIncomeOverride
  * @property {(age:number) => number} getTaxFreeIncomeOverride
  * @property {() => void} regenerateTaxableIncomeFields
@@ -183,7 +182,7 @@ function initializeInputsForWorkingYear(inputs, yearIndex, UI) {
   const result = inputs.clone();
 
   result.yearIndex = yearIndex;
-  result.additionalSpending = UI.getSpendingOverride(result.subjectAge);
+  // result.additionalSpending = UI.getSpendingOverride(result.subjectAge);
   result.taxableIncomeAdjustment = UI.getTaxableIncomeOverride(
     result.subjectAge
   );
@@ -204,7 +203,7 @@ function initializeInputsForRetirementYear(inputs, yearIndex, UI) {
   const result = inputs.clone();
 
   result.yearIndex = yearIndex;
-  result.additionalSpending = UI.getSpendingOverride(result.subjectAge);
+  // result.additionalSpending = UI.getSpendingOverride(result.subjectAge);
   result.taxableIncomeAdjustment = UI.getTaxableIncomeOverride(
     result.subjectAge
   );
