@@ -55,17 +55,17 @@ class FiscalData {
   //     return this._description;
   //   }
 
-  // Method to update for next year
-  /**
-   * @param {number} newSpend
-   * @param {number} newYearIndex
-   */
-  updateForNextYear(newSpend, newYearIndex) {
-    debugger;
-    this.spend = newSpend;
-    this.yearIndex = newYearIndex;
-    this.taxYear = this.taxYear + (newYearIndex - this.yearIndex);
-  }
+  // // Method to update for next year
+  // /**
+  //  * @param {number} newSpend
+  //  * @param {number} newYearIndex
+  //  */
+  // updateForNextYear(newSpend, newYearIndex) {
+  //   debugger;
+  //   this.spend = newSpend;
+  //   this.yearIndex = newYearIndex;
+  //   this.taxYear = this.taxYear + (newYearIndex - this.yearIndex);
+  // }
 
   // Method to get account usage flags
   getAccountUsageFlags() {
@@ -194,7 +194,7 @@ class FiscalData {
       inputs.subjectUseRoth,
       inputs.flatSsWithholdingRate,
       inputs.flatCareerTrad401kWithholdingRate,
-      inputs.retirementYearExtraSpend
+      inputs.retirementYearSpendingOverride
     );
   }
 }

@@ -22,11 +22,9 @@ import {
 import { createHelpIcon } from "./retirement-ui-help.js";
 import { showToast } from "./retirement-ui-toast.js";
 
-
 const STORAGE_KEY = "retirement-calculator-inputs";
 /** @type {Record<string, string>} */
 let persistedInputs = {};
-
 
 /**
  * @param {string} id
@@ -160,7 +158,6 @@ document.addEventListener("value-changed", (e) => {
   const input = document.getElementById(id);
   input?.classList.add("input-dirty");
 });
-
 
 document.addEventListener("keydown", (e) => {
   // Calculate button shortcut: Ctrl+Enter (or Cmd+Enter on Mac)
@@ -358,8 +355,8 @@ function parseInputParameters() {
   const useRMD = checkbox(UIField.USE_RMD)?.checked ?? false;
   // const order = withdrawalOrder;
 
-  /** @type {import("./cInputs.js").RetirementYearExtraSpending[]} */
-  const retirementYearExtraSpending = [];
+  /** @type {import("./cInputs.js").RetirementYearSpendingOverride[]} */
+  const retirementYearSpendingOverride = [];
 
   for (let age = subjectRetireAge; age <= subjectLifeSpan; age++) {
     const field = inputText(`spending_${age}`);
@@ -375,7 +372,7 @@ function parseInputParameters() {
       ? applyInflationToSpendingValue(raw, age)
       : raw;
 
-    retirementYearExtraSpending.push({
+    retirementYearSpendingOverride.push({
       year: age - subjectRetireAge + 1,
       amount: amount,
     });
@@ -393,7 +390,7 @@ function parseInputParameters() {
     subject401kStartAge: subject401kStartAge,
     subjectLifeSpan: subjectLifeSpan,
 
-    retirementYearExtraSpending: retirementYearExtraSpending, // This can be populated from dynamic UI fields for extra spending in specific retirement years
+    retirementYearSpendingOverride: retirementYearSpendingOverride, // This can be populated from dynamic UI fields for extra spending in specific retirement years
 
     // Spending
     inflationRate: inflationRate,
@@ -523,8 +520,6 @@ function resetAll() {
   // if (kpiTax) {
   //   kpiTax.textContent = "—";
   // }
-
-  
 }
 
 // Initialize when DOM is loaded
@@ -765,8 +760,12 @@ function regenerateSpendingFields() {
 
     const id = `spending_${age}`;
 
-        // ✅ RESTORE persisted value
-    if (persistedInputs[id] !== undefined && persistedInputs[id] !== null && field) {
+    // ✅ RESTORE persisted value
+    if (
+      persistedInputs[id] !== undefined &&
+      persistedInputs[id] !== null &&
+      field
+    ) {
       field.value = persistedInputs[id];
     }
 
@@ -783,14 +782,12 @@ function regenerateSpendingFields() {
       );
     });
 
-    
     field.addEventListener("blur", (event) =>
       handleSpendingFieldChange(age, event)
     );
   }
 
   attachDirtyTracking(grid);
-
 }
 
 // /**
@@ -1310,7 +1307,6 @@ function restorePersistedInputs() {
     }
   });
 }
-
 
 function initUI() {
   loadPersistedInputs(); // ← ADD THIS FIRST

@@ -205,7 +205,7 @@ class FixedIncomeStreams {
     return result.asCurrency();
   }
 
-  get nonTaxableIncome(){
+  get nonTaxableIncome() {
     const result =
       this.taxFreeIncomeAdjustment +
       this.#careerStreams.combinedWagesAndCompensationNonTaxable +
@@ -268,22 +268,23 @@ class FixedIncomeStreams {
     return total.asCurrency();
   }
 
-  get retirementYearAdditionalSpend(){
-    const retirementYearIndex = this.#inputs.subjectAge - this.#inputs.subjectRetireAge + 1;
+  get retirementYearSpendingOverride() {
+    const retirementYearIndex =
+      this.#inputs.subjectAge - this.#inputs.subjectRetireAge + 1;
     if (retirementYearIndex < 1) {
-      return 0;
-    } 
-
-    const retirementYearExtraSpending = this.#inputs.retirementYearExtraSpending.find(
-      (item) => item.year === retirementYearIndex
-    );
-    if (!retirementYearExtraSpending) {
       return 0;
     }
 
-    return retirementYearExtraSpending.amount.asCurrency();
-  }
+    const retirementYearSpendingOverride =
+      this.#inputs.retirementYearSpendingOverrides.find(
+        (item) => item.year === retirementYearIndex
+      );
+    if (!retirementYearSpendingOverride) {
+      return 0;
+    }
 
+    return retirementYearSpendingOverride.amount.asCurrency();
+  }
 }
 
 export { FixedIncomeStreams };

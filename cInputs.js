@@ -2,7 +2,7 @@ import { ACCOUNT_TYPES } from "./cAccount.js";
 import { compoundedRate } from "./utils.js";
 
 /**
- * @typedef {Object} RetirementYearExtraSpending
+ * @typedef {Object} RetirementYearSpendingOverride
  * @property {number} year - Year number relative to retirement (1 = first year of retirement)
  * @property {number} amount - Extra spending amount for that year
  *
@@ -16,7 +16,7 @@ import { compoundedRate } from "./utils.js";
  * @property {number} [subjectPensionStartAge]
  * @property {number} [subject401kStartAge]
  * @property {number} [subjectLifeSpan]
- * @property {RetirementYearExtraSpending[]} [retirementYearExtraSpending]
+ * @property {RetirementYearSpendingOverride[]} [retirementYearSpendingOverride]
  *
  * @property {number} [inflationRate]
  * @property {number} [spendingToday]
@@ -110,7 +110,6 @@ class Inputs {
       subjectPensionStartAge = 0,
       subject401kStartAge = 0,
       subjectLifeSpan = 0,
-      retirementYearExtraSpending = [],
 
       // Inflation + spending
       inflationRate = 0,
@@ -218,9 +217,9 @@ class Inputs {
     /** @type {number} */
     this.subjectLifeSpan = subjectLifeSpan;
 
-    /** @type {RetirementYearExtraSpending[]} */
-    this.retirementYearExtraSpending =
-      options.retirementYearExtraSpending || [];
+    /** @type {RetirementYearSpendingOverride[]} */
+    this.retirementYearSpendingOverrides =
+      options.retirementYearSpendingOverride || [];
 
     /** @type {number} */
     this.inflationRate = inflationRate;
@@ -593,8 +592,11 @@ class Inputs {
         -this.spendingDecline,
         this.#retirementYearIndex
       );
-      result += this.retirementYearExtraSpend;
 
+      if (this.retirementYearSpendingOverride && this.retirementYearSpendingOverride > 0) {
+        result = this.retirementYearSpendingOverride;
+      }
+      
       return result;
     }
 
@@ -697,11 +699,11 @@ class Inputs {
     return this.#taxFreeIncomeAdjustment;
   }
 
-  get retirementYearExtraSpend() {
-    const ryes = this.retirementYearExtraSpending.find(
+  get retirementYearSpendingOverride() {
+    const spendingOverride = this.retirementYearSpendingOverrides.find(
       (rye) => rye.year === this.#retirementYearIndex + 1
     );
-    return ryes ? ryes.amount : 0;
+    return spendingOverride ? spendingOverride.amount : 0;
   }
 
   /**
@@ -727,7 +729,7 @@ class Inputs {
       subjectPensionStartAge: this.subjectPensionStartAge,
       subject401kStartAge: this.subject401kStartAge,
       subjectLifeSpan: this.subjectLifeSpan,
-      retirementYearExtraSpending: this.retirementYearExtraSpending,
+      retirementYearSpendingOverride: this.retirementYearSpendingOverrides,
 
       inflationRate: this.inflationRate,
       spendingToday: this.spendingToday,

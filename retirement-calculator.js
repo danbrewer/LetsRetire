@@ -203,7 +203,6 @@ function initializeInputsForRetirementYear(inputs, yearIndex, UI) {
   const result = inputs.clone();
 
   result.yearIndex = yearIndex;
-  // result.additionalSpending = UI.getSpendingOverride(result.subjectAge);
   result.taxableIncomeAdjustment = UI.getTaxableIncomeOverride(
     result.subjectAge
   );
