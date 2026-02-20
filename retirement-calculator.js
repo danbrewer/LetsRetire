@@ -75,8 +75,7 @@ function calc(calculations, UI) {
   for (let yearIndex = 0; yearIndex < inputs.totalWorkingYears; yearIndex++) {
     const workingYearInputs = initializeInputsForWorkingYear(
       inputs,
-      yearIndex,
-      UI
+      yearIndex
     );
 
     const accountYear = AccountingYear.Create(
@@ -118,7 +117,6 @@ function calc(calculations, UI) {
     const retirementYearInputs = initializeInputsForRetirementYear(
       inputs,
       yearIndex,
-      UI
     );
 
     const accountYear = AccountingYear.Create(
@@ -175,20 +173,19 @@ function calc(calculations, UI) {
 /**
  * @param {Inputs} inputs
  * @param {number} yearIndex
- * @param {RetirementUIFunctions} UI
  * @return {Inputs}
  */
-function initializeInputsForWorkingYear(inputs, yearIndex, UI) {
+function initializeInputsForWorkingYear(inputs, yearIndex) {
   const result = inputs.clone();
 
   result.yearIndex = yearIndex;
   // result.additionalSpending = UI.getSpendingOverride(result.subjectAge);
-  result.taxableIncomeAdjustment = UI.getTaxableIncomeOverride(
-    result.subjectAge
-  );
-  result.taxFreeIncomeAdjustment = UI.getTaxFreeIncomeOverride(
-    result.subjectAge
-  );
+  // result.taxableIncomeAdjustment = UI.getTaxableIncomeOverride(
+  //   result.subjectAge
+  // );
+  // result.taxFreeIncomeAdjustment = UI.getTaxFreeIncomeOverride(
+  //   result.subjectAge
+  // );
 
   return result;
 }
@@ -196,19 +193,12 @@ function initializeInputsForWorkingYear(inputs, yearIndex, UI) {
 /**
  * @param {Inputs} inputs
  * @param {number} yearIndex
- * @param {RetirementUIFunctions} UI
  * @return {Inputs}
  */
-function initializeInputsForRetirementYear(inputs, yearIndex, UI) {
+function initializeInputsForRetirementYear(inputs, yearIndex) {
   const result = inputs.clone();
 
   result.yearIndex = yearIndex;
-  result.taxableIncomeAdjustment = UI.getTaxableIncomeOverride(
-    result.subjectAge
-  );
-  result.taxFreeIncomeAdjustment = UI.getTaxFreeIncomeOverride(
-    result.subjectAge
-  );
   return result;
 }
 

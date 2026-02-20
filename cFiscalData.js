@@ -15,7 +15,7 @@ class FiscalData {
    * @param {boolean} useRoth
    * @param {number} flatSsWithholdingRate
    * @param {number} flatTrad401kWithholdingRate
-   * @param {number} retirementYearExtraSpending
+ 
    */
   constructor(
     inflationRate,
@@ -31,7 +31,9 @@ class FiscalData {
     useRoth,
     flatSsWithholdingRate,
     flatTrad401kWithholdingRate,
-    retirementYearExtraSpending
+    // retirementYearExtraSpending,
+    // retirementYearTaxableIncomeOverride,
+    // retirementYearTaxFreeIncomeOverride
   ) {
     this._description = "Fiscal Year Data";
     this.inflationRate = inflationRate;
@@ -47,7 +49,9 @@ class FiscalData {
     this.useRoth = useRoth;
     this.flatSsWithholdingRate = flatSsWithholdingRate;
     this.flatTrad401kWithholdingRate = flatTrad401kWithholdingRate;
-    this.retirementYearExtraSpending = retirementYearExtraSpending;
+    // this.retirementYearExtraSpending = retirementYearExtraSpending;
+    // this.retirementYearTaxableIncomeOverride = retirementYearTaxableIncomeOverride;
+    // this.retirementYearTaxFreeIncomeOverride = retirementYearTaxFreeIncomeOverride;
   }
 
   //   // Getter for description to maintain compatibility
@@ -194,7 +198,9 @@ class FiscalData {
       inputs.subjectUseRoth,
       inputs.flatSsWithholdingRate,
       inputs.flatCareerTrad401kWithholdingRate,
-      inputs.retirementYearSpendingOverride
+      // inputs.retirementYearSpendingOverride,
+      // inputs.retirementYearTaxableIncomeOverride,
+      // inputs.retirementYearTaxFreeIncomeOverride
     );
   }
 }

@@ -119,7 +119,15 @@ class FixedIncomeStreams {
   }
 
   get miscTaxableIncome() {
-    return this.#inputs.taxableIncomeAdjustment.asCurrency();
+    // debugger;
+    const taxableIncomeOverride = this.#inputs.taxableIncomeOverrides.find(
+      (item) => item.year === this.#demographics.currentAge
+    );
+    if (!taxableIncomeOverride) {
+      return 0;
+    }
+
+    return taxableIncomeOverride.amount.asCurrency();
   }
 
   get miscTaxableIncomeWithholdings() {
@@ -129,7 +137,14 @@ class FixedIncomeStreams {
   }
 
   get taxFreeIncomeAdjustment() {
-    return this.#inputs.taxFreeIncomeAdjustment.asCurrency();
+    const taxFreeIncomeOverride = this.#inputs.taxFreeIncomeOverrides.find(
+      (item) => item.year === this.#demographics.currentAge
+    );
+    if (!taxFreeIncomeOverride) {
+      return 0;
+    }
+
+    return taxFreeIncomeOverride.amount.asCurrency();
   }
 
   // Factory method for backward compatibility and dependency injection

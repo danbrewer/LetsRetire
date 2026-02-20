@@ -232,6 +232,51 @@ function initializeHelpIcons() {
 }
 
 /**
+ * Harvest override values from age-based override fields
+ *
+ * @param {string} prefix
+ * @param {number} startAge
+ * @param {number} endAge
+ * @param {boolean} useCurrentYearMode
+ * @param {(value:number, age:number)=>number} inflationFn
+ * @returns {{year:number, amount:number}[]}
+ */
+function harvestAgeOverrides(
+  prefix,
+  startAge,
+  endAge,
+  useCurrentYearMode,
+  inflationFn
+) {
+  const result = [];
+
+  for (let age = startAge; age <= endAge; age++) {
+    const field = inputText(`${prefix}_${age}`);
+    if (!field) continue;
+
+    const raw = parseFloat(field.value);
+    if (!raw || isNaN(raw)) continue;
+
+    let amount = raw;
+
+    if (useCurrentYearMode) {
+      const stored = field.getAttribute("data-current-year-value");
+
+      const base = stored !== null ? parseFloat(stored) : raw;
+
+      amount = inflationFn(base, age);
+    }
+
+    result.push({
+      year: age,
+      amount,
+    });
+  }
+
+  return result;
+}
+
+/**
  * Parse and validate input parameters for the retirement calculation
  */
 /**
@@ -366,27 +411,55 @@ function parseInputParameters() {
   // const order = withdrawalOrder;
 
   /** @type {import("./cInputs.js").RetirementYearSpendingOverride[]} */
-  const retirementYearSpendingOverride = [];
+  // const retirementYearSpendingOverride = [];
+  const retirementYearSpendingOverrides = harvestAgeOverrides(
+    "spending",
+    subjectRetireAge,
+    subjectLifeSpan,
+    checkbox("useCurrentYearValues")?.checked ?? false,
+    applyInflationToSpendingValue
+  ).map((o) => ({
+    year: o.year - subjectRetireAge + 1,
+    amount: o.amount,
+  }));
 
-  for (let age = subjectRetireAge; age <= subjectLifeSpan; age++) {
-    const field = inputText(`spending_${age}`);
-    if (!field) continue;
+  const taxableIncomeOverrides = harvestAgeOverrides(
+    "taxableIncome",
+    subjectCurrentAge,
+    subjectLifeSpan,
+    checkbox("useTaxableCurrentYearValues")?.checked ?? false,
+    applyInflationToIncomeValue
+  );
 
-    const raw = parseFloat(field.value);
-    if (!raw || isNaN(raw)) continue;
+  console.log("taxableIncomeOverrides", taxableIncomeOverrides);
 
-    const useCurrentYearValues =
-      checkbox("useCurrentYearValues")?.checked ?? false;
+  const taxFreeIncomeOverrides = harvestAgeOverrides(
+    "taxFreeIncome",
+    subjectCurrentAge,
+    subjectLifeSpan,
+    checkbox("useTaxFreeCurrentYearValues")?.checked ?? false,
+    applyInflationToIncomeValue
+  );
 
-    const amount = useCurrentYearValues
-      ? applyInflationToSpendingValue(raw, age)
-      : raw;
+  // for (let age = subjectRetireAge; age <= subjectLifeSpan; age++) {
+  //   const field = inputText(`spending_${age}`);
+  //   if (!field) continue;
 
-    retirementYearSpendingOverride.push({
-      year: age - subjectRetireAge + 1,
-      amount: amount,
-    });
-  }
+  //   const raw = parseFloat(field.value);
+  //   if (!raw || isNaN(raw)) continue;
+
+  //   const useCurrentYearValues =
+  //     checkbox("useCurrentYearValues")?.checked ?? false;
+
+  //   const amount = useCurrentYearValues
+  //     ? applyInflationToSpendingValue(raw, age)
+  //     : raw;
+
+  //   retirementYearSpendingOverride.push({
+  //     year: age - subjectRetireAge + 1,
+  //     amount: amount,
+  //   });
+  // }
 
   /** @type {import("./cInputs.js").InputsOptions} */
   const inputArgs = {
@@ -400,7 +473,9 @@ function parseInputParameters() {
     subject401kStartAge: subject401kStartAge,
     subjectLifeSpan: subjectLifeSpan,
 
-    retirementYearSpendingOverride: retirementYearSpendingOverride, // This can be populated from dynamic UI fields for extra spending in specific retirement years
+    retirementYearSpendingOverrides: retirementYearSpendingOverrides,
+    taxableIncomeOverrides: taxableIncomeOverrides,
+    taxFreeIncomeOverrides: taxFreeIncomeOverrides,
 
     // Spending
     inflationRate: inflationRate,

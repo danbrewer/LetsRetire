@@ -190,7 +190,7 @@ class FixedIncomeCareerStreams {
     ).asCurrency();
   }
 
-  get wagesAndCompensationWithholdingRate(){
+  get wagesAndCompensationWithholdingRate() {
     return this.#inputs.flatWageWithholdingRate;
   }
 
@@ -301,7 +301,20 @@ class FixedIncomeCareerStreams {
   }
 
   get miscTaxableIncome() {
-    return this.#inputs.taxableIncomeAdjustment.asCurrency();
+    const retirementYearIndex =
+      this.#inputs.subjectAge - this.#inputs.subjectRetireAge + 1;
+    if (retirementYearIndex < 1) {
+      return 0;
+    }
+
+    const taxableIncomeOverride = this.#inputs.taxableIncomeOverrides.find(
+      (item) => item.year === retirementYearIndex
+    );
+    if (!taxableIncomeOverride) {
+      return 0;
+    }
+
+    return taxableIncomeOverride.amount.asCurrency();
   }
 
   get miscTaxableIncomeWithholdings() {
@@ -311,7 +324,20 @@ class FixedIncomeCareerStreams {
   }
 
   get taxFreeIncomeAdjustment() {
-    return this.#inputs.taxFreeIncomeAdjustment.asCurrency();
+    const retirementYearIndex =
+      this.#inputs.subjectAge - this.#inputs.subjectRetireAge + 1;
+    if (retirementYearIndex < 1) {
+      return 0;
+    }
+
+    const taxFreeIncomeOverride = this.#inputs.taxFreeIncomeOverrides.find(
+      (item) => item.year === retirementYearIndex
+    );
+    if (!taxFreeIncomeOverride) {
+      return 0;
+    }
+
+    return taxFreeIncomeOverride.amount.asCurrency();
   }
 
   get subjectWorkingYearSavingsContributionFixed() {

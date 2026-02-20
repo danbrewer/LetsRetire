@@ -170,7 +170,7 @@ function showSsBreakdown(data) {
         <span class="ss-breakdown-label">Percent Taxable:</span>
         <span class="ss-breakdown-value">${
           combinedSsGross
-            ? (combinedSsTaxable / combinedSsGross * 100).toFixed(0) + "%"
+            ? ((combinedSsTaxable / combinedSsGross) * 100).toFixed(0) + "%"
             : "N/A"
         }</span>
     </div>
@@ -229,10 +229,6 @@ function showSsGrossBreakdown(data) {
 
   popup.setContent(breakdownHtml);
   popup.show();
-  // if (content)
-  //   content.innerHTML = breakdownHtml;
-  // if (popup)
-  //   popup.classList.add("show");
 }
 
 /**
@@ -261,7 +257,7 @@ function showTaxesBreakdown(data) {
         <span class="ss-breakdown-value">${data.income_total_gross.asWholeDollars()}</span>
     </div>
     <div class="ss-breakdown-item">
-        <span class="ss-breakdown-label">Nontaxable income:</span>
+        <span class="ss-breakdown-label">Tax-free reductions:</span>
         <span class="ss-breakdown-value">${data.taxes_nonTaxableIncome.asWholeDollars()}</span>
     </div>
     <div class="ss-breakdown-item breakdown-accent">
@@ -324,19 +320,7 @@ function showWithholdingsBreakdown(data) {
   }
 
   const popup = ensurePopup("withholdings", "Withholdings Breakdown");
-  /*
-      this.income_subjectWagesWithholdings +
-      this.income_subject401kWithholdings +
-      this.income_subjectPensionWithholdings +
-      this.ss_subjectSsWithholdings +
 
-      this.income_partnerWagesWithholdings +
-      this.income_partner401kWithholdings +
-      this.income_partnerPensionWithholdings +
-      this.ss_partnerSsWithholdings +
-
-      this.income_additionalWithholdings;
-*/
   // Build the breakdown content
   let breakdownHtml = `
     <div class="ss-breakdown-item">
@@ -386,10 +370,13 @@ function showWithholdingsBreakdown(data) {
     </div>
     `;
   }
-
   breakdownHtml += `
+    <div class="ss-breakdown-item">
+      <span class="ss-breakdown-label">Misc Taxable Income:</span>
+      <span class="ss-breakdown-value">${data.income_miscIncomeWithholdings.asWholeDollars()}</span>
+    </div>
     <div class="ss-breakdown-item breakdown-accent">
-        <span class="ss-breakdown-label">Withholdings:</span>
+        <span class="ss-breakdown-label">Total Withholdings:</span>
         <span class="ss-breakdown-value">${data.income_total_withholdings.asWholeDollars()}</span>
     </div>
     `;

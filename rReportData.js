@@ -165,10 +165,9 @@ class ReportData extends BaseReports {
 
     this.income_miscIncomeGross = 0;
     this.income_miscIncomeWithholdings = 0;
-    this.income_miscIncomeTakehome = 0;
+    this.income_miscTaxableIncomeTakehome = 0;
 
-    this.income_additionalWithholdings = 0;
-    this.income_taxFreeIncome = 0;
+    this.income_miscTaxFreeIncome = 0;
 
     this.income_savingsInterest = 0;
 
@@ -451,7 +450,7 @@ class ReportData extends BaseReports {
     return (
       this.income_subjectTakehomeWages +
       this.income_partnerTakehomeWages +
-      this.income_miscIncomeTakehome +
+      this.income_miscTaxableIncomeTakehome +
       this.income_subject401kTakehome +
       this.income_partner401kTakehome +
       this.income_subjectPensionTakehome +
@@ -460,7 +459,8 @@ class ReportData extends BaseReports {
       this.ss_partnerSsTakehome +
       this.savings_Withdrawals +
       this.retirementAcct_partnerRothWithdrawals +
-      this.retirementAcct_subjectRothWithdrawals
+      this.retirementAcct_subjectRothWithdrawals +
+      this.income_miscTaxFreeIncome
     ).asCurrency();
   }
 
@@ -489,7 +489,7 @@ class ReportData extends BaseReports {
       this.income_partnerPensionWithholdings +
       this.ss_subjectSsWithholdings +
       this.ss_partnerSsWithholdings +
-      this.income_additionalWithholdings;
+      this.income_miscIncomeWithholdings;
 
     return result.asCurrency();
   }

@@ -607,7 +607,11 @@ const columnGroups = [
         render: (calc) =>
           money("income", calc.reportData.income_combined401kGross),
       },
-
+      {
+        label: "Misc Gross",
+        render: (calc) =>
+          money("income", calc.reportData.income_miscIncomeGross),
+      },
       {
         label: "Total Gross",
         render: (calc) => money("income", calc.reportData.income_total_gross),
@@ -625,9 +629,9 @@ const columnGroups = [
       {
         label: "Withholdings",
         render: (calc, index) =>
-          money("outgoing", calc.reportData.income_total_withholdings,{
-              index,
-              action: "showWithholdingsBreakdown"
+          money("outgoing", calc.reportData.income_total_withholdings, {
+            index,
+            action: "showWithholdingsBreakdown",
           }),
       },
       {

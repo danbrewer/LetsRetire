@@ -27,7 +27,7 @@ function createInputs() {
     initialAgeSubject: 60,
     initialAgePartner: 56,
     subjectLifeSpan: 80,
-    retirementYearSpendingOverride: [
+    retirementYearSpendingOverrides: [
       // { year: 1, amount: 20000 },
       // { year: 2, amount: 20000 },
       // { year: 3, amount: 20000 },
@@ -140,7 +140,7 @@ function createInputsNoFussNoMuss() {
     initialAgeSubject: 60,
     initialAgePartner: 60,
     subjectLifeSpan: 80,
-    retirementYearSpendingOverride: [
+    retirementYearSpendingOverrides: [
       { year: 1, amount: 5000 },
       { year: 2, amount: 4000 },
       { year: 3, amount: 3000 },

@@ -216,7 +216,7 @@ class WorkingYearCalculator {
         PERIODIC_FREQUENCY.MONTHLY
       );
 
-      this.#reportingYear.ReportData.income_miscIncomeTakehome = miscIncome;
+      this.#reportingYear.ReportData.income_miscIncomeGross = miscIncome;
 
       const withholdings =
         this.#fixedIncomeStreams.miscTaxableIncomeWithholdings;
@@ -242,7 +242,8 @@ class WorkingYearCalculator {
         TransactionCategory.Withholdings
       );
 
-      this.#reportingYear.ReportData.income_miscIncomeTakehome = takeHomeAmount;
+      this.#reportingYear.ReportData.income_miscTaxableIncomeTakehome =
+        takeHomeAmount;
     }
   }
 
@@ -257,7 +258,7 @@ class WorkingYearCalculator {
         PERIODIC_FREQUENCY.MONTHLY
       );
     }
-    this.#reportingYear.ReportData.income_taxFreeIncome = taxFreeIncome;
+    this.#reportingYear.ReportData.income_miscTaxFreeIncome = taxFreeIncome;
 
     // const subjectNonTaxableIncome =
     //   this.#fixedIncomeStreams.subjectPayrollDeductions;

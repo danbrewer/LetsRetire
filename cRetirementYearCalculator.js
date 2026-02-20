@@ -103,7 +103,7 @@ class RetirementYearCalculator {
         PERIODIC_FREQUENCY.MONTHLY
       );
 
-      this.#reportingYear.ReportData.income_miscIncomeTakehome = miscIncome;
+      this.#reportingYear.ReportData.income_miscIncomeGross = miscIncome;
 
       const withholdings =
         this.#fixedIncomeStreams.miscTaxableIncomeWithholdings;
@@ -129,13 +129,15 @@ class RetirementYearCalculator {
         TransactionCategory.Withholdings
       );
 
-      this.#reportingYear.ReportData.income_miscIncomeTakehome = takeHomeAmount;
+      this.#reportingYear.ReportData.income_miscTaxableIncomeTakehome =
+        takeHomeAmount;
     }
   }
 
   #processTaxFreeIncome() {
     const taxFreeIncome = this.#fixedIncomeStreams.taxFreeIncomeAdjustment;
     if (taxFreeIncome > 0) {
+      // debugger;
       this.#accountYear.processAsPeriodicDeposits(
         ACCOUNT_TYPES.CASH,
         TransactionCategory.OtherNonTaxable,
@@ -143,8 +145,10 @@ class RetirementYearCalculator {
         taxFreeIncome,
         PERIODIC_FREQUENCY.MONTHLY
       );
+
+      this.#reportingYear.ReportData.income_miscTaxFreeIncome = taxFreeIncome;
     }
-    this.#reportingYear.ReportData.income_taxFreeIncome = taxFreeIncome;
+    
 
     // const subjectNonTaxableIncome =
     //   this.#fixedIncomeStreams.subjectPayrollDeductions;
@@ -716,7 +720,7 @@ class RetirementYearCalculator {
 
     this.#reportingYear.ReportData.taxes_ssWithholdingRate =
       this.#inputs.flatSsWithholdingRate;
-    
+
     this.#reportingYear.ReportData.ss_subjectSsGross +=
       this.#fixedIncomeStreams.subjectSsGross ?? 0;
     this.#reportingYear.ReportData.ss_subjectSsWithholdings +=
@@ -900,7 +904,7 @@ class RetirementYearCalculator {
     this.#reportingYear.ReportData.retirementAcct_partner401kBalance =
       this.#accountYear.getEndingBalance(ACCOUNT_TYPES.PARTNER_401K);
 
-    this.#reportingYear.ReportData.taxes_pensionWithholdingRate = 
+    this.#reportingYear.ReportData.taxes_pensionWithholdingRate =
       this.#inputs.flatPensionWithholdingRate;
 
     this.#reportingYear.ReportData.income_subjectPensionGross =

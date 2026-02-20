@@ -160,8 +160,9 @@ class RetirementYearData extends BaseYearData {
         this.#reportData.income_partnerPensionTakehome,
       ss_subjectSsTakehome: this.#reportData.ss_subjectSsTakehome,
       ss_partnerSsTakehome: this.#reportData.ss_partnerSsTakehome,
-      income_miscIncomeTakehome: this.#reportData.income_miscIncomeTakehome,
-      income_taxFreeIncome: this.#reportData.income_taxFreeIncome,
+      income_miscIncomeTakehome:
+        this.#reportData.income_miscTaxableIncomeTakehome,
+      income_taxFreeIncome: this.#reportData.income_miscTaxFreeIncome,
     };
   }
 

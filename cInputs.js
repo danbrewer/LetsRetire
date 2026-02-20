@@ -16,7 +16,9 @@ import { compoundedRate } from "./utils.js";
  * @property {number} [subjectPensionStartAge]
  * @property {number} [subject401kStartAge]
  * @property {number} [subjectLifeSpan]
- * @property {RetirementYearSpendingOverride[]} [retirementYearSpendingOverride]
+ * @property {RetirementYearSpendingOverride[]} [retirementYearSpendingOverrides]
+ * @property {RetirementYearSpendingOverride[]} [taxableIncomeOverrides]
+ * @property {RetirementYearSpendingOverride[]} [taxFreeIncomeOverrides]
  *
  * @property {number} [inflationRate]
  * @property {number} [spendingToday]
@@ -88,12 +90,6 @@ import { compoundedRate } from "./utils.js";
  */
 
 class Inputs {
-  /** @type {number} */
-  #taxableIncomeAdjustment = 0;
-
-  /** @type {number} */
-  #taxFreeIncomeAdjustment = 0;
-
   /**
    * JS "named parameters" pattern: constructor takes a single options object.
    *
@@ -219,7 +215,13 @@ class Inputs {
 
     /** @type {RetirementYearSpendingOverride[]} */
     this.retirementYearSpendingOverrides =
-      options.retirementYearSpendingOverride || [];
+      options.retirementYearSpendingOverrides || [];
+
+    /** @type {RetirementYearSpendingOverride[]} */
+    this.taxableIncomeOverrides = options.taxableIncomeOverrides || [];
+
+    /** @type {RetirementYearSpendingOverride[]} */
+    this.taxFreeIncomeOverrides = options.taxFreeIncomeOverrides || [];
 
     /** @type {number} */
     this.inflationRate = inflationRate;
@@ -593,10 +595,13 @@ class Inputs {
         this.#retirementYearIndex
       );
 
-      if (this.retirementYearSpendingOverride && this.retirementYearSpendingOverride > 0) {
+      if (
+        this.retirementYearSpendingOverride &&
+        this.retirementYearSpendingOverride > 0
+      ) {
         result = this.retirementYearSpendingOverride;
       }
-      
+
       return result;
     }
 
@@ -677,27 +682,19 @@ class Inputs {
     return this.subjectAge - this.subjectRetireAge;
   }
 
-  /**
-   * @param {number} value
-   */
-  set taxableIncomeAdjustment(value) {
-    this.#taxableIncomeAdjustment = value;
-  }
+  // get retirementYearTaxableIncomeOverride() {
+  //   const taxableIncomeOverride = this.taxableIncomeOverrides.find(
+  //     (tye) => tye.year === this.#retirementYearIndex + 1
+  //   );
+  //   return taxableIncomeOverride ? taxableIncomeOverride.amount : 0;
+  // }
 
-  get taxableIncomeAdjustment() {
-    return this.#taxableIncomeAdjustment;
-  }
-
-  /**
-   * @param {number} value
-   */
-  set taxFreeIncomeAdjustment(value) {
-    this.#taxFreeIncomeAdjustment = value;
-  }
-
-  get taxFreeIncomeAdjustment() {
-    return this.#taxFreeIncomeAdjustment;
-  }
+  // get retirementYearTaxFreeIncomeOverride() {
+  //   const taxFreeIncomeOverride = this.taxFreeIncomeOverrides.find(
+  //     (tye) => tye.year === this.#retirementYearIndex + 1
+  //   );
+  //   return taxFreeIncomeOverride ? taxFreeIncomeOverride.amount : 0;
+  // }
 
   get retirementYearSpendingOverride() {
     const spendingOverride = this.retirementYearSpendingOverrides.find(
@@ -729,7 +726,10 @@ class Inputs {
       subjectPensionStartAge: this.subjectPensionStartAge,
       subject401kStartAge: this.subject401kStartAge,
       subjectLifeSpan: this.subjectLifeSpan,
-      retirementYearSpendingOverride: this.retirementYearSpendingOverrides,
+
+      retirementYearSpendingOverrides: this.retirementYearSpendingOverrides,
+      taxableIncomeOverrides: this.taxableIncomeOverrides,
+      taxFreeIncomeOverrides: this.taxFreeIncomeOverrides,
 
       inflationRate: this.inflationRate,
       spendingToday: this.spendingToday,
