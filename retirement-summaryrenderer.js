@@ -573,7 +573,7 @@ const columnGroups = [
     order: 30,
     columns: [
       {
-        label: "Salary",
+        label: "Wages",
         render: (calc) =>
           money("income", calc.reportData.income_combinedWagesGross),
       },
@@ -587,21 +587,35 @@ const columnGroups = [
       {
         label: "SS Gross",
         render: (calc, index) =>
-          money("income", calc.reportData.ss_combinedGross, {
+          money("income", calc.reportData.ss_subjectSsGross, {
             index,
             action: "showSsGrossBreakdown",
           }),
       },
-
       {
-        label: "Pension Gross",
+        label: "SS Gross (Partner)",
         render: (calc, index) =>
-          money("income", calc.reportData.income_combinedPensionGross, {
+          money("income", calc.reportData.ss_partnerSsGross, {
+            index,
+            action: "showSsGrossBreakdown",
+          }),
+      },
+      {
+        label: "Pension",
+        render: (calc, index) =>
+          money("income", calc.reportData.income_subjectPensionGross, {
             index,
             action: "showPensionGrossBreakdown",
           }),
       },
-
+      {
+        label: "Pension (Partner)",
+        render: (calc, index) =>
+          money("income", calc.reportData.income_partnerPensionGross, {
+            index,
+            action: "showPensionGrossBreakdown",
+          }),
+      },
       {
         label: "401k Gross",
         render: (calc) =>
