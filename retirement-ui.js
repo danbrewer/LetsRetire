@@ -27,6 +27,16 @@ const STORAGE_KEY = "retirement-calculator-inputs";
 let persistedInputs = {};
 
 /**
+ * @typedef OverrideFieldOptions
+ * @property {string} prefix
+ * @property {string} gridId
+ * @property {string} label
+ * @property {string} placeholder
+ * @property {(age:number, event:FocusEvent)=>void} onBlur
+ * @property {number} startAge
+ */
+
+/**
  * @param {string} id
  * @returns {HTMLInputElement | null}
  * @throws {Error} if element is missing or not a text-like input
@@ -555,6 +565,20 @@ function doCalculations() {
   const result = calc(calculations, DefaultUI);
   clearDirty();
   generateOutputAndSummary(result?.inputs, result?.calculations);
+  // const inputs = parseInputParameters();
+
+  // if (!inputs) return;
+
+  // const calculations = new Calculations();
+
+  // const result = calc(calculations, inputs);
+
+  // clearDirty();
+
+  // generateOutputAndSummary(
+  //   result?.inputs,
+  //   result?.calculations
+  // );
 }
 
 function updateTaxFreeIncomeFieldsDisplayMode() {
@@ -733,110 +757,119 @@ function loadExample() {
 
 // Annual Spending Details Functions
 function regenerateSpendingFields() {
-  const retireAge = num(UIField.SUBJECT_RETIRE_AGE);
-  const endAge = num(UIField.SUBJECT_LIFESPAN);
+  generateOverrideFields({
+    prefix: "spending",
+    gridId: "spendingDetailsGrid",
+    label: "spending ($)",
+    placeholder: "Auto",
+    onBlur: handleSpendingFieldChange,
+    startAge: num(UIField.SUBJECT_RETIRE_AGE),
+  });
 
-  // Only generate if ages are valid
-  if (retireAge <= 0 || endAge <= retireAge) {
-    return;
-  }
+  // const retireAge = num(UIField.SUBJECT_RETIRE_AGE);
+  // const endAge = num(UIField.SUBJECT_LIFESPAN);
 
-  const grid = $("spendingDetailsGrid");
-  if (!grid) return;
-  grid.innerHTML = ""; // Clear existing fields
+  // // Only generate if ages are valid
+  // if (retireAge <= 0 || endAge <= retireAge) {
+  //   return;
+  // }
 
-  // Generate input fields for each retirement year
-  for (let age = retireAge; age <= endAge; age++) {
-    const div = document.createElement("div");
-    div.innerHTML = `
-        <label for="spending_${age}">Age ${age} spending ($)</label>
-        <input id="spending_${age}" type="number" step="1000" placeholder="Auto" />
-    `;
-    grid.appendChild(div);
+  // const grid = $("spendingDetailsGrid");
+  // if (!grid) return;
+  // grid.innerHTML = ""; // Clear existing fields
 
-    // Add event listener for inflation adjustment
-    const field = inputText(`spending_${age}`);
-    if (!field) continue;
+  // // Generate input fields for each retirement year
+  // for (let age = retireAge; age <= endAge; age++) {
+  //   const div = document.createElement("div");
+  //   div.innerHTML = `
+  //       <label for="spending_${age}">Age ${age} spending ($)</label>
+  //       <input id="spending_${age}" type="number" step="1000" placeholder="Auto" />
+  //   `;
+  //   grid.appendChild(div);
 
-    const id = `spending_${age}`;
+  //   // Add event listener for inflation adjustment
+  //   const field = inputText(`spending_${age}`);
+  //   if (!field) continue;
 
-    // ✅ RESTORE persisted value
-    if (
-      persistedInputs[id] !== undefined &&
-      persistedInputs[id] !== null &&
-      field
-    ) {
-      field.value = persistedInputs[id];
-    }
+  //   const id = `spending_${age}`;
 
-    // mark dirty on change
-    field.addEventListener("input", () => {
-      field.dispatchEvent(
-        new CustomEvent("value-changed", {
-          bubbles: true,
-          detail: {
-            id: field.id,
-            value: field.value,
-          },
-        })
-      );
-    });
+  //   // ✅ RESTORE persisted value
+  //   if (
+  //     persistedInputs[id] !== undefined &&
+  //     persistedInputs[id] !== null &&
+  //     field
+  //   ) {
+  //     field.value = persistedInputs[id];
+  //   }
 
-    field.addEventListener("blur", (event) =>
-      handleSpendingFieldChange(age, event)
-    );
-  }
+  //   // mark dirty on change
+  //   field.addEventListener("input", () => {
+  //     field.dispatchEvent(
+  //       new CustomEvent("value-changed", {
+  //         bubbles: true,
+  //         detail: {
+  //           id: field.id,
+  //           value: field.value,
+  //         },
+  //       })
+  //     );
+  //   });
 
-  attachDirtyTracking(grid);
+  //   field.addEventListener("blur", (event) =>
+  //     handleSpendingFieldChange(age, event)
+  //   );
+  // }
+
+  // attachDirtyTracking(grid);
 }
 
-// /**
-//  * @param {any} age
-//  */
-// function getSpendingOverride(age) {
-//   let result = 0;
+/**
+ * @param {any} age
+ */
+function getSpendingOverride(age) {
+  let result = 0;
 
-//   const field = inputText(`spending_${age}`);
-//   if (field && field.value) {
-//     const value = parseFloat(field.value);
-//     if (isNaN(value)) {
-//       // console.log(`getSpendingOverride(${age}): Invalid number in field`);
-//       setSpendingFieldValue(age);
-//       return result;
-//     }
-//     const useCurrentYearValues = checkbox("useCurrentYearValues");
-//     const useCurrentYear = useCurrentYearValues && useCurrentYearValues.checked;
-//     const fieldValue = Number(field.value);
+  const field = inputText(`spending_${age}`);
+  if (field && field.value) {
+    const value = parseFloat(field.value);
+    if (isNaN(value)) {
+      // console.log(`getSpendingOverride(${age}): Invalid number in field`);
+      setSpendingFieldValue(age);
+      return result;
+    }
+    const useCurrentYearValues = checkbox("useCurrentYearValues");
+    const useCurrentYear = useCurrentYearValues && useCurrentYearValues.checked;
+    const fieldValue = Number(field.value);
 
-//     if (useCurrentYear) {
-//       // If in current year mode, check if we have a stored current year value
-//       const storedCurrentYearValue = field.getAttribute(
-//         "data-current-year-value"
-//       );
-//       const value = parseFloat(storedCurrentYearValue ?? "0");
-//       if (storedCurrentYearValue && !isNaN(value)) {
-//         // Use the stored current year value and apply inflation
-//         const inflatedValue = applyInflationToSpendingValue(
-//           Number(storedCurrentYearValue),
-//           age
-//         );
-//         // console.log(`  Using stored current year value ${storedCurrentYearValue} → inflated ${inflatedValue}`);
-//         result = inflatedValue;
-//       } else {
-//         // Treat the field value as current year value and apply inflation
-//         const inflatedValue = applyInflationToSpendingValue(fieldValue, age);
-//         // console.log(`  Using field value as current year ${fieldValue} → inflated ${inflatedValue}`);
-//         result = inflatedValue;
-//       }
-//     } else {
-//       // Return the field value as-is (already in future dollars)
-//       // console.log(`  Using field value as future dollars: ${fieldValue}`);
-//       result = fieldValue;
-//     }
-//   }
-//   setSpendingFieldValue(age);
-//   return result.asCurrency();
-// }
+    if (useCurrentYear) {
+      // If in current year mode, check if we have a stored current year value
+      const storedCurrentYearValue = field.getAttribute(
+        "data-current-year-value"
+      );
+      const value = parseFloat(storedCurrentYearValue ?? "0");
+      if (storedCurrentYearValue && !isNaN(value)) {
+        // Use the stored current year value and apply inflation
+        const inflatedValue = applyInflationToSpendingValue(
+          Number(storedCurrentYearValue),
+          age
+        );
+        // console.log(`  Using stored current year value ${storedCurrentYearValue} → inflated ${inflatedValue}`);
+        result = inflatedValue;
+      } else {
+        // Treat the field value as current year value and apply inflation
+        const inflatedValue = applyInflationToSpendingValue(fieldValue, age);
+        // console.log(`  Using field value as current year ${fieldValue} → inflated ${inflatedValue}`);
+        result = inflatedValue;
+      }
+    } else {
+      // Return the field value as-is (already in future dollars)
+      // console.log(`  Using field value as future dollars: ${fieldValue}`);
+      result = fieldValue;
+    }
+  }
+  setSpendingFieldValue(age);
+  return result.asCurrency();
+}
 
 /**
  * @param {any} age
@@ -959,37 +992,128 @@ function updateSpendingFieldsDisplayMode() {
   doCalculations();
 }
 
-// Taxable Income Adjustments Functions
-function regenerateTaxableIncomeFields() {
-  const currentAge = num(UIField.SUBJECT_CURRENT_AGE);
+/**
+ * Generic override field generator
+ * Used by spending, taxable income, and tax-free income
+ *
+ * @param {OverrideFieldOptions} options
+ */
+function generateOverrideFields(options) {
+  const startAge = options.startAge;
   const endAge = num(UIField.SUBJECT_LIFESPAN);
 
-  // Only generate if ages are valid
-  if (currentAge <= 0 || endAge <= currentAge) {
-    return;
-  }
+  if (startAge <= 0 || endAge <= startAge) return;
 
-  const grid = $("taxableIncomeDetailsGrid");
+  const grid = $(options.gridId);
   if (!grid) return;
 
-  grid.innerHTML = ""; // Clear existing fields
+  grid.innerHTML = "";
 
-  // Generate input fields for each year from current age to end age
-  for (let age = currentAge; age <= endAge; age++) {
+  for (let age = startAge; age <= endAge; age++) {
+    const id = `${options.prefix}_${age}`;
+
     const div = document.createElement("div");
+
     div.innerHTML = `
-        <label for="taxableIncome_${age}">Age ${age} taxable income ($)</label>
-        <input id="taxableIncome_${age}" type="number" step="1000" placeholder="0" />
+      <label for="${id}">
+        Age ${age} ${options.label}
+      </label>
+      <input
+        id="${id}"
+        type="number"
+        step="1000"
+        placeholder="${options.placeholder}"
+      />
     `;
+
     grid.appendChild(div);
 
-    // Add event listener for inflation adjustment
-    const field = $(`taxableIncome_${age}`);
+    const field = inputText(id);
     if (!field) continue;
-    field.addEventListener("blur", (event) =>
-      handleTaxableIncomeFieldChange(age, event)
-    );
+
+    // Restore persisted value
+    if (persistedInputs[id] !== undefined) {
+      field.value = persistedInputs[id];
+    }
+
+    // Persist on input
+    field.addEventListener("input", () => {
+      field.dispatchEvent(
+        new CustomEvent("value-changed", {
+          bubbles: true,
+          detail: {
+            id,
+            value: field.value,
+          },
+        })
+      );
+    });
+
+    // inflation handler
+    field.addEventListener("blur", (event) => options.onBlur(age, event));
   }
+
+  attachDirtyTracking(grid);
+}
+
+// Taxable Income Adjustments Functions
+function regenerateTaxableIncomeFields() {
+  generateOverrideFields({
+    prefix: "taxableIncome",
+    gridId: "taxableIncomeDetailsGrid",
+    label: "taxable income ($)",
+    placeholder: "0",
+    onBlur: handleTaxableIncomeFieldChange,
+    startAge: num(UIField.SUBJECT_CURRENT_AGE),
+  });
+  // const currentAge = num(UIField.SUBJECT_CURRENT_AGE);
+  // const endAge = num(UIField.SUBJECT_LIFESPAN);
+
+  // if (currentAge <= 0 || endAge <= currentAge) return;
+
+  // const grid = $("taxableIncomeDetailsGrid");
+  // if (!grid) return;
+
+  // grid.innerHTML = "";
+
+  // for (let age = currentAge; age <= endAge; age++) {
+  //   const id = `taxableIncome_${age}`;
+
+  //   const div = document.createElement("div");
+  //   div.innerHTML = `
+  //       <label for="${id}">Age ${age} taxable income ($)</label>
+  //       <input id="${id}" type="number" step="1000" placeholder="0" />
+  //   `;
+  //   grid.appendChild(div);
+
+  //   const field = inputText(id);
+  //   if (!field) continue;
+
+  //   // ✅ RESTORE persisted value
+  //   if (persistedInputs[id] !== undefined && persistedInputs[id] !== null) {
+  //     field.value = persistedInputs[id];
+  //   }
+
+  //   // ✅ Persist on input (same as spending)
+  //   field.addEventListener("input", () => {
+  //     field.dispatchEvent(
+  //       new CustomEvent("value-changed", {
+  //         bubbles: true,
+  //         detail: {
+  //           id: field.id,
+  //           value: field.value,
+  //         },
+  //       })
+  //     );
+  //   });
+
+  //   // existing inflation handling
+  //   field.addEventListener("blur", (event) =>
+  //     handleTaxableIncomeFieldChange(age, event)
+  //   );
+  // }
+
+  // attachDirtyTracking(grid);
 }
 
 /**
@@ -1066,8 +1190,18 @@ function handleTaxableIncomeFieldChange(age, event) {
     target.removeAttribute("title");
   }
 
+  target.dispatchEvent(
+    new CustomEvent("value-changed", {
+      bubbles: true,
+      detail: {
+        id: target.id,
+        value: target.value,
+      },
+    })
+  );
+
   // Trigger recalculation
-  doCalculations();
+  // doCalculations();
 }
 
 function updateTaxableIncomeFieldsDisplayMode() {
@@ -1123,35 +1257,44 @@ function updateTaxableIncomeFieldsDisplayMode() {
 
 // Tax-free Income Adjustments Functions
 function regenerateTaxFreeIncomeFields() {
-  const currentAge = num(UIField.SUBJECT_CURRENT_AGE);
-  const endAge = num(UIField.SUBJECT_LIFESPAN);
+  generateOverrideFields({
+    prefix: "taxFreeIncome",
+    gridId: "taxFreeIncomeDetailsGrid",
+    label: "tax-free income ($)",
+    placeholder: "0",
+    onBlur: handleTaxFreeIncomeFieldChange,
+    startAge: num(UIField.SUBJECT_CURRENT_AGE),
+  });
 
-  // Only generate if ages are valid
-  if (currentAge <= 0 || endAge <= currentAge) {
-    return;
-  }
+  // const currentAge = num(UIField.SUBJECT_CURRENT_AGE);
+  // const endAge = num(UIField.SUBJECT_LIFESPAN);
 
-  const grid = $("taxFreeIncomeDetailsGrid");
-  if (!grid) return;
+  // // Only generate if ages are valid
+  // if (currentAge <= 0 || endAge <= currentAge) {
+  //   return;
+  // }
 
-  grid.innerHTML = ""; // Clear existing fields
+  // const grid = $("taxFreeIncomeDetailsGrid");
+  // if (!grid) return;
 
-  // Generate input fields for each year from current age to end age
-  for (let age = currentAge; age <= endAge; age++) {
-    const div = document.createElement("div");
-    div.innerHTML = `
-        <label for="taxFreeIncome_${age}">Age ${age} tax-free income ($)</label>
-        <input id="taxFreeIncome_${age}" type="number" step="1000" placeholder="0" />
-    `;
-    grid.appendChild(div);
+  // grid.innerHTML = ""; // Clear existing fields
 
-    // Add event listener for inflation adjustment
-    const field = $(`taxFreeIncome_${age}`);
-    if (!field) continue;
-    field.addEventListener("blur", (event) =>
-      handleTaxFreeIncomeFieldChange(age, event)
-    );
-  }
+  // // Generate input fields for each year from current age to end age
+  // for (let age = currentAge; age <= endAge; age++) {
+  //   const div = document.createElement("div");
+  //   div.innerHTML = `
+  //       <label for="taxFreeIncome_${age}">Age ${age} tax-free income ($)</label>
+  //       <input id="taxFreeIncome_${age}" type="number" step="1000" placeholder="0" />
+  //   `;
+  //   grid.appendChild(div);
+
+  //   // Add event listener for inflation adjustment
+  //   const field = $(`taxFreeIncome_${age}`);
+  //   if (!field) continue;
+  //   field.addEventListener("blur", (event) =>
+  //     handleTaxFreeIncomeFieldChange(age, event)
+  //   );
+  // }
 }
 
 /**
@@ -1225,8 +1368,18 @@ function handleTaxFreeIncomeFieldChange(age, event) {
     target.removeAttribute("title");
   }
 
+  target.dispatchEvent(
+    new CustomEvent("value-changed", {
+      bubbles: true,
+      detail: {
+        id: target.id,
+        value: target.value,
+      },
+    })
+  );
+
   // Trigger recalculation
-  doCalculations();
+  // doCalculations();
 }
 
 // Helper function for income inflation (similar to spending inflation)
@@ -1315,6 +1468,8 @@ function initUI() {
   initializeHelpIcons();
   loadExample();
   regenerateSpendingFields();
+  regenerateTaxableIncomeFields();
+  regenerateTaxFreeIncomeFields();
   restorePersistedInputs(); // ← ADD THIS AFTER UI EXISTS
   doCalculations();
   attachDirtyTracking();
@@ -1354,7 +1509,7 @@ export {
   updateTaxFreeIncomeFieldsDisplayMode,
   regenerateSpendingFields,
   updateSpendingFieldsDisplayMode,
-  // getSpendingOverride,
+  getSpendingOverride,
   getTaxFreeIncomeOverride,
   getTaxableIncomeOverride,
   loadPartial,
