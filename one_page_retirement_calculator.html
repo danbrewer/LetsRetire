@@ -1144,6 +1144,125 @@ details[open] .content {
   cursor: pointer;
 }
 
+.pension-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  margin-bottom: 12px;
+  background: var(--card);
+  transition: all 0.2s ease;
+}
+
+.pension-row:hover {
+  border-color: var(--accent);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+}
+
+.pension-info {
+  flex-grow: 1;
+}
+
+.pension-info strong {
+  display: block;
+  font-size: 16px;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.pension-details {
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.pension-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.pension-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 8px;
+  border: 1.5px solid;
+  border-radius: 10px;
+  background: transparent;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  /* text-transform: uppercase; */
+  letter-spacing: 0.5px;
+  transition: all 0.2s ease;
+  min-width: 20px;
+  justify-content: center;
+}
+
+.pension-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.pension-btn:active {
+  transform: translateY(0);
+}
+
+.pension-edit {
+  border-color: #10b981;
+  color: #10b981;
+}
+
+.pension-edit:hover {
+  background: #10b981;
+  color: white;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.pension-delete {
+  border-color: #ef4444;
+  color: #ef4444;
+}
+
+.pension-delete:hover {
+  background: #ef4444;
+  color: white;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.btn-icon {
+  font-size: 8px;
+  display: inline-block;
+}
+
+.btn-text {
+  font-size: 11px;
+}
+
+/* Compact mode for smaller screens */
+@media (max-width: 640px) {
+  .pension-row {
+    flex-direction: column;
+    text-align: center;
+    gap: 12px;
+  }
+  
+  .pension-actions {
+    justify-content: center;
+  }
+  
+  .btn-text {
+    display: none;
+  }
+  
+  .pension-btn {
+    min-width: 44px;
+    padding: 10px;
+  }
+}
+
   </style>
 </head>
 <body>

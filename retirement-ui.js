@@ -267,8 +267,11 @@ function setupEventListeners() {
  * @param {string} id - The pension ID to edit
  * @returns {void}
  */
+
+
+
 /**
- * Create an inline edit form for a pension entry
+ * Show pension edit modal dialog
  * @param {string} id - The pension ID to edit
  * @returns {void}
  */
@@ -277,86 +280,182 @@ function editPension(id) {
   const pension = pensionManager.getById(id);
   if (!pension) return;
 
-  // Close any existing edit forms
-  cancelPensionEdit();
-
-  const rows = Array.from(document.querySelectorAll(".pension-row"));
-  const targetRow = rows.find((row) => {
-    const editBtn = row.querySelector(".edit");
-    return editBtn?.getAttribute("data-id") === id;
-  });
-
-  if (!targetRow) return;
-
-  // Create edit form
-  const editForm = document.createElement("div");
-  editForm.className = "pension-edit-form";
-  editForm.setAttribute("data-editing-id", id);
-
-  editForm.innerHTML = `
-    <div class="pension-edit-content">
-      <div class="pension-edit-field">
-        <label for="edit-name-${id}">Name:</label>
-        <input 
-          id="edit-name-${id}" 
-          type="text" 
-          value="${pension.name}" 
-          placeholder="Pension name"
-        >
+  // Create modal overlay
+  const modal = document.createElement('div');
+  modal.className = 'pension-modal-overlay';
+  modal.setAttribute('data-editing-id', id);
+  
+  modal.innerHTML = `
+    <div class="pension-modal">
+      <div class="pension-modal-header">
+        <h3>Edit Pension/Annuity</h3>
+        <button class="pension-modal-close" type="button" aria-label="Close">×</button>
       </div>
       
-      <div class="pension-edit-field">
-        <label for="edit-monthly-${id}">Monthly Amount:</label>
-        <input 
-          id="edit-monthly-${id}" 
-          type="number" 
-          step="100" 
-          value="${pension.monthlyAmount}" 
-          placeholder="0"
-        >
+      <div class="pension-modal-body">
+        <form class="pension-edit-form" id="pensionEditForm">
+          <div class="pension-form-grid">
+            <div class="pension-form-field">
+              <label for="pension-name-${id}">Pension Name</label>
+              <input 
+                id="pension-name-${id}" 
+                type="text" 
+                value="${pension.name}" 
+                placeholder="Enter pension name"
+                required
+              >
+            </div>
+            
+            <div class="pension-form-field">
+              <label for="pension-monthly-${id}">Monthly Amount</label>
+              <input 
+                id="pension-monthly-${id}" 
+                type="number" 
+                step="100" 
+                value="${pension.monthlyAmount}" 
+                placeholder="0"
+                min="0"
+                required
+              >
+            </div>
+            
+            <div class="pension-form-field">
+              <label for="pension-age-${id}">Start Age</label>
+              <input 
+                id="pension-age-${id}" 
+                type="number" 
+                min="50" 
+                max="100" 
+                value="${pension.startAge}" 
+                placeholder="65"
+                required
+              >
+            </div>
+            
+            <div class="pension-form-field">
+              <label for="pension-withholding-${id}">Tax Withholding (%)</label>
+              <input 
+                id="pension-withholding-${id}" 
+                type="number" 
+                step="0.5" 
+                min="0" 
+                max="50" 
+                value="${(pension.withholdingRate * 100).toFixed(1)}" 
+                placeholder="15.0"
+              >
+            </div>
+            
+            <div class="pension-form-field full-width">
+              <label for="pension-survivor-${id}">Survivorship Percentage (%)</label>
+              <input 
+                id="pension-survivor-${id}" 
+                type="number" 
+                step="5" 
+                min="0" 
+                max="100" 
+                value="${(pension.survivorshipPercent * 100).toFixed(0)}" 
+                placeholder="0"
+              >
+            </div>
+          </div>
+        </form>
       </div>
       
-      <div class="pension-edit-field">
-        <label for="edit-age-${id}">Start Age:</label>
-        <input 
-          id="edit-age-${id}" 
-          type="number" 
-          min="50" 
-          max="100" 
-          value="${pension.startAge}" 
-          placeholder="65"
-        >
-      </div>
-      
-      <div class="pension-edit-field">
-        <label for="edit-withholding-${id}">Withholding Rate (%):</label>
-        <input 
-          id="edit-withholding-${id}" 
-          type="number" 
-          step="1" 
-          min="0" 
-          max="50" 
-          value="${(pension.withholdingRate * 100).toFixed(1)}" 
-          placeholder="15"
-        >
-      </div>
-      
-      <div class="pension-edit-actions">
-        <button type="button" data-id="${id}" class="save-pension">Save</button>
-        <button type="button" class="cancel-pension-edit">Cancel</button>
+      <div class="pension-modal-footer">
+        <button type="button" class="pension-btn pension-cancel">Cancel</button>
+        <button type="button" class="pension-btn pension-save" data-id="${id}">Save Changes</button>
       </div>
     </div>
   `;
 
-  // Replace the row with the edit form
-  targetRow.parentNode?.replaceChild(editForm, targetRow);
-
-  // Focus the first input
-  const nameInput = editForm.querySelector(`#edit-name-${id}`);
+  // Add to document
+  document.body.appendChild(modal);
+  
+  // Focus first input
+  const nameInput = modal.querySelector(`#pension-name-${id}`);
   if (nameInput instanceof HTMLInputElement) {
     nameInput.focus();
     nameInput.select();
   }
+  
+  // Prevent background scrolling
+  document.body.style.overflow = 'hidden';
+}
+
+/**
+ * Close pension edit modal
+ * @returns {void}
+ */
+function closePensionModal() {
+  const modal = document.querySelector('.pension-modal-overlay');
+  if (modal) {
+    document.body.removeChild(modal);
+    document.body.style.overflow = '';
+  }
+}
+
+/**
+ * Save pension changes from modal form
+ * @param {string} id - The pension ID being edited
+ * @returns {void}
+ */
+function savePensionFromModal(id) {
+  if (!pensionManager) return;
+  
+  const pension = pensionManager.getById(id);
+  if (!pension) return;
+
+  // Get form values
+  const nameInput = document.getElementById(`pension-name-${id}`);
+  const monthlyInput = document.getElementById(`pension-monthly-${id}`);
+  const ageInput = document.getElementById(`pension-age-${id}`);
+  const withholdingInput = document.getElementById(`pension-withholding-${id}`);
+  const survivorInput = document.getElementById(`pension-survivor-${id}`);
+
+  if (!(nameInput instanceof HTMLInputElement) ||
+      !(monthlyInput instanceof HTMLInputElement) ||
+      !(ageInput instanceof HTMLInputElement) ||
+      !(withholdingInput instanceof HTMLInputElement) ||
+      !(survivorInput instanceof HTMLInputElement)) {
+    return;
+  }
+
+  // Validate inputs
+  const name = nameInput.value.trim();
+  const monthlyAmount = parseFloat(monthlyInput.value) || 0;
+  const startAge = parseInt(ageInput.value) || pension.startAge;
+  const withholdingRate = (parseFloat(withholdingInput.value) || 15) / 100;
+  const survivorshipPercent = (parseFloat(survivorInput.value) || 0) / 100;
+
+  if (!name) {
+    nameInput.focus();
+    showToast("Validation Error", "Pension name is required", "error");
+    return;
+  }
+
+  if (startAge < 50 || startAge > 100) {
+    ageInput.focus();
+    showToast("Validation Error", "Start age must be between 50 and 100", "error");
+    return;
+  }
+
+  // Update the pension
+  pensionManager.update({
+    ...pension,
+    name,
+    monthlyAmount,
+    startAge,
+    withholdingRate,
+    survivorshipPercent
+  });
+
+  // Close modal and refresh
+  closePensionModal();
+  renderPensionList();
+  markDirty();
+  doCalculations();
+  
+  showToast("Success", "Pension updated successfully", "success");
 }
 
 /**
@@ -1806,19 +1905,24 @@ function renderPensionList() {
 
   list.forEach((item) => {
     const row = document.createElement("div");
-
     row.className = "pension-row";
 
     row.innerHTML = `
-      <div>
+      <div class="pension-info">
         <strong>${item.name}</strong>
-        ${item.monthlyAmount.asCurrency()}/mo
-        starting ${item.startAge}
+        <div class="pension-details">$${item.monthlyAmount.asCurrency()}/mo starting age ${item.startAge}
+        </div>
       </div>
 
-      <div>
-        <button data-id="${item.id}" class="edit">Edit</button>
-        <button data-id="${item.id}" class="delete">Delete</button>
+      <div class="pension-actions">
+        <button class="pension-btn pension-edit edit" data-id="${item.id}" title="Modify pension details">
+          <span class="btn-icon">📝</span>
+          <span class="btn-text">Edit</span>
+        </button>
+        <button class="pension-btn pension-delete delete" data-id="${item.id}" title="Remove pension">
+          <span class="btn-icon">❌</span>
+          <span class="btn-text">Remove</span>
+        </button>
       </div>
     `;
 
