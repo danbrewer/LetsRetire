@@ -9,8 +9,7 @@ This is a sophisticated JavaScript retirement planning application with GAAP-com
 1. **Assess and Analyze**: Examine the problem thoroughly
 2. **Present Findings**: Explain what's wrong and why
 3. **Show Code Solutions**: Provide the proposed code changes in markdown code blocks
-4. **Wait for Approval**: Let the developer review and approve before implementing
-5. **Only Change When Asked**: Use editing tools only when explicitly requested
+4. **DO NOT ASK FOR IMPLEMENTATION**: The developer will always implement changes themselves
 
 **Example Response Format:**
 ```
@@ -22,9 +21,9 @@ This is a sophisticated JavaScript retirement planning application with GAAP-com
 
 ## Code Changes
 [Show the changes in markdown code blocks]
-
-Would you like me to implement these changes?
 ```
+
+**Note: Never ask "Would you like me to implement these changes?" - the developer will always handle implementation.**
 
 ## Key Architecture Points
 - **GAAP System**: All financial transactions use double-entry bookkeeping (cGaap.js, cGaapAccount.js, etc.)
@@ -38,6 +37,8 @@ Would you like me to implement these changes?
 - Preserve two-phase tax calculation approach
 - Include comprehensive error handling and validation
 - Always suggest appropriate tests for changes
+- **REQUIRED: All new functions must include proper JSDoc declarations** with parameter types, return types, and descriptions
+- Follow existing TypeScript-style JSDoc patterns used throughout the codebase
 
 ## Common Tasks
 - Debugging complex retirement calculations in RetirementYearCalculator
