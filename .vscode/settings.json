@@ -1,1 +1,10 @@
-{}
+{
+  "github.copilot.advanced": {
+    "debug.overrideEngine": "copilot-chat"
+  },
+  "github.copilot.chat.welcomeMessage": "I'm ready to help with your retirement calculator project. I have full context of the GAAP accounting system, tax calculations, and modular architecture. Reference /overview.md for complete documentation.",
+  "files.associations": {
+    "*.md": "markdown",
+    "copilot-instructions.md": "markdown"
+  }
+}
