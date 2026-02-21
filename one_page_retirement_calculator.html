@@ -1063,6 +1063,87 @@ details[open] .content {
     background: rgba(110,168,254,0.15);
   }
 
+  .pension-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 8px;
+  }
+
+  .pension-row button {
+    padding: 5px 10px;
+    margin-left: 5px;
+    font-size: 12px;
+  }
+
+  .pension-edit-form {
+  border: 1px solid var(--accent);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 8px;
+  background: var(--card);
+  box-shadow: 0 4px 12px rgba(0,0,0,.3);
+}
+
+.pension-edit-content {
+  display: grid;
+  gap: 12px;
+}
+
+.pension-edit-field {
+  display: grid;
+  gap: 4px;
+}
+
+.pension-edit-field label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.pension-edit-field input {
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #0b1426;
+  color: var(--text);
+  font-size: 14px;
+}
+
+.pension-edit-field input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(110,168,254,.15);
+}
+
+.pension-edit-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+.save-pension {
+  background: var(--accent);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.cancel-pension-edit {
+  background: var(--border);
+  color: var(--text);
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
   </style>
 </head>
 <body>

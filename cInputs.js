@@ -1,5 +1,8 @@
 import { ACCOUNT_TYPES } from "./cAccount.js";
-import { compoundedRate } from "./utils.js";
+/**
+ * @typedef {import("./cPensionAnnuityStorage.js").PensionAnnuity} PensionAnnuity
+ */
+
 
 /**
  * @typedef {Object} RetirementYearSpendingOverride
@@ -19,6 +22,7 @@ import { compoundedRate } from "./utils.js";
  * @property {RetirementYearSpendingOverride[]} [retirementYearSpendingOverrides]
  * @property {RetirementYearSpendingOverride[]} [taxableIncomeOverrides]
  * @property {RetirementYearSpendingOverride[]} [taxFreeIncomeOverrides]
+ * @property {PensionAnnuity[]} [pensionAnnuities]
  *
  * @property {number} [inflationRate]
  * @property {number} [spendingToday]
@@ -173,6 +177,7 @@ class Inputs {
         ACCOUNT_TYPES.SUBJECT_401K,
         ACCOUNT_TYPES.SUBJECT_ROTH_IRA,
       ],
+      pensionAnnuities = [],
 
       // Savings contribution knobs
       subjectWorkingYearSavingsContributionFixedAmount = 0,
@@ -206,6 +211,9 @@ class Inputs {
 
     /** @type {number} */
     this.subjectPensionStartAge = subjectPensionStartAge;
+
+    /** @type {PensionAnnuity[]} */
+    this.pensionAnnuities = options.pensionAnnuities || [];
 
     /** @type {number} */
     this.subject401kStartAge = subject401kStartAge;

@@ -21,10 +21,19 @@ import {
 } from "./retirement-summaryrenderer.js";
 import { createHelpIcon } from "./retirement-ui-help.js";
 import { showToast } from "./retirement-ui-toast.js";
+import { PensionAnnuityStorage } from "./cPensionAnnuityStorage.js";
+import { PensionAnnuityManager } from "./cPensionAnnuityManager.js";
 
 const STORAGE_KEY = "retirement-calculator-inputs";
+
 /** @type {Record<string, string>} */
 let persistedInputs = {};
+
+/** @type {PensionAnnuityStorage|null} */
+let pensionStorage = null;
+
+/** @type {PensionAnnuityManager|null} */
+let pensionManager = null;
 
 /**
  * @typedef OverrideFieldOptions
@@ -177,23 +186,269 @@ document.addEventListener("keydown", (e) => {
   }
 });
 
+// Add to the existing click event listener in setupEventListeners()
+document.addEventListener("click", (e) => {
+  const target = e.target;
+  if (!(target instanceof Element)) return;
+
+  if (target.matches(".pension-row .edit")) {
+    const id = target.getAttribute("data-id");
+    if (!id) {
+      console.log("Pension ID not found for edit action");
+      return;
+    }
+    editPension(id);
+  }
+  if (target.matches(".pension-row .delete")) {
+    const id = target.getAttribute("data-id");
+    if (!id) {
+      console.log("Pension ID not found for delete action");
+      return;
+    }
+    deletePension(id);
+  }
+  // Add new handlers for edit form
+  if (target.matches(".save-pension")) {
+    const id = target.getAttribute("data-id");
+    if (!id) {
+      console.log("Pension ID not found for save action");
+      return;
+    }
+    savePensionEdit(id);
+  }
+  if (target.matches(".cancel-pension-edit")) {
+    cancelPensionEdit();
+  }
+});
+
 // Events
-$("calcBtn")?.addEventListener("click", doCalculations);
-$("pdfBtn")?.addEventListener("click", generatePDFReport);
-$("csvBtn")?.addEventListener("click", exportCSV);
-$("exportJsonBtn")?.addEventListener("click", exportJSON);
-$("importJsonBtn")?.addEventListener("click", importJSON);
-$("jsonFileInput")?.addEventListener("change", handleJSONFile);
-$("clearBtn")?.addEventListener("click", resetAll);
-$("useCurrentYearValues")?.addEventListener("change", function () {
-  updateSpendingFieldsDisplayMode();
-});
-$("useTaxableCurrentYearValues")?.addEventListener("change", function () {
-  updateTaxableIncomeFieldsDisplayMode();
-});
-$("useTaxFreeCurrentYearValues")?.addEventListener("change", function () {
-  updateTaxFreeIncomeFieldsDisplayMode();
-});
+// Event listeners will be set up in setupEventListeners() after partials load
+
+function setupEventListeners() {
+  $("calcBtn")?.addEventListener("click", doCalculations);
+  $("pdfBtn")?.addEventListener("click", generatePDFReport);
+  $("csvBtn")?.addEventListener("click", exportCSV);
+  $("exportJsonBtn")?.addEventListener("click", exportJSON);
+  $("importJsonBtn")?.addEventListener("click", importJSON);
+  $("jsonFileInput")?.addEventListener("change", handleJSONFile);
+  $("clearBtn")?.addEventListener("click", resetAll);
+  $("useCurrentYearValues")?.addEventListener("change", function () {
+    updateSpendingFieldsDisplayMode();
+  });
+  $("useTaxableCurrentYearValues")?.addEventListener("change", function () {
+    updateTaxableIncomeFieldsDisplayMode();
+  });
+  $("useTaxFreeCurrentYearValues")?.addEventListener("change", function () {
+    updateTaxFreeIncomeFieldsDisplayMode();
+  });
+
+  $("addPensionBtn")?.addEventListener("click", () => {
+    if (!pensionManager) return;
+
+    pensionManager.add({
+      owner: "subject",
+      name: "New Pension",
+      startAge: num(UIField.SUBJECT_PENSION_START_AGE),
+      monthlyAmount: 0,
+      withholdingRate: 0.15,
+      survivorshipPercent: 0,
+    });
+
+    renderPensionList();
+
+    markDirty();
+
+    doCalculations();
+  });
+}
+
+/**
+ * Edit a pension entry using prompt dialogs
+ * @param {string} id - The pension ID to edit
+ * @returns {void}
+ */
+/**
+ * Create an inline edit form for a pension entry
+ * @param {string} id - The pension ID to edit
+ * @returns {void}
+ */
+function editPension(id) {
+  if (!pensionManager) return;
+  const pension = pensionManager.getById(id);
+  if (!pension) return;
+
+  // Close any existing edit forms
+  cancelPensionEdit();
+
+  const rows = Array.from(document.querySelectorAll(".pension-row"));
+  const targetRow = rows.find((row) => {
+    const editBtn = row.querySelector(".edit");
+    return editBtn?.getAttribute("data-id") === id;
+  });
+
+  if (!targetRow) return;
+
+  // Create edit form
+  const editForm = document.createElement("div");
+  editForm.className = "pension-edit-form";
+  editForm.setAttribute("data-editing-id", id);
+
+  editForm.innerHTML = `
+    <div class="pension-edit-content">
+      <div class="pension-edit-field">
+        <label for="edit-name-${id}">Name:</label>
+        <input 
+          id="edit-name-${id}" 
+          type="text" 
+          value="${pension.name}" 
+          placeholder="Pension name"
+        >
+      </div>
+      
+      <div class="pension-edit-field">
+        <label for="edit-monthly-${id}">Monthly Amount:</label>
+        <input 
+          id="edit-monthly-${id}" 
+          type="number" 
+          step="100" 
+          value="${pension.monthlyAmount}" 
+          placeholder="0"
+        >
+      </div>
+      
+      <div class="pension-edit-field">
+        <label for="edit-age-${id}">Start Age:</label>
+        <input 
+          id="edit-age-${id}" 
+          type="number" 
+          min="50" 
+          max="100" 
+          value="${pension.startAge}" 
+          placeholder="65"
+        >
+      </div>
+      
+      <div class="pension-edit-field">
+        <label for="edit-withholding-${id}">Withholding Rate (%):</label>
+        <input 
+          id="edit-withholding-${id}" 
+          type="number" 
+          step="1" 
+          min="0" 
+          max="50" 
+          value="${(pension.withholdingRate * 100).toFixed(1)}" 
+          placeholder="15"
+        >
+      </div>
+      
+      <div class="pension-edit-actions">
+        <button type="button" data-id="${id}" class="save-pension">Save</button>
+        <button type="button" class="cancel-pension-edit">Cancel</button>
+      </div>
+    </div>
+  `;
+
+  // Replace the row with the edit form
+  targetRow.parentNode?.replaceChild(editForm, targetRow);
+
+  // Focus the first input
+  const nameInput = editForm.querySelector(`#edit-name-${id}`);
+  if (nameInput instanceof HTMLInputElement) {
+    nameInput.focus();
+    nameInput.select();
+  }
+}
+
+/**
+ * Save the pension edit form data
+ * @param {string} id - The pension ID being edited
+ * @returns {void}
+ */
+function savePensionEdit(id) {
+  if (!pensionManager) return;
+
+  const pension = pensionManager.getById(id);
+  if (!pension) return;
+
+  // Get form values
+  const nameInput = document.getElementById(`edit-name-${id}`);
+  const monthlyInput = document.getElementById(`edit-monthly-${id}`);
+  const ageInput = document.getElementById(`edit-age-${id}`);
+  const withholdingInput = document.getElementById(`edit-withholding-${id}`);
+
+  if (
+    !(nameInput instanceof HTMLInputElement) ||
+    !(monthlyInput instanceof HTMLInputElement) ||
+    !(ageInput instanceof HTMLInputElement) ||
+    !(withholdingInput instanceof HTMLInputElement)
+  ) {
+    return;
+  }
+
+  // Validate inputs
+  const name = nameInput.value.trim();
+  const monthlyAmount = parseFloat(monthlyInput.value) || 0;
+  const startAge = parseInt(ageInput.value) || pension.startAge;
+  const withholdingRate = (parseFloat(withholdingInput.value) || 15) / 100;
+
+  if (!name) {
+    nameInput.focus();
+    showToast("Validation Error", "Pension name is required", "error");
+    return;
+  }
+
+  if (startAge < 50 || startAge > 100) {
+    ageInput.focus();
+    showToast(
+      "Validation Error",
+      "Start age must be between 50 and 100",
+      "error"
+    );
+    return;
+  }
+
+  // Update the pension
+  pensionManager.update({
+    ...pension,
+    name,
+    monthlyAmount,
+    startAge,
+    withholdingRate,
+  });
+
+  // Refresh the list
+  renderPensionList();
+  markDirty();
+  doCalculations();
+}
+
+/**
+ * Cancel pension editing and restore the original row
+ * @returns {void}
+ */
+function cancelPensionEdit() {
+  const editForm = document.querySelector(".pension-edit-form");
+  if (editForm) {
+    editForm.remove();
+    renderPensionList();
+  }
+}
+
+/**
+ * Delete a pension entry after user confirmation
+ * @param {string} id - The pension ID to delete
+ * @returns {void}
+ */
+function deletePension(id) {
+  if (!pensionManager) return;
+
+  if (confirm("Delete this pension?")) {
+    pensionManager.delete(id);
+    renderPensionList();
+    markDirty();
+    doCalculations();
+  }
+}
 
 // Initialize help icons
 function initializeHelpIcons() {
@@ -441,6 +696,8 @@ function parseInputParameters() {
     applyInflationToIncomeValue
   );
 
+  const pensionAnnuities = pensionManager ? pensionManager.getAll() : [];
+
   // for (let age = subjectRetireAge; age <= subjectLifeSpan; age++) {
   //   const field = inputText(`spending_${age}`);
   //   if (!field) continue;
@@ -492,6 +749,8 @@ function parseInputParameters() {
     partner401kStartAge: partner401kStartAge,
     // partnerTaxSS: withholdingsSs,
     partnerPensionWithholdings: partnerPensionWithholdings,
+
+    pensionAnnuities: pensionAnnuities,
 
     // Employment and contributions
     subjectStartingSalary: subjectStartingSalary,
@@ -1536,8 +1795,50 @@ function restorePersistedInputs() {
   });
 }
 
+function renderPensionList() {
+  const container = $("pensionList");
+  if (!container) return;
+
+  if (!pensionManager) return;
+
+  const list = pensionManager.getAll();
+  container.innerHTML = "";
+
+  list.forEach((item) => {
+    const row = document.createElement("div");
+
+    row.className = "pension-row";
+
+    row.innerHTML = `
+      <div>
+        <strong>${item.name}</strong>
+        ${item.monthlyAmount.asCurrency()}/mo
+        starting ${item.startAge}
+      </div>
+
+      <div>
+        <button data-id="${item.id}" class="edit">Edit</button>
+        <button data-id="${item.id}" class="delete">Delete</button>
+      </div>
+    `;
+
+    container.appendChild(row);
+  });
+}
+
 function initUI() {
   loadPersistedInputs(); // ← ADD THIS FIRST
+
+  pensionStorage = new PensionAnnuityStorage(
+    persistedInputs,
+    savePersistedInputs
+  );
+
+  pensionManager = new PensionAnnuityManager(pensionStorage);
+
+  // Set up event listeners after partials are loaded
+  setupEventListeners();
+
   loadColumnLayout();
   buildColumnMenu();
   initializeHelpIcons();
@@ -1546,6 +1847,7 @@ function initUI() {
   regenerateTaxableIncomeFields();
   regenerateTaxFreeIncomeFields();
   restorePersistedInputs(); // ← ADD THIS AFTER UI EXISTS
+  renderPensionList();
   doCalculations();
   attachDirtyTracking();
 }
