@@ -281,27 +281,7 @@ function setupEventListeners() {
     updateTaxFreeIncomeFieldsDisplayMode();
   });
 
-  // $("addPensionBtn")?.addEventListener("click", () => {
-  //   if (!pensionManager) return;
-
-  //   pensionManager.add({
-  //     owner: "subject",
-  //     name: "New Pension",
-  //     startAge: num(UIField.SUBJECT_PENSION_START_AGE),
-  //     monthlyAmount: 0,
-  //     withholdingRate: 0.15,
-  //     survivorshipPercent: 0,
-  //   });
-
-  //   renderPensionList();
-
-  //   markDirty();
-
-  //   doCalculations();
-  // });
-
-  // import { openPensionCreateModal } from "./retirement-ui-pension-modal.js";
-
+  
   $("addPensionBtn")?.addEventListener("click", () => {
     if (!pensionManager) return;
 
@@ -525,80 +505,6 @@ function savePensionFromModal(id) {
   showToast("Success", "Pension updated successfully", "success");
 }
 
-/**
- * Save the pension edit form data
- * @param {string} id - The pension ID being edited
- * @returns {void}
- */
-function savePensionEdit(id) {
-  if (!pensionManager) return;
-
-  const pension = pensionManager.getById(id);
-  if (!pension) return;
-
-  // Get form values
-  const nameInput = document.getElementById(`edit-name-${id}`);
-  const monthlyInput = document.getElementById(`edit-monthly-${id}`);
-  const ageInput = document.getElementById(`edit-age-${id}`);
-  const withholdingInput = document.getElementById(`edit-withholding-${id}`);
-
-  if (
-    !(nameInput instanceof HTMLInputElement) ||
-    !(monthlyInput instanceof HTMLInputElement) ||
-    !(ageInput instanceof HTMLInputElement) ||
-    !(withholdingInput instanceof HTMLInputElement)
-  ) {
-    return;
-  }
-
-  // Validate inputs
-  const name = nameInput.value.trim();
-  const monthlyAmount = parseFloat(monthlyInput.value) || 0;
-  const startAge = parseInt(ageInput.value) || pension.startAge;
-  const withholdingRate = (parseFloat(withholdingInput.value) || 15) / 100;
-
-  if (!name) {
-    nameInput.focus();
-    showToast("Validation Error", "Pension name is required", "error");
-    return;
-  }
-
-  if (startAge < 50 || startAge > 100) {
-    ageInput.focus();
-    showToast(
-      "Validation Error",
-      "Start age must be between 50 and 100",
-      "error"
-    );
-    return;
-  }
-
-  // Update the pension
-  pensionManager.update({
-    ...pension,
-    name,
-    monthlyAmount,
-    startAge,
-    withholdingRate,
-  });
-
-  // Refresh the list
-  renderPensionList();
-  markDirty();
-  doCalculations();
-}
-
-/**
- * Cancel pension editing and restore the original row
- * @returns {void}
- */
-function cancelPensionEdit() {
-  const editForm = document.querySelector(".pension-edit-form");
-  if (editForm) {
-    editForm.remove();
-    renderPensionList();
-  }
-}
 
 /**
  * Delete a pension entry after user confirmation
@@ -1184,7 +1090,7 @@ function loadExample() {
 }
 
 // Annual Spending Details Functions
-function regenerateSpendingFields() {
+function renderSpendingOverrideFields() {
   generateOverrideFields({
     prefix: "spending",
     gridId: "spendingDetailsGrid",
@@ -1426,7 +1332,7 @@ function generateOverrideFields(options) {
 }
 
 // Taxable Income Adjustments Functions
-function regenerateTaxableIncomeFields() {
+function renderTaxableIncomeFields() {
   generateOverrideFields({
     prefix: "taxableIncome",
     gridId: "taxableIncomeDetailsGrid",
@@ -1576,7 +1482,7 @@ function updateTaxableIncomeFieldsDisplayMode() {
 }
 
 // Tax-free Income Adjustments Functions
-function regenerateTaxFreeIncomeFields() {
+function renderTaxFreeIncomeFields() {
   generateOverrideFields({
     prefix: "taxFreeIncome",
     gridId: "taxFreeIncomeDetailsGrid",
@@ -1799,9 +1705,9 @@ function initUI() {
   buildColumnMenu();
   initializeHelpIcons();
   loadExample();
-  regenerateSpendingFields();
-  regenerateTaxableIncomeFields();
-  regenerateTaxFreeIncomeFields();
+  renderSpendingOverrideFields();
+  renderTaxableIncomeFields();
+  renderTaxFreeIncomeFields();
   restorePersistedInputs(); // ← ADD THIS AFTER UI EXISTS
   renderPensionList();
   doCalculations();
@@ -1836,11 +1742,11 @@ export {
   parseInputParameters,
   resetAll,
   loadExample,
-  regenerateTaxableIncomeFields,
+  renderTaxableIncomeFields as regenerateTaxableIncomeFields,
   updateTaxableIncomeFieldsDisplayMode,
-  regenerateTaxFreeIncomeFields,
+  renderTaxFreeIncomeFields as regenerateTaxFreeIncomeFields,
   updateTaxFreeIncomeFieldsDisplayMode,
-  regenerateSpendingFields,
+  renderSpendingOverrideFields as regenerateSpendingFields,
   updateSpendingFieldsDisplayMode,
   getSpendingOverride,
   getTaxFreeIncomeOverride,

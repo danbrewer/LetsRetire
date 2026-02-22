@@ -141,7 +141,7 @@ class Inputs {
     this.partnerPensionSurvivorship = partnerPensionSurvivorship;
 
     /** @type {PensionAnnuity[]} */
-    this.pensionAnnuities = options.pensionAnnuities || [];
+    this.pensionAnnuities = pensionAnnuities;
 
     /** @type {number} */
     this.subject401kStartAge = subject401kStartAge;

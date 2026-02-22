@@ -1391,6 +1391,154 @@ details[open] .content {
 .add-pension-btn:active {
   transform: scale(0.95);
 }
+
+
+
+/* Horizontal radio group */
+.pension-owner-group {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.pension-owner-option {
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.pension-owner-option input {
+  display: none;
+}
+
+.pension-owner-option input:checked + span {
+  color: var(--accent);
+}
+
+
+/* the group containing the two options */
+.pension-owner-group {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+/* IMPORTANT: force horizontal layout even if global label rules do something weird */
+.pension-owner-option {
+  display: flex;          /* not inline-flex; beats more label rules */
+  flex-direction: row;    /* prevent column stacking */
+  align-items: center;    /* vertically center radio and text */
+  gap: 0.5rem;
+  margin: 0;
+  line-height: 1.2;
+  cursor: pointer;
+}
+
+/* remove browser default margins that can push the radio up/down */
+.pension-owner-option input[type="radio"] {
+  margin: 0;
+  transform: translateY(0); /* neutralize any inherited transforms */
+  accent-color: var(--accent-color);
+}
+
+.pension-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+
+  /* These two lines fix a lot of “drifting”/overlap issues */
+  position: relative;
+  box-sizing: border-box;
+}
+
+/* Ensure buttons don’t wrap weirdly */
+.pension-modal-footer .pension-btn {
+  white-space: nowrap;
+}
+
+
+/* ===== OWNER SEGMENTED CONTROL ===== */
+
+.owner-segmented {
+  display: inline-flex;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.14);
+  border-radius: 999px;
+  padding: 4px;
+  gap: 4px;
+}
+
+.owner-option {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+
+  padding: 8px 18px;
+  border-radius: 999px;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+/* Hover */
+.owner-option:hover {
+  color: var(--text);
+}
+
+/* Active */
+.owner-option.active {
+  background: linear-gradient(180deg, #2b63ff, hsl(227, 71%, 48%));
+  color: white;
+  box-shadow: 0 6px 14px rgba(43, 99, 255, 0.35);
+}
+
+/* ===== MODAL FOOTER BUTTONS (override icon-style .pension-btn) ===== */
+.pension-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+}
+
+/* Your .pension-btn is currently a 30x30 icon button.
+   Override ONLY inside the modal footer. */
+.pension-modal-footer .pension-btn {
+  width: auto;
+  height: auto;
+  padding: 10px 14px;
+  border-radius: 10px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  white-space: nowrap; /* prevents "Save Changes" wrapping */
+}
+
+/* Make the primary save button look like your app */
+.pension-modal-footer .pension-save {
+  background: linear-gradient(180deg, #2b63ff, hsl(227, 71%, 48%));
+  border-color: #1f3fb8;
+  color: #fff;
+}
+
+.pension-modal-footer .pension-cancel {
+  background: rgba(255,255,255,0.06);
+  border-color: rgba(255,255,255,0.14);
+  color: var(--text);
+}
   </style>
 </head>
 <body>

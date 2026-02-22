@@ -158,6 +158,25 @@ function buildModalDom(args) {
       <div class="pension-modal-body">
         <form class="pension-edit-form" id="pensionEditForm">
           <div class="pension-form-grid">
+            <div class="pension-form-field full-width">
+                <label>Owner</label>
+
+                <div class="owner-segmented">
+                    <button
+                    type="button"
+                    class="owner-option ${values.owner === "subject" ? "active" : ""}"
+                    data-owner="subject">
+                    Subject
+                    </button>
+
+                    <button
+                    type="button"
+                    class="owner-option ${values.owner === "partner" ? "active" : ""}"
+                    data-owner="partner">
+                    Partner
+                    </button>
+                </div>
+                </div>
             <div class="pension-form-field">
               <label for="pension-name-${inputKey}">Pension Name</label>
               <input
@@ -258,6 +277,17 @@ function wireModalEvents(args) {
     if (e.key === "Escape") onClose();
     if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) onSave();
   };
+
+  overlay.querySelectorAll(".owner-option").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      overlay
+        .querySelectorAll(".owner-option")
+        .forEach((b) => b.classList.remove("active"));
+
+      btn.classList.add("active");
+    });
+  });
+
   document.addEventListener("keydown", activeKeydownHandler);
 }
 
@@ -356,8 +386,16 @@ function readFormValues(inputKey, fallback, deps) {
       ? fallback.survivorshipPercent
       : clampNumber(parseFloat(survivorPctRaw) || 0, 0, 100) / 100;
 
+  const activeOwnerBtn = activeOverlay?.querySelector(".owner-option.active");
+
+  let owner = fallback.owner;
+
+  if (activeOwnerBtn instanceof HTMLButtonElement) {
+    owner = activeOwnerBtn.dataset.owner === "partner" ? "partner" : "subject";
+  }
+
   return {
-    owner: fallback.owner,
+    owner,
     name,
     startAge,
     monthlyAmount,

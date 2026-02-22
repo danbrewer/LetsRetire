@@ -63,6 +63,9 @@ class FixedIncomeStreams {
   }
 
   get subjectPensionGross() {
+
+    
+
     let pension = this.#inputs.subjectPension.asCurrency();
 
     if (this.#demographics.subjectIsLiving) {
