@@ -115,7 +115,7 @@ class Common {
     };
 
     result.ssAnnual =
-      inputs.ssMonthly *
+      inputs.subjectSsMonthly *
       12 *
       (inputs.subjectRetireAge >= inputs.subjectSsStartAge
         ? compoundedRate(
@@ -123,7 +123,7 @@ class Common {
             inputs.subjectRetireAge - inputs.subjectSsStartAge
           )
         : 1);
-    result.penAnnual = inputs.penMonthly * 12;
+    result.penAnnual = inputs.subjectPensionMonthly * 12;
 
     if (inputs.hasPartner) {
       result.partnerSsAnnual = inputs.partnerSsMonthly * 12;

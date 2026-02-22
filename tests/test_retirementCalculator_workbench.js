@@ -81,8 +81,8 @@ function createInputs() {
     subjectCareerMonthlyPayrollDeductions: 500,
     partnerCareerMonthlyPayrollDeductions: 0,
 
-    subjectPayPeriods: 26,
-    partnerPayPeriods: 26,
+    subjectCareerPayPeriods: 26,
+    partnerCareerPayPeriods: 26,
 
     // Growth rates
     subjectSalaryGrowthRate: 0.02,
@@ -172,8 +172,8 @@ function createInputsNoFussNoMuss() {
     subjectCareerMonthlyPayrollDeductions: 0,
     partnerCareerMonthlyPayrollDeductions: 0,
 
-    subjectPayPeriods: 26,
-    partnerPayPeriods: 26,
+    subjectCareerPayPeriods: 26,
+    partnerCareerPayPeriods: 26,
 
     // 401k
     flatCareerTrad401kWithholdingRate: 0,

@@ -144,10 +144,10 @@ class ReportData extends BaseReports {
     this.year = 0;
 
     // DEMOGRAPHICS
-    this.demographics_subjectAge = 0;
-    this.demographics_partnerAge = 0;
-    this.demographics_isMarriedFilingJointly = false;
+    this.demographics_subjectAge = '';
+    this.demographics_partnerAge = '';
     this.demographics_numberOfDependents = 0;
+    this.demographics_hasPartner = false;
 
     // WAGES AND COMPENSATION
     this.income_subjectGrossWages = 0;
@@ -263,12 +263,8 @@ class ReportData extends BaseReports {
     this.retirementAcct_partnerRothWithdrawals = 0;
     this.retirementAcct_partnerRothDeposits = 0;
     this.retirementAcct_partnerRothBalance = 0;
-  }
 
-  get demographics_filingStatus() {
-    return this.demographics_isMarriedFilingJointly
-      ? "Married Filing Jointly"
-      : "Single";
+    this.demographics_filingStatus = '';
   }
 
   // SOCIAL SECURITY

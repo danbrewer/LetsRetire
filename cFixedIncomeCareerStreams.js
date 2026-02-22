@@ -123,14 +123,14 @@ class FixedIncomeCareerStreams {
 
   get subjectPayrollDeductions() {
     return (
-      this.#inputs.subjectCareerPayrollDeductions *
+      this.#inputs.subjectCareerMonthlyPayrollDeductions *
       this.#inputs.subjectCareerPayPeriods
     ).asCurrency();
   }
 
   get partnerNonTaxableSalaryDeductions() {
     return (
-      this.#inputs.partnerCareerPayrollDeductions *
+      this.#inputs.partnerCareerMonthlyPayrollDeductions *
       this.#inputs.partnerCareerPayPeriods
     ).asCurrency();
   }
@@ -172,7 +172,7 @@ class FixedIncomeCareerStreams {
   get partnerWagesAndCompensationNonTaxable() {
     return (
       this.partnerAllowed401kContribution +
-      this.#inputs.partnerCareerPayrollDeductions
+      this.#inputs.partnerCareerMonthlyPayrollDeductions
     ).asCurrency();
   }
 

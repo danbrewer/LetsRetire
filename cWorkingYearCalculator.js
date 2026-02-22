@@ -52,12 +52,14 @@ class WorkingYearCalculator {
 
     this.#reportingYear.ReportData.year = this.#fiscalData.taxYear;
 
-    this.#reportingYear.ReportData.demographics_isMarriedFilingJointly =
+    this.#reportingYear.ReportData.demographics_hasPartner =
       this.#demographics.hasPartner;
     this.#reportingYear.ReportData.demographics_subjectAge =
-      this.#demographics.currentAge;
+      this.#demographics.subjectIsLiving ?
+      `${this.#demographics.currentAge}` : '-';
     this.#reportingYear.ReportData.demographics_partnerAge =
-      this.#demographics.currentAgeOfPartner;
+      this.#demographics.partnerIsLiving ?
+      `${this.#demographics.currentAgeOfPartner}` : '-';
 
     // this.#workingYearIncome = WorkingYearIncome.CreateUsing(
     //   this.#fixedIncomeStreams,

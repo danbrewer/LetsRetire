@@ -73,10 +73,7 @@ function calc(calculations, UI) {
 
   // Working years
   for (let yearIndex = 0; yearIndex < inputs.totalWorkingYears; yearIndex++) {
-    const workingYearInputs = initializeInputsForWorkingYear(
-      inputs,
-      yearIndex
-    );
+    const workingYearInputs = initializeInputsForWorkingYear(inputs, yearIndex);
 
     const accountYear = AccountingYear.Create(
       accountsManager,
@@ -108,15 +105,25 @@ function calc(calculations, UI) {
     );
   }
 
+  // debugger;
+
+  // debugger;
+  let livingYears = Math.max(
+    inputs.subjectLivingYears,
+    inputs.partnerLivingYears - inputs.totalWorkingYears
+  );
+
+
+
   // Retirement years
   for (
     let yearIndex = inputs.totalWorkingYears;
-    yearIndex <= inputs.totalLivingYears;
+    yearIndex <= livingYears; // inputs.subjectLivingYears;
     yearIndex++
   ) {
     const retirementYearInputs = initializeInputsForRetirementYear(
       inputs,
-      yearIndex,
+      yearIndex
     );
 
     const accountYear = AccountingYear.Create(

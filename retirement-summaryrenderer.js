@@ -729,7 +729,7 @@ function buildSummaryRow(calculation, index) {
   const r = calculation.reportData;
 
   const age =
-    r.demographics_partnerAge > 0
+    r.demographics_hasPartner
       ? `${r.demographics_subjectAge} / ${r.demographics_partnerAge}`
       : r.demographics_subjectAge;
 
@@ -746,86 +746,6 @@ function buildSummaryRow(calculation, index) {
   return tr(...cells);
 }
 
-///////////////////////////////////////////////////////////////
-// ROW BUILDER
-///////////////////////////////////////////////////////////////
-
-/**
- * @param {Calculation} calculation
- * @param {number} index
- * @returns {HTMLTableRowElement}
- */
-function buildSummaryRowOld(calculation, index) {
-  const r = calculation.reportData;
-
-  const age =
-    r.demographics_partnerAge > 0
-      ? `${r.demographics_subjectAge} / ${r.demographics_partnerAge}`
-      : r.demographics_subjectAge;
-
-  return tr(
-    textTd("neutral", r.year),
-    textTd("neutral", age),
-
-    money("outgoing", r.ask),
-
-    money("income", r.income_combinedTakehomeWages, {
-      index,
-      action: "showSalaryBreakdown",
-    }),
-
-    money("income", r.ss_combinedTakehome, {
-      index,
-      action: "showSsBreakdown",
-    }),
-
-    money("income", r.income_combinedPensionTakehome, {
-      index,
-      action: "showPensionBreakdown",
-    }),
-    money("income", r.income_combined401kTakehome, {
-      index,
-      action: "show401kBreakdown",
-    }),
-    money("income", r.savings_Withdrawals + r.income_combinedRothTakehome, {
-      index,
-      action: "showSavingsRothBreakdown",
-    }),
-
-    money("income", r.income_total_net, {
-      index,
-      action: "showTotalCashBreakdown",
-    }),
-
-    money("income", r.income_combinedWagesGross),
-    money("income", r.income_savingsInterest),
-    money("income", r.ss_combinedGross, {
-      index,
-      action: "showSsGrossBreakdown",
-    }),
-    money("income", r.income_combinedPensionGross, {
-      index,
-      action: "showPensionGrossBreakdown",
-    }),
-    money("income", r.income_combined401kGross),
-    money("income", r.income_total_gross),
-
-    money("neutral", r.savings_Balance, {
-      index,
-      action: "showSavingsBalanceBreakdown",
-    }),
-
-    money("neutral", r.balances_combined401k, {
-      index,
-      action: "show401kBalanceBreakdown",
-    }),
-    money("neutral", r.balances_combinedRoth),
-    money("neutral", r.balances_total, {
-      index,
-      action: "showAccountBalances",
-    })
-  );
-}
 
 ///////////////////////////////////////////////////////////////
 // MAIN RENDER FUNCTION

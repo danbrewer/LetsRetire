@@ -7,7 +7,7 @@ import { Demographics } from "./cDemographics.js";
 import { FiscalData } from "./cFiscalData.js";
 import { FixedIncomeStreams } from "./cFixedIncomeStreams.js";
 import { Inputs } from "./cInputs.js";
-import { PERIODIC_FREQUENCY, TAX_BASE_YEAR } from "./consts.js";
+import { constsJS_FILING_STATUS, PERIODIC_FREQUENCY, TAX_BASE_YEAR } from "./consts.js";
 import { ReportingYear } from "./cReporting.js";
 import { ReportsManager } from "./cReportsManager.js";
 import { RetirementYearData } from "./cRetirementYearData.js";
@@ -81,12 +81,12 @@ class RetirementYearCalculator {
 
     this.#reportingYear.ReportData.year = this.#fiscalData.taxYear;
 
-    this.#reportingYear.ReportData.demographics_isMarriedFilingJointly =
+    this.#reportingYear.ReportData.demographics_hasPartner =
       this.#demographics.hasPartner;
-    this.#reportingYear.ReportData.demographics_subjectAge =
-      this.#demographics.currentAge;
-    this.#reportingYear.ReportData.demographics_partnerAge =
-      this.#demographics.currentAgeOfPartner;
+    this.#reportingYear.ReportData.demographics_subjectAge = `${this.#demographics.subjectIsLiving ? this.#demographics.currentAge : "-"}`;
+    this.#reportingYear.ReportData.demographics_partnerAge = `${this.#demographics.partnerIsLiving ? this.#demographics.currentAgeOfPartner : "-"}`;
+    this.#reportingYear.ReportData.demographics_filingStatus = 
+      this.#demographics.filingStatus === constsJS_FILING_STATUS.MARRIED_FILING_JOINTLY ? "Married Filing Jointly" : "Single";
   }
 
   // COPIED FROM WORKING YEAR CALCULATOR
@@ -148,7 +148,6 @@ class RetirementYearCalculator {
 
       this.#reportingYear.ReportData.income_miscTaxFreeIncome = taxFreeIncome;
     }
-    
 
     // const subjectNonTaxableIncome =
     //   this.#fixedIncomeStreams.subjectPayrollDeductions;
@@ -248,121 +247,124 @@ class RetirementYearCalculator {
   // }
 
   #processWagesAndCompensation() {
-    // Subject wages and compensation
-    this.#accountYear.processAsPeriodicDeposits(
-      ACCOUNT_TYPES.SUBJECT_WAGES,
-      TransactionCategory.IncomeGross,
-      TransactionRoutes.External,
-      this.#fixedIncomeStreams.retirement.subjectWagesAndCompensationGross,
-      PERIODIC_FREQUENCY.MONTHLY
-    );
+    if (this.#demographics.subjectIsLiving) {
+      // Subject wages and compensation
+      this.#accountYear.processAsPeriodicDeposits(
+        ACCOUNT_TYPES.SUBJECT_WAGES,
+        TransactionCategory.IncomeGross,
+        TransactionRoutes.External,
+        this.#fixedIncomeStreams.retirement.subjectWagesAndCompensationGross,
+        PERIODIC_FREQUENCY.MONTHLY
+      );
 
-    this.#reportingYear.ReportData.income_subjectGrossWages =
-      this.#fixedIncomeStreams.retirement.subjectWagesAndCompensationGross;
+      this.#reportingYear.ReportData.income_subjectGrossWages =
+        this.#fixedIncomeStreams.retirement.subjectWagesAndCompensationGross;
 
-    this.#accountYear.processAsPeriodicTransfers(
-      ACCOUNT_TYPES.SUBJECT_WAGES,
-      ACCOUNT_TYPES.SUBJECT_401K,
-      this.#fixedIncomeStreams.retirement.subjectAllowed401kContribution,
-      PERIODIC_FREQUENCY.MONTHLY,
-      TransactionCategory.RetirementContribution
-    );
+      this.#accountYear.processAsPeriodicTransfers(
+        ACCOUNT_TYPES.SUBJECT_WAGES,
+        ACCOUNT_TYPES.SUBJECT_401K,
+        this.#fixedIncomeStreams.retirement.subjectAllowed401kContribution,
+        PERIODIC_FREQUENCY.MONTHLY,
+        TransactionCategory.RetirementContribution
+      );
 
-    this.#reportingYear.ReportData.income_subject401kContribution =
-      this.#fixedIncomeStreams.retirement.subjectAllowed401kContribution;
+      this.#reportingYear.ReportData.income_subject401kContribution =
+        this.#fixedIncomeStreams.retirement.subjectAllowed401kContribution;
 
-    this.#accountYear.processAsPeriodicTransfers(
-      ACCOUNT_TYPES.SUBJECT_WAGES,
-      ACCOUNT_TYPES.TAXES,
-      this.#fixedIncomeStreams.retirement
-        .subjectWagesAndCompensationEstimatedWithholdings,
-      PERIODIC_FREQUENCY.MONTHLY,
-      TransactionCategory.Withholdings
-    );
+      this.#accountYear.processAsPeriodicTransfers(
+        ACCOUNT_TYPES.SUBJECT_WAGES,
+        ACCOUNT_TYPES.TAXES,
+        this.#fixedIncomeStreams.retirement
+          .subjectWagesAndCompensationEstimatedWithholdings,
+        PERIODIC_FREQUENCY.MONTHLY,
+        TransactionCategory.Withholdings
+      );
 
-    this.#reportingYear.ReportData.income_subjectWagesWithholdings =
-      this.#fixedIncomeStreams.retirement.subjectWagesAndCompensationEstimatedWithholdings;
+      this.#reportingYear.ReportData.income_subjectWagesWithholdings =
+        this.#fixedIncomeStreams.retirement.subjectWagesAndCompensationEstimatedWithholdings;
 
-    this.#accountYear.processAsPeriodicTransfers(
-      ACCOUNT_TYPES.SUBJECT_WAGES,
-      ACCOUNT_TYPES.SUBJECT_PAYROLL_DEDUCTIONS,
-      this.#fixedIncomeStreams.retirement.subjectPayrollDeductions,
-      PERIODIC_FREQUENCY.MONTHLY,
-      TransactionCategory.PayrollDeductions
-    );
+      this.#accountYear.processAsPeriodicTransfers(
+        ACCOUNT_TYPES.SUBJECT_WAGES,
+        ACCOUNT_TYPES.SUBJECT_PAYROLL_DEDUCTIONS,
+        this.#fixedIncomeStreams.retirement.subjectPayrollDeductions,
+        PERIODIC_FREQUENCY.MONTHLY,
+        TransactionCategory.PayrollDeductions
+      );
 
-    this.#reportingYear.ReportData.income_subjectPayrollDeductions =
-      this.#fixedIncomeStreams.retirement.subjectPayrollDeductions;
+      this.#reportingYear.ReportData.income_subjectPayrollDeductions =
+        this.#fixedIncomeStreams.retirement.subjectPayrollDeductions;
 
-    this.#accountYear.processAsPeriodicTransfers(
-      ACCOUNT_TYPES.SUBJECT_WAGES,
-      ACCOUNT_TYPES.CASH,
-      this.#fixedIncomeStreams.retirement
-        .subjectWagesAndCompensationActualIncome,
-      PERIODIC_FREQUENCY.MONTHLY,
-      TransactionCategory.IncomeNet
-    );
+      this.#accountYear.processAsPeriodicTransfers(
+        ACCOUNT_TYPES.SUBJECT_WAGES,
+        ACCOUNT_TYPES.CASH,
+        this.#fixedIncomeStreams.retirement
+          .subjectWagesAndCompensationActualIncome,
+        PERIODIC_FREQUENCY.MONTHLY,
+        TransactionCategory.IncomeNet
+      );
 
-    this.#reportingYear.ReportData.income_subjectTakehomeWages =
-      this.#fixedIncomeStreams.retirement.subjectWagesAndCompensationActualIncome;
+      this.#reportingYear.ReportData.income_subjectTakehomeWages =
+        this.#fixedIncomeStreams.retirement.subjectWagesAndCompensationActualIncome;
+    }
 
     // Partner wages and compensation
 
-    this.#accountYear.processAsPeriodicDeposits(
-      ACCOUNT_TYPES.PARTNER_WAGES,
-      TransactionCategory.IncomeGross,
-      TransactionRoutes.External,
-      this.#fixedIncomeStreams.retirement.partnerWagesAndCompensationGross,
-      PERIODIC_FREQUENCY.MONTHLY
-    );
+    if (this.#demographics.hasPartner && this.#demographics.partnerIsLiving) {
+      this.#accountYear.processAsPeriodicDeposits(
+        ACCOUNT_TYPES.PARTNER_WAGES,
+        TransactionCategory.IncomeGross,
+        TransactionRoutes.External,
+        this.#fixedIncomeStreams.retirement.partnerWagesAndCompensationGross,
+        PERIODIC_FREQUENCY.MONTHLY
+      );
 
-    this.#reportingYear.ReportData.income_partnerGrossWages =
-      this.#fixedIncomeStreams.retirement.partnerWagesAndCompensationGross;
+      this.#reportingYear.ReportData.income_partnerGrossWages =
+        this.#fixedIncomeStreams.retirement.partnerWagesAndCompensationGross;
 
-    this.#accountYear.processAsPeriodicTransfers(
-      ACCOUNT_TYPES.PARTNER_WAGES,
-      ACCOUNT_TYPES.PARTNER_401K,
-      this.#fixedIncomeStreams.retirement.partnerAllowed401kContribution,
-      PERIODIC_FREQUENCY.MONTHLY,
-      TransactionCategory.RetirementContribution
-    );
-    this.#reportingYear.ReportData.income_partner401kContribution =
-      this.#fixedIncomeStreams.retirement.partnerAllowed401kContribution;
+      this.#accountYear.processAsPeriodicTransfers(
+        ACCOUNT_TYPES.PARTNER_WAGES,
+        ACCOUNT_TYPES.PARTNER_401K,
+        this.#fixedIncomeStreams.retirement.partnerAllowed401kContribution,
+        PERIODIC_FREQUENCY.MONTHLY,
+        TransactionCategory.RetirementContribution
+      );
+      this.#reportingYear.ReportData.income_partner401kContribution =
+        this.#fixedIncomeStreams.retirement.partnerAllowed401kContribution;
 
-    this.#accountYear.processAsPeriodicTransfers(
-      ACCOUNT_TYPES.PARTNER_WAGES,
-      ACCOUNT_TYPES.PARTNER_PAYROLL_DEDUCTIONS,
-      this.#fixedIncomeStreams.retirement.partnerNonTaxableSalaryDeductions,
-      PERIODIC_FREQUENCY.MONTHLY,
-      TransactionCategory.PayrollDeductions
-    );
-    this.#reportingYear.ReportData.income_partnerPayrollDeductions =
-      this.#fixedIncomeStreams.retirement.partnerNonTaxableSalaryDeductions;
+      this.#accountYear.processAsPeriodicTransfers(
+        ACCOUNT_TYPES.PARTNER_WAGES,
+        ACCOUNT_TYPES.PARTNER_PAYROLL_DEDUCTIONS,
+        this.#fixedIncomeStreams.retirement.partnerNonTaxableSalaryDeductions,
+        PERIODIC_FREQUENCY.MONTHLY,
+        TransactionCategory.PayrollDeductions
+      );
+      this.#reportingYear.ReportData.income_partnerPayrollDeductions =
+        this.#fixedIncomeStreams.retirement.partnerNonTaxableSalaryDeductions;
 
-    this.#accountYear.processAsPeriodicTransfers(
-      ACCOUNT_TYPES.PARTNER_WAGES,
-      ACCOUNT_TYPES.TAXES,
-      this.#fixedIncomeStreams.retirement
-        .partnerWagesAndCompensationEstimatedWithholdings,
-      PERIODIC_FREQUENCY.MONTHLY,
-      TransactionCategory.Withholdings
-    );
+      this.#accountYear.processAsPeriodicTransfers(
+        ACCOUNT_TYPES.PARTNER_WAGES,
+        ACCOUNT_TYPES.TAXES,
+        this.#fixedIncomeStreams.retirement
+          .partnerWagesAndCompensationEstimatedWithholdings,
+        PERIODIC_FREQUENCY.MONTHLY,
+        TransactionCategory.Withholdings
+      );
 
-    this.#reportingYear.ReportData.income_partnerWagesWithholdings =
-      this.#fixedIncomeStreams.retirement.partnerWagesAndCompensationEstimatedWithholdings;
+      this.#reportingYear.ReportData.income_partnerWagesWithholdings =
+        this.#fixedIncomeStreams.retirement.partnerWagesAndCompensationEstimatedWithholdings;
 
-    this.#accountYear.processAsPeriodicTransfers(
-      ACCOUNT_TYPES.PARTNER_WAGES,
-      ACCOUNT_TYPES.CASH,
-      this.#fixedIncomeStreams.retirement
-        .partnerWagesAndCompensationActualIncome,
-      PERIODIC_FREQUENCY.MONTHLY,
-      TransactionCategory.IncomeNet
-    );
+      this.#accountYear.processAsPeriodicTransfers(
+        ACCOUNT_TYPES.PARTNER_WAGES,
+        ACCOUNT_TYPES.CASH,
+        this.#fixedIncomeStreams.retirement
+          .partnerWagesAndCompensationActualIncome,
+        PERIODIC_FREQUENCY.MONTHLY,
+        TransactionCategory.IncomeNet
+      );
 
-    this.#reportingYear.ReportData.income_partnerTakehomeWages =
-      this.#fixedIncomeStreams.retirement.partnerWagesAndCompensationActualIncome;
-
+      this.#reportingYear.ReportData.income_partnerTakehomeWages =
+        this.#fixedIncomeStreams.retirement.partnerWagesAndCompensationActualIncome;
+    }
     // this.#reportingYear.ReportData.dump("Wages and Compensation Report");
     // debugger;
   }
@@ -612,43 +614,7 @@ class RetirementYearCalculator {
 
     this.#processIncomeTaxes();
 
-    // this.#dumpAccountReports();
-
     this.#generateReportData();
-
-    // this.#reportingYear.ReportData.dump("ReportData");
-    // debugger;
-    // const balances = {
-    //   year: this.#fiscalData.taxYear,
-    //   spend: this.#reportingYear.ReportData.spend,
-    //   takeHome: this.#reportingYear.ReportData.takeHome,
-    //   financialHealth:
-    //     this.#reportingYear.ReportData.takeHome >=
-    //     this.#reportingYear.ReportData.spend
-    //       ? "✅"
-    //       : "⚠️",
-    //   savings: this.#reportingYear.ReportData.savings_Balance,
-    //   subject401k:
-    //     this.#reportingYear.ReportData.retirementAcct_subject401kBalance,
-    //   partner401k:
-    //     this.#reportingYear.ReportData.retirementAcct_partner401kBalance,
-    //   subjectRoth:
-    //     this.#reportingYear.ReportData.retirementAcct_subjectRothBalance,
-    //   partnerRoth:
-    //     this.#reportingYear.ReportData.retirementAcct_partnerRothBalance,
-    //   subjectWagesTakehome:
-    //     this.#reportingYear.ReportData.income_subjectTakehomeWages,
-    //   partnerWagesTakehome:
-    //     this.#reportingYear.ReportData.income_partnerTakehomeWages,
-    //   subjectPensionTakehome:
-    //     this.#reportingYear.ReportData.income_subjectPensionTakehome,
-    //   partnerPensionTakehome:
-    //     this.#reportingYear.ReportData.income_partnerPensionTakehome,
-    //   subjectSsTakehome: this.#reportingYear.ReportData.ss_subjectSsTakehome,
-    //   partnerSsTakehome: this.#reportingYear.ReportData.ss_partnerSsTakehome,
-    // };
-
-    // balances.dump("balances");
 
     const retirementYearData = RetirementYearData.CreateUsing(
       this.#demographics,
@@ -657,24 +623,6 @@ class RetirementYearCalculator {
       this.#taxes,
       this.#reportingYear.ReportData
     );
-
-    // const temp = {
-    //   subjectAge: retirementYearData.subjectAge,
-    //   year: retirementYearData.fiscalYear,
-    //   ask: retirementYearData.ask,
-    //   spend: retirementYearData.spend,
-    //   balances: retirementYearData.accountBalances.total,
-    //   income: retirementYearData.cashFlowBreakdown.income.total,
-    //   withdrawals: retirementYearData.cashFlowBreakdown.withdrawals.total,
-    // };
-
-    // temp.dump();
-
-    // retirementYearData.dump("retirementYearData");
-
-    // if (this.#fiscalData.taxYear === 2031) {
-    //   this.#reportingYear.ReportData.dump("ReportData at 2031");
-    // }
 
     return retirementYearData;
   }
@@ -1139,6 +1087,7 @@ class RetirementYearCalculator {
   }
 
   #processPensionIncome() {
+    // debugger;
     if (this.#fixedIncomeStreams.combinedPensionActualIncome.asCurrency() == 0)
       return;
 
@@ -1190,37 +1139,6 @@ class RetirementYearCalculator {
       TransactionCategory.Withholdings
     );
   }
-
-  // #processTaxFreeIncome() {
-  //   const taxFreeIncome = this.#fixedIncomeStreams.taxFreeIncomeAdjustment;
-
-  //   if (taxFreeIncome <= 0) return;
-
-  //   this.#accountYear.processAsPeriodicDeposits(
-  //     ACCOUNT_TYPES.CASH,
-  //     TransactionCategory.OtherNonTaxable,
-  //     TransactionRoutes.External,
-  //     taxFreeIncome,
-  //     PERIODIC_FREQUENCY.MONTHLY,
-  //     "Tax-free income"
-  //   );
-
-  //   this.#reportingYear.ReportData.income_taxFreeIncome = taxFreeIncome;
-  // }
-
-  // #apply401kInterest() {
-  //   this.#accountYear.recordInterestEarnedForYear(ACCOUNT_TYPES.SUBJECT_401K);
-  //   this.#accountYear.recordInterestEarnedForYear(ACCOUNT_TYPES.PARTNER_401K);
-
-  //   this.#reportingYear.ReportData.retirementAcct_subject401kInterest =
-  //     this.#accountYear
-  //       .getDeposits(ACCOUNT_TYPES.SUBJECT_401K, TransactionCategory.Interest)
-  //       .asCurrency();
-  //   this.#reportingYear.ReportData.retirementAcct_partner401kInterest =
-  //     this.#accountYear
-  //       .getDeposits(ACCOUNT_TYPES.PARTNER_401K, TransactionCategory.Interest)
-  //       .asCurrency();
-  // }
 
   #draw401kPortions() {
     this.#reportingYear.ReportData.taxes_401kWithholdingRate =

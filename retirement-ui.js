@@ -846,8 +846,10 @@ function parseInputParameters() {
     partnerPenMonthly: partnerPenMonthly,
     partnerPenStartAge: partnerPenStartAge,
     partner401kStartAge: partner401kStartAge,
+    partnerLifeSpan: partnerLifeSpan,
     // partnerTaxSS: withholdingsSs,
     partnerPensionWithholdings: partnerPensionWithholdings,
+    partnerPensionSurvivorship: partnerPensionSurvivorship,
 
     pensionAnnuities: pensionAnnuities,
 
@@ -880,6 +882,7 @@ function parseInputParameters() {
     subjectSsMonthly: subjectSsMonthly,
     ssCola: ssCola,
     subjectPensionMonthly: subjectPensionMonthly,
+    subjectPensionSurvivorship: subjectPensionSurvivorship,
 
     // Tax rates and settings
     filingStatus: filingStatus,

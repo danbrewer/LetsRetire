@@ -107,9 +107,8 @@ function showSsBreakdown(data) {
         
         <div style="margin-top: 12px;">
             <div style="font-size: 12px; color: var(--muted); margin-bottom: 8px;">
-            <strong>Thresholds (${
-              "Filing Status: " +
-              (data.demographics_isMarriedFilingJointly ? "Married" : "Single")
+            <strong>Thresholds (Filing status: ${
+              data.demographics_filingStatus
             }):</strong><br/>
             • Tier 1: $${data.ss_threshold1?.toLocaleString()} (0% → 50% taxable)<br/>
             • Tier 2: $${data.ss_threshold2?.toLocaleString()} (50% → 85% taxable)
@@ -249,7 +248,7 @@ function showTaxesBreakdown(data) {
     </div>
     <div class="ss-breakdown-item">
       <span class="ss-breakdown-label">Filing Status:</span>
-      <span class="ss-breakdown-value">${data.demographics_isMarriedFilingJointly ? "Married Filing Jointly" : "Single"}</span>
+      <span class="ss-breakdown-value">${data.demographics_filingStatus}</span>
     </div>
 
     <div class="ss-breakdown-item breakdown-accent">
@@ -347,7 +346,7 @@ function showWithholdingsBreakdown(data) {
       </div>
     </div>
     `;
-  if (data.demographics_isMarriedFilingJointly) {
+  if (data.demographics_hasPartner) {
     breakdownHtml += `
     <div style="margin: 16px 0; padding: 12px; background: rgba(110, 168, 254, 0.1); border-radius: 8px;">
         <strong style="color: var(--accent);">Partner:</strong>
@@ -463,7 +462,7 @@ function showPensionBreakdown(data) {
     </div>
     `;
 
-  if (data.demographics_isMarriedFilingJointly) {
+  if (data.demographics_hasPartner) {
     breakdownHtml += `
 <div style="margin: 16px 0; padding: 12px; background: rgba(110, 168, 254, 0.1); border-radius: 8px;">
         <strong style="color: var(--accent);">Partner:</strong>
@@ -514,7 +513,7 @@ function showPensionGrossBreakdown(data) {
     </div>
     `;
 
-  if (data.demographics_isMarriedFilingJointly) {
+  if (data.demographics_hasPartner) {
     breakdownHtml += `
 <div style="margin: 16px 0; padding: 12px; background: rgba(110, 168, 254, 0.1); border-radius: 8px;">
         <strong style="color: var(--accent);">Partner:</strong>
@@ -663,7 +662,7 @@ function show401kBalanceBreakdown(data) {
     </div>
     `;
 
-  if (data.demographics_isMarriedFilingJointly) {
+  if (data.demographics_hasPartner) {
     breakdownHtml += `
     <div style="margin: 16px 0; padding: 12px; background: rgba(110, 168, 254, 0.1); border-radius: 8px;">
       <strong style="color: var(--accent);">Partner:</strong>
@@ -773,7 +772,7 @@ function show401kBreakdown(data) {
     </div>
     `;
 
-  if (data.demographics_isMarriedFilingJointly) {
+  if (data.demographics_hasPartner) {
     breakdownHtml += `
 <div style="margin: 16px 0; padding: 12px; background: rgba(110, 168, 254, 0.1); border-radius: 8px;">
         <strong style="color: var(--accent);">Partner:</strong>

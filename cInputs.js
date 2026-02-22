@@ -3,94 +3,12 @@ import { ACCOUNT_TYPES } from "./cAccount.js";
  * @typedef {import("./cPensionAnnuityStorage.js").PensionAnnuity} PensionAnnuity
  */
 
-
 /**
  * @typedef {Object} RetirementYearSpendingOverride
  * @property {number} year - Year number relative to retirement (1 = first year of retirement)
  * @property {number} amount - Extra spending amount for that year
  *
- *
- * @typedef {Object} InputsOptions
- * @property {number} [startingYear]
- * @property {number} [initialAgeSubject]
- * @property {number} [initialAgePartner]
- * @property {number} [subjectRetireAge]
- * @property {number} [subjectSsStartAge]
- * @property {number} [subjectPensionStartAge]
- * @property {number} [subject401kStartAge]
- * @property {number} [subjectLifeSpan]
- * @property {RetirementYearSpendingOverride[]} [retirementYearSpendingOverrides]
- * @property {RetirementYearSpendingOverride[]} [taxableIncomeOverrides]
- * @property {RetirementYearSpendingOverride[]} [taxFreeIncomeOverrides]
- * @property {PensionAnnuity[]} [pensionAnnuities]
- *
- * @property {number} [inflationRate]
- * @property {number} [spendingToday]
- * @property {number} [spendingRetirement]
- * @property {number} [spendingDecline]
- *
- * @property {number} [partnerRetireAge]
- * @property {number} [partnerSsMonthly]
- * @property {number} [partnerSsStartAge]
- * @property {number} [partnerPenMonthly]
- * @property {number} [partnerPenStartAge]
- * @property {number} [partner401kStartAge]
- * @property {number} [partnerTaxSS]
- * @property {number} [partnerPensionWithholdings]
- *
- * @property {number} [subjectStartingSalary]
- * @property {number} [partnerStartingSalary]
- * @property {number} [subjectSalaryGrowthRate]
- * @property {number} [partnerSalaryGrowthRate]
- * @property {number} [subjectCareer401kContributionRate]
- * @property {number} [partnerCareer401kContributionRate]
- * @property {number} [subjectRothContributionRate]
- * @property {number} [partnerRothContributionRate]
- * @property {number} [subjectEmp401kMatchRate]
- * @property {number} [subject401kContributionRate]
- *
- * @property {number} [subject401kStartingBalance]
- * @property {number} [subjectRothStartingBalance]
- * @property {number} [partner401kStartingBalance]
- * @property {number} [partnerRothStartingBalance]
- * @property {number} [savingsStartingBalance]
- *
- * @property {number} [subject401kInterestRate]
- * @property {number} [subjectRothInterestRate]
- * @property {number} [partner401kInterestRate]
- * @property {number} [partnerRothInterestRate]
- * @property {number} [savingsInterestRate]
- *
- * @property {number} [subjectSsMonthly]
- * @property {number} [ssCola]
- * @property {number} [subjectPensionMonthly]
- *
- * @property {string} [filingStatus]
- * @property {boolean} [useRMD]
- *
- * @property {number} [flatSsWithholdingRate]
- * @property {number} [flatCareerTrad401kWithholdingRate]
- * @property {number} [flatPensionWithholdingRate]
- * @property {number} [flatWageWithholdingRate]
- *
- * @property {string[]} [order]
- *
- * @property {number} [subjectWorkingYearSavingsContributionFixedAmount]
- * @property {number} [subjectWorkingYearSavingsContributionRate]
- * @property {number} [partnerWorkingYearSavingsContributionFixedAmount]
- * @property {number} [partnerWorkingYearSavingsContributionRate]
- * @property {number} [subjectRetirementYearSavingsContributionFixedAmount]
- * @property {number} [subjectRetirementYearSavingsContributionRate]
- * @property {number} [partnerRetirementYearSavingsContributionFixedAmount]
- * @property {number} [partnerRetirementYearSavingsContributionRate]
- *
- * @property {number} [partnerCareer401kContributionRate]
- * @property {number} [partnerRothContributionRate]
- *
- * @property {number} [subjectCareerMonthlyPayrollDeductions]
- * @property {number} [partnerCareerMonthlyPayrollDeductions]
- * @property {number} [subjectPayPeriods]
- * @property {number} [partnerPayPeriods]
+ * @typedef {Partial<Inputs>} InputsOptions
  */
 
 class Inputs {
@@ -108,8 +26,11 @@ class Inputs {
       subjectRetireAge = 0,
       subjectSsStartAge = 0,
       subjectPensionStartAge = 0,
+      subjectPensionSurvivorship = 0,
+      partnerPensionSurvivorship = 0,
       subject401kStartAge = 0,
       subjectLifeSpan = 0,
+      partnerLifeSpan = 0,
 
       // Inflation + spending
       inflationRate = 0,
@@ -137,12 +58,12 @@ class Inputs {
       subjectRothContributionRate = 0,
       partnerRothContributionRate = 0,
       // taxablePct = 0,
-      subjectEmp401kMatchRate: employer401kMatchRate = 0,
-      subject401kContributionRate: subject401kMatchRate = 0,
+      subjectEmp401kMatchRate = 0,
+      subject401kContributionRate = 0,
       partnerCareerMonthlyPayrollDeductions = 1,
       subjectCareerMonthlyPayrollDeductions = 1,
-      subjectPayPeriods = 26,
-      partnerPayPeriods = 26,
+      subjectCareerPayPeriods = 26,
+      partnerCareerPayPeriods = 26,
 
       // Starting balances
       subject401kStartingBalance = 0,
@@ -194,6 +115,7 @@ class Inputs {
     // ---------------------------
     // Assign values
     // ---------------------------
+    /** @type{number} */
     this.startingYear = startingYear;
 
     // Personal information
@@ -212,6 +134,12 @@ class Inputs {
     /** @type {number} */
     this.subjectPensionStartAge = subjectPensionStartAge;
 
+    /** @type {number} */
+    this.subjectPensionSurvivorship = subjectPensionSurvivorship;
+
+    /** @type {number} */
+    this.partnerPensionSurvivorship = partnerPensionSurvivorship;
+
     /** @type {PensionAnnuity[]} */
     this.pensionAnnuities = options.pensionAnnuities || [];
 
@@ -220,6 +148,9 @@ class Inputs {
 
     /** @type {number} */
     this.subjectLifeSpan = subjectLifeSpan;
+
+    /** @type {number} */
+    this.partnerLifeSpan = partnerLifeSpan;
 
     /** @type {RetirementYearSpendingOverride[]} */
     this.retirementYearSpendingOverrides =
@@ -266,7 +197,7 @@ class Inputs {
     this.partnerTaxSS = partnerTaxSS;
 
     /** @type {number} */
-    this.partnerTaxPension = partnerPensionWithholdings;
+    this.partnerPensionWithholdings = partnerPensionWithholdings;
 
     // Employment and contributions
     /** @type {number} */
@@ -297,10 +228,10 @@ class Inputs {
     // this.taxablePct = taxablePct;
 
     /** @type {number} */
-    this.employer401kMatchRate = employer401kMatchRate;
+    this.subjectEmp401kMatchRate = subjectEmp401kMatchRate;
 
     /** @type {number} */
-    this.subject401kMatchRate = subject401kMatchRate;
+    this.subject401kContributionRate = subject401kContributionRate;
 
     // Account balances and returns
     /** @type {number} */
@@ -335,13 +266,13 @@ class Inputs {
 
     // Income sources
     /** @type {number} */
-    this.ssMonthly = subjectSsMonthly;
+    this.subjectSsMonthly = subjectSsMonthly;
 
     /** @type {number} */
     this.ssCola = ssCola;
 
     /** @type {number} */
-    this.penMonthly = subjectPensionMonthly;
+    this.subjectPensionMonthly = subjectPensionMonthly;
 
     // Tax rates and settings
     /** @type {string} */
@@ -385,13 +316,15 @@ class Inputs {
     this.rothUseAge = this.subjectRetireAge;
 
     /** @type {number} */
-    this.subjectCareerPayrollDeductions = subjectCareerMonthlyPayrollDeductions;
+    this.subjectCareerMonthlyPayrollDeductions =
+      subjectCareerMonthlyPayrollDeductions;
 
     this.subjectRetirementPayrollDeductions = 0;
     this.partnerRetirementPayrollDeductions = 0;
 
     /** @type {number} */
-    this.partnerCareerPayrollDeductions = partnerCareerMonthlyPayrollDeductions;
+    this.partnerCareerMonthlyPayrollDeductions =
+      partnerCareerMonthlyPayrollDeductions;
 
     /** @type {number} */
     this.subjectWorkingYearSavingsContributionFixedAmount =
@@ -431,45 +364,34 @@ class Inputs {
     /** @type {number} */
     this.partnerRothContributionRate = partnerRothContributionRate;
 
-    // These were duplicated in your original constructor; keep them once.
     /** @type {number} */
-    this.totalWorkingYears = 0;
-
-    /** @type {number} */
-    this.totalLivingYears = 0;
-
-    // /** @type {number} */
-    // this.spendingRetirement = 0;
-
-    /** @type {boolean} */
-    this.hasPartner = false;
-
-    /** @type {number} */
-    this.subjectCareerPayPeriods = subjectPayPeriods;
+    this.subjectCareerPayPeriods = subjectCareerPayPeriods;
 
     this.subjectRetirementPayPeriods = 0;
     this.partnerRetirementPayPeriods = 0;
 
     /** @type {number} */
-    this.partnerCareerPayPeriods = partnerPayPeriods;
-
-    // Calculate derived values
-    this.#calculateDerivedValues();
+    this.partnerCareerPayPeriods = partnerCareerPayPeriods;
   }
 
-  /**
-   * Private method to calculate derived values
-   */
-  #calculateDerivedValues() {
-    this.hasPartner = this.initialAgePartner > 0;
+  get hasPartner() {
+    return this.initialAgePartner > 0;
+  }
 
-    this.totalWorkingYears = this.subjectRetireAge - this.initialAgeSubject;
+  get totalWorkingYears() {
+    return this.subjectRetireAge - this.initialAgeSubject;
+  }
 
-    this.totalLivingYears = this.subjectLifeSpan - this.initialAgeSubject;
+  get totalLivingYears() {
+    return this.subjectLifeSpan - this.initialAgeSubject;
+  }
 
-    // this.spendAtRetire =
-    //   this.spendingToday *
-    //   compoundedRate(this.inflationRate, this.totalWorkingYears);
+  get subjectLivingYears(){
+    return this.subjectLifeSpan - this.initialAgeSubject;
+  }
+
+  get partnerLivingYears(){
+    return this.partnerLifeSpan - this.partnerAge;
   }
 
   // Utility methods for input validation and analysis
@@ -517,8 +439,8 @@ class Inputs {
 
   getTotalMonthlyBenefits() {
     return (
-      this.ssMonthly +
-      this.penMonthly +
+      this.subjectSsMonthly +
+      this.subjectPensionMonthly +
       this.partnerSsMonthly +
       this.partnerPenMonthly
     );
@@ -561,7 +483,7 @@ class Inputs {
   get subjectSs() {
     // debugger;
     if (this.subjectAge >= this.subjectSsStartAge) {
-      return (this.ssMonthly * 12).adjustedForInflation(
+      return (this.subjectSsMonthly * 12).adjustedForInflation(
         this.ssCola,
         this.subjectAge - this.subjectSsStartAge
       );
@@ -571,7 +493,7 @@ class Inputs {
 
   get subjectPension() {
     if (this.subjectAge >= this.subjectPensionStartAge) {
-      return (this.penMonthly * 12).asCurrency();
+      return (this.subjectPensionMonthly * 12).asCurrency();
     }
     return 0;
   }
@@ -723,99 +645,101 @@ class Inputs {
    * Optional helper: turn current instance into a plain object.
    * Great for persistence, cloning, diffing, etc.
    */
-  /** @returns {InputsOptions} */
+  /** @returns {Inputs} */
   toObject() {
-    return {
-      startingYear: this.startingYear,
-      initialAgeSubject: this.initialAgeSubject,
-      initialAgePartner: this.initialAgePartner,
-      subjectRetireAge: this.subjectRetireAge,
-      subjectSsStartAge: this.subjectSsStartAge,
-      subjectPensionStartAge: this.subjectPensionStartAge,
-      subject401kStartAge: this.subject401kStartAge,
-      subjectLifeSpan: this.subjectLifeSpan,
+    // Return a shallow copy of the current instance
+    return {...this};
+    // return {
+    //   startingYear: this.startingYear,
+    //   initialAgeSubject: this.initialAgeSubject,
+    //   initialAgePartner: this.initialAgePartner,
+    //   subjectRetireAge: this.subjectRetireAge,
+    //   subjectSsStartAge: this.subjectSsStartAge,
+    //   subjectPensionStartAge: this.subjectPensionStartAge,
+    //   subject401kStartAge: this.subject401kStartAge,
+    //   subjectLifeSpan: this.subjectLifeSpan,
 
-      retirementYearSpendingOverrides: this.retirementYearSpendingOverrides,
-      taxableIncomeOverrides: this.taxableIncomeOverrides,
-      taxFreeIncomeOverrides: this.taxFreeIncomeOverrides,
+    //   retirementYearSpendingOverrides: this.retirementYearSpendingOverrides,
+    //   taxableIncomeOverrides: this.taxableIncomeOverrides,
+    //   taxFreeIncomeOverrides: this.taxFreeIncomeOverrides,
 
-      inflationRate: this.inflationRate,
-      spendingToday: this.spendingToday,
-      spendingRetirement: this.spendingRetirement,
-      spendingDecline: this.spendingDecline,
+    //   inflationRate: this.inflationRate,
+    //   spendingToday: this.spendingToday,
+    //   spendingRetirement: this.spendingRetirement,
+    //   spendingDecline: this.spendingDecline,
 
-      partnerRetireAge: this.partnerRetireAge,
-      partnerSsMonthly: this.partnerSsMonthly,
-      partnerSsStartAge: this.partnerSsStartAge,
-      partnerPenMonthly: this.partnerPenMonthly,
-      partnerPenStartAge: this.partnerPenStartAge,
-      partner401kStartAge: this.partner401kStartAge,
-      partnerTaxSS: this.partnerTaxSS,
-      partnerPensionWithholdings: this.partnerTaxPension,
+    //   partnerRetireAge: this.partnerRetireAge,
+    //   partnerSsMonthly: this.partnerSsMonthly,
+    //   partnerSsStartAge: this.partnerSsStartAge,
+    //   partnerPenMonthly: this.partnerPenMonthly,
+    //   partnerPenStartAge: this.partnerPenStartAge,
+    //   partner401kStartAge: this.partner401kStartAge,
+    //   partnerTaxSS: this.partnerTaxSS,
+    //   partnerPensionWithholdings: this.partnerPensionWithholdings,
 
-      subjectStartingSalary: this.subjectStartingSalary,
-      partnerStartingSalary: this.partnerStartingSalary,
-      subjectSalaryGrowthRate: this.subjectSalaryGrowthRate,
-      partnerSalaryGrowthRate: this.partnerSalaryGrowthRate,
-      subjectCareer401kContributionRate: this.subjectCareer401kContributionRate,
-      subjectRothContributionRate: this.subjectRothContributionRate,
-      // taxablePct: this.taxablePct,
-      subjectEmp401kMatchRate: this.employer401kMatchRate,
-      subject401kContributionRate: this.subject401kMatchRate,
+    //   subjectStartingSalary: this.subjectStartingSalary,
+    //   partnerStartingSalary: this.partnerStartingSalary,
+    //   subjectSalaryGrowthRate: this.subjectSalaryGrowthRate,
+    //   partnerSalaryGrowthRate: this.partnerSalaryGrowthRate,
+    //   subjectCareer401kContributionRate: this.subjectCareer401kContributionRate,
+    //   subjectRothContributionRate: this.subjectRothContributionRate,
+    //   // taxablePct: this.taxablePct,
+    //   subjectEmp401kMatchRate: this.subjectEmp401kMatchRate,
+    //   subject401kContributionRate: this.subject401kContributionRate,
 
-      subject401kStartingBalance: this.subject401kStartingBalance,
-      subjectRothStartingBalance: this.subjectRothStartingBalance,
-      partner401kStartingBalance: this.partner401kStartingBalance,
-      partnerRothStartingBalance: this.partnerRothStartingBalance,
-      savingsStartingBalance: this.savingsStartingBalance,
+    //   subject401kStartingBalance: this.subject401kStartingBalance,
+    //   subjectRothStartingBalance: this.subjectRothStartingBalance,
+    //   partner401kStartingBalance: this.partner401kStartingBalance,
+    //   partnerRothStartingBalance: this.partnerRothStartingBalance,
+    //   savingsStartingBalance: this.savingsStartingBalance,
 
-      subject401kInterestRate: this.subject401kInterestRate,
-      subjectRothInterestRate: this.subjectRothInterestRate,
-      partner401kInterestRate: this.partner401kInterestRate,
-      partnerRothInterestRate: this.partnerRothInterestRate,
-      savingsInterestRate: this.savingsInterestRate,
+    //   subject401kInterestRate: this.subject401kInterestRate,
+    //   subjectRothInterestRate: this.subjectRothInterestRate,
+    //   partner401kInterestRate: this.partner401kInterestRate,
+    //   partnerRothInterestRate: this.partnerRothInterestRate,
+    //   savingsInterestRate: this.savingsInterestRate,
 
-      subjectSsMonthly: this.ssMonthly,
-      ssCola: this.ssCola,
-      subjectPensionMonthly: this.penMonthly,
+    //   subjectSsMonthly: this.subjectSsMonthly,
+    //   ssCola: this.ssCola,
+    //   subjectPensionMonthly: this.subjectPensionMonthly,
 
-      filingStatus: this.filingStatus,
-      useRMD: this.useRMD,
+    //   filingStatus: this.filingStatus,
+    //   useRMD: this.useRMD,
 
-      flatSsWithholdingRate: this.flatSsWithholdingRate,
-      flatCareerTrad401kWithholdingRate: this.flatCareerTrad401kWithholdingRate,
-      flatPensionWithholdingRate: this.flatPensionWithholdingRate,
-      flatWageWithholdingRate: this.flatWageWithholdingRate,
+    //   flatSsWithholdingRate: this.flatSsWithholdingRate,
+    //   flatCareerTrad401kWithholdingRate: this.flatCareerTrad401kWithholdingRate,
+    //   flatPensionWithholdingRate: this.flatPensionWithholdingRate,
+    //   flatWageWithholdingRate: this.flatWageWithholdingRate,
 
-      order: this.order,
+    //   order: this.order,
 
-      subjectWorkingYearSavingsContributionFixedAmount:
-        this.subjectWorkingYearSavingsContributionFixedAmount,
-      subjectWorkingYearSavingsContributionRate:
-        this.subjectWorkingYearSavingsContributionRate,
-      partnerWorkingYearSavingsContributionFixedAmount:
-        this.partnerWorkingYearSavingsContributionFixedAmount,
-      partnerWorkingYearSavingsContributionRate:
-        this.partnerWorkingYearSavingsContributionRate,
-      subjectRetirementYearSavingsContributionFixedAmount:
-        this.subjectRetirementYearSavingsContributionFixedAmount,
-      subjectRetirementYearSavingsContributionRate:
-        this.subjectRetirementYearSavingsContributionRate,
-      partnerRetirementYearSavingsContributionFixedAmount:
-        this.partnerRetirementYearSavingsContributionFixedAmount,
-      partnerRetirementYearSavingsContributionRate:
-        this.partnerRetirementYearSavingsContributionRate,
+    //   subjectWorkingYearSavingsContributionFixedAmount:
+    //     this.subjectWorkingYearSavingsContributionFixedAmount,
+    //   subjectWorkingYearSavingsContributionRate:
+    //     this.subjectWorkingYearSavingsContributionRate,
+    //   partnerWorkingYearSavingsContributionFixedAmount:
+    //     this.partnerWorkingYearSavingsContributionFixedAmount,
+    //   partnerWorkingYearSavingsContributionRate:
+    //     this.partnerWorkingYearSavingsContributionRate,
+    //   subjectRetirementYearSavingsContributionFixedAmount:
+    //     this.subjectRetirementYearSavingsContributionFixedAmount,
+    //   subjectRetirementYearSavingsContributionRate:
+    //     this.subjectRetirementYearSavingsContributionRate,
+    //   partnerRetirementYearSavingsContributionFixedAmount:
+    //     this.partnerRetirementYearSavingsContributionFixedAmount,
+    //   partnerRetirementYearSavingsContributionRate:
+    //     this.partnerRetirementYearSavingsContributionRate,
 
-      partnerCareer401kContributionRate: this.partnerCareer401kContributionRate,
-      partnerRothContributionRate: this.partnerRothContributionRate,
+    //   partnerCareer401kContributionRate: this.partnerCareer401kContributionRate,
+    //   partnerRothContributionRate: this.partnerRothContributionRate,
 
-      subjectCareerMonthlyPayrollDeductions:
-        this.subjectCareerPayrollDeductions,
-      partnerCareerMonthlyPayrollDeductions:
-        this.partnerCareerPayrollDeductions,
-      subjectPayPeriods: this.subjectCareerPayPeriods,
-      partnerPayPeriods: this.partnerCareerPayPeriods,
-    };
+    //   subjectCareerMonthlyPayrollDeductions:
+    //     this.subjectCareerMonthlyPayrollDeductions,
+    //   partnerCareerMonthlyPayrollDeductions:
+    //     this.partnerCareerMonthlyPayrollDeductions,
+    //   subjectCareerPayPeriods: this.subjectCareerPayPeriods,
+    //   partnerCareerPayPeriods: this.partnerCareerPayPeriods,
+    // };
   }
 }
 

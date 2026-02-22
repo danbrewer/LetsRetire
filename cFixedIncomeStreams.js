@@ -63,13 +63,25 @@ class FixedIncomeStreams {
   }
 
   get subjectPensionGross() {
-    return this.#inputs.subjectPension.asCurrency();
+    let pension = this.#inputs.subjectPension.asCurrency();
+
+    if (this.#demographics.subjectIsLiving) {
+      return pension;
+    }
+
+    // debugger;
+
+    // Subject is no longer living.  Assume survivorship benefits
+    pension *= this.#inputs.subjectPensionSurvivorship / 100;
+
+    return pension.asCurrency();
   }
 
   get subjectPensionWithholdings() {
     return (
-      this.#inputs.flatPensionWithholdingRate * this.#inputs.subjectPension
-    ).asCurrency();
+      this.subjectPensionGross *
+      this.#inputs.flatPensionWithholdingRate.asCurrency()
+    );
   }
 
   get subjectPensionActualIncome() {
@@ -77,12 +89,19 @@ class FixedIncomeStreams {
   }
 
   get subjectSsGross() {
-    return this.#inputs.subjectSs.asCurrency();
+    if (!this.#demographics.subjectIsLiving) return 0;
+
+    let ssGross = this.#inputs.subjectSs;
+    if (!this.#demographics.partnerIsLiving) {
+      ssGross = Math.max(ssGross, this.#inputs.partnerSs);
+    }
+
+    return ssGross.asCurrency();
   }
 
   get subjectSsWithholdings() {
     return (
-      this.#inputs.flatSsWithholdingRate * this.#inputs.subjectSs
+      this.#inputs.flatSsWithholdingRate * this.subjectSsGross
     ).asCurrency();
   }
 
@@ -91,13 +110,23 @@ class FixedIncomeStreams {
   }
 
   get partnerPensionGross() {
-    return this.#inputs.partnerPension.asCurrency();
+    let pension = this.#inputs.partnerPension.asCurrency();
+
+    if (this.#demographics.partnerIsLiving) {
+      return pension;
+    }
+    // Partner is no longer living; assume survivorship benefits
+    pension *= this.#inputs.partnerPensionSurvivorship / 100;
+
+    return pension.asCurrency();
   }
 
   get partnerPensionWithholdings() {
-    return (
-      this.#inputs.flatPensionWithholdingRate * this.#inputs.partnerPension
-    ).asCurrency();
+    return this.#demographics.partnerIsLiving
+      ? (
+          this.#inputs.flatPensionWithholdingRate * this.partnerPensionGross
+        ).asCurrency()
+      : 0;
   }
 
   get partnerPensionActualIncome() {
@@ -105,12 +134,20 @@ class FixedIncomeStreams {
   }
 
   get partnerSsGross() {
-    return this.#inputs.partnerSs.asCurrency();
+    if (!this.#demographics.partnerIsLiving) return 0;
+
+    let ssGross = this.#inputs.partnerSs;
+    if (!this.#demographics.subjectIsLiving) {
+      // Take the higher of the two SS benefits
+      ssGross = Math.max(ssGross, this.#inputs.subjectSs);
+    }
+
+    return ssGross.asCurrency();
   }
 
   get partnerSsWithholdings() {
     return (
-      this.#inputs.flatSsWithholdingRate * this.#inputs.partnerSs
+      this.#inputs.flatSsWithholdingRate * this.partnerSsGross
     ).asCurrency();
   }
 

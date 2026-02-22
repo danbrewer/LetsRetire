@@ -5,6 +5,7 @@ class Demographics {
    * @param {number} currentAge
    * @param {number} ssStartAge
    * @param {number} penStartAge
+   * @param {number} subjectLifeSpan
    * @param {number} subject401kStartAge
    * @param {number} partner401kStartAge
    * @param {number} retirementYear
@@ -15,6 +16,7 @@ class Demographics {
     ssStartAge,
     penStartAge,
     subject401kStartAge,
+    subjectLifeSpan,  
     retirementYear,
     yearIndex,
     isRetired = true,
@@ -24,11 +26,13 @@ class Demographics {
     partnerSsStartAge = Number.MAX_VALUE,
     partnerPenStartAge = Number.MAX_VALUE,
     partner401kStartAge = Number.MAX_VALUE,
+    partnerLifeSpan = Number.MIN_VALUE,
     filingStatus = "single"
   ) {
     this.currentAge = currentAge;
     this.ssStartAge = ssStartAge;
     this.penStartAge = penStartAge;
+    this.subjectLifeSpan = subjectLifeSpan;
     this.subject401kStartAge = subject401kStartAge;
     this.retirementYear = retirementYear;
     this.isRetired = isRetired;
@@ -44,8 +48,19 @@ class Demographics {
     this.trad401kStartAgeOfPartner = hasPartner
       ? partner401kStartAge
       : Number.MAX_VALUE;
+    this.partnerLifeSpan = hasPartner ? partnerLifeSpan : Number.MIN_VALUE;
     this.filingStatus = filingStatus;
     this._description = `Retirement Year ${yearIndex + 1} (Age ${this.currentAge}) (Year ${this.retirementYear})`;
+  }
+
+  get subjectIsLiving() {
+    const isLiving = this.currentAge <= this.subjectLifeSpan;
+    // debugger;
+    return isLiving;
+  }
+
+  get partnerIsLiving() {
+    return this.currentAgeOfPartner <= this.partnerLifeSpan;
   }
 
   get isSubjectEligibleForSs() {
@@ -172,11 +187,13 @@ class Demographics {
    * @since 1.0.0
    */
   static CreateUsing(inputs, isRetired, isWorking) {
+    // debugger;
     return new Demographics(
       inputs.subjectAge,
       inputs.subjectSsStartAge,
       inputs.subjectPensionStartAge,
       inputs.subject401kStartAge,
+      inputs.subjectLifeSpan,
       inputs.currentYear,
       inputs.yearIndex,
       isRetired,
@@ -186,6 +203,7 @@ class Demographics {
       inputs.partnerSsStartAge,
       inputs.partnerPenStartAge,
       inputs.partner401kStartAge,
+      inputs.partnerLifeSpan,
       inputs.filingStatus
     );
   }
