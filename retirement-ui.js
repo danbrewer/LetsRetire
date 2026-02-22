@@ -797,26 +797,6 @@ function parseInputParameters() {
 
   const pensionAnnuities = pensionManager ? pensionManager.getAll() : [];
 
-  // for (let age = subjectRetireAge; age <= subjectLifeSpan; age++) {
-  //   const field = inputText(`spending_${age}`);
-  //   if (!field) continue;
-
-  //   const raw = parseFloat(field.value);
-  //   if (!raw || isNaN(raw)) continue;
-
-  //   const useCurrentYearValues =
-  //     checkbox("useCurrentYearValues")?.checked ?? false;
-
-  //   const amount = useCurrentYearValues
-  //     ? applyInflationToSpendingValue(raw, age)
-  //     : raw;
-
-  //   retirementYearSpendingOverride.push({
-  //     year: age - subjectRetireAge + 1,
-  //     amount: amount,
-  //   });
-  // }
-
   /** @type {import("./cInputs.js").InputsOptions} */
   const inputArgs = {
     // Ages / timeline
@@ -917,61 +897,13 @@ function resetAll() {
   persistedInputs = {};
 
   loadExample();
-
-  // const order = select("order");
-  // if (order) {
-  //   order.value = "taxable,pretax,roth";
-  // }
-
-  // const filingStatus = select("filingStatus");
-  // if (filingStatus) {
-  //   filingStatus.value = "single";
-  // }
   doCalculations();
 
-  // // Clear spending override fields
-  // const grid = divById("spendingDetailsGrid");
-  // if (grid) {
-  //   grid.innerHTML = "";
-  // }
-  // // Clear income adjustment fields
-  // const taxableGrid = divById("taxableIncomeDetailsGrid");
-  // if (taxableGrid) {
-  //   taxableGrid.innerHTML = "";
-  // }
-  // const taxFreeGrid = divById("taxFreeIncomeDetailsGrid");
-  // if (taxFreeGrid) {
-  //   taxFreeGrid.innerHTML = "";
-  // }
-  // const rows = divById("rows");
-  // if (rows) {
-  //   rows.innerHTML = "";
-  // }
-  // const kpiAge = divById("kpiAge");
-  // if (kpiAge) {
-  //   kpiAge.textContent = "—";
-  // }
-
-  // const kpiEndBal = divById("kpiEndBal");
-  // if (kpiEndBal) {
-  //   kpiEndBal.textContent = "—";
-  // }
-
-  // const kpiDraw = divById("kpiDraw");
-  // if (kpiDraw) {
-  //   kpiDraw.textContent = "—";
-  // }
-
-  // const kpiTax = divById("kpiTax");
-  // if (kpiTax) {
-  //   kpiTax.textContent = "—";
-  // }
 }
 
 // Initialize when DOM is loaded
 document.addEventListener("DOMContentLoaded", function () {
-  // First render
-  // initUI();
+
 });
 
 let isDirty = false;
@@ -1001,20 +933,6 @@ function doCalculations() {
   const result = calc(calculations, DefaultUI);
   clearDirty();
   generateOutputAndSummary(result?.inputs, result?.calculations);
-  // const inputs = parseInputParameters();
-
-  // if (!inputs) return;
-
-  // const calculations = new Calculations();
-
-  // const result = calc(calculations, inputs);
-
-  // clearDirty();
-
-  // generateOutputAndSummary(
-  //   result?.inputs,
-  //   result?.calculations
-  // );
 }
 
 function updateTaxFreeIncomeFieldsDisplayMode() {
@@ -1201,62 +1119,6 @@ function regenerateSpendingFields() {
     onBlur: handleSpendingFieldChange,
     startAge: num(UIField.SUBJECT_RETIRE_AGE),
   });
-
-  // const retireAge = num(UIField.SUBJECT_RETIRE_AGE);
-  // const endAge = num(UIField.SUBJECT_LIFESPAN);
-
-  // // Only generate if ages are valid
-  // if (retireAge <= 0 || endAge <= retireAge) {
-  //   return;
-  // }
-
-  // const grid = $("spendingDetailsGrid");
-  // if (!grid) return;
-  // grid.innerHTML = ""; // Clear existing fields
-
-  // // Generate input fields for each retirement year
-  // for (let age = retireAge; age <= endAge; age++) {
-  //   const div = document.createElement("div");
-  //   div.innerHTML = `
-  //       <label for="spending_${age}">Age ${age} spending ($)</label>
-  //       <input id="spending_${age}" type="number" step="1000" placeholder="Auto" />
-  //   `;
-  //   grid.appendChild(div);
-
-  //   // Add event listener for inflation adjustment
-  //   const field = inputText(`spending_${age}`);
-  //   if (!field) continue;
-
-  //   const id = `spending_${age}`;
-
-  //   // ✅ RESTORE persisted value
-  //   if (
-  //     persistedInputs[id] !== undefined &&
-  //     persistedInputs[id] !== null &&
-  //     field
-  //   ) {
-  //     field.value = persistedInputs[id];
-  //   }
-
-  //   // mark dirty on change
-  //   field.addEventListener("input", () => {
-  //     field.dispatchEvent(
-  //       new CustomEvent("value-changed", {
-  //         bubbles: true,
-  //         detail: {
-  //           id: field.id,
-  //           value: field.value,
-  //         },
-  //       })
-  //     );
-  //   });
-
-  //   field.addEventListener("blur", (event) =>
-  //     handleSpendingFieldChange(age, event)
-  //   );
-  // }
-
-  // attachDirtyTracking(grid);
 }
 
 /**
@@ -1372,9 +1234,6 @@ function handleSpendingFieldChange(age, event) {
       },
     })
   );
-
-  // Trigger recalculation
-  // doCalculations();
 }
 
 function updateSpendingFieldsDisplayMode() {
@@ -1502,54 +1361,6 @@ function regenerateTaxableIncomeFields() {
     onBlur: handleTaxableIncomeFieldChange,
     startAge: num(UIField.SUBJECT_CURRENT_AGE),
   });
-  // const currentAge = num(UIField.SUBJECT_CURRENT_AGE);
-  // const endAge = num(UIField.SUBJECT_LIFESPAN);
-
-  // if (currentAge <= 0 || endAge <= currentAge) return;
-
-  // const grid = $("taxableIncomeDetailsGrid");
-  // if (!grid) return;
-
-  // grid.innerHTML = "";
-
-  // for (let age = currentAge; age <= endAge; age++) {
-  //   const id = `taxableIncome_${age}`;
-
-  //   const div = document.createElement("div");
-  //   div.innerHTML = `
-  //       <label for="${id}">Age ${age} taxable income ($)</label>
-  //       <input id="${id}" type="number" step="1000" placeholder="0" />
-  //   `;
-  //   grid.appendChild(div);
-
-  //   const field = inputText(id);
-  //   if (!field) continue;
-
-  //   // ✅ RESTORE persisted value
-  //   if (persistedInputs[id] !== undefined && persistedInputs[id] !== null) {
-  //     field.value = persistedInputs[id];
-  //   }
-
-  //   // ✅ Persist on input (same as spending)
-  //   field.addEventListener("input", () => {
-  //     field.dispatchEvent(
-  //       new CustomEvent("value-changed", {
-  //         bubbles: true,
-  //         detail: {
-  //           id: field.id,
-  //           value: field.value,
-  //         },
-  //       })
-  //     );
-  //   });
-
-  //   // existing inflation handling
-  //   field.addEventListener("blur", (event) =>
-  //     handleTaxableIncomeFieldChange(age, event)
-  //   );
-  // }
-
-  // attachDirtyTracking(grid);
 }
 
 /**
@@ -1561,7 +1372,6 @@ function getTaxableIncomeOverride(age) {
   if (field && field.value) {
     const fieldValue = parseFloat(field.value);
     if (isNaN(fieldValue)) {
-      // console.log(`getTaxableIncomeOverride(${age}): Invalid number in field`);
       return 0;
     }
 
@@ -1701,36 +1511,6 @@ function regenerateTaxFreeIncomeFields() {
     onBlur: handleTaxFreeIncomeFieldChange,
     startAge: num(UIField.SUBJECT_CURRENT_AGE),
   });
-
-  // const currentAge = num(UIField.SUBJECT_CURRENT_AGE);
-  // const endAge = num(UIField.SUBJECT_LIFESPAN);
-
-  // // Only generate if ages are valid
-  // if (currentAge <= 0 || endAge <= currentAge) {
-  //   return;
-  // }
-
-  // const grid = $("taxFreeIncomeDetailsGrid");
-  // if (!grid) return;
-
-  // grid.innerHTML = ""; // Clear existing fields
-
-  // // Generate input fields for each year from current age to end age
-  // for (let age = currentAge; age <= endAge; age++) {
-  //   const div = document.createElement("div");
-  //   div.innerHTML = `
-  //       <label for="taxFreeIncome_${age}">Age ${age} tax-free income ($)</label>
-  //       <input id="taxFreeIncome_${age}" type="number" step="1000" placeholder="0" />
-  //   `;
-  //   grid.appendChild(div);
-
-  //   // Add event listener for inflation adjustment
-  //   const field = $(`taxFreeIncome_${age}`);
-  //   if (!field) continue;
-  //   field.addEventListener("blur", (event) =>
-  //     handleTaxFreeIncomeFieldChange(age, event)
-  //   );
-  // }
 }
 
 /**
@@ -1813,9 +1593,6 @@ function handleTaxFreeIncomeFieldChange(age, event) {
       },
     })
   );
-
-  // Trigger recalculation
-  // doCalculations();
 }
 
 // Helper function for income inflation (similar to spending inflation)

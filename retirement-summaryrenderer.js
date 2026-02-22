@@ -61,6 +61,9 @@ function divById(id) {
  * @property {(ev: DragEvent) => void} [ondragstart]
  * @property {(ev: DragEvent) => void} [ondragenter]
  * @property {(ev: DragEvent) => void} [ondragleave]
+ * @property {string} [title]
+ * @property {string} [role]
+ * @property {string} [ariaLabel]
  * @property {string} [type]
  * @property {boolean} [checked]
  * @property {string} [value]
@@ -117,6 +120,8 @@ function el(tag, props = {}, ...children) {
       if (node instanceof HTMLTableCellElement) {
         node.rowSpan = Number(value);
       }
+    } else if (key === "ariaLabel") {
+      node.setAttribute("aria-label", String(value));
     } else {
       node.setAttribute(key, String(value));
     }
@@ -188,6 +193,50 @@ function calcLink({ className, index, action, text }) {
 ///////////////////////////////////////////////////////////////
 
 /**
+ * @typedef {object} CellBadgeOptions
+ * @property {string} emoji          // e.g. "⚠️"
+ * @property {string} tooltip        // shown on hover
+ * @property {string} [className]    // optional styling hook
+ * @property {string} [ariaLabel]    // accessible label; defaults to tooltip
+ */
+
+/**
+ * @param {CellBadgeOptions} b
+ * @returns {HTMLSpanElement}
+ */
+function cellBadge(b) {
+  return el(
+    "span",
+    {
+      className: b.className ? `cell-badge ${b.className}` : "cell-badge",
+      title: b.tooltip,
+      // a11y
+      role: "img",
+      ariaLabel: b.ariaLabel ?? b.tooltip,
+    },
+    b.emoji
+  );
+}
+
+/**
+ * Wraps content + optional badge into a single inline container.
+ * @param {Node | string} content
+ * @param {CellBadgeOptions | undefined} badge
+ * @returns {Node | string}
+ */
+function withOptionalBadge(content, badge) {
+  if (!badge) return content;
+
+  // NOTE: no "calc-link" class on the badge; click delegation won't match it.
+  return el(
+    "span",
+    { className: "cell-with-badge" },
+    cellBadge(badge),
+    content
+  );
+}
+
+/**
  * @param {string} className
  * @param {Child} value
  * @returns {HTMLTableCellElement}
@@ -201,6 +250,7 @@ function textTd(className, value) {
  * @property {number} [index]
  * @property {string} [action]
  * @property {string} [modifier]
+ * @property {CellBadgeOptions} [badge]
  */
 
 /**
@@ -213,11 +263,18 @@ function textTd(className, value) {
 function money(className, moneyObj, options = {}) {
   if (!moneyObj) return td(className, "");
 
-  const text = moneyObj.asWholeDollars();
+  // const text = moneyObj.asWholeDollars();
+  // Support either Money-like objects or numbers (you often pass numbers)
+  const text =
+    typeof moneyObj === "number"
+      ? /** @type {any} */ (moneyObj).asWholeDollars
+        ? /** @type {any} */ (moneyObj).asWholeDollars()
+        : String(moneyObj)
+      : moneyObj.asWholeDollars();
 
   // Plain cell
   if (!options.action) {
-    return td(className, text);
+    return td(className, withOptionalBadge(text, options.badge));
   }
 
   // If action exists, index should exist too. Make that explicit for TS.
@@ -228,15 +285,23 @@ function money(className, moneyObj, options = {}) {
     ? `calc-link ${options.modifier}`
     : "calc-link breakdown-link";
 
-  return td(
-    className,
-    calcLink({
-      className: spanClass,
-      index,
-      action: options.action,
-      text,
-    })
-  );
+  // return td(
+  //   className,
+  //   calcLink({
+  //     className: spanClass,
+  //     index,
+  //     action: options.action,
+  //     text,
+  //   })
+  // );
+  const link = calcLink({
+    className: spanClass,
+    index,
+    action: options.action,
+    text,
+  });
+
+  return td(className, withOptionalBadge(link, options.badge));
 }
 
 /**
@@ -290,7 +355,6 @@ function percent(className, value, options = {}) {
     })
   );
 }
-
 
 function buildTableHead() {
   const thead = document.getElementById("tableHead");
@@ -495,7 +559,18 @@ const columnGroups = [
     columns: [
       {
         label: "Annual Spend",
-        render: (calc, _) => money("outgoing", calc.reportData.ask),
+        render: (calc, _) => {
+          const warnings = [];
+          if (calc.reportData.spending_overriding) {
+            warnings.push(`⚠️ Overriding spending`);
+          }
+          return money("outgoing", calc.reportData.ask, {
+            badge:
+              warnings.length > 0
+                ? { emoji: "⚠️", tooltip: warnings.join("\n") }
+                : undefined,
+          });
+        },
       },
     ],
   },
@@ -545,22 +620,41 @@ const columnGroups = [
 
       {
         label: "Savings/Roth",
-        render: (calc, index) =>
-          money(
+        render: (calc, index) => {
+          return money(
             "income",
             calc.reportData.savings_Withdrawals +
               calc.reportData.income_combinedRothTakehome,
             { index, action: "showSavingsRothBreakdown" }
-          ),
+          );
+        },
       },
 
       {
         label: "Total Net",
-        render: (calc, index) =>
-          money("income", calc.reportData.income_total_net, {
+        render: (calc, index) => {
+          const warnings = [];
+          if (calc.reportData.income_miscTaxFreeIncome > 0) {
+            warnings.push(
+              `⚠️ Includes tax-free income of $${calc.reportData.income_miscTaxFreeIncome}.`
+            );
+          }
+
+          if (calc.reportData.income_miscTaxableIncomeTakehome > 0) {
+            warnings.push(
+              `⚠️ Includes taxable income of $${calc.reportData.income_miscTaxableIncomeTakehome}.`
+            );
+          }
+
+          return money("income", calc.reportData.income_total_net, {
             index,
             action: "showTotalCashBreakdown",
-          }),
+            badge:
+              warnings.length > 0
+                ? { emoji: "⚠️", tooltip: warnings.join("\n") }
+                : undefined,
+          });
+        },
       },
     ],
   },
@@ -728,10 +822,9 @@ const columnGroups = [
 function buildSummaryRow(calculation, index) {
   const r = calculation.reportData;
 
-  const age =
-    r.demographics_hasPartner
-      ? `${r.demographics_subjectAge} / ${r.demographics_partnerAge}`
-      : r.demographics_subjectAge;
+  const age = r.demographics_hasPartner
+    ? `${r.demographics_subjectAge} / ${r.demographics_partnerAge}`
+    : r.demographics_subjectAge;
 
   const cells = [textTd("neutral", r.year), textTd("neutral", age)];
 
@@ -745,7 +838,6 @@ function buildSummaryRow(calculation, index) {
 
   return tr(...cells);
 }
-
 
 ///////////////////////////////////////////////////////////////
 // MAIN RENDER FUNCTION

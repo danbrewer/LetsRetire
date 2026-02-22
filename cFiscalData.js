@@ -8,6 +8,7 @@ class FiscalData {
    * @param {number} savingsRateOfReturn
    * @param {number} yearIndex
    * @param {number} spend
+   * @param {boolean} overridingSpend
    * @param {number} taxYearBase
    * @param {boolean} useRmd
    * @param {boolean} useSavings
@@ -24,6 +25,7 @@ class FiscalData {
     savingsRateOfReturn,
     yearIndex,
     spend,
+    overridingSpend,
     taxYearBase,
     useRmd,
     useSavings,
@@ -43,6 +45,7 @@ class FiscalData {
     this.taxYear = taxYearBase + yearIndex;
     this.yearIndex = yearIndex;
     this.spend = spend;
+    this.overridingSpend = overridingSpend;
     this.useRmd = useRmd;
     this.useSavings = useSavings;
     this.useTrad401k = useTrad401k;
@@ -191,6 +194,7 @@ class FiscalData {
       inputs.savingsInterestRate,
       inputs.yearIndex,
       inputs.spend,
+      inputs.overridingSpend,
       taxYearBase,
       inputs.useRMD,
       inputs.useSavings,

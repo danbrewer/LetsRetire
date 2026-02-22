@@ -195,6 +195,7 @@ class ReportData extends BaseReports {
     // SPENDING AND ASK
     this.ask = 0;
     this.spend = 0;
+    this.spending_overriding = false;
     this.takeHome = 0;
     this.spending_shortfall = 0;
     this.spending_surplus = 0;

@@ -386,11 +386,11 @@ class Inputs {
     return this.subjectLifeSpan - this.initialAgeSubject;
   }
 
-  get subjectLivingYears(){
+  get subjectLivingYears() {
     return this.subjectLifeSpan - this.initialAgeSubject;
   }
 
-  get partnerLivingYears(){
+  get partnerLivingYears() {
     return this.partnerLifeSpan - this.partnerAge;
   }
 
@@ -515,6 +515,16 @@ class Inputs {
     return 0;
   }
 
+
+  /** @returns {boolean} */
+  get overridingSpend() {
+    return this.retirementYearSpendingOverride > 0;
+    // return (
+    //   (this.retirementYearSpendingOverride ?? 0) &&
+    //   this.retirementYearSpendingOverride > 0
+    // );
+  }
+
   get spend() {
     if (this.#isRetired) {
       let result = this.spendingRetirement
@@ -525,10 +535,7 @@ class Inputs {
         this.#retirementYearIndex
       );
 
-      if (
-        this.retirementYearSpendingOverride &&
-        this.retirementYearSpendingOverride > 0
-      ) {
+      if (this.overridingSpend) {
         result = this.retirementYearSpendingOverride;
       }
 
@@ -648,7 +655,7 @@ class Inputs {
   /** @returns {Inputs} */
   toObject() {
     // Return a shallow copy of the current instance
-    return {...this};
+    return { ...this };
   }
 }
 

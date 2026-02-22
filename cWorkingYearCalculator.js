@@ -520,6 +520,8 @@ class WorkingYearCalculator {
 
     const cash = this.#accountYear.getEndingBalance(ACCOUNT_TYPES.CASH);
 
+    this.#reportingYear.ReportData.spending_overriding = this.#fiscalData.overridingSpend;
+
     if (cash <= 0) {
       console.warn("Warning: No cash available to cover spending.");
       return;

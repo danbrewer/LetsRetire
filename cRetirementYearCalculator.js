@@ -519,6 +519,7 @@ class RetirementYearCalculator {
 
     this.#reportingYear.ReportData.ask = spend;
     this.#reportingYear.ReportData.spend = actualSpend.asCurrency();
+    this.#reportingYear.ReportData.spending_overriding = this.#fiscalData.overridingSpend;
     this.#reportingYear.ReportData.takeHome = cash.asCurrency();
 
     if (cash <= 0) {

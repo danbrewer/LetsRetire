@@ -186,13 +186,6 @@ function initializeInputsForWorkingYear(inputs, yearIndex) {
   const result = inputs.clone();
 
   result.yearIndex = yearIndex;
-  // result.additionalSpending = UI.getSpendingOverride(result.subjectAge);
-  // result.taxableIncomeAdjustment = UI.getTaxableIncomeOverride(
-  //   result.subjectAge
-  // );
-  // result.taxFreeIncomeAdjustment = UI.getTaxFreeIncomeOverride(
-  //   result.subjectAge
-  // );
 
   return result;
 }

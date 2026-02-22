@@ -842,11 +842,29 @@ function showTotalCashBreakdown(data) {
         <span class="ss-breakdown-label">Roth Withdrawals:</span>
         <span class="ss-breakdown-value">${data.income_combinedRothTakehome.asWholeDollars()}</span>
     </div>
+    `;
+
+  if (data.income_miscTaxableIncomeTakehome > 0){
+    breakdownHtml += `
+    <div class="ss-breakdown-item">
+        <span class="ss-breakdown-label">Miscellaneous Taxable Income:</span>
+        <span class="ss-breakdown-value">${data.income_miscTaxableIncomeTakehome.asWholeDollars()}</span>
+    </div>`;
+  }
+
+  if (data.income_miscTaxFreeIncome > 0){
+    breakdownHtml += `
+    <div class="ss-breakdown-item">
+        <span class="ss-breakdown-label">Miscellaneous Tax-Free Income:</span>
+        <span class="ss-breakdown-value">${data.income_miscTaxFreeIncome.asWholeDollars()}</span>
+    </div>`;
+  }
+
+  breakdownHtml += `    
     <div class="ss-breakdown-item breakdown-accent">
         <span class="ss-breakdown-label">Total:</span>
         <span class="ss-breakdown-value">${data.income_total_net.asWholeDollars()}</span>
-    </div>
-    `;
+    </div>`;
 
   popup.setContent(breakdownHtml);
   popup.show();

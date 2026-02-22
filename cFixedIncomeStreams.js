@@ -321,6 +321,7 @@ class FixedIncomeStreams {
   }
 
   get retirementYearSpendingOverride() {
+    debugger;
     const retirementYearIndex =
       this.#inputs.subjectAge - this.#inputs.subjectRetireAge + 1;
     if (retirementYearIndex < 1) {
