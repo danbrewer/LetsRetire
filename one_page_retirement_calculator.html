@@ -1276,6 +1276,80 @@ details[open] .content {
   user-select: none;
 }
 
+.pension-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  display: grid;
+  place-items: center;
+  z-index: 1000;
+  padding: 16px;
+}
+
+.pension-modal {
+  width: min(720px, 100%);
+  background: #111;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 14px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+  overflow: hidden;
+}
+
+.pension-modal-header,
+.pension-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.pension-modal-footer {
+  border-bottom: none;
+  border-top: 1px solid rgba(255,255,255,0.08);
+  justify-content: flex-end;
+}
+
+.pension-modal-body {
+  padding: 16px;
+}
+
+.pension-modal-close {
+  font-size: 22px;
+  line-height: 1;
+  background: transparent;
+  border: 0;
+  color: #ddd;
+  cursor: pointer;
+}
+
+.pension-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.pension-form-field.full-width {
+  grid-column: 1 / -1;
+}
+
+.pension-form-field label {
+  display: block;
+  font-size: 12px;
+  opacity: 0.85;
+  margin-bottom: 6px;
+}
+
+.pension-form-field input {
+  width: 100%;
+  padding: 10px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(255,255,255,0.06);
+  color: #eee;
+}
+
   </style>
 </head>
 <body>

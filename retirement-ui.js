@@ -23,6 +23,8 @@ import { createHelpIcon } from "./retirement-ui-help.js";
 import { showToast } from "./retirement-ui-toast.js";
 import { PensionAnnuityStorage } from "./cPensionAnnuityStorage.js";
 import { PensionAnnuityManager } from "./cPensionAnnuityManager.js";
+import { openPensionCreateModal, openPensionEditModal } from "./retirement-ui-pension-modal.js";
+import { openConfirmModal } from "./retirement-ui-confirm-modal.js";
 
 const STORAGE_KEY = "retirement-calculator-inputs";
 
@@ -186,40 +188,77 @@ document.addEventListener("keydown", (e) => {
   }
 });
 
-// Add to the existing click event listener in setupEventListeners()
 document.addEventListener("click", (e) => {
   const target = e.target;
   if (!(target instanceof Element)) return;
 
-  if (target.matches(".pension-row .edit")) {
-    const id = target.getAttribute("data-id");
-    if (!id) {
-      console.log("Pension ID not found for edit action");
-      return;
-    }
-    editPension(id);
+  // list row buttons
+  if (target.closest(".pension-row .edit")) {
+    const btn = target.closest(".pension-row .edit");
+    const id = btn?.getAttribute("data-id");
+    if (!id || !pensionManager) return;
+
+    openPensionEditModal(pensionManager, id, {
+      renderPensionList,
+      markDirty,
+      doCalculations,
+      showToast,
+    });
+    return;
   }
-  if (target.matches(".pension-row .delete")) {
-    const id = target.getAttribute("data-id");
-    if (!id) {
-      console.log("Pension ID not found for delete action");
-      return;
-    }
+
+  if (target.closest(".pension-row .delete")) {
+    const btn = target.closest(".pension-row .delete");
+    const id = btn?.getAttribute("data-id");
+    if (!id) return;
     deletePension(id);
+    return;
   }
-  // Add new handlers for edit form
-  if (target.matches(".save-pension")) {
-    const id = target.getAttribute("data-id");
-    if (!id) {
-      console.log("Pension ID not found for save action");
-      return;
-    }
-    savePensionEdit(id);
-  }
-  if (target.matches(".cancel-pension-edit")) {
-    cancelPensionEdit();
+
+  // modal buttons (close/cancel/save)
+  if (
+    target.closest(".pension-modal-close") ||
+    target.closest(".pension-cancel")
+  ) {
+    closePensionModal();
+    return;
   }
 });
+
+// Add to the existing click event listener in setupEventListeners()
+// document.addEventListener("click", (e) => {
+//   const target = e.target;
+//   if (!(target instanceof Element)) return;
+
+//   if (target.matches(".pension-row .edit")) {
+//     const id = target.getAttribute("data-id");
+//     if (!id) {
+//       console.log("Pension ID not found for edit action");
+//       return;
+//     }
+//     editPension(id);
+//   }
+//   if (target.matches(".pension-row .delete")) {
+//     const id = target.getAttribute("data-id");
+//     if (!id) {
+//       console.log("Pension ID not found for delete action");
+//       return;
+//     }
+//     deletePension(id);
+//   }
+//   // Add new handlers for edit form
+//   if (target.matches(".save-pension")) {
+//     const id = target.getAttribute("data-id");
+//     if (!id) {
+//       console.log("Pension ID not found for save action");
+//       return;
+//     }
+//     savePensionEdit(id);
+//   }
+//   if (target.matches(".cancel-pension-edit")) {
+//     cancelPensionEdit();
+//   }
+// });
 
 // Events
 // Event listeners will be set up in setupEventListeners() after partials load
@@ -242,23 +281,47 @@ function setupEventListeners() {
     updateTaxFreeIncomeFieldsDisplayMode();
   });
 
+  // $("addPensionBtn")?.addEventListener("click", () => {
+  //   if (!pensionManager) return;
+
+  //   pensionManager.add({
+  //     owner: "subject",
+  //     name: "New Pension",
+  //     startAge: num(UIField.SUBJECT_PENSION_START_AGE),
+  //     monthlyAmount: 0,
+  //     withholdingRate: 0.15,
+  //     survivorshipPercent: 0,
+  //   });
+
+  //   renderPensionList();
+
+  //   markDirty();
+
+  //   doCalculations();
+  // });
+
+  // import { openPensionCreateModal } from "./retirement-ui-pension-modal.js";
+
   $("addPensionBtn")?.addEventListener("click", () => {
     if (!pensionManager) return;
 
-    pensionManager.add({
-      owner: "subject",
-      name: "New Pension",
-      startAge: num(UIField.SUBJECT_PENSION_START_AGE),
-      monthlyAmount: 0,
-      withholdingRate: 0.15,
-      survivorshipPercent: 0,
-    });
-
-    renderPensionList();
-
-    markDirty();
-
-    doCalculations();
+    openPensionCreateModal(
+      pensionManager,
+      {
+        owner: "subject",
+        name: "New Pension",
+        startAge: num(UIField.SUBJECT_PENSION_START_AGE),
+        monthlyAmount: 0,
+        withholdingRate: 0.15,
+        survivorshipPercent: 0,
+      },
+      {
+        renderPensionList,
+        markDirty,
+        doCalculations,
+        showToast,
+      }
+    );
   });
 }
 
@@ -267,8 +330,6 @@ function setupEventListeners() {
  * @param {string} id - The pension ID to edit
  * @returns {void}
  */
-
-
 
 /**
  * Show pension edit modal dialog
@@ -281,10 +342,10 @@ function editPension(id) {
   if (!pension) return;
 
   // Create modal overlay
-  const modal = document.createElement('div');
-  modal.className = 'pension-modal-overlay';
-  modal.setAttribute('data-editing-id', id);
-  
+  const modal = document.createElement("div");
+  modal.className = "pension-modal-overlay";
+  modal.setAttribute("data-editing-id", id);
+
   modal.innerHTML = `
     <div class="pension-modal">
       <div class="pension-modal-header">
@@ -370,16 +431,16 @@ function editPension(id) {
 
   // Add to document
   document.body.appendChild(modal);
-  
+
   // Focus first input
   const nameInput = modal.querySelector(`#pension-name-${id}`);
   if (nameInput instanceof HTMLInputElement) {
     nameInput.focus();
     nameInput.select();
   }
-  
+
   // Prevent background scrolling
-  document.body.style.overflow = 'hidden';
+  document.body.style.overflow = "hidden";
 }
 
 /**
@@ -387,10 +448,10 @@ function editPension(id) {
  * @returns {void}
  */
 function closePensionModal() {
-  const modal = document.querySelector('.pension-modal-overlay');
+  const modal = document.querySelector(".pension-modal-overlay");
   if (modal) {
     document.body.removeChild(modal);
-    document.body.style.overflow = '';
+    document.body.style.overflow = "";
   }
 }
 
@@ -401,7 +462,7 @@ function closePensionModal() {
  */
 function savePensionFromModal(id) {
   if (!pensionManager) return;
-  
+
   const pension = pensionManager.getById(id);
   if (!pension) return;
 
@@ -412,11 +473,13 @@ function savePensionFromModal(id) {
   const withholdingInput = document.getElementById(`pension-withholding-${id}`);
   const survivorInput = document.getElementById(`pension-survivor-${id}`);
 
-  if (!(nameInput instanceof HTMLInputElement) ||
-      !(monthlyInput instanceof HTMLInputElement) ||
-      !(ageInput instanceof HTMLInputElement) ||
-      !(withholdingInput instanceof HTMLInputElement) ||
-      !(survivorInput instanceof HTMLInputElement)) {
+  if (
+    !(nameInput instanceof HTMLInputElement) ||
+    !(monthlyInput instanceof HTMLInputElement) ||
+    !(ageInput instanceof HTMLInputElement) ||
+    !(withholdingInput instanceof HTMLInputElement) ||
+    !(survivorInput instanceof HTMLInputElement)
+  ) {
     return;
   }
 
@@ -435,7 +498,11 @@ function savePensionFromModal(id) {
 
   if (startAge < 50 || startAge > 100) {
     ageInput.focus();
-    showToast("Validation Error", "Start age must be between 50 and 100", "error");
+    showToast(
+      "Validation Error",
+      "Start age must be between 50 and 100",
+      "error"
+    );
     return;
   }
 
@@ -446,7 +513,7 @@ function savePensionFromModal(id) {
     monthlyAmount,
     startAge,
     withholdingRate,
-    survivorshipPercent
+    survivorshipPercent,
   });
 
   // Close modal and refresh
@@ -454,7 +521,7 @@ function savePensionFromModal(id) {
   renderPensionList();
   markDirty();
   doCalculations();
-  
+
   showToast("Success", "Pension updated successfully", "success");
 }
 
@@ -541,12 +608,22 @@ function cancelPensionEdit() {
 function deletePension(id) {
   if (!pensionManager) return;
 
-  if (confirm("Delete this pension?")) {
-    pensionManager.delete(id);
-    renderPensionList();
-    markDirty();
-    doCalculations();
-  }
+  const pension = pensionManager.getById(id);
+  if (!pension) return;
+
+  openConfirmModal({
+    title: "Delete Pension",
+    message: `Are you sure you want to delete "${pension.name}"? This action cannot be undone.`,
+    confirmText: "Delete",
+    cancelText: "Cancel",
+    onConfirm: () => {
+      pensionManager?.delete(id);
+      renderPensionList();
+      markDirty();
+      doCalculations();
+      showToast("Deleted", "Pension removed successfully", "success");
+    },
+  });
 }
 
 // Initialize help icons
@@ -898,13 +975,10 @@ function resetAll() {
 
   loadExample();
   doCalculations();
-
 }
 
 // Initialize when DOM is loaded
-document.addEventListener("DOMContentLoaded", function () {
-
-});
+document.addEventListener("DOMContentLoaded", function () {});
 
 let isDirty = false;
 
