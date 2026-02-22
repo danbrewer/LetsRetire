@@ -1184,52 +1184,43 @@ details[open] .content {
 }
 
 .pension-btn {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 8px;
-  border: 1.5px solid;
-  border-radius: 10px;
-  background: transparent;
-  cursor: pointer;
-  font-size: 12px;
-  font-weight: 600;
-  /* text-transform: uppercase; */
-  letter-spacing: 0.5px;
-  transition: all 0.2s ease;
-  min-width: 20px;
   justify-content: center;
+
+  width: 30px;
+  height: 30px;
+
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.03);
+
+  color: var(--muted);
+
+  font-size: 14px;
+  font-weight: 500;
+
+  cursor: pointer;
+  transition: all 0.15s ease;
 }
 
 .pension-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  background: rgba(255,255,255,0.08);
+  color: var(--text);
 }
 
 .pension-btn:active {
-  transform: translateY(0);
-}
-
-.pension-edit {
-  border-color: #10b981;
-  color: #10b981;
+  transform: scale(0.95);
 }
 
 .pension-edit:hover {
-  background: #10b981;
-  color: white;
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-}
-
-.pension-delete {
-  border-color: #ef4444;
-  color: #ef4444;
+  background: rgba(16,185,129,0.15);
+  color: #10b981;
 }
 
 .pension-delete:hover {
-  background: #ef4444;
-  color: white;
-  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+  background: rgba(239,68,68,0.15);
+  color: #ef4444;
 }
 
 .btn-icon {
@@ -1350,6 +1341,56 @@ details[open] .content {
   color: #eee;
 }
 
+.pension-actions {
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+.pension-row:hover .pension-actions {
+  opacity: 1;
+}
+
+.pension-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.pension-section-title {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text);
+}
+
+.add-pension-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 30px;
+  height: 30px;
+
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.03);
+
+  font-size:20px;
+  color: #10b981; /* modern green */
+
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.add-pension-btn:hover {
+  background: rgba(110,168,254,0.15);
+  color: var(--accent);
+  border-color: rgba(110,168,254,0.35);
+}
+
+.add-pension-btn:active {
+  transform: scale(0.95);
+}
   </style>
 </head>
 <body>
