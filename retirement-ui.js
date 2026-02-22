@@ -1770,7 +1770,7 @@ function renderPensionList() {
 
       <div class="pension-actions">
         <button class="pension-btn pension-edit edit" data-id="${item.id}" title="Modify pension details">
-          <span class="btn-icon">📝</span>
+          <span class="btn-icon">✏️</span>
         </button>
         <button class="pension-btn pension-delete delete" data-id="${item.id}" title="Remove pension">
           <span class="btn-icon">❌</span>
