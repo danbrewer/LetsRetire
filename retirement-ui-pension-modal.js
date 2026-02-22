@@ -161,7 +161,9 @@ function buildModalDom(args) {
             <div class="pension-form-field full-width">
                 <label>Owner</label>
 
-                <div class="owner-segmented">
+                <div class="owner-segmented" tabindex="0">
+                    <div class="owner-highlight"></div>
+
                     <button
                     type="button"
                     class="owner-option ${values.owner === "subject" ? "active" : ""}"
@@ -176,7 +178,7 @@ function buildModalDom(args) {
                     Partner
                     </button>
                 </div>
-                </div>
+            </div>
             <div class="pension-form-field">
               <label for="pension-name-${inputKey}">Pension Name</label>
               <input
@@ -278,15 +280,78 @@ function wireModalEvents(args) {
     if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) onSave();
   };
 
-  overlay.querySelectorAll(".owner-option").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      overlay
-        .querySelectorAll(".owner-option")
-        .forEach((b) => b.classList.remove("active"));
+const segmented = overlay.querySelector(".owner-segmented");
+const highlight = overlay.querySelector(".owner-highlight");
+const buttons = overlay.querySelectorAll(".owner-option");
 
-      btn.classList.add("active");
-    });
+    /**
+     * @param {string | undefined} owner
+     */
+function setOwner(owner) {
+  buttons.forEach((btn) => {
+    if (btn instanceof HTMLButtonElement) {
+      btn.classList.toggle("active", btn.dataset.owner === owner);
+    }
   });
+
+  if (!(highlight instanceof HTMLElement)) return;
+
+  highlight.style.transform =
+    owner === "partner" ? "translateX(100%)" : "translateX(0)";
+}
+
+/* ---- INITIAL STATE ---- */
+const initialActive = overlay.querySelector(".owner-option.active");
+
+if (initialActive instanceof HTMLButtonElement) {
+  setOwner(initialActive.dataset.owner || "subject");
+} else if (buttons.length > 0 && buttons[0] instanceof HTMLButtonElement) {
+  setOwner(buttons[0].dataset.owner || "subject");
+}
+
+/* ---- CLICK ---- */
+buttons.forEach((btn) => {
+  if (!(btn instanceof HTMLButtonElement)) return;
+
+  btn.addEventListener("click", () => {
+    setOwner(btn.dataset.owner || "subject");
+  });
+});
+
+/* ---- ARROW KEYS ---- */
+if (segmented) {
+  segmented.addEventListener("keydown", (e) => {
+    if (!(e instanceof KeyboardEvent)) return;
+
+    const activeBtn = overlay.querySelector(".owner-option.active");
+    if (!(activeBtn instanceof HTMLButtonElement)) return;
+
+    const buttonArray = Array.from(buttons).filter(
+      (b) => b instanceof HTMLButtonElement
+    );
+
+    const currentIndex = buttonArray.indexOf(activeBtn);
+
+    if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+      e.preventDefault();
+
+      let newIndex = currentIndex;
+
+      if (e.key === "ArrowRight") {
+        newIndex = Math.min(currentIndex + 1, buttonArray.length - 1);
+      }
+
+      if (e.key === "ArrowLeft") {
+        newIndex = Math.max(currentIndex - 1, 0);
+      }
+
+      const nextBtn = buttonArray[newIndex];
+      if (nextBtn) {
+        setOwner(nextBtn.dataset.owner || "subject");
+      }
+    }
+  });
+}
 
   document.addEventListener("keydown", activeKeydownHandler);
 }

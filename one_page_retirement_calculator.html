@@ -1460,43 +1460,66 @@ details[open] .content {
 }
 
 
-/* ===== OWNER SEGMENTED CONTROL ===== */
+/* ===== OWNER SEGMENTED CONTROL (Animated) ===== */
 
 .owner-segmented {
+  position: relative;
   display: inline-flex;
+  align-items: center;
+
   background: rgba(255,255,255,0.05);
   border: 1px solid rgba(255,255,255,0.14);
   border-radius: 999px;
+
   padding: 4px;
   gap: 4px;
+
+  overflow: hidden;
+  outline: none;
+}
+
+.owner-segmented:focus {
+  border-color: rgba(110,168,254,0.5);
 }
 
 .owner-option {
+  position: relative;
+  z-index: 2;
+
   appearance: none;
   border: none;
   background: transparent;
-  color: var(--muted);
 
   padding: 8px 18px;
   border-radius: 999px;
 
   font-size: 14px;
   font-weight: 600;
+  color: var(--muted);
 
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: color 0.2s ease;
 }
 
-/* Hover */
-.owner-option:hover {
-  color: var(--text);
-}
-
-/* Active */
 .owner-option.active {
-  background: linear-gradient(180deg, #2b63ff, hsl(227, 71%, 48%));
   color: white;
-  box-shadow: 0 6px 14px rgba(43, 99, 255, 0.35);
+}
+
+/* Sliding highlight */
+.owner-highlight {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+
+  height: calc(100% - 8px);
+  width: calc(50% - 4px);
+
+  border-radius: 999px;
+
+  background: linear-gradient(180deg, #2b63ff, hsl(227, 71%, 48%));
+  box-shadow: 0 6px 16px rgba(43, 99, 255, 0.35);
+
+  transition: transform 240ms cubic-bezier(.4,0,.2,1);
 }
 
 /* ===== MODAL FOOTER BUTTONS (override icon-style .pension-btn) ===== */
