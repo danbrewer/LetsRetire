@@ -442,54 +442,37 @@ function showPensionBreakdown(data) {
     return; // No data to show
   }
 
-  const popup = ensurePopup("pension", "Pension Breakdown");
+  const popup = ensurePopup("pension", "Pension/Annuity Breakdown");
 
-  let breakdownHtml = `
+  let bd = data.income_pensionBreakdowns.reduce((acc, d) => {
+    acc += `
     <div style="margin: 16px 0; padding: 12px; background: rgba(110, 168, 254, 0.1); border-radius: 8px;">
-        <strong style="color: var(--accent);">Subject:</strong>
+        <strong style="color: var(--accent);">${d.name}</strong>
       <div class="ss-breakdown-item">
-        <span class="ss-breakdown-label">Gross income:</span>
-        <span class="ss-breakdown-value">${data.income_subjectPensionGross.asWholeDollars()}</span>
+        <span class="ss-breakdown-label">Gross:</span>
+        <span class="ss-breakdown-value">${d.grossAmount.asWholeDollars()}</span>
       </div>
       <div class="ss-breakdown-item">
-          <span class="ss-breakdown-label">Withholdings:</span>
-          <span class="ss-breakdown-value">${data.income_subjectPensionWithholdings.asWholeDollars()}</span>
+        <span class="ss-breakdown-label">Withholdings (${d.withholdingRate * 100}%):</span>
+        <span class="ss-breakdown-value">${d.withholdingsAmount.asWholeDollars()}</span>
       </div>
       <div class="ss-breakdown-item breakdown-accent">
-          <span class="ss-breakdown-label">Net (takehome):</span>
-          <span class="ss-breakdown-value">${data.income_subject401kTakehome.asWholeDollars()}</span>
+        <span class="ss-breakdown-label">Takehome:</span>
+        <span class="ss-breakdown-value">${d.takehomeAmount.asWholeDollars()}</span>
       </div>
     </div>
     `;
+    return acc;
+  }, '');
 
-  if (data.demographics_hasPartner) {
-    breakdownHtml += `
-<div style="margin: 16px 0; padding: 12px; background: rgba(110, 168, 254, 0.1); border-radius: 8px;">
-        <strong style="color: var(--accent);">Partner:</strong>
-      <div class="ss-breakdown-item">
-        <span class="ss-breakdown-label">Gross income:</span>
-        <span class="ss-breakdown-value">${data.income_partnerPensionGross.asWholeDollars()}</span>
-      </div>
-      <div class="ss-breakdown-item">
-          <span class="ss-breakdown-label">Withholdings:</span>
-          <span class="ss-breakdown-value">${data.income_partnerPensionWithholdings.asWholeDollars()}</span>
-      </div>
+  bd += `
       <div class="ss-breakdown-item breakdown-accent">
-          <span class="ss-breakdown-label">Net (takehome):</span>
-          <span class="ss-breakdown-value">${data.income_partnerPensionTakehome.asWholeDollars()}</span>
-      </div>
-    </div>
-      `;
-  }
-
-  breakdownHtml += `
-      <div class="ss-breakdown-item breakdown-accent">
-          <span class="ss-breakdown-label">Total (takehome):</span>
+          <span class="ss-breakdown-label">Total takehome:</span>
           <span class="ss-breakdown-value">${data.income_combinedPensionTakehome.asWholeDollars()}</span>
       </div>
   `;
 
-  popup.setContent(breakdownHtml);
+  popup.setContent(bd);
   popup.show();
 }
 
@@ -503,27 +486,39 @@ function showPensionGrossBreakdown(data) {
 
   const popup = ensurePopup("pension", "Pension Breakdown");
 
-  let breakdownHtml = `
+  let breakdownHtml = data.income_pensionBreakdowns.reduce((acc, d) => {
+    acc += `
     <div style="margin: 16px 0; padding: 12px; background: rgba(110, 168, 254, 0.1); border-radius: 8px;">
-        <strong style="color: var(--accent);">Subject:</strong>
+        <strong style="color: var(--accent);">${d.name}</strong>
       <div class="ss-breakdown-item">
-        <span class="ss-breakdown-label">Subject Gross income:</span>
-        <span class="ss-breakdown-value">${data.income_subjectPensionGross.asWholeDollars()}</span>
+        <span class="ss-breakdown-label">Gross:</span>
+        <span class="ss-breakdown-value">${d.grossAmount.asWholeDollars()}</span>
       </div>
     </div>
     `;
+    return acc;
+  }, "");
+//   let breakdownHtml = `
+//     <div style="margin: 16px 0; padding: 12px; background: rgba(110, 168, 254, 0.1); border-radius: 8px;">
+//         <strong style="color: var(--accent);">Subject:</strong>
+//       <div class="ss-breakdown-item">
+//         <span class="ss-breakdown-label">Subject Gross income:</span>
+//         <span class="ss-breakdown-value">${data.income_subjectPensionGross.asWholeDollars()}</span>
+//       </div>
+//     </div>
+//     `;
 
-  if (data.demographics_hasPartner) {
-    breakdownHtml += `
-<div style="margin: 16px 0; padding: 12px; background: rgba(110, 168, 254, 0.1); border-radius: 8px;">
-        <strong style="color: var(--accent);">Partner:</strong>
-      <div class="ss-breakdown-item">
-        <span class="ss-breakdown-label">Partner Gross income:</span>
-        <span class="ss-breakdown-value">${data.income_partnerPensionGross.asWholeDollars()}</span>
-      </div>
-    </div>
-      `;
-  }
+//   if (data.demographics_hasPartner) {
+//     breakdownHtml += `
+// <div style="margin: 16px 0; padding: 12px; background: rgba(110, 168, 254, 0.1); border-radius: 8px;">
+//         <strong style="color: var(--accent);">Partner:</strong>
+//       <div class="ss-breakdown-item">
+//         <span class="ss-breakdown-label">Partner Gross income:</span>
+//         <span class="ss-breakdown-value">${data.income_partnerPensionGross.asWholeDollars()}</span>
+//       </div>
+//     </div>
+//       `;
+//   }
 
   breakdownHtml += `
       <div class="ss-breakdown-item breakdown-accent">

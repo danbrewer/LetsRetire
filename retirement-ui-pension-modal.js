@@ -280,78 +280,78 @@ function wireModalEvents(args) {
     if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) onSave();
   };
 
-const segmented = overlay.querySelector(".owner-segmented");
-const highlight = overlay.querySelector(".owner-highlight");
-const buttons = overlay.querySelectorAll(".owner-option");
+  const segmented = overlay.querySelector(".owner-segmented");
+  const highlight = overlay.querySelector(".owner-highlight");
+  const buttons = overlay.querySelectorAll(".owner-option");
 
-    /**
-     * @param {string | undefined} owner
-     */
-function setOwner(owner) {
+  /**
+   * @param {string | undefined} owner
+   */
+  function setOwner(owner) {
+    buttons.forEach((btn) => {
+      if (btn instanceof HTMLButtonElement) {
+        btn.classList.toggle("active", btn.dataset.owner === owner);
+      }
+    });
+
+    if (!(highlight instanceof HTMLElement)) return;
+
+    highlight.style.transform =
+      owner === "partner" ? "translateX(100%)" : "translateX(0)";
+  }
+
+  /* ---- INITIAL STATE ---- */
+  const initialActive = overlay.querySelector(".owner-option.active");
+
+  if (initialActive instanceof HTMLButtonElement) {
+    setOwner(initialActive.dataset.owner || "subject");
+  } else if (buttons.length > 0 && buttons[0] instanceof HTMLButtonElement) {
+    setOwner(buttons[0].dataset.owner || "subject");
+  }
+
+  /* ---- CLICK ---- */
   buttons.forEach((btn) => {
-    if (btn instanceof HTMLButtonElement) {
-      btn.classList.toggle("active", btn.dataset.owner === owner);
-    }
+    if (!(btn instanceof HTMLButtonElement)) return;
+
+    btn.addEventListener("click", () => {
+      setOwner(btn.dataset.owner || "subject");
+    });
   });
 
-  if (!(highlight instanceof HTMLElement)) return;
+  /* ---- ARROW KEYS ---- */
+  if (segmented) {
+    segmented.addEventListener("keydown", (e) => {
+      if (!(e instanceof KeyboardEvent)) return;
 
-  highlight.style.transform =
-    owner === "partner" ? "translateX(100%)" : "translateX(0)";
-}
+      const activeBtn = overlay.querySelector(".owner-option.active");
+      if (!(activeBtn instanceof HTMLButtonElement)) return;
 
-/* ---- INITIAL STATE ---- */
-const initialActive = overlay.querySelector(".owner-option.active");
+      const buttonArray = Array.from(buttons).filter(
+        (b) => b instanceof HTMLButtonElement
+      );
 
-if (initialActive instanceof HTMLButtonElement) {
-  setOwner(initialActive.dataset.owner || "subject");
-} else if (buttons.length > 0 && buttons[0] instanceof HTMLButtonElement) {
-  setOwner(buttons[0].dataset.owner || "subject");
-}
+      const currentIndex = buttonArray.indexOf(activeBtn);
 
-/* ---- CLICK ---- */
-buttons.forEach((btn) => {
-  if (!(btn instanceof HTMLButtonElement)) return;
+      if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+        e.preventDefault();
 
-  btn.addEventListener("click", () => {
-    setOwner(btn.dataset.owner || "subject");
-  });
-});
+        let newIndex = currentIndex;
 
-/* ---- ARROW KEYS ---- */
-if (segmented) {
-  segmented.addEventListener("keydown", (e) => {
-    if (!(e instanceof KeyboardEvent)) return;
+        if (e.key === "ArrowRight") {
+          newIndex = Math.min(currentIndex + 1, buttonArray.length - 1);
+        }
 
-    const activeBtn = overlay.querySelector(".owner-option.active");
-    if (!(activeBtn instanceof HTMLButtonElement)) return;
+        if (e.key === "ArrowLeft") {
+          newIndex = Math.max(currentIndex - 1, 0);
+        }
 
-    const buttonArray = Array.from(buttons).filter(
-      (b) => b instanceof HTMLButtonElement
-    );
-
-    const currentIndex = buttonArray.indexOf(activeBtn);
-
-    if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
-      e.preventDefault();
-
-      let newIndex = currentIndex;
-
-      if (e.key === "ArrowRight") {
-        newIndex = Math.min(currentIndex + 1, buttonArray.length - 1);
+        const nextBtn = buttonArray[newIndex];
+        if (nextBtn) {
+          setOwner(nextBtn.dataset.owner || "subject");
+        }
       }
-
-      if (e.key === "ArrowLeft") {
-        newIndex = Math.max(currentIndex - 1, 0);
-      }
-
-      const nextBtn = buttonArray[newIndex];
-      if (nextBtn) {
-        setOwner(nextBtn.dataset.owner || "subject");
-      }
-    }
-  });
-}
+    });
+  }
 
   document.addEventListener("keydown", activeKeydownHandler);
 }

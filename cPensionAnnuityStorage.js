@@ -22,6 +22,16 @@
  * @property {number} survivorshipPercent
  */
 
+/**
+ * @typedef {Object} PensionAnnuityBreakdown
+ * @property {string} owner
+ * @property {string} name
+ * @property {number} withholdingRate
+ * @property {number} grossAmount
+ * @property {number} withholdingsAmount
+ * @property {number} takehomeAmount
+ */
+
 const KEY = "pensionAnnuities";
 
 export class PensionAnnuityStorage {

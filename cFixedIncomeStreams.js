@@ -4,10 +4,6 @@ import { Demographics } from "./cDemographics.js";
 import { FixedIncomeCareerStreams } from "./cFixedIncomeCareerStreams.js";
 import { FixedIncomeRetirementStreams } from "./cFixedIncomeRetirementStreams.js";
 import { Inputs } from "./cInputs.js";
-import {
-  EMPLOYEE_401K_CATCHUP_50,
-  EMPLOYEE_401K_LIMIT_2025,
-} from "./consts.js";
 import { TransactionCategory } from "./cTransaction.js";
 
 class FixedIncomeStreams {
@@ -63,28 +59,45 @@ class FixedIncomeStreams {
   }
 
   get subjectPensionGross() {
+    let pension = this.#inputs.pensionAnnuities
+      .filter((p) => p.owner === "subject")
+      .reduce((acc, p) => {
+        let annualPension =
+          this.#demographics.currentAge >= p.startAge
+            ? p.monthlyAmount * 12
+            : 0;
 
-    
+        if (!this.#demographics.subjectIsLiving) {
+          annualPension *= p.survivorshipPercent / 100;
+        }
 
-    let pension = this.#inputs.subjectPension.asCurrency();
-
-    if (this.#demographics.subjectIsLiving) {
-      return pension;
-    }
-
-    // debugger;
-
-    // Subject is no longer living.  Assume survivorship benefits
-    pension *= this.#inputs.subjectPensionSurvivorship / 100;
+        return acc + annualPension;
+      }, 0);
 
     return pension.asCurrency();
   }
 
   get subjectPensionWithholdings() {
-    return (
-      this.subjectPensionGross *
-      this.#inputs.flatPensionWithholdingRate.asCurrency()
-    );
+    let withholdings = this.#inputs.pensionAnnuities
+      .filter((p) => p.owner === "subject")
+      .reduce((acc, p) => {
+        let annualPension =
+          this.#demographics.currentAge >= p.startAge
+            ? p.monthlyAmount * 12 * p.withholdingRate
+            : 0;
+
+        if (!this.#demographics.subjectIsLiving) {
+          annualPension *= p.survivorshipPercent / 100;
+        }
+
+        return acc + annualPension;
+      }, 0);
+
+    return withholdings.asCurrency();
+    // return (
+    //   this.subjectPensionGross *
+    //   this.#inputs.flatPensionWithholdingRate.asCurrency()
+    // );
   }
 
   get subjectPensionActualIncome() {
@@ -112,24 +125,90 @@ class FixedIncomeStreams {
     return this.subjectSsGross - this.subjectSsWithholdings;
   }
 
-  get partnerPensionGross() {
-    let pension = this.#inputs.partnerPension.asCurrency();
 
-    if (this.#demographics.partnerIsLiving) {
-      return pension;
-    }
-    // Partner is no longer living; assume survivorship benefits
-    pension *= this.#inputs.partnerPensionSurvivorship / 100;
+  /** @returns {import("./cPensionAnnuityStorage.js").PensionAnnuityBreakdown[]} */
+  get pensionAnnunityBreakdowns(){
+    const breakdown = this.#inputs.pensionAnnuities.map(p=>{
+      let eligible = false;
+      let isLiving = false;
+      switch(p.owner){
+        case "partner":
+          eligible = this.#demographics.currentAgeOfPartner >= p.startAge;
+          isLiving = this.#demographics.partnerIsLiving;
+          break;
+        case "subject":
+          eligible = this.#demographics.currentAge >= p.startAge;
+          isLiving = this.#demographics.subjectIsLiving;
+          break;
+      }
+
+      let grossAmount =
+        eligible
+          ? p.monthlyAmount * 12
+          : 0;
+
+      if (!isLiving) {
+        grossAmount *= p.survivorshipPercent / 100;
+      }
+
+      let withholdingsAmount = grossAmount * p.withholdingRate;
+      let takehomeAmount = grossAmount - withholdingsAmount;
+
+      return {
+        owner: p.owner === "partner" ? "Partner" : "Subject",
+        name: p.name,
+        withholdingRate: p.withholdingRate,
+        grossAmount,
+        withholdingsAmount,
+        takehomeAmount
+      }
+
+    });
+
+    return breakdown;
+  }
+
+  get partnerPensionGross() {
+    let pension = this.#inputs.pensionAnnuities
+      .filter((p) => p.owner === "partner")
+      .reduce((acc, p) => {
+        let annualPension =
+          this.#demographics.currentAgeOfPartner >= p.startAge
+            ? p.monthlyAmount * 12
+            : 0;
+
+        if (!this.#demographics.partnerIsLiving) {
+          annualPension *= p.survivorshipPercent / 100;
+        }
+
+        return acc + annualPension;
+      }, 0);
 
     return pension.asCurrency();
   }
 
   get partnerPensionWithholdings() {
-    return this.#demographics.partnerIsLiving
-      ? (
-          this.#inputs.flatPensionWithholdingRate * this.partnerPensionGross
-        ).asCurrency()
-      : 0;
+    let withholdings = this.#inputs.pensionAnnuities
+      .filter((p) => p.owner === "partner")
+      .reduce((acc, p) => {
+        let withholdings =
+          this.#demographics.currentAgeOfPartner >= p.startAge
+            ? p.monthlyAmount * 12 * p.withholdingRate
+            : 0;
+
+        if (!this.#demographics.partnerIsLiving) {
+          withholdings *= p.survivorshipPercent / 100;
+        }
+
+        return acc + withholdings;
+      }, 0);
+
+    return withholdings.asCurrency();
+    // return this.#demographics.partnerIsLiving
+    //   ? (
+    //       this.#inputs.flatPensionWithholdingRate * this.partnerPensionGross
+    //     ).asCurrency()
+    //   : 0;
   }
 
   get partnerPensionActualIncome() {

@@ -870,6 +870,8 @@ class RetirementYearCalculator {
     this.#reportingYear.ReportData.income_partnerPensionTakehome =
       this.#fixedIncomeStreams?.partnerPensionActualIncome ?? 0;
 
+    this.#reportingYear.ReportData.income_pensionBreakdowns = this.#fixedIncomeStreams.pensionAnnunityBreakdowns;
+
     this.#reportingYear.ReportData.retirementAcct_subjectRothOpenBalance =
       this.#accountYear.getStartingBalance(ACCOUNT_TYPES.SUBJECT_ROTH_IRA);
     this.#reportingYear.ReportData.retirementAcct_subjectRothWithdrawals =

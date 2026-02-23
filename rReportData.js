@@ -266,6 +266,9 @@ class ReportData extends BaseReports {
     this.retirementAcct_partnerRothBalance = 0;
 
     this.demographics_filingStatus = '';
+
+    /** @type {import("./cPensionAnnuityStorage.js").PensionAnnuityBreakdown[]} */
+    this.income_pensionBreakdowns = [];
   }
 
   // SOCIAL SECURITY

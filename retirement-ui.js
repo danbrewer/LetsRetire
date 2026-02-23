@@ -667,7 +667,7 @@ function parseInputParameters() {
   const subjectRetireAge = num(UIField.SUBJECT_RETIRE_AGE);
   const subjectLifeSpan = num(UIField.SUBJECT_LIFESPAN);
   const subject401kStartAge = num(UIField.SUBJECT_401K_START_AGE);
-  const subjectPensionStartAge = num(UIField.SUBJECT_PENSION_START_AGE);
+  // const subjectPensionStartAge = num(UIField.SUBJECT_PENSION_START_AGE);
   const subjectSsStartAge = num(UIField.SUBJECT_SS_START_AGE);
   const subjectStartingSalary = num(UIField.SUBJECT_SALARY);
   const subjectMonthlyPayrollDeductions = num(
@@ -687,7 +687,7 @@ function parseInputParameters() {
   const partnerRetireAge = num(UIField.PARTNER_RETIRE_AGE);
   const partnerLifeSpan = num(UIField.PARTNER_LIFESPAN);
   const partner401kStartAge = num(UIField.PARTNER_401K_START_AGE);
-  const partnerPenStartAge = num(UIField.PARTNER_PENSION_START_AGE);
+  // const partnerPenStartAge = num(UIField.PARTNER_PENSION_START_AGE);
   const partnerSsStartAge = num(UIField.PARTNER_SS_START_AGE);
 
   const partnerStartingSalary = num(UIField.PARTNER_SALARY);
@@ -724,18 +724,18 @@ function parseInputParameters() {
   const flatSsWithholdingRate = pct(num(UIField.SS_WITHHOLDING));
   const ssCola = pct(num(UIField.SS_COLA));
 
-  // Pensions
-  const subjectPensionMonthly = num(UIField.SUBJECT_PENSION_MONTHLY);
-  const subjectPensionWithholdingRate = pct(
-    num(UIField.SUBJECT_PENSION_WITHHOLDING)
-  );
-  const subjectPensionSurvivorship = num(UIField.SUBJECT_PENSION_SURVIVORSHIP);
-  const partnerPenMonthly = num(UIField.PARTNER_PENSION_MONTHLY);
-  const partnerPensionWithholdings = pct(
-    num(UIField.PARTNER_PENSION_WITHHOLDING)
-  );
+  // // Pensions
+  // const subjectPensionMonthly = num(UIField.SUBJECT_PENSION_MONTHLY);
+  // const subjectPensionWithholdingRate = pct(
+  //   num(UIField.SUBJECT_PENSION_WITHHOLDING)
+  // );
+  // const subjectPensionSurvivorship = num(UIField.SUBJECT_PENSION_SURVIVORSHIP);
+  // const partnerPenMonthly = num(UIField.PARTNER_PENSION_MONTHLY);
+  // const partnerPensionWithholdings = pct(
+  //   num(UIField.PARTNER_PENSION_WITHHOLDING)
+  // );
 
-  const partnerPensionSurvivorship = num(UIField.PARTNER_PENSION_SURVIVORSHIP);
+  // const partnerPensionSurvivorship = num(UIField.PARTNER_PENSION_SURVIVORSHIP);
 
   // Witholdings/Taxes
   const filingStatus = select(UIField.FILING_STATUS)?.value || "single";
@@ -788,7 +788,7 @@ function parseInputParameters() {
     initialAgePartner: partnerCurrentAge,
     subjectRetireAge: subjectRetireAge,
     subjectSsStartAge: subjectSsStartAge,
-    subjectPensionStartAge: subjectPensionStartAge,
+    // subjectPensionStartAge: subjectPensionStartAge,
     subject401kStartAge: subject401kStartAge,
     subjectLifeSpan: subjectLifeSpan,
 
@@ -806,13 +806,13 @@ function parseInputParameters() {
     partnerRetireAge: partnerRetireAge,
     partnerSsMonthly: partnerSsMonthly,
     partnerSsStartAge: partnerSsStartAge,
-    partnerPenMonthly: partnerPenMonthly,
-    partnerPenStartAge: partnerPenStartAge,
+    // partnerPenMonthly: partnerPenMonthly,
+    // partnerPenStartAge: partnerPenStartAge,
     partner401kStartAge: partner401kStartAge,
     partnerLifeSpan: partnerLifeSpan,
     // partnerTaxSS: withholdingsSs,
-    partnerPensionWithholdings: partnerPensionWithholdings,
-    partnerPensionSurvivorship: partnerPensionSurvivorship,
+    // partnerPensionWithholdings: partnerPensionWithholdings,
+    // partnerPensionSurvivorship: partnerPensionSurvivorship,
 
     pensionAnnuities: pensionAnnuities,
 
@@ -844,15 +844,15 @@ function parseInputParameters() {
     // Income sources
     subjectSsMonthly: subjectSsMonthly,
     ssCola: ssCola,
-    subjectPensionMonthly: subjectPensionMonthly,
-    subjectPensionSurvivorship: subjectPensionSurvivorship,
+    // subjectPensionMonthly: subjectPensionMonthly,
+    // subjectPensionSurvivorship: subjectPensionSurvivorship,
 
     // Tax rates and settings
     filingStatus: filingStatus,
     useRMD: useRMD,
     flatSsWithholdingRate: flatSsWithholdingRate,
     flatCareerTrad401kWithholdingRate: withholdings401k,
-    flatPensionWithholdingRate: subjectPensionWithholdingRate,
+    // flatPensionWithholdingRate: subjectPensionWithholdingRate,
     flatWageWithholdingRate: flatWageWithholdingRate,
 
     // Withdrawal order

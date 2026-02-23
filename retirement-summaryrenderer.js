@@ -601,7 +601,7 @@ const columnGroups = [
       },
 
       {
-        label: "Pension (Net)",
+        label: "Pensions/Annuities",
         render: (calc, index) =>
           money("income", calc.reportData.income_combinedPensionTakehome, {
             index,
@@ -695,17 +695,9 @@ const columnGroups = [
           }),
       },
       {
-        label: "Pension",
+        label: "Pensions/Annuities",
         render: (calc, index) =>
-          money("income", calc.reportData.income_subjectPensionGross, {
-            index,
-            action: "showPensionGrossBreakdown",
-          }),
-      },
-      {
-        label: "Pension (Partner)",
-        render: (calc, index) =>
-          money("income", calc.reportData.income_partnerPensionGross, {
+          money("income", calc.reportData.income_combinedPensionGross, {
             index,
             action: "showPensionGrossBreakdown",
           }),

@@ -3,7 +3,9 @@
  * @property {(title:string, message:string, kind:"success"|"error"|"info") => void} showToast
  */
 
+/** @type {HTMLDivElement | null} */
 let activeOverlay = null;
+/** @type {((e: KeyboardEvent) => void) | null} */
 let activeKeydownHandler = null;
 
 /**
