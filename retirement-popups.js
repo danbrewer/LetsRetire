@@ -1,8 +1,5 @@
 import { ensurePopup } from "./popup-engine.js";
-
-import { Calculation } from "./cCalculation.js";
 import { ReportData } from "./rReportData.js";
-// import {fmt} from "./utils.js";
 
 /**
  * @typedef {(data: import("./rReportData.js").ReportData) => void} PopupHandler
@@ -30,6 +27,9 @@ export const popupActions = {
   show401kBalanceBreakdown,
   showTaxesBreakdown,
   showWithholdingsBreakdown,
+  showGrossWagesBreakdown,
+  show401kGrossBreakdown,
+  showEffectiveTaxRateBreakdown,
 };
 
 // SS Breakdown Popup Functions
@@ -54,10 +54,6 @@ function showSsBreakdown(data) {
     (data.ss_subjectSsWithholdings || 0) + (data.ss_partnerSsWithholdings || 0);
   const combinedSsTakehome =
     (data.ss_subjectSsTakehome || 0) + (data.ss_partnerSsTakehome || 0);
-  // Get the breakdown data from the calculation
-  // const ssBreakdown = calculation.accountYear || {};
-  // const details = ssBreakdown.calculationDetails || {};
-
   // Build the breakdown content
   let breakdownHtml = `
     <div class="ss-breakdown-item">
@@ -78,9 +74,6 @@ function showSsBreakdown(data) {
     </div>
     `;
 
-  // Add detailed calculation steps based on method
-  // if (details.method === "irs-rules") {
-  // debugger;
   breakdownHtml += `
         <div style="margin: 16px 0; padding: 12px; background: rgba(110, 168, 254, 0.1); border-radius: 8px;">
         <strong style="color: var(--accent);">IRS SS Taxation Calculation:</strong>
@@ -202,8 +195,7 @@ function showSsGrossBreakdown(data) {
   }
 
   const popup = ensurePopup("ss", "Social Security Gross");
-  // const content = document.getElementById("ssBreakdownContent");
-
+  
   const combinedSsGross =
     (data.ss_subjectSsGross || 0) + (data.ss_partnerSsGross || 0);
   // Build the breakdown content
@@ -400,17 +392,6 @@ function showSalaryBreakdown(data) {
         <span class="ss-breakdown-label">Year:</span>
         <span class="ss-breakdown-value">${data.year}</span>
     </div>
-    <!-- <div class="ss-breakdown-item">
-        <span class="ss-breakdown-label">Age:</span>
-        <span class="ss-breakdown-value">${data.demographics_subjectAge}</span>
-    </div>
-    -->
-    <!-- 
-    <div class="ss-breakdown-item">
-        <span class="ss-breakdown-label">Salary Gross (Monthly):</span>
-        <span class="ss-breakdown-value">${fmt(data.income_combinedTakehomeWages / 12)}</span>
-    </div>
-    -->
     <div class="ss-breakdown-item">
         <span class="ss-breakdown-label">Payroll Gross (Annual):</span>
         <span class="ss-breakdown-value">${data.income_combinedWagesGross.asWholeDollars()}</span>
@@ -429,6 +410,124 @@ function showSalaryBreakdown(data) {
     </div>
     </div>
     `;
+
+  popup.setContent(breakdownHtml);
+  popup.show();
+}
+
+/**
+ * @param {ReportData} data
+ */
+function show401kGrossBreakdown(data) {
+  if (!data) {
+    return; // No data to show
+  }
+
+  const popup = ensurePopup("401kGross", "401k Gross Breakdown");
+
+  // Build the breakdown content
+  let breakdownHtml = `
+    <div class="ss-breakdown-item">
+        <span class="ss-breakdown-label">Year:</span>
+        <span class="ss-breakdown-value">${data.year}</span>
+    </div>
+    <div class="ss-breakdown-item">
+        <span class="ss-breakdown-label">Subject (Annual):</span>
+        <span class="ss-breakdown-value">${data.income_subject401kGross.asWholeDollars()}</span>
+    </div>
+    `;
+
+  if (data.demographics_hasPartner) {
+    breakdownHtml += `
+    <div class="ss-breakdown-item">
+        <span class="ss-breakdown-label">Partner:</span>
+        <span class="ss-breakdown-value">${data.income_partner401kGross.asWholeDollars()}</span>
+    </div>
+    `;
+  }
+
+  breakdownHtml += `
+   <div class="ss-breakdown-item breakdown-accent">
+        <span class="ss-breakdown-label">Total:</span>
+        <span class="ss-breakdown-value">${data.income_combined401kGross.asWholeDollars()}</span>
+    </div>`;
+
+  popup.setContent(breakdownHtml);
+  popup.show();
+}
+
+/**
+ * @param {ReportData} data
+ */
+function showEffectiveTaxRateBreakdown(data) {
+  if (!data) {
+    return; // No data to show
+  }
+
+  const popup = ensurePopup("effectiveTaxRate", "Effective Tax Rate Breakdown");
+
+  // Build the breakdown content
+  let breakdownHtml = `
+    <div class="ss-breakdown-item">
+        <span class="ss-breakdown-label">Year:</span>
+        <span class="ss-breakdown-value">${data.year}</span>
+    </div>
+    <div class="ss-breakdown-item">
+        <span class="ss-breakdown-label">Gross income:</span>
+        <span class="ss-breakdown-value">${data.income_total_gross.asWholeDollars()}</span>
+    </div>
+    <div class="ss-breakdown-item">
+        <span class="ss-breakdown-label">Taxes due:</span>
+        <span class="ss-breakdown-value">${data.taxes_federalIncomeTaxOwed.asWholeDollars()}</span>
+    </div>
+    `;
+
+  breakdownHtml += `
+   <div class="ss-breakdown-item breakdown-accent">
+        <span class="ss-breakdown-label">Effective Tax Rate:</span>
+        <span class="ss-breakdown-value">${data.taxes_effectiveTaxRate.toFixed(2)}%</span>
+    </div>`;
+
+  popup.setContent(breakdownHtml);
+  popup.show();
+}
+
+/**
+ * @param {ReportData} data
+ */
+function showGrossWagesBreakdown(data) {
+  if (!data) {
+    return; // No data to show
+  }
+
+  const popup = ensurePopup("grossWages", "Gross Wages Breakdown");
+
+  // Build the breakdown content
+  let breakdownHtml = `
+    <div class="ss-breakdown-item">
+        <span class="ss-breakdown-label">Year:</span>
+        <span class="ss-breakdown-value">${data.year}</span>
+    </div>
+    <div class="ss-breakdown-item">
+        <span class="ss-breakdown-label">Subject (Annual):</span>
+        <span class="ss-breakdown-value">${data.income_subjectGrossWages.asWholeDollars()}</span>
+    </div>
+    `;
+
+  if (data.demographics_hasPartner) {
+    breakdownHtml += `
+    <div class="ss-breakdown-item">
+        <span class="ss-breakdown-label">Partner (Annual):</span>
+        <span class="ss-breakdown-value">${data.income_partnerGrossWages.asWholeDollars()}</span>
+    </div>
+    `;
+  }
+
+  breakdownHtml += `
+   <div class="ss-breakdown-item breakdown-accent">
+        <span class="ss-breakdown-label">Net (Take Home):</span>
+        <span class="ss-breakdown-value">${data.income_combinedWagesGross.asWholeDollars()}</span>
+    </div>`;
 
   popup.setContent(breakdownHtml);
   popup.show();

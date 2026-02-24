@@ -85,6 +85,8 @@ class RetirementYearCalculator {
 
     this.#reportingYear.ReportData.year = this.#fiscalData.taxYear;
 
+    this.#reportingYear.ReportData.demographics_isWidowed =
+      !this.#demographics.isWidowed;
     this.#reportingYear.ReportData.demographics_hasPartner =
       this.#demographics.hasPartner;
     this.#reportingYear.ReportData.demographics_subjectAge = `${this.#demographics.subjectIsLiving ? this.#demographics.currentAge : "-"}`;

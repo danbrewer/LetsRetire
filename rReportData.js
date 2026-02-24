@@ -148,6 +148,7 @@ class ReportData extends BaseReports {
     this.demographics_partnerAge = '';
     this.demographics_numberOfDependents = 0;
     this.demographics_hasPartner = false;
+    this.demographics_isWidowed = false;
 
     // WAGES AND COMPENSATION
     this.income_subjectGrossWages = 0;

@@ -660,8 +660,11 @@ const columnGroups = [
     columns: [
       {
         label: "Wages",
-        render: (calc) =>
-          money("income", calc.reportData.income_combinedWagesGross),
+        render: (calc, index) =>
+          money("income", calc.reportData.income_combinedWagesGross, {
+            index,
+            action: "showGrossWagesBreakdown",
+          }),
       },
 
       {
@@ -696,8 +699,11 @@ const columnGroups = [
       },
       {
         label: "401k Gross",
-        render: (calc) =>
-          money("income", calc.reportData.income_combined401kGross),
+        render: (calc, index) =>
+          money("income", calc.reportData.income_combined401kGross, {
+            index,
+            action: "show401kGrossBreakdown",
+          }),
       },
       {
         label: "Misc Gross",
@@ -745,8 +751,12 @@ const columnGroups = [
       },
       {
         label: "Effective Tax Rate",
-        render: (calc, _) =>
-          percent("income", calc.reportData.taxes_effectiveTaxRate),
+        render: (calc, index) =>
+          percent("income", calc.reportData.taxes_effectiveTaxRate, {
+            decimals: 2,
+            index,
+            action: "showEffectiveTaxRateBreakdown",
+          }),
       },
     ],
   },
