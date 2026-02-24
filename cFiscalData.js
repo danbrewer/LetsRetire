@@ -9,6 +9,7 @@ class FiscalData {
    * @param {number} yearIndex
    * @param {number} spend
    * @param {boolean} overridingSpend
+   * @param {number} spendingBasis
    * @param {number} taxYearBase
    * @param {boolean} useRmd
    * @param {boolean} useSavings
@@ -16,6 +17,8 @@ class FiscalData {
    * @param {boolean} useRoth
    * @param {number} flatSsWithholdingRate
    * @param {number} flatTrad401kWithholdingRate
+   * @param {number} startingYear
+   * @param {number} spendingBasisYear
  
    */
   constructor(
@@ -26,6 +29,7 @@ class FiscalData {
     yearIndex,
     spend,
     overridingSpend,
+    spendingBasis,
     taxYearBase,
     useRmd,
     useSavings,
@@ -33,22 +37,27 @@ class FiscalData {
     useRoth,
     flatSsWithholdingRate,
     flatTrad401kWithholdingRate,
+    startingYear,
+    spendingBasisYear
   ) {
     this._description = "Fiscal Year Data";
     this.inflationRate = inflationRate;
     this.retirementAccountRateOfReturn = retirementAccountRateOfReturn;
     this.rothRateOfReturn = rothRateOfReturn;
     this.savingsRateOfReturn = savingsRateOfReturn;
-    this.taxYear = taxYearBase + yearIndex;
+    this.taxYear = startingYear + yearIndex;
     this.yearIndex = yearIndex;
     this.spend = spend;
+    this.spendingBasis = spendingBasis;
     this.overridingSpend = overridingSpend;
+    this.startingYear = startingYear;
     this.useRmd = useRmd;
     this.useSavings = useSavings;
     this.useTrad401k = useTrad401k;
     this.useRoth = useRoth;
     this.flatSsWithholdingRate = flatSsWithholdingRate;
     this.flatTrad401kWithholdingRate = flatTrad401kWithholdingRate;
+    this.spendingBasisYear = spendingBasisYear;
   }
 
   // Method to get account usage flags
@@ -111,6 +120,7 @@ class FiscalData {
       inputs.yearIndex,
       inputs.spend,
       inputs.overridingSpend,
+      inputs.spendingBasis,
       taxYearBase,
       inputs.useRMD,
       inputs.useSavings,
@@ -118,6 +128,8 @@ class FiscalData {
       inputs.subjectUseRoth,
       inputs.flatSsWithholdingRate,
       inputs.flatCareerTrad401kWithholdingRate,
+      inputs.startingYear,
+      inputs.spendingBasisYear
       // inputs.retirementYearSpendingOverride,
       // inputs.retirementYearTaxableIncomeOverride,
       // inputs.retirementYearTaxFreeIncomeOverride

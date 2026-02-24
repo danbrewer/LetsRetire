@@ -2,7 +2,6 @@ import { AccountingYear } from "./cAccountingYear.js";
 import { AccountsManager } from "./cAccountsManager.js";
 import { Calculation, Calculations } from "./cCalculation.js";
 import { Inputs } from "./cInputs.js";
-import { TAX_BASE_YEAR } from "./consts.js";
 import { ReportsManager } from "./cReportsManager.js";
 import { RetirementYearCalculator } from "./cRetirementYearCalculator.js";
 import { TransactionManager } from "./cTransactionManager.js";
@@ -75,11 +74,11 @@ function calc(calculations, UI) {
 
     const accountYear = AccountingYear.Create(
       accountsManager,
-      TAX_BASE_YEAR + yearIndex
+      inputs.startingYear + yearIndex
     );
 
     const reportingYear = reportingManager.addReportingYear(
-      TAX_BASE_YEAR + yearIndex
+      inputs.startingYear + yearIndex
     );
 
     const workingYearIncomeCalculator = new WorkingYearCalculator(
@@ -114,11 +113,11 @@ function calc(calculations, UI) {
 
     const accountYear = AccountingYear.Create(
       accountsManager,
-      TAX_BASE_YEAR + yearIndex
+      inputs.startingYear + yearIndex
     );
 
     const reportingYear = reportingManager.addReportingYear(
-      TAX_BASE_YEAR + yearIndex
+      inputs.startingYear + yearIndex
     );
 
     const calculator = new RetirementYearCalculator(

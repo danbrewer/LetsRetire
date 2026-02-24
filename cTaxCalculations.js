@@ -1,7 +1,6 @@
 import { Demographics } from "./cDemographics.js";
 import { FiscalData } from "./cFiscalData.js";
 import {
-  TAX_BASE_YEAR,
   constsJS_FILING_STATUS,
   constsJS_TAX_TABLES_2025,
   constsJS_STANDARD_DEDUCTION_2025,
@@ -31,7 +30,7 @@ class TaxCalculations {
     // The year passed is the actual tax year (e.g., 2025, 2026, 2052, etc.)
     // The adjustedForInflation expects years from the base (2025)
 
-    const yearsFromBase = fiscalData.taxYear - TAX_BASE_YEAR;
+    const yearsFromBase = fiscalData.taxYear - fiscalData.startingYear;
     if (
       demographics.filingStatus ===
         constsJS_FILING_STATUS.MARRIED_FILING_JOINTLY &&
@@ -62,7 +61,7 @@ class TaxCalculations {
   static getStandardDeduction(fiscalData, demographics) {
     // The year passed should be the actual tax year (e.g., 2025, 2026, 2052, etc.)
     // The adjustedForInflation expects years from the base (2025)
-    const yearsFromBase = fiscalData.taxYear - TAX_BASE_YEAR;
+    const yearsFromBase = fiscalData.taxYear - fiscalData.startingYear;
 
     if (
       demographics.filingStatus ===

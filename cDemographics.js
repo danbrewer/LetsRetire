@@ -8,7 +8,7 @@ class Demographics {
    * @param {number} subjectLifeSpan
    * @param {number} subject401kStartAge
    * @param {number} partner401kStartAge
-   * @param {number} retirementYear
+   * @param {number} currentYear
    * @param {number} yearIndex
    * @param {string} preferredFilingStatus
    */
@@ -18,7 +18,7 @@ class Demographics {
     penStartAge,
     subject401kStartAge,
     subjectLifeSpan,
-    retirementYear,
+    currentYear,
     yearIndex,
     isRetired = true,
     isWorking = false,
@@ -35,7 +35,7 @@ class Demographics {
     this.penStartAge = penStartAge;
     this.subjectLifeSpan = subjectLifeSpan;
     this.subject401kStartAge = subject401kStartAge;
-    this.retirementYear = retirementYear;
+    this.retirementYear = currentYear;
     this.isRetired = isRetired;
     this.isWorking = isWorking;
     this.hasPartner = hasPartner;

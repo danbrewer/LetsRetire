@@ -32,8 +32,6 @@ const constsJS_FILING_STATUS = {
   MARRIED_FILING_JOINTLY: "married",
 };
 
-const TAX_BASE_YEAR = 2025; // Base year for tax calculations
-
 // --- Added by patch: 2025 elective deferral limits (401k/Roth 401k) ---
 const EMPLOYEE_401K_LIMIT_2025 = 23000; // elective deferral
 const EMPLOYEE_401K_CATCHUP_50 = 7500; // catch-up age 50+
@@ -60,7 +58,6 @@ export {
   constsJS_TAX_TABLES_2025,
   constsJS_STANDARD_DEDUCTION_2025,
   constsJS_FILING_STATUS,
-  TAX_BASE_YEAR,
   EMPLOYEE_401K_LIMIT_2025,
   EMPLOYEE_401K_CATCHUP_50,
   INTEREST_CALCULATION_EPOCH,

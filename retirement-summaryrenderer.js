@@ -550,12 +550,14 @@ const columnGroups = [
     columns: [
       {
         label: "Annual Spend",
-        render: (calc, _) => {
+        render: (calc, index) => {
           const warnings = [];
           if (calc.reportData.spending_overriding) {
             warnings.push(`⚠️ Overriding spending`);
           }
           return money("outgoing", calc.reportData.ask, {
+            action: "showAnnualSpendBreakdown",
+            index,
             badge:
               warnings.length > 0
                 ? { emoji: "⚠️", tooltip: warnings.join("\n") }

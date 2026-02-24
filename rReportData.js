@@ -142,13 +142,15 @@ class ReportData extends BaseReports {
 
     // FISCAL
     this.year = 0;
+    this.inflationRate = 0;
 
     // DEMOGRAPHICS
-    this.demographics_subjectAge = '';
-    this.demographics_partnerAge = '';
+    this.demographics_subjectAge = "";
+    this.demographics_partnerAge = "";
     this.demographics_numberOfDependents = 0;
     this.demographics_hasPartner = false;
     this.demographics_isWidowed = false;
+    this.demographics_spendingBasisYear = 0;
 
     // WAGES AND COMPENSATION
     this.income_subjectGrossWages = 0;
@@ -200,6 +202,7 @@ class ReportData extends BaseReports {
     this.takeHome = 0;
     this.spending_shortfall = 0;
     this.spending_surplus = 0;
+    this.spending_basis = 0;
 
     // TAXES
     this.taxes_grossIncome = 0;
@@ -266,7 +269,7 @@ class ReportData extends BaseReports {
     this.retirementAcct_partnerRothDeposits = 0;
     this.retirementAcct_partnerRothBalance = 0;
 
-    this.demographics_filingStatus = '';
+    this.demographics_filingStatus = "";
 
     /** @type {import("./cPensionAnnuityStorage.js").PensionAnnuityBreakdown[]} */
     this.income_pensionBreakdowns = [];

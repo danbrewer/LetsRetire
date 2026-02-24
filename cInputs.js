@@ -512,42 +512,34 @@ class Inputs {
     return 0;
   }
 
-
   /** @returns {boolean} */
   get overridingSpend() {
     return this.retirementYearSpendingOverride > 0;
   }
 
-  get spend() {
+  get spendingBasis() {
+    return this.#isRetired ? this.spendingRetirement : this.spendingToday;
+  }
 
-     if (this.overridingSpend) {
-       let result = this.retirementYearSpendingOverride;
-       return result;
-     }
+  get spend() {
+    if (this.overridingSpend) {
+      let result = this.retirementYearSpendingOverride;
+      return result;
+    }
+
+    let result = this.spendingBasis
+      .adjustedForInflation(this.inflationRate, this.yearIndex)
+      .asCurrency();
 
     if (this.#isRetired) {
-      let result = this.spendingRetirement
-        .adjustedForInflation(this.inflationRate, this.yearIndex)
+      result = this.spendingBasis
+        .adjustedForInflation(this.inflationRate, this.#retirementYearIndex)
         .asCurrency();
       result = result.adjustedForInflation(
         -this.spendingDecline,
         this.#retirementYearIndex
       );
-
-      return result;
     }
-
-    let result = this.spendingToday
-      .adjustedForInflation(this.inflationRate, this.yearIndex)
-      .asCurrency();
-
-    // if (this.#isRetired) {
-    //   result = result.adjustedForInflation(
-    //     -this.spendingDecline,
-    //     this.#retirementYearIndex
-    //   );
-    //   result += this.retirementYearExtraSpend;
-    // }
 
     return result;
   }
@@ -580,6 +572,14 @@ class Inputs {
 
   get currentYear() {
     return this.startingYear + this.yearIndex;
+  }
+
+  get spendingBasisYear() {
+    let result = this.startingYear;
+    if (this.#isRetired) {
+      result += this.subjectRetireAge - this.initialAgeSubject;
+    }
+    return result;
   }
 
   get subjectAge() {

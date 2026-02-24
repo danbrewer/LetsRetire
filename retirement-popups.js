@@ -30,6 +30,7 @@ export const popupActions = {
   showGrossWagesBreakdown,
   show401kGrossBreakdown,
   showEffectiveTaxRateBreakdown,
+  showAnnualSpendBreakdown,
 };
 
 // SS Breakdown Popup Functions
@@ -450,6 +451,42 @@ function show401kGrossBreakdown(data) {
    <div class="ss-breakdown-item breakdown-accent">
         <span class="ss-breakdown-label">Total:</span>
         <span class="ss-breakdown-value">${data.income_combined401kGross.asWholeDollars()}</span>
+    </div>`;
+
+  popup.setContent(breakdownHtml);
+  popup.show();
+}
+
+/**
+ * @param {ReportData} data
+ */
+function showAnnualSpendBreakdown(data) {
+  if (!data) {
+    return; // No data to show
+  }
+
+  const popup = ensurePopup("annualSpend", "Annual Spend Breakdown");
+
+  // Build the breakdown content
+  let breakdownHtml = `
+    <div class="ss-breakdown-item">
+        <span class="ss-breakdown-label">Year:</span>
+        <span class="ss-breakdown-value">${data.year}</span>
+    </div>
+    <div class="ss-breakdown-item">
+        <span class="ss-breakdown-label">Annual Spend (${data.demographics_spendingBasisYear} dollars):</span>
+        <span class="ss-breakdown-value">${data.spending_basis.asWholeDollars()}</span>
+    </div>
+    <div class="ss-breakdown-item">
+        <span class="ss-breakdown-label">Inflation rate:</span>
+        <span class="ss-breakdown-value">${(data.inflationRate * 100).toFixed(2)}%</span>
+    </div>
+    `;
+
+  breakdownHtml += `
+   <div class="ss-breakdown-item breakdown-accent">
+        <span class="ss-breakdown-label">Spend:</span>
+        <span class="ss-breakdown-value">${data.ask.asWholeDollars()}</span>
     </div>`;
 
   popup.setContent(breakdownHtml);

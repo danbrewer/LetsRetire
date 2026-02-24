@@ -5,7 +5,6 @@ import { FiscalData } from "./cFiscalData.js";
 import { FixedIncomeStreams } from "./cFixedIncomeStreams.js";
 import { Inputs } from "./cInputs.js";
 import {
-  TAX_BASE_YEAR,
   PERIODIC_FREQUENCY,
   constsJS_FILING_STATUS,
 } from "./consts.js";
@@ -43,7 +42,7 @@ class WorkingYearCalculator {
     this.#inputs = inputs;
     this.#accountYear = accountYear;
     this.#demographics = Demographics.CreateUsing(inputs, false, true);
-    this.#fiscalData = FiscalData.CreateUsing(inputs, TAX_BASE_YEAR);
+    this.#fiscalData = FiscalData.CreateUsing(inputs, inputs.startingYear);
     this.#reportingYear = reportingYear;
 
     this.#fixedIncomeStreams = FixedIncomeStreams.CreateUsing(
@@ -51,6 +50,14 @@ class WorkingYearCalculator {
       accountYear,
       this.#inputs
     );
+
+    this.#reportingYear.ReportData.spending_basis =
+      this.#fiscalData.spendingBasis;
+    this.#reportingYear.ReportData.demographics_spendingBasisYear =
+      this.#fiscalData.spendingBasisYear;
+
+    this.#reportingYear.ReportData.inflationRate =
+      this.#fiscalData.inflationRate;
 
     this.#reportingYear.ReportData.year = this.#fiscalData.taxYear;
 
