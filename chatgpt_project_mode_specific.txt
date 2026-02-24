@@ -1,0 +1,55 @@
+PROJECT: One-Page Retirement Calculator
+
+Architecture Overview:
+- Pure JavaScript modules
+- No frameworks
+- Inputs → calc() → Calculation → Calculations → SummaryRenderer
+- UI layer separated from calculation engine
+- Local storage persistence
+- Modular modal system
+- GAAP-style ledger modeling for income/withdrawals
+
+Design Principles:
+- Deterministic calculations
+- No hidden mutation
+- Inputs object is canonical state
+- parseInputParameters() hydrates Inputs
+- doCalculations() produces new Calculations instance
+- UI should reflect derived state only
+
+Constraints:
+- No TypeScript hacks
+- TSC clean but implementation is JS
+- Avoid index signatures
+- Avoid hard casts
+- Avoid circular dependencies
+- Avoid DOM re-query loops where possible
+
+Common Failure Points:
+- Closure capture of stale calculation references
+- Inputs mutated but not re-instantiated
+- Overrides not harvested generically
+- Blur events firing without triggering re-render
+- SummaryRenderer using outdated state
+
+Preferred Patterns:
+- Single source of truth
+- Explicit data flow
+- Small pure functions
+- Prefix-based field harvesting (e.g., spending_, taxableIncome_)
+- Stable enum definitions
+
+When Debugging:
+- Confirm lifecycle order:
+  1. UI change
+  2. parseInputParameters
+  3. new Inputs
+  4. doCalculations
+  5. regenerateOutputAndSummary
+- Confirm state replacement vs mutation
+- Confirm no stale closures
+
+When Refactoring:
+- Maintain Inputs constructor integrity
+- Normalize arrays to avoid shared references
+- Avoid dynamic property indexing unless safe

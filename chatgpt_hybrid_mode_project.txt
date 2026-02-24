@@ -1,0 +1,52 @@
+PROJECT: One-Page Retirement Calculator
+MODE: Hybrid (Speed + Architectural Integrity)
+
+That fits me exactly:
+I move fast.
+But I hate architectural slop.
+I refactor aggressively.
+I want systems that age well.
+
+My tuned Hybrid Mode — optimized for speed and rigor:
+
+Architecture:
+- Pure JavaScript modules
+- Inputs → calc() → Calculation → Calculations → SummaryRenderer
+- Inputs is canonical state
+- parseInputParameters() hydrates Inputs
+- doCalculations() returns new Calculations
+- UI renders derived state only
+- Local storage persistence
+
+Constraints:
+- No TypeScript hacks
+- TSC clean but JS implementation
+- Avoid index signatures
+- Avoid hard casts
+- Avoid circular dependencies
+- Avoid stale closures
+
+Common Pitfalls:
+- Closure capturing old Calculations
+- Inputs mutated but not re-instantiated
+- Overrides not harvested generically
+- Blur triggers without recalculation
+- SummaryRenderer using stale references
+
+Debug Checklist:
+1. UI event fires
+2. parseInputParameters executes
+3. New Inputs created
+4. doCalculations called
+5. New Calculations assigned
+6. regenerateOutputAndSummary called
+
+Refactor Priorities:
+- Single source of truth
+- Explicit data flow
+- Deterministic outputs
+- Prefix-based dynamic harvesting (spending_, taxableIncome_, etc.)
+- Normalize arrays to avoid shared references
+
+Goal:
+Move fast without compromising engine integrity.
