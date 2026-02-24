@@ -526,6 +526,12 @@ class Inputs {
   }
 
   get spend() {
+
+     if (this.overridingSpend) {
+       let result = this.retirementYearSpendingOverride;
+       return result;
+     }
+
     if (this.#isRetired) {
       let result = this.spendingRetirement
         .adjustedForInflation(this.inflationRate, this.yearIndex)
@@ -534,10 +540,6 @@ class Inputs {
         -this.spendingDecline,
         this.#retirementYearIndex
       );
-
-      if (this.overridingSpend) {
-        result = this.retirementYearSpendingOverride;
-      }
 
       return result;
     }

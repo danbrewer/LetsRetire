@@ -55,12 +55,19 @@ class Demographics {
 
   get subjectIsLiving() {
     const isLiving = this.currentAge <= this.subjectLifeSpan;
-    // debugger;
     return isLiving;
   }
 
   get partnerIsLiving() {
     return this.currentAgeOfPartner <= this.partnerLifeSpan;
+  }
+
+  get spouseIsLiving(){
+    return this.subjectIsLiving && this.partnerIsLiving;
+  }
+
+  get isWidowed(){
+    return this.hasPartner && !(this.subjectIsLiving && this.spouseIsLiving);
   }
 
   get isSubjectEligibleForSs() {

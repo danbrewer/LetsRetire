@@ -633,6 +633,7 @@ const columnGroups = [
       {
         label: "Total Net",
         render: (calc, index) => {
+          // debugger;
           const warnings = [];
           if (calc.reportData.income_miscTaxFreeIncome > 0) {
             warnings.push(
@@ -892,7 +893,11 @@ function generateOutputAndSummary(inputs, calculations) {
       const action = target.dataset.action;
       if (!action) return;
 
-      const calcObj = allCalcs[index];
+      // Always fetch fresh calculations
+      const calcs = currentCalculations?.getAllCalculations();
+      if (!calcs) return;
+
+      const calcObj = calcs[index];
       if (!calcObj) return;
 
       const fn = popupActions[action];

@@ -89,31 +89,19 @@ function calc(calculations, UI) {
       accountYear,
       reportingYear
     );
-    // console.log(
-    //   `------ START OF WORKING YEAR ` + (TAX_BASE_YEAR + yearIndex) + ` ------`
-    // );
 
     const workingYearData =
       workingYearIncomeCalculator.processWorkingYearData();
-
-    // console.log(
-    //   `------ END OF WORKING YEAR ` + (TAX_BASE_YEAR + yearIndex) + ` ------`
-    // );
 
     calculations.addCalculation(
       new Calculation(accountYear.taxYear, workingYearData)
     );
   }
 
-  // debugger;
-
-  // debugger;
   let livingYears = Math.max(
     inputs.subjectLivingYears,
     inputs.partnerLivingYears - inputs.totalWorkingYears
   );
-
-
 
   // Retirement years
   for (
@@ -142,21 +130,7 @@ function calc(calculations, UI) {
     );
 
     try {
-      // console.log(
-      //   `------ START OF RETIREMENT YEAR ` +
-      //     (TAX_BASE_YEAR + yearIndex) +
-      //     ` ------`
-      // );
-
       const retirementYearData = calculator.processRetirementYearData();
-
-      // retirementYearData.dump("retirement year");
-
-      // console.log(
-      //   `------ END OF RETIREMENT YEAR ` +
-      //     (TAX_BASE_YEAR + yearIndex) +
-      //     ` ------`
-      // );
       calculations.addCalculation(
         new Calculation(accountYear.taxYear, retirementYearData)
       );

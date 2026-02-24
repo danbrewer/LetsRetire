@@ -1606,6 +1606,7 @@ details[open] .content {
           <div id="taxesSection"></div>
           <div id="taxableIncomeAdjustmentsSection"></div>
           <div id="taxfreeIncomeAdjustmentsSection"></div>
+          <div id="healthcareExpensesSection"></div>
         </div>
       </section>
 
@@ -1804,7 +1805,8 @@ details[open] .content {
     ['#balancesSection', './partials/balances.html'],
     ['#taxesSection', './partials/withholdings.html'],
     ['#taxableIncomeAdjustmentsSection', './partials/taxableIncomeAdjustments.html'],
-    ['#taxfreeIncomeAdjustmentsSection', './partials/taxfreeIncomeAdjustments.html']
+    ['#taxfreeIncomeAdjustmentsSection', './partials/taxfreeIncomeAdjustments.html'],
+    ['#healthcareExpensesSection', './partials/healthcareExpenses.html']
   ];
 
   await Promise.all(

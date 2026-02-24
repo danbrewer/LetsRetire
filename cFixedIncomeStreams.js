@@ -68,7 +68,7 @@ class FixedIncomeStreams {
             : 0;
 
         if (!this.#demographics.subjectIsLiving) {
-          annualPension *= p.survivorshipPercent / 100;
+          annualPension *= p.survivorshipPercent;
         }
 
         return acc + annualPension;
@@ -87,7 +87,7 @@ class FixedIncomeStreams {
             : 0;
 
         if (!this.#demographics.subjectIsLiving) {
-          annualPension *= p.survivorshipPercent / 100;
+          annualPension *= p.survivorshipPercent;
         }
 
         return acc + annualPension;
@@ -148,7 +148,7 @@ class FixedIncomeStreams {
           : 0;
 
       if (!isLiving) {
-        grossAmount *= p.survivorshipPercent / 100;
+        grossAmount *= p.survivorshipPercent;
       }
 
       let withholdingsAmount = grossAmount * p.withholdingRate;
@@ -178,7 +178,7 @@ class FixedIncomeStreams {
             : 0;
 
         if (!this.#demographics.partnerIsLiving) {
-          annualPension *= p.survivorshipPercent / 100;
+          annualPension *= p.survivorshipPercent;
         }
 
         return acc + annualPension;
@@ -197,7 +197,7 @@ class FixedIncomeStreams {
             : 0;
 
         if (!this.#demographics.partnerIsLiving) {
-          withholdings *= p.survivorshipPercent / 100;
+          withholdings *= p.survivorshipPercent;
         }
 
         return acc + withholdings;

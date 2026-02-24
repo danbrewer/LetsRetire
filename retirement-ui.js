@@ -25,6 +25,7 @@ import { PensionAnnuityStorage } from "./cPensionAnnuityStorage.js";
 import { PensionAnnuityManager } from "./cPensionAnnuityManager.js";
 import { openPensionCreateModal, openPensionEditModal } from "./retirement-ui-pension-modal.js";
 import { openConfirmModal } from "./retirement-ui-confirm-modal.js";
+import { renderHealthcareExpensesFields } from "./cHealthcareExpenses.js";
 
 const STORAGE_KEY = "retirement-calculator-inputs";
 
@@ -45,6 +46,7 @@ let pensionManager = null;
  * @property {string} placeholder
  * @property {(age:number, event:FocusEvent)=>void} onBlur
  * @property {number} startAge
+ * @property {number} startYear
  */
 
 /**
@@ -150,7 +152,7 @@ function $(id) {
  * @param {string} id
  * @returns {number}
  */
-function num(id) {
+export function num(id) {
   const el = inputText(id);
   if (!el) {
     throw new Error(`Element with id '${id}' not found.`);
@@ -751,7 +753,7 @@ function parseInputParameters() {
   // const retirementYearSpendingOverride = [];
   const retirementYearSpendingOverrides = harvestAgeOverrides(
     "spending",
-    subjectRetireAge,
+    subjectCurrentAge,
     subjectLifeSpan,
     checkbox("useCurrentYearValues")?.checked ?? false,
     applyInflationToSpendingValue
@@ -1097,7 +1099,8 @@ function renderSpendingOverrideFields() {
     label: "spending ($)",
     placeholder: "Auto",
     onBlur: handleSpendingFieldChange,
-    startAge: num(UIField.SUBJECT_RETIRE_AGE),
+    startAge: num(UIField.SUBJECT_CURRENT_AGE),
+    startYear: num(UIField.CURRENT_YEAR)
   });
 }
 
@@ -1273,9 +1276,10 @@ function updateSpendingFieldsDisplayMode() {
  *
  * @param {OverrideFieldOptions} options
  */
-function generateOverrideFields(options) {
+export function generateOverrideFields(options) {
   const startAge = options.startAge;
   const endAge = num(UIField.SUBJECT_LIFESPAN);
+  let year = options.startYear;
 
   if (startAge <= 0 || endAge <= startAge) return;
 
@@ -1291,7 +1295,7 @@ function generateOverrideFields(options) {
 
     div.innerHTML = `
       <label for="${id}">
-        Age ${age} ${options.label}
+        ${year - 1} ${options.label}
       </label>
       <input
         id="${id}"
@@ -1300,6 +1304,8 @@ function generateOverrideFields(options) {
         placeholder="${options.placeholder}"
       />
     `;
+
+    year += 1;
 
     grid.appendChild(div);
 
@@ -1340,8 +1346,11 @@ function renderTaxableIncomeFields() {
     placeholder: "0",
     onBlur: handleTaxableIncomeFieldChange,
     startAge: num(UIField.SUBJECT_CURRENT_AGE),
+    startYear: num(UIField.CURRENT_YEAR)
   });
 }
+
+
 
 /**
  * @param {any} age
@@ -1425,9 +1434,6 @@ function handleTaxableIncomeFieldChange(age, event) {
       },
     })
   );
-
-  // Trigger recalculation
-  // doCalculations();
 }
 
 function updateTaxableIncomeFieldsDisplayMode() {
@@ -1490,6 +1496,7 @@ function renderTaxFreeIncomeFields() {
     placeholder: "0",
     onBlur: handleTaxFreeIncomeFieldChange,
     startAge: num(UIField.SUBJECT_CURRENT_AGE),
+    startYear: num(UIField.CURRENT_YEAR),
   });
 }
 
@@ -1708,6 +1715,7 @@ function initUI() {
   renderSpendingOverrideFields();
   renderTaxableIncomeFields();
   renderTaxFreeIncomeFields();
+  renderHealthcareExpensesFields();
   restorePersistedInputs(); // ← ADD THIS AFTER UI EXISTS
   renderPensionList();
   doCalculations();

@@ -7,7 +7,11 @@ import { Demographics } from "./cDemographics.js";
 import { FiscalData } from "./cFiscalData.js";
 import { FixedIncomeStreams } from "./cFixedIncomeStreams.js";
 import { Inputs } from "./cInputs.js";
-import { constsJS_FILING_STATUS, PERIODIC_FREQUENCY, TAX_BASE_YEAR } from "./consts.js";
+import {
+  constsJS_FILING_STATUS,
+  PERIODIC_FREQUENCY,
+  TAX_BASE_YEAR,
+} from "./consts.js";
 import { ReportingYear } from "./cReporting.js";
 import { ReportsManager } from "./cReportsManager.js";
 import { RetirementYearData } from "./cRetirementYearData.js";
@@ -85,8 +89,11 @@ class RetirementYearCalculator {
       this.#demographics.hasPartner;
     this.#reportingYear.ReportData.demographics_subjectAge = `${this.#demographics.subjectIsLiving ? this.#demographics.currentAge : "-"}`;
     this.#reportingYear.ReportData.demographics_partnerAge = `${this.#demographics.partnerIsLiving ? this.#demographics.currentAgeOfPartner : "-"}`;
-    this.#reportingYear.ReportData.demographics_filingStatus = 
-      this.#demographics.filingStatus === constsJS_FILING_STATUS.MARRIED_FILING_JOINTLY ? "Married Filing Jointly" : "Single";
+    const filingStatus = this.#demographics.isWidowed ? constsJS_FILING_STATUS.SINGLE : this.#demographics.filingStatus;
+    this.#reportingYear.ReportData.demographics_filingStatus =
+      filingStatus === constsJS_FILING_STATUS.MARRIED_FILING_JOINTLY
+        ? "Married Filing Jointly"
+        : "Single";
   }
 
   // COPIED FROM WORKING YEAR CALCULATOR
@@ -148,103 +155,7 @@ class RetirementYearCalculator {
 
       this.#reportingYear.ReportData.income_miscTaxFreeIncome = taxFreeIncome;
     }
-
-    // const subjectNonTaxableIncome =
-    //   this.#fixedIncomeStreams.subjectPayrollDeductions;
-
-    // if (subjectNonTaxableIncome > 0) {
-    //   this.#accountYear.processAsPeriodicDeposits(
-    //     ACCOUNT_TYPES.SUBJECT_WAGES,
-    //     TransactionCategory.OtherNonTaxable,
-    //     TransactionRoutes.External,
-    //     subjectNonTaxableIncome,
-    //     PERIODIC_FREQUENCY.MONTHLY
-    //   );
-    //   this.#accountYear.processAsPeriodicTransfers(
-    //     ACCOUNT_TYPES.SUBJECT_WAGES,
-    //     ACCOUNT_TYPES.CASH,
-    //     subjectNonTaxableIncome,
-    //     PERIODIC_FREQUENCY.MONTHLY,
-    //     TransactionCategory.OtherNonTaxable
-    //   );
-    // }
-    // const partnerNonTaxableIncome =
-    //   this.#fixedIncomeStreams.partnerCareerNonTaxableSalaryDeductions;
-    // if (partnerNonTaxableIncome > 0) {
-    //   this.#accountYear.processAsPeriodicDeposits(
-    //     ACCOUNT_TYPES.PARTNER_WAGES,
-    //     TransactionCategory.OtherNonTaxable,
-    //     TransactionRoutes.External,
-    //     partnerNonTaxableIncome,
-    //     PERIODIC_FREQUENCY.MONTHLY
-    //   );
-
-    //   this.#accountYear.processAsPeriodicTransfers(
-    //     ACCOUNT_TYPES.PARTNER_WAGES,
-    //     ACCOUNT_TYPES.CASH,
-    //     partnerNonTaxableIncome,
-    //     PERIODIC_FREQUENCY.MONTHLY,
-    //     TransactionCategory.OtherNonTaxable
-    //   );
-    // }
   }
-
-  // #processSavingsContributions() {
-  //   const subjectDesiredSavingsContribution = Math.max(
-  //     this.#fixedIncomeStreams.subjectSavingsContributionVariable,
-  //     this.#fixedIncomeStreams.subjectSavingsContributionFixed
-  //   ).asCurrency();
-
-  //   const partnerDesiredSavingsContribution = Math.max(
-  //     this.#fixedIncomeStreams.partnerSavingsContributionVariable,
-  //     this.#fixedIncomeStreams.partnerSavingsContributionFixed
-  //   ).asCurrency();
-
-  //   const desiredTransferAmount =
-  //     subjectDesiredSavingsContribution + partnerDesiredSavingsContribution;
-
-  //   if (desiredTransferAmount <= 0) return;
-
-  //   let availableCash = this.#accountYear.getEndingBalance(ACCOUNT_TYPES.CASH);
-
-  //   if (availableCash <= 0) return;
-
-  //   const actualTransferAmount = Math.min(
-  //     availableCash,
-  //     subjectDesiredSavingsContribution
-  //   );
-
-  //   this.#accountYear.processAsPeriodicTransfers(
-  //     ACCOUNT_TYPES.CASH,
-  //     ACCOUNT_TYPES.SAVINGS,
-  //     actualTransferAmount,
-  //     PERIODIC_FREQUENCY.MONTHLY,
-  //     TransactionCategory.AutoTransfer,
-  //     "Combined contrib."
-  //   );
-
-  //   this.#reportingYear.ReportData.retirementAcct_subjectSavingsContributions +=
-  //     actualTransferAmount;
-
-  //   availableCash -= actualTransferAmount;
-
-  //   const actualPartnerTransferAmount = Math.min(
-  //     availableCash,
-  //     partnerDesiredSavingsContribution
-  //   );
-
-  //   this.#accountYear.processAsPeriodicTransfers(
-  //     ACCOUNT_TYPES.CASH,
-  //     ACCOUNT_TYPES.SAVINGS,
-  //     actualPartnerTransferAmount,
-  //     PERIODIC_FREQUENCY.MONTHLY,
-  //     TransactionCategory.AutoTransfer,
-  //     "Combined contrib."
-  //   );
-
-  //   this.#reportingYear.ReportData.retirementAcct_partnerSavingsContributions +=
-  //     actualPartnerTransferAmount;
-  // }
 
   #processWagesAndCompensation() {
     if (this.#demographics.subjectIsLiving) {
@@ -365,8 +276,6 @@ class RetirementYearCalculator {
       this.#reportingYear.ReportData.income_partnerTakehomeWages =
         this.#fixedIncomeStreams.retirement.partnerWagesAndCompensationActualIncome;
     }
-    // this.#reportingYear.ReportData.dump("Wages and Compensation Report");
-    // debugger;
   }
 
   #applySavingsInterest() {
@@ -513,13 +422,20 @@ class RetirementYearCalculator {
 
     const cash = this.#accountYear.getEndingBalance(ACCOUNT_TYPES.CASH);
 
-    const spend = this.#fiscalData.spend.asCurrency();
+    let spend = this.#fiscalData.spend.asCurrency();
+
+    this.#demographics.spouseIsLiving
+    // Reduce spending by 25% if either the subject or partner is not living
+    if (this.#demographics.isWidowed){
+      spend *= 0.75;
+    }
 
     const actualSpend = Math.min(cash, spend);
 
     this.#reportingYear.ReportData.ask = spend;
     this.#reportingYear.ReportData.spend = actualSpend.asCurrency();
-    this.#reportingYear.ReportData.spending_overriding = this.#fiscalData.overridingSpend;
+    this.#reportingYear.ReportData.spending_overriding =
+      this.#fiscalData.overridingSpend;
     this.#reportingYear.ReportData.takeHome = cash.asCurrency();
 
     if (cash <= 0) {
@@ -598,8 +514,6 @@ class RetirementYearCalculator {
     // Process non-variable income streams into savings account
     this.#processPensionIncome();
     this.#processSocialSecurityIncome();
-
-    // this.#processSavingsContributions();
 
     this.determineRetirementAccountWithdrawalPortions();
 
@@ -870,7 +784,8 @@ class RetirementYearCalculator {
     this.#reportingYear.ReportData.income_partnerPensionTakehome =
       this.#fixedIncomeStreams?.partnerPensionActualIncome ?? 0;
 
-    this.#reportingYear.ReportData.income_pensionBreakdowns = this.#fixedIncomeStreams.pensionAnnunityBreakdowns;
+    this.#reportingYear.ReportData.income_pensionBreakdowns =
+      this.#fixedIncomeStreams.pensionAnnunityBreakdowns;
 
     this.#reportingYear.ReportData.retirementAcct_subjectRothOpenBalance =
       this.#accountYear.getStartingBalance(ACCOUNT_TYPES.SUBJECT_ROTH_IRA);
@@ -909,130 +824,6 @@ class RetirementYearCalculator {
     this.#reportingYear.ReportData.savings_Balance =
       this.#accountYear.getEndingBalance(ACCOUNT_TYPES.SAVINGS);
   }
-
-  // #processMonthlySpending() {
-  //   const actualIncome = this.#accountYear.getEndingBalance(ACCOUNT_TYPES.CASH);
-  //   const spend = this.#fiscalData.spend;
-
-  //   // Any money not used from the spend budget goes back into savings
-  //   if (actualIncome > spend) {
-  //     const surplusAmount = actualIncome - spend;
-  //     this.#accountYear.processAsPeriodicTransfers(
-  //       ACCOUNT_TYPES.CASH,
-  //       ACCOUNT_TYPES.SAVINGS,
-  //       surplusAmount,
-  //       PERIODIC_FREQUENCY.MONTHLY,
-  //       TransactionCategory.SurplusIncome
-  //     );
-  //   }
-  //   if (actualIncome < spend) {
-  //     // Any money needed to cover the spend budget deficit is withdrawn from savings
-  //     const deficitAmount = spend - actualIncome;
-  //     const availableFunds = this.#accountYear.getAvailableFunds([
-  //       ACCOUNT_TYPES.SAVINGS,
-  //     ]);
-  //     if (availableFunds > 0) {
-  //       const catchupAmount = Math.min(deficitAmount, availableFunds);
-
-  //       this.#accountYear.processAsPeriodicTransfers(
-  //         ACCOUNT_TYPES.SAVINGS,
-  //         ACCOUNT_TYPES.CASH,
-  //         catchupAmount,
-  //         PERIODIC_FREQUENCY.MONTHLY,
-  //         TransactionCategory.IncomeShortfall
-  //       );
-  //     }
-  //   }
-  // }
-
-  // #processWagesIncome() {
-  //   this.#processSubjectWagesIncome();
-  //   this.#processPartnerWagesIncome();
-  // }
-
-  // #processSubjectWagesIncome() {
-  //   if (
-  //     this.#fixedIncomeStreams?.subjectRetirementWagesAndCompensationGross ??
-  //     0 > 0
-  //   ) {
-  //     this.#accountYear.processAsPeriodicDeposits(
-  //       ACCOUNT_TYPES.SUBJECT_WAGES,
-  //       TransactionCategory.IncomeGross,
-  //       TransactionRoutes.External,
-  //       this.#fixedIncomeStreams?.subjectRetirementWagesAndCompensationGross ??
-  //         0,
-  //       PERIODIC_FREQUENCY.MONTHLY
-  //     );
-
-  //     this.#accountYear.processAsPeriodicTransfers(
-  //       ACCOUNT_TYPES.SUBJECT_WAGES,
-  //       ACCOUNT_TYPES.TAXES,
-  //       this.#fixedIncomeStreams
-  //         ?.subjectRetirementWagesAndCompensationEstimatedWithholdings ?? 0,
-  //       PERIODIC_FREQUENCY.MONTHLY,
-  //       TransactionCategory.Withholdings
-  //     );
-
-  //     this.#accountYear.processAsPeriodicTransfers(
-  //       ACCOUNT_TYPES.SUBJECT_WAGES,
-  //       ACCOUNT_TYPES.SUBJECT_PAYROLL_DEDUCTIONS,
-  //       this.#fixedIncomeStreams.subjectRetirementNonTaxableSalaryReductions,
-  //       PERIODIC_FREQUENCY.MONTHLY,
-  //       TransactionCategory.PayrollDeductions
-  //     );
-
-  //     this.#accountYear.processAsPeriodicTransfers(
-  //       ACCOUNT_TYPES.SUBJECT_WAGES,
-  //       ACCOUNT_TYPES.CASH,
-  //       this.#fixedIncomeStreams
-  //         ?.subjectRetirementWagesAndCompensationActualIncome ?? 0,
-  //       PERIODIC_FREQUENCY.MONTHLY,
-  //       TransactionCategory.IncomeNet
-  //     );
-  //   }
-  // }
-
-  // #processPartnerWagesIncome() {
-  //   if (
-  //     this.#fixedIncomeStreams?.partnerRetirementWagesAndCompensationGross ??
-  //     0 > 0
-  //   ) {
-  //     this.#accountYear.processAsPeriodicDeposits(
-  //       ACCOUNT_TYPES.PARTNER_WAGES,
-  //       TransactionCategory.IncomeGross,
-  //       TransactionRoutes.External,
-  //       this.#fixedIncomeStreams?.partnerRetirementWagesAndCompensationGross ??
-  //         0,
-  //       PERIODIC_FREQUENCY.MONTHLY
-  //     );
-
-  //     this.#accountYear.processAsPeriodicTransfers(
-  //       ACCOUNT_TYPES.PARTNER_WAGES,
-  //       ACCOUNT_TYPES.TAXES,
-  //       this.#fixedIncomeStreams
-  //         ?.partnerRetirementWagesAndCompensationEstimatedWithholdings ?? 0,
-  //       PERIODIC_FREQUENCY.MONTHLY,
-  //       TransactionCategory.Withholdings
-  //     );
-
-  //     this.#accountYear.processAsPeriodicTransfers(
-  //       ACCOUNT_TYPES.PARTNER_WAGES,
-  //       ACCOUNT_TYPES.PARTNER_PAYROLL_DEDUCTIONS,
-  //       this.#fixedIncomeStreams.partnerRetirementNonTaxableSalaryReductions,
-  //       PERIODIC_FREQUENCY.MONTHLY,
-  //       TransactionCategory.PayrollDeductions
-  //     );
-
-  //     this.#accountYear.processAsPeriodicTransfers(
-  //       ACCOUNT_TYPES.PARTNER_WAGES,
-  //       ACCOUNT_TYPES.CASH,
-  //       this.#fixedIncomeStreams
-  //         ?.partnerRetirementWagesAndCompensationActualIncome ?? 0,
-  //       PERIODIC_FREQUENCY.MONTHLY,
-  //       TransactionCategory.IncomeNet
-  //     );
-  //   }
-  // }
 
   #processSocialSecurityIncome() {
     // Subject SS income goes into living expenses fund

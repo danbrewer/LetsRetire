@@ -54,12 +54,14 @@ class WorkingYearCalculator {
 
     this.#reportingYear.ReportData.demographics_hasPartner =
       this.#demographics.hasPartner;
-    this.#reportingYear.ReportData.demographics_subjectAge =
-      this.#demographics.subjectIsLiving ?
-      `${this.#demographics.currentAge}` : '-';
-    this.#reportingYear.ReportData.demographics_partnerAge =
-      this.#demographics.partnerIsLiving ?
-      `${this.#demographics.currentAgeOfPartner}` : '-';
+    this.#reportingYear.ReportData.demographics_subjectAge = this.#demographics
+      .subjectIsLiving
+      ? `${this.#demographics.currentAge}`
+      : "-";
+    this.#reportingYear.ReportData.demographics_partnerAge = this.#demographics
+      .partnerIsLiving
+      ? `${this.#demographics.currentAgeOfPartner}`
+      : "-";
 
     // this.#workingYearIncome = WorkingYearIncome.CreateUsing(
     //   this.#fixedIncomeStreams,
@@ -520,16 +522,22 @@ class WorkingYearCalculator {
 
     const cash = this.#accountYear.getEndingBalance(ACCOUNT_TYPES.CASH);
 
-    this.#reportingYear.ReportData.spending_overriding = this.#fiscalData.overridingSpend;
-
     if (cash <= 0) {
       console.warn("Warning: No cash available to cover spending.");
       return;
     }
 
-    const actualSpend = Math.min(cash, this.#fiscalData.spend);
+    let spend = this.#fiscalData.spend;
+    // Reduce spending by 25% if either the subject or partner is not living
+    if (this.#demographics.isWidowed) {
+      spend *= 0.75;
+    }
 
-    this.#reportingYear.ReportData.ask = this.#fiscalData.spend;
+    const actualSpend = Math.min(cash, spend);
+
+    this.#reportingYear.ReportData.ask = spend;
+    this.#reportingYear.ReportData.spending_overriding =
+      this.#fiscalData.overridingSpend;
     this.#reportingYear.ReportData.spend = actualSpend;
 
     this.#accountYear.processAsPeriodicWithdrawals(
@@ -540,7 +548,7 @@ class WorkingYearCalculator {
       PERIODIC_FREQUENCY.MONTHLY
     );
 
-    this.surplusSpend = cash - this.#fiscalData.spend;
+    this.surplusSpend = cash - spend;
 
     if (this.surplusSpend == 0) return;
 
