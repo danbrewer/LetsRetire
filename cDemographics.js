@@ -10,13 +10,14 @@ class Demographics {
    * @param {number} partner401kStartAge
    * @param {number} retirementYear
    * @param {number} yearIndex
+   * @param {string} preferredFilingStatus
    */
   constructor(
     currentAge,
     ssStartAge,
     penStartAge,
     subject401kStartAge,
-    subjectLifeSpan,  
+    subjectLifeSpan,
     retirementYear,
     yearIndex,
     isRetired = true,
@@ -27,7 +28,7 @@ class Demographics {
     partnerPenStartAge = Number.MAX_VALUE,
     partner401kStartAge = Number.MAX_VALUE,
     partnerLifeSpan = Number.MIN_VALUE,
-    filingStatus = "single"
+    preferredFilingStatus = "single"
   ) {
     this.currentAge = currentAge;
     this.ssStartAge = ssStartAge;
@@ -49,8 +50,16 @@ class Demographics {
       ? partner401kStartAge
       : Number.MAX_VALUE;
     this.partnerLifeSpan = hasPartner ? partnerLifeSpan : Number.MIN_VALUE;
-    this.filingStatus = filingStatus;
+    this.preferredFilingStatus = preferredFilingStatus;
     this._description = `Retirement Year ${yearIndex + 1} (Age ${this.currentAge}) (Year ${this.retirementYear})`;
+  }
+
+  get filingStatus() {
+    if (this.hasPartner && !this.isWidowed) {
+      return this.preferredFilingStatus;
+    } else {
+      return "single";
+    }
   }
 
   get subjectIsLiving() {
@@ -62,11 +71,11 @@ class Demographics {
     return this.currentAgeOfPartner <= this.partnerLifeSpan;
   }
 
-  get spouseIsLiving(){
+  get spouseIsLiving() {
     return this.subjectIsLiving && this.partnerIsLiving;
   }
 
-  get isWidowed(){
+  get isWidowed() {
     return this.hasPartner && !(this.subjectIsLiving && this.spouseIsLiving);
   }
 

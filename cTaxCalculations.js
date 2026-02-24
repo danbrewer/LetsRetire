@@ -34,13 +34,14 @@ class TaxCalculations {
     const yearsFromBase = fiscalData.taxYear - TAX_BASE_YEAR;
     if (
       demographics.filingStatus ===
-      constsJS_FILING_STATUS.MARRIED_FILING_JOINTLY && !demographics.isWidowed
+        constsJS_FILING_STATUS.MARRIED_FILING_JOINTLY &&
+      !demographics.isWidowed
     ) {
       return constsJS_TAX_TABLES_2025.mfj.map((bracket) => ({
         rate: bracket.rate,
         upTo: bracket.upTo.adjustedForInflation(
           fiscalData.inflationRate,
-          0 //yearsFromBase
+          yearsFromBase
         ),
       }));
     } else {

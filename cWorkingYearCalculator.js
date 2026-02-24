@@ -4,7 +4,11 @@ import { Demographics } from "./cDemographics.js";
 import { FiscalData } from "./cFiscalData.js";
 import { FixedIncomeStreams } from "./cFixedIncomeStreams.js";
 import { Inputs } from "./cInputs.js";
-import { TAX_BASE_YEAR, PERIODIC_FREQUENCY } from "./consts.js";
+import {
+  TAX_BASE_YEAR,
+  PERIODIC_FREQUENCY,
+  constsJS_FILING_STATUS,
+} from "./consts.js";
 import { ReportingYear } from "./cReporting.js";
 import { Taxes } from "./cTaxes.js";
 import { TransactionCategory } from "./cTransaction.js";
@@ -62,6 +66,12 @@ class WorkingYearCalculator {
       .partnerIsLiving
       ? `${this.#demographics.currentAgeOfPartner}`
       : "-";
+
+    this.#reportingYear.ReportData.demographics_filingStatus =
+      this.#demographics.filingStatus ===
+      constsJS_FILING_STATUS.MARRIED_FILING_JOINTLY
+        ? "Married Filing Jointly"
+        : "Single";
 
     // this.#workingYearIncome = WorkingYearIncome.CreateUsing(
     //   this.#fixedIncomeStreams,

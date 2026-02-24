@@ -89,9 +89,9 @@ class RetirementYearCalculator {
       this.#demographics.hasPartner;
     this.#reportingYear.ReportData.demographics_subjectAge = `${this.#demographics.subjectIsLiving ? this.#demographics.currentAge : "-"}`;
     this.#reportingYear.ReportData.demographics_partnerAge = `${this.#demographics.partnerIsLiving ? this.#demographics.currentAgeOfPartner : "-"}`;
-    const filingStatus = this.#demographics.isWidowed ? constsJS_FILING_STATUS.SINGLE : this.#demographics.filingStatus;
     this.#reportingYear.ReportData.demographics_filingStatus =
-      filingStatus === constsJS_FILING_STATUS.MARRIED_FILING_JOINTLY
+      this.#demographics.filingStatus ===
+      constsJS_FILING_STATUS.MARRIED_FILING_JOINTLY
         ? "Married Filing Jointly"
         : "Single";
   }
@@ -424,9 +424,9 @@ class RetirementYearCalculator {
 
     let spend = this.#fiscalData.spend.asCurrency();
 
-    this.#demographics.spouseIsLiving
+    this.#demographics.spouseIsLiving;
     // Reduce spending by 25% if either the subject or partner is not living
-    if (this.#demographics.isWidowed){
+    if (this.#demographics.isWidowed) {
       spend *= 0.75;
     }
 
