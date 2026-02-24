@@ -32,8 +32,6 @@ class WorkingYearCalculator {
   #fixedIncomeStreams;
   /** @type {ReportingYear} */
   #reportingYear;
-  // /** @type {WorkingYearIncome} */
-  // #workingYearIncome;
 
   /**
    * Create working year income calculator with input configuration
@@ -72,13 +70,6 @@ class WorkingYearCalculator {
       constsJS_FILING_STATUS.MARRIED_FILING_JOINTLY
         ? "Married Filing Jointly"
         : "Single";
-
-    // this.#workingYearIncome = WorkingYearIncome.CreateUsing(
-    //   this.#fixedIncomeStreams,
-    //   this.#demographics,
-    //   this.#fiscalData,
-    //   this.#accountYear
-    // );
   }
 
   processWorkingYearData() {
@@ -273,45 +264,6 @@ class WorkingYearCalculator {
       );
     }
     this.#reportingYear.ReportData.income_miscTaxFreeIncome = taxFreeIncome;
-
-    // const subjectNonTaxableIncome =
-    //   this.#fixedIncomeStreams.subjectPayrollDeductions;
-
-    // if (subjectNonTaxableIncome > 0) {
-    //   this.#accountYear.processAsPeriodicDeposits(
-    //     ACCOUNT_TYPES.SUBJECT_WAGES,
-    //     TransactionCategory.OtherNonTaxable,
-    //     TransactionRoutes.External,
-    //     subjectNonTaxableIncome,
-    //     PERIODIC_FREQUENCY.MONTHLY
-    //   );
-    //   this.#accountYear.processAsPeriodicTransfers(
-    //     ACCOUNT_TYPES.SUBJECT_WAGES,
-    //     ACCOUNT_TYPES.CASH,
-    //     subjectNonTaxableIncome,
-    //     PERIODIC_FREQUENCY.MONTHLY,
-    //     TransactionCategory.OtherNonTaxable
-    //   );
-    // }
-    // const partnerNonTaxableIncome =
-    //   this.#fixedIncomeStreams.partnerCareerNonTaxableSalaryDeductions;
-    // if (partnerNonTaxableIncome > 0) {
-    //   this.#accountYear.processAsPeriodicDeposits(
-    //     ACCOUNT_TYPES.PARTNER_WAGES,
-    //     TransactionCategory.OtherNonTaxable,
-    //     TransactionRoutes.External,
-    //     partnerNonTaxableIncome,
-    //     PERIODIC_FREQUENCY.MONTHLY
-    //   );
-
-    //   this.#accountYear.processAsPeriodicTransfers(
-    //     ACCOUNT_TYPES.PARTNER_WAGES,
-    //     ACCOUNT_TYPES.CASH,
-    //     partnerNonTaxableIncome,
-    //     PERIODIC_FREQUENCY.MONTHLY,
-    //     TransactionCategory.OtherNonTaxable
-    //   );
-    // }
   }
 
   #processSavingsContributions() {
@@ -371,12 +323,6 @@ class WorkingYearCalculator {
 
     this.#reportingYear.ReportData.retirementAcct_partnerSavingsContributions +=
       actualPartnerTransferAmount;
-
-    // this.#reportingYear.ReportData.savings_Deposits += actualPartnerTransferAmount;
-
-    // this.#accountYear.analyzers[ACCOUNT_TYPES.CASH].dumpAccountActivity("");
-
-    // debugger;
   }
 
   #processWagesAndCompensation() {
@@ -502,8 +448,6 @@ class WorkingYearCalculator {
       this.#reportingYear.ReportData.income_partnerTakehomeWages =
         this.#fixedIncomeStreams.career.partnerWagesAndCompensationActualIncome;
     }
-    // this.#reportingYear.ReportData.dump("Wages and Compensation Report");
-    // debugger;
   }
 
   #processRothIraContributions() {
@@ -739,7 +683,6 @@ class WorkingYearCalculator {
       );
       this.#reportingYear.ReportData.taxes_underPayment = withdrawalAmount;
     }
-    // debugger;
   }
 }
 

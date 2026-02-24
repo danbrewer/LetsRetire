@@ -5,10 +5,8 @@ import { Inputs } from "./cInputs.js";
 import { TAX_BASE_YEAR } from "./consts.js";
 import { ReportsManager } from "./cReportsManager.js";
 import { RetirementYearCalculator } from "./cRetirementYearCalculator.js";
-import { Transaction } from "./cTransaction.js";
 import { TransactionManager } from "./cTransactionManager.js";
 import { WorkingYearCalculator } from "./cWorkingYearCalculator.js";
-// import { generateOutputAndSummary } from "./retirement-ui.js";
 
 /**
  * @typedef {object} RetirementUIFunctions

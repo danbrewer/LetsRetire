@@ -300,9 +300,6 @@ class Inputs {
     /** @type {number} */
     this.yearIndex = 0;
 
-    // /** @type {number} */
-    // this.additionalSpending = 0;
-
     /** @type {number} */
     this.savingsUseAge = this.subjectRetireAge;
 
@@ -519,10 +516,6 @@ class Inputs {
   /** @returns {boolean} */
   get overridingSpend() {
     return this.retirementYearSpendingOverride > 0;
-    // return (
-    //   (this.retirementYearSpendingOverride ?? 0) &&
-    //   this.retirementYearSpendingOverride > 0
-    // );
   }
 
   get spend() {
@@ -620,20 +613,6 @@ class Inputs {
   get #retirementYearIndex() {
     return this.subjectAge - this.subjectRetireAge;
   }
-
-  // get retirementYearTaxableIncomeOverride() {
-  //   const taxableIncomeOverride = this.taxableIncomeOverrides.find(
-  //     (tye) => tye.year === this.#retirementYearIndex + 1
-  //   );
-  //   return taxableIncomeOverride ? taxableIncomeOverride.amount : 0;
-  // }
-
-  // get retirementYearTaxFreeIncomeOverride() {
-  //   const taxFreeIncomeOverride = this.taxFreeIncomeOverrides.find(
-  //     (tye) => tye.year === this.#retirementYearIndex + 1
-  //   );
-  //   return taxFreeIncomeOverride ? taxFreeIncomeOverride.amount : 0;
-  // }
 
   get retirementYearSpendingOverride() {
     const spendingOverride = this.retirementYearSpendingOverrides.find(

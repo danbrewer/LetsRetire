@@ -498,27 +498,6 @@ function showPensionGrossBreakdown(data) {
     `;
     return acc;
   }, "");
-//   let breakdownHtml = `
-//     <div style="margin: 16px 0; padding: 12px; background: rgba(110, 168, 254, 0.1); border-radius: 8px;">
-//         <strong style="color: var(--accent);">Subject:</strong>
-//       <div class="ss-breakdown-item">
-//         <span class="ss-breakdown-label">Subject Gross income:</span>
-//         <span class="ss-breakdown-value">${data.income_subjectPensionGross.asWholeDollars()}</span>
-//       </div>
-//     </div>
-//     `;
-
-//   if (data.demographics_hasPartner) {
-//     breakdownHtml += `
-// <div style="margin: 16px 0; padding: 12px; background: rgba(110, 168, 254, 0.1); border-radius: 8px;">
-//         <strong style="color: var(--accent);">Partner:</strong>
-//       <div class="ss-breakdown-item">
-//         <span class="ss-breakdown-label">Partner Gross income:</span>
-//         <span class="ss-breakdown-value">${data.income_partnerPensionGross.asWholeDollars()}</span>
-//       </div>
-//     </div>
-//       `;
-//   }
 
   breakdownHtml += `
       <div class="ss-breakdown-item breakdown-accent">

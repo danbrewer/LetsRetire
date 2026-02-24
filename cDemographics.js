@@ -110,24 +110,6 @@ class Demographics {
     return this.currentAge >= this.subject401kStartAge;
   }
 
-  //   // Getter for description to maintain compatibility
-  //   get description() {
-  //     return this._description;
-  //   }
-
-  //   // Method to update age for multi-year calculations
-  //   /**
-  //    * @param {number} newAge
-  //    * @param {number} yearIndex
-  //    */
-  //   updateAge(newAge, yearIndex) {
-  //     this.age = newAge;
-  //     if (this.hasSpouse) {
-  //       this.ageOfSpouse = this.ageOfSpouse + 1; // Assuming partner ages at same rate
-  //     }
-  //     this._description = `Retirement Year ${yearIndex + 1} (Age ${this.age}) (Year ${this.retirementYear + yearIndex})`;
-  //   }
-
   // Method to get current eligibility status
   getEligibilityStatuses() {
     return {
@@ -141,69 +123,12 @@ class Demographics {
   /**
    * Factory method to create a Demographics instance from retirement calculation inputs.
    *
-   * This method provides a convenient way to construct Demographics objects by extracting
-   * the relevant demographic information from a comprehensive inputs object. It handles
-   * both single and married filing scenarios, automatically setting partner-related
-   * properties based on the hasSpouse flag.
-   *
    * @param {Inputs} inputs - Retirement calculation inputs object containing:
-   *   - age: Primary person's current age
-   *   - ssStartAge: Age when primary person starts collecting Social Security
-   *   - penStartAge: Age when primary person starts collecting pension
-   *   - retirementYear: Calendar year of retirement
-   *   - yearIndex: Index of the current retirement year (0-based)
-   *   - hasSpouse: Boolean indicating if married filing jointly
-   *   - partnerAge: Spouse's current age (required if hasSpouse is true)
-   *   - partnerSsStartAge: Age when partner starts Social Security (required if hasSpouse)
-   *   - partnerPenStartAge: Age when partner starts pension (required if hasSpouse)
-   *   - filingStatus: Tax filing status ("single", "married_filing_jointly", etc.)
-   *
    * @param {boolean} isRetired - Whether the primary person is currently retired.
-   *   Affects eligibility calculations and income stream determinations.
-   *
    * @param {boolean} isWorking - Whether the primary person is currently working.
-   *   Used for earned income calculations and Social Security benefit adjustments.
-   *
    * @returns {Demographics} A fully configured Demographics instance with:
-   *   - All age and eligibility information for primary and partner
-   *   - Retirement status and working status flags
-   *   - Calculated eligibility methods for benefits
-   *   - Descriptive information for reporting
-   *
-   * @throws {Error} When required partner information is missing but hasSpouse is true
-   * @throws {Error} When age values are invalid or inconsistent
-   *
-   * @example
-   * // Create demographics for single retiree
-   * const singleInputs = {
-   *   age: 65, ssStartAge: 67, penStartAge: 65,
-   *   retirementYear: 2024, yearIndex: 0,
-   *   hasSpouse: false, filingStatus: "single"
-   * };
-   * const demographics = Demographics.CreateUsing(singleInputs, true, false);
-   * console.log(demographics.eligibleForSs()); // true if age >= ssStartAge
-   *
-   * @example
-   * // Create demographics for married couple
-   * const marriedInputs = {
-   *   age: 65, ssStartAge: 67, penStartAge: 65,
-   *   retirementYear: 2024, yearIndex: 0,
-   *   hasSpouse: true, partnerAge: 63,
-   *   partnerSsStartAge: 67, partnerPenStartAge: 65,
-   *   filingStatus: "married_filing_jointly"
-   * };
-   * const demographics = Demographics.CreateUsing(marriedInputs, true, false);
-   * console.log(demographics.partnerEligibleForSs()); // false (63 < 67)
-   *
-   * @see {@link Demographics#constructor} For detailed parameter descriptions
-   * @see {@link Demographics#getEligibilityStatuses} For checking all benefit eligibilities
-   * @see {@link IncomeStreams} For complete input object structure
-   *
-   * @static
-   * @since 1.0.0
    */
   static CreateUsing(inputs, isRetired, isWorking) {
-    // debugger;
     return new Demographics(
       inputs.subjectAge,
       inputs.subjectSsStartAge,

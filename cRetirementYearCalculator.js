@@ -616,96 +616,6 @@ class RetirementYearCalculator {
     return ssBreakdown;
   }
 
-  // #processIncomeTaxes() {
-  //   this.#ssBreakdown = this.#determineSocialSecurityBreakdown();
-
-  //   const grossIncome =
-  //     this.#fixedIncomeStreams.grossTaxableIncome +
-  //     this.#adjustableIncomeStreams.grossTaxableIncome;
-  //   const taxableIncome = grossIncome - this.#ssBreakdown.nonTaxableAmount;
-
-  //   this.#taxes = Taxes.CreateFromTaxableIncome(
-  //     grossIncome,
-  //     taxableIncome,
-  //     this.#fiscalData,
-  //     this.#demographics
-  //   );
-
-  //   const totalWithholdings = this.#accountYear.getAnnualRevenues(
-  //     ACCOUNT_TYPES.TAXES,
-  //     TransactionCategory.Withholdings
-  //   );
-
-  //   const taxesDue = this.#taxes.federalTaxesOwed.asCurrency();
-
-  //   const taxUnderpayment = taxesDue - totalWithholdings;
-  //   const taxOverpayment = -taxUnderpayment;
-
-  //   if (taxesDue < totalWithholdings) {
-  //     this.#accountYear.withdrawal(
-  //       ACCOUNT_TYPES.TAXES,
-  //       TransactionCategory.TaxPayment,
-  //       TransactionRoutes.External,
-  //       taxesDue.asCurrency(),
-  //       12,
-  //       31,
-  //       "Pay the Feds"
-  //     );
-  //   }
-
-  //   if (taxUnderpayment > 0) {
-  //     // Need to withdraw from savings to cover tax underpayment
-  //     const availableSavings = this.#accountYear.getEndingBalance(
-  //       ACCOUNT_TYPES.SAVINGS
-  //     );
-
-  //     if (taxUnderpayment > availableSavings) {
-  //       console.warn(
-  //         "Warning: Taxes due exceed available savings. Partial payment will be made."
-  //       );
-  //     }
-
-  //     const withdrawalAmount = Math.min(taxUnderpayment, availableSavings);
-
-  //     // Transfer withdrawal amount from savings to tax account
-  //     this.#accountYear.processAsPeriodicTransfers(
-  //       ACCOUNT_TYPES.SAVINGS,
-  //       ACCOUNT_TYPES.TAXES,
-  //       withdrawalAmount,
-  //       PERIODIC_FREQUENCY.ANNUAL_TRAILING,
-  //       TransactionCategory.TaxPayment,
-  //       "Cover taxes shortfall"
-  //     );
-
-  //     // Requery the tax account balance after transfer from savings
-  //     const taxAccountDeposits = this.#accountYear.getDeposits(
-  //       ACCOUNT_TYPES.TAXES
-  //     );
-
-  //     this.#accountYear.withdrawal(
-  //       ACCOUNT_TYPES.TAXES,
-  //       TransactionCategory.TaxPayment,
-  //       TransactionRoutes.External,
-  //       taxAccountDeposits.asCurrency(),
-  //       12,
-  //       31,
-  //       "Pay the Feds"
-  //     );
-  //   }
-
-  //   if (taxOverpayment > 0) {
-  //     // Refund the overpayment to savings
-  //     this.#accountYear.processAsPeriodicTransfers(
-  //       ACCOUNT_TYPES.TAXES,
-  //       ACCOUNT_TYPES.SAVINGS,
-  //       taxOverpayment,
-  //       PERIODIC_FREQUENCY.ANNUAL_TRAILING,
-  //       TransactionCategory.TaxRefund,
-  //       "Overpayment refund"
-  //     );
-  //   }
-  // }
-
   #dumpAccountReports() {
     // WAGES AND COMPENSATION
     this.#accountYear.analyzers[
@@ -1053,16 +963,6 @@ class RetirementYearCalculator {
     this.#reportingYear.ReportData.income_partner401kTakehome +=
       actualAmount.asCurrency();
   }
-
-  // #applyRothInterest() {
-  //   this.#accountYear.recordInterestEarnedForYear(
-  //     ACCOUNT_TYPES.SUBJECT_ROTH_IRA
-  //   );
-
-  //   this.#accountYear.recordInterestEarnedForYear(
-  //     ACCOUNT_TYPES.PARTNER_ROTH_IRA
-  //   );
-  // }
 
   #drawRothPortions() {
     const desiredRothWithdrawal =

@@ -910,7 +910,6 @@ export function getDirty() {
 }
 
 function doCalculations() {
-  // return; // for now
   const calculations = new Calculations();
   const result = calc(calculations, DefaultUI);
   clearDirty();

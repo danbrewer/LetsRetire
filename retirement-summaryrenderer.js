@@ -285,15 +285,6 @@ function money(className, moneyObj, options = {}) {
     ? `calc-link ${options.modifier}`
     : "calc-link breakdown-link";
 
-  // return td(
-  //   className,
-  //   calcLink({
-  //     className: spanClass,
-  //     index,
-  //     action: options.action,
-  //     text,
-  //   })
-  // );
   const link = calcLink({
     className: spanClass,
     index,

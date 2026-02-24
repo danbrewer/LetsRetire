@@ -94,10 +94,6 @@ class FixedIncomeStreams {
       }, 0);
 
     return withholdings.asCurrency();
-    // return (
-    //   this.subjectPensionGross *
-    //   this.#inputs.flatPensionWithholdingRate.asCurrency()
-    // );
   }
 
   get subjectPensionActualIncome() {
@@ -204,11 +200,6 @@ class FixedIncomeStreams {
       }, 0);
 
     return withholdings.asCurrency();
-    // return this.#demographics.partnerIsLiving
-    //   ? (
-    //       this.#inputs.flatPensionWithholdingRate * this.partnerPensionGross
-    //     ).asCurrency()
-    //   : 0;
   }
 
   get partnerPensionActualIncome() {

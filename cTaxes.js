@@ -46,15 +46,6 @@ class Taxes {
     this.otherTaxes = otherTaxes;
   }
 
-  //   /**
-  //    * Gets the descriptive label for this tax calculation.
-  //    *
-  //    * @returns {string} Description of the tax calculation
-  //    */
-  //   get description() {
-  //     return this._description;
-  //   }
-
   /**
    * Sets a new description for this tax calculation.
    *
@@ -73,55 +64,6 @@ class Taxes {
     if (this.totalTaxableIncome === 0) return 0;
     return this.federalTaxesOwed / this.totalTaxableIncome;
   }
-
-  // /**
-  //  * Gets the total tax burden including federal and other taxes.
-  //  *
-  //  * @returns {number} Total taxes owed from all sources
-  //  */
-  // get totalTaxes() {
-  //   return 0;
-  //   // return this.federalTaxesOwed + this.otherTaxes;
-  // }
-
-  // /**
-  //  * Calculates net income after all taxes.
-  //  *
-  //  * @returns {number} Gross income minus total taxes
-  //  */
-  // get netIncome() {
-  //   return this.totalTaxableIncome - this.totalTaxes;
-  // }
-
-  // /**
-  //  * Creates a summary object with key tax metrics.
-  //  *
-  //  * @returns {Object} Summary containing:
-  //  *   - grossIncome: Total gross income
-  //  *   - adjustedGrossIncome: Gross income after adjustments
-  //  *   - standardDeduction: Standard deduction amount
-  //  *   - taxableIncome: Income subject to taxation
-  //  *   - federalTaxes: Federal tax liability
-  //  *   - otherTaxes: Additional taxes
-  //  *   - totalTaxes: Combined tax burden
-  //  *   - netIncome: Income after all taxes
-  //  *   - effectiveTaxRate: Effective tax rate as percentage
-  //  *   - isValid: Whether calculations appear consistent
-  //  */
-  // getSummary() {
-  //   return {
-  //     grossIncome: this.grossIncome,
-  //     // adjustedGrossIncome: this.adjustedGrossIncome,
-  //     standardDeduction: this.standardDeduction,
-  //     taxableIncome: this.taxableIncome,
-  //     federalTaxes: this.federalTaxesOwed,
-  //     otherTaxes: this.otherTaxes,
-  //     totalTaxes: this.totalTaxes,
-  //     netIncome: this.netIncome,
-  //     effectiveTaxRate: (this.effectiveTaxRate * 100).toFixed(2) + "%",
-  //     isValid: this.isCalculationValid(),
-  //   };
-  // }
 
   /**
    * Factory method to create a Taxes instance from income and deduction data.
@@ -177,44 +119,6 @@ class Taxes {
       "Taxes"
     );
   }
-
-  // /**
-  //  * @param {WorkingYearIncome} workingYearIncome
-  //  * @param {FiscalData} fiscalData
-  //  * @param {Demographics} demographics
-  //  */
-  // static CreateForWorkingYearIncome(
-  //   workingYearIncome,
-  //   fiscalData,
-  //   demographics
-  // ) {
-  //   const standardDeduction = TaxCalculations.getStandardDeduction(
-  //     fiscalData,
-  //     demographics
-  //   );
-
-  //   const taxableIncome = Math.max(
-  //     0,
-  //     workingYearIncome.adjustedGrossIncome - standardDeduction
-  //   );
-
-  //   const federalIncomeTaxOwed = TaxCalculations.determineFederalIncomeTax(
-  //     workingYearIncome.totalTaxableIncome,
-  //     workingYearIncome.adjustedGrossIncome,
-  //     fiscalData,
-  //     demographics
-  //   );
-
-  //   return new Taxes(
-  //     workingYearIncome.totalTaxableIncome,
-  //     workingYearIncome.adjustedGrossIncome,
-  //     standardDeduction,
-  //     taxableIncome,
-  //     federalIncomeTaxOwed, // federalTaxesOwed - to be calculated later
-  //     0, // otherTaxes - to be calculated later
-  //     "Taxes"
-  //   );
-  // }
 }
 
 export { Taxes };
