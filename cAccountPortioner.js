@@ -5,6 +5,7 @@ import { Demographics } from "./cDemographics.js";
 import { EnumBase } from "./cEnum.js";
 import { Trad401kAvailabilityManager } from "./cTrad401kAvailabilityManager.js";
 import { AccountPortioner401k } from "./cAccountPortioner401k.js";
+import { Common } from "./cCommon.js";
 
 const ProportionStrategyNames = /** @type {const} */ ({
   EqualShares: "equalShares",
@@ -494,6 +495,77 @@ class AccountPortioner {
       }
     }
     return 0;
+  }
+
+  get portionedGrossAmountCombined() {
+    const result =
+      this.trad401kAccountPortions?.combinedFinalWithdrawalGross ?? 0;
+    return Math.max(result, 0);
+  }
+  get subjectGrossFundsAvailable() {
+    const result = this.#demographics.isSubjectEligibleFor401k
+      ? this.#accountYear.getAvailableFunds([ACCOUNT_TYPES.SUBJECT_401K])
+      : 0;
+    return result;
+  }
+
+  get partnerGrossFundsAvailable() {
+    const result = this.#demographics.isPartnerEligibleFor401k
+      ? this.#accountYear.getAvailableFunds([ACCOUNT_TYPES.PARTNER_401K])
+      : 0;
+    return result;
+  }
+
+  get combinedGrossFundsAvailable() {
+    return this.subjectGrossFundsAvailable + this.partnerGrossFundsAvailable;
+  }
+
+  get subjectPortion() {
+    if (this.combinedGrossFundsAvailable === 0) return 0;
+
+    if (!this.#demographics.hasPartner) return 1;
+
+    return this.subjectGrossFundsAvailable / this.combinedGrossFundsAvailable;
+  }
+
+  get partnerPortion() {
+    if (this.combinedGrossFundsAvailable === 0) return 0;
+
+    if (!this.#demographics.hasPartner) return 0;
+
+    return 1 - this.subjectPortion;
+  }
+
+  get combinedGrossWithdrawalAmount() {
+    // Take the lesser of the portioned gross amount and the available funds
+    return Math.min(
+      this.portionedGrossAmountCombined,
+      this.combinedGrossFundsAvailable
+    );
+  }
+
+  get subjectGrossWithdrawalAmount() {
+    return this.subjectPortion * this.combinedGrossWithdrawalAmount;
+  }
+
+  get subjectNetWithdrawalAmount() {
+    const actualAmount = Common.convertGross401kToActual401k(
+      this.subjectGrossWithdrawalAmount,
+      this.#fiscalData.flatTrad401kWithholdingRate ?? 0
+    );
+    return actualAmount;
+  }
+
+  get partnerGrossWithdrawalAmount() {
+    return this.partnerPortion * this.combinedGrossWithdrawalAmount;
+  }
+
+  get partnerNetWithdrawalAmount(){
+    const actualAmount = Common.convertGross401kToActual401k(
+      this.partnerGrossWithdrawalAmount,
+      this.#fiscalData.flatTrad401kWithholdingRate ?? 0
+    );
+    return actualAmount;
   }
 
   /**

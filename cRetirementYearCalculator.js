@@ -861,66 +861,29 @@ class RetirementYearCalculator {
     this.#reportingYear.ReportData.taxes_401kWithholdingRate =
       this.#fiscalData.flatTrad401kWithholdingRate;
 
-    const portionedGrossAmountCombined =
-      this.#accountPortioner?.trad401kAccountPortions
-        ?.combinedFinalWithdrawalGross ?? 0;
-    if (portionedGrossAmountCombined <= 0) return;
-
-    const subjectGrossFundsAvailable = this.#demographics
-      .isSubjectEligibleFor401k
-      ? this.#accountYear.getAvailableFunds([ACCOUNT_TYPES.SUBJECT_401K])
-      : 0;
-
-    const partnerGrossFundsAvailable = this.#demographics
-      .isPartnerEligibleFor401k
-      ? this.#accountYear.getAvailableFunds([ACCOUNT_TYPES.PARTNER_401K])
-      : 0;
-
-    const combinedGrossFundsAvailable =
-      subjectGrossFundsAvailable + partnerGrossFundsAvailable;
-
-    if (combinedGrossFundsAvailable <= 0) return;
-
-    const combinedGrossWithdrawalAmount = Math.min(
-      portionedGrossAmountCombined,
-      combinedGrossFundsAvailable
-    );
-
-    const subjectPortion =
-      subjectGrossFundsAvailable / combinedGrossFundsAvailable;
-    const partnerPortion = 1 - subjectPortion;
-
-    const subjectGrossWithdrawalAmount =
-      combinedGrossWithdrawalAmount * subjectPortion;
-
-    const partnerGrossWithdrawalAmount =
-      combinedGrossWithdrawalAmount * partnerPortion;
-
-    this.#processSubjectGrossPeriodic401kIncome(subjectGrossWithdrawalAmount);
-
-    this.#processPartnerGrossPeriodic401kIncome(partnerGrossWithdrawalAmount);
+    this.#processSubjectPeriodic401kIncome();
+    this.#processPartnerPeriodic401kIncome();
   }
 
   /**
-   * @param {number} grossAmount
    * @param {string} [memo]
    */
-  #processSubjectGrossPeriodic401kIncome(grossAmount, memo) {
-    const actualAmount = Common.convertGross401kToActual401k(
-      grossAmount,
-      this.#fiscalData.flatTrad401kWithholdingRate ?? 0
-    );
+  #processSubjectPeriodic401kIncome(memo) {
+    if (!this.#accountPortioner) return;
+
+    const grossAmount = this.#accountPortioner.subjectGrossWithdrawalAmount;
+    const takehomeAmount = this.#accountPortioner.subjectNetWithdrawalAmount;
 
     this.#accountYear.processAsPeriodicTransfers(
       ACCOUNT_TYPES.SUBJECT_401K,
       ACCOUNT_TYPES.CASH,
-      actualAmount,
+      takehomeAmount,
       PERIODIC_FREQUENCY.MONTHLY,
       TransactionCategory.IncomeNet,
       memo
     );
 
-    const withholdingAmount = grossAmount - actualAmount;
+    const withholdingAmount = grossAmount - takehomeAmount;
 
     this.#accountYear.processAsPeriodicTransfers(
       ACCOUNT_TYPES.SUBJECT_401K,
@@ -936,29 +899,28 @@ class RetirementYearCalculator {
     this.#reportingYear.ReportData.income_subject401kWithholdings =
       withholdingAmount.asCurrency();
     this.#reportingYear.ReportData.income_subject401kTakehome =
-      actualAmount.asCurrency();
+      takehomeAmount.asCurrency();
   }
 
   /**
-   * @param {number} grossAmount
    * @param {string} [memo]
    */
-  #processPartnerGrossPeriodic401kIncome(grossAmount, memo) {
-    const actualAmount = Common.convertGross401kToActual401k(
-      grossAmount,
-      this.#fiscalData.flatTrad401kWithholdingRate ?? 0
-    );
+  #processPartnerPeriodic401kIncome(memo) {
+    if (!this.#accountPortioner) return;
+
+    const grossAmount = this.#accountPortioner.partnerGrossWithdrawalAmount;
+    const takehomeAmount = this.#accountPortioner.partnerNetWithdrawalAmount;
 
     this.#accountYear.processAsPeriodicTransfers(
       ACCOUNT_TYPES.PARTNER_401K,
       ACCOUNT_TYPES.CASH,
-      actualAmount,
+      takehomeAmount,
       PERIODIC_FREQUENCY.MONTHLY,
       TransactionCategory.IncomeNet,
       memo
     );
 
-    const withholdingAmount = grossAmount - actualAmount;
+    const withholdingAmount = grossAmount - takehomeAmount;
 
     this.#accountYear.processAsPeriodicTransfers(
       ACCOUNT_TYPES.PARTNER_401K,
@@ -974,7 +936,7 @@ class RetirementYearCalculator {
     this.#reportingYear.ReportData.income_partner401kWithholdings +=
       withholdingAmount.asCurrency();
     this.#reportingYear.ReportData.income_partner401kTakehome +=
-      actualAmount.asCurrency();
+      takehomeAmount.asCurrency();
   }
 
   #drawRothPortions() {
