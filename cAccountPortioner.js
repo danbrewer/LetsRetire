@@ -5,7 +5,6 @@ import { Demographics } from "./cDemographics.js";
 import { EnumBase } from "./cEnum.js";
 import { Trad401kAvailabilityManager } from "./cTrad401kAvailabilityManager.js";
 import { AccountPortioner401k } from "./cAccountPortioner401k.js";
-import { TransactionCategory } from "./cTransaction.js";
 
 const ProportionStrategyNames = /** @type {const} */ ({
   EqualShares: "equalShares",
@@ -375,90 +374,6 @@ class AccountPortioner {
       .asCurrency();
   }
 
-  // /** @param {number} cashOnHand */
-  // calculatePortions(cashOnHand) {
-  //   const annualSpend = this.#fiscalData.spend.asCurrency();
-  //   let ask = annualSpend - cashOnHand.asCurrency();
-
-  //   if (ask <= 0) return;
-
-  //   // to prevent never reaching zero, if the fund is less than $100 remaining, just take it all
-
-  //   let availableSavings = this.#availableSavings.asCurrency();
-  //   if (availableSavings > 0 && availableSavings < 100) {
-  //     ask -= availableSavings;
-  //     this.#savingsWithdrawal = availableSavings;
-  //     availableSavings = 0;
-  //   }
-
-  //   let available401k =
-  //     this.#trad401kAccountPortioner.combined401kTakehomeAvailable.asCurrency();
-  //   if (available401k > 0 && available401k < 100) {
-  //     ask -= available401k;
-  //     this.#final401kPortions = new AccountPortioner401k(
-  //       this.#trad401kAccountPortioner,
-  //       available401k.asCurrency(),
-  //       available401k.asCurrency(),
-  //       this.#fiscalData
-  //     );
-  //     available401k = 0;
-  //   }
-
-  //   let availableRoth = this.#availableRoth.asCurrency();
-  //   if (availableRoth > 0 && availableRoth < 100) {
-  //     ask -= availableRoth;
-  //     this.#rothIraWithdrawal = availableRoth;
-  //     availableRoth = 0;
-  //   }
-
-  //   ask = Math.max(ask, 0).asCurrency();
-
-  //   let totalFundsAvailable = availableSavings + available401k + availableRoth;
-
-  //   totalFundsAvailable = Math.max(totalFundsAvailable, 0).asCurrency();
-
-  //   if (available401k.asCurrency() > 0 && ask > 0) {
-  //     this.#final401kPortions = this.#determineFinal401kPortions(
-  //       this.#trad401kAccountPortioner,
-  //       ask,
-  //       totalFundsAvailable
-  //     );
-  //     ask -= this.#final401kPortions.combinedFinalWithdrawalNet.asCurrency();
-  //   }
-
-  //   ask = Math.max(ask, 0).asCurrency();
-
-  //   totalFundsAvailable = this.#availableSavings + this.#availableRoth;
-  //   totalFundsAvailable = Math.max(totalFundsAvailable, 0).asCurrency();
-
-  //   let withdrawFromSavings = 0;
-  //   if (availableSavings > 0 && ask > 0) {
-  //     const pctThatIsSavings =
-  //       totalFundsAvailable > 0
-  //         ? this.#availableSavings / totalFundsAvailable
-  //         : 0;
-  //     withdrawFromSavings = (ask * pctThatIsSavings).asCurrency();
-  //     this.#savingsWithdrawal = withdrawFromSavings;
-  //   }
-
-  //   let withdrawFromRoth = 0;
-  //   if (availableRoth > 0 && ask > 0) {
-  //     const pctThatIsRoth =
-  //       totalFundsAvailable > 0 ? this.#availableRoth / totalFundsAvailable : 0;
-  //     withdrawFromRoth = (ask * pctThatIsRoth).asCurrency();
-  //     this.#rothIraWithdrawal = withdrawFromRoth;
-  //   }
-
-  //   const withdrawFrom401k =
-  //     this.#final401kPortions?.combinedFinalWithdrawalNet ?? 0;
-
-  //   let totalWithdrawals =
-  //     withdrawFrom401k + withdrawFromSavings + withdrawFromRoth;
-
-  //   this.#totalActualWithdrawals = totalWithdrawals.asCurrency();
-
-  // }
-
   /**
    * @param {number} ask
    * @param {number} totalFundsAvailable
@@ -510,32 +425,6 @@ class AccountPortioner {
     return 0;
   }
 
-  // #rothIraPortion() {
-  //   return this.#totalAvailable() > 0
-  //     ? this.#tradRothAvailable() / this.#totalAvailable()
-  //     : 0;
-  // }
-
-  // #totalAvailable() {
-  //   return (
-  //     this.#savingsAvailable() +
-  //     this.#actual401kAvailable() +
-  //     this.#tradRothAvailable()
-  //   );
-  // }
-
-  // get savingsPortion() {
-  //   return (this.#savingsPortion() * this.#ask).asCurrency();
-  // }
-
-  // get trad401kPortion() {
-  //   return (this.#actual401kPortion() * this.#ask).asCurrency();
-  // }
-
-  // get rothPortion() {
-  //   return (this.#rothIraPortion() * this.#ask).asCurrency();
-  // }
-
   /**
    * @param {AccountingYear} accountYear
    * @param {FiscalData} fiscalData
@@ -550,66 +439,6 @@ class AccountPortioner {
     );
     return portioner;
   }
-
-  // calculatePortions() {
-  //   let ask = this.#fiscalData.spend;
-
-  //   // estimated income from SS, pension, RMDs, etc. will reduce the "ask"
-  //   const netFixedIncome = this.#fixedIncomeStreams.totalActualFixedIncome;
-
-  //   ask = (ask - netFixedIncome).asCurrency();
-
-  //   if (ask <= 0) {
-  //     this.#ask = 0;
-  //     return;
-  //   }
-
-  //   const rmd = Common.calculateRMD(
-  //     this.#fiscalData.useRmd,
-  //     this.#demographics.currentAge,
-  //     this.#accountYear.getStartingBalance(ACCOUNT_TYPES.SUBJECT_401K)
-  //   );
-
-  //   const available401k = this.#actual401kAvailable();
-
-  //   // We know what the "ask" is, so we can interpolate the portions based on a binary search
-  //   let lo = 0;
-  //   let hi = Math.min(ask * 2, this.#actual401kAvailable());
-
-  //   this.#ask = hi;
-  //   const maximumIterations = 80;
-  //   let guestimatedVariableIncomeNeeded = 0;
-
-  //   let incomeBreakdown = this.#calculateIncomeBreakdown(this.trad401kAsk);
-
-  //   if (incomeBreakdown?.netIncome.asCurrency() < ask) {
-  //     for (let i = 0; i < maximumIterations; i++) {
-  //       this.#ask = (lo + hi) / 2;
-
-  //       incomeBreakdown = this.#calculateIncomeBreakdown(this.trad401kAsk);
-
-  //       const netIncome = incomeBreakdown?.netIncome.asCurrency() ?? 0;
-
-  //       if (netIncome == ask.asCurrency()) break;
-  //       if (netIncome < ask) lo = guestimatedVariableIncomeNeeded;
-  //       else hi = guestimatedVariableIncomeNeeded;
-  //       if (hi.asCurrency() - lo.asCurrency() <= 0.01) break;
-  //     }
-  //   }
-  // }
-
-  // /** @param {number} variableIncomeAmount
-  //  * @return {IncomeBreakdown}
-  //  */
-  // #calculateIncomeBreakdown(variableIncomeAmount) {
-  //   const incomeStream =
-  //     this.#retirementIncomeCalculator.calculateIncomeBreakdown(
-  //       variableIncomeAmount,
-  //       this.#incomeStreams
-  //     );
-
-  //   return incomeStream;
-  // }
 }
 
 export { AccountPortioner };
