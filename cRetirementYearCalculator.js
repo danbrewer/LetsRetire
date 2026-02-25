@@ -7,10 +7,7 @@ import { Demographics } from "./cDemographics.js";
 import { FiscalData } from "./cFiscalData.js";
 import { FixedIncomeStreams } from "./cFixedIncomeStreams.js";
 import { Inputs } from "./cInputs.js";
-import {
-  constsJS_FILING_STATUS,
-  PERIODIC_FREQUENCY,
-} from "./consts.js";
+import { constsJS_FILING_STATUS, PERIODIC_FREQUENCY } from "./consts.js";
 import { ReportingYear } from "./cReporting.js";
 import { ReportsManager } from "./cReportsManager.js";
 import { RetirementYearData } from "./cRetirementYearData.js";
@@ -64,7 +61,7 @@ class RetirementYearCalculator {
     this.#accountYear = accountYear;
     this.#reportingYear = reportingYear;
     this.#demographics = Demographics.CreateUsing(this.#inputs, true, false);
-    this.#fiscalData = FiscalData.CreateUsing(this.#inputs, this.#inputs.startingYear);
+    this.#fiscalData = FiscalData.CreateUsing(this.#inputs);
 
     this.#fixedIncomeStreams = FixedIncomeStreams.CreateUsing(
       this.#demographics,
@@ -92,6 +89,12 @@ class RetirementYearCalculator {
 
     this.#reportingYear.ReportData.inflationRate =
       this.#fiscalData.inflationRate;
+
+    this.#reportingYear.ReportData.demographics_isRetired =
+      this.#demographics.isRetired;
+
+    this.#reportingYear.ReportData.spending_taper_rate =
+      this.#fiscalData.speningTaperRate;
 
     this.#reportingYear.ReportData.demographics_isWidowed =
       !this.#demographics.isWidowed;

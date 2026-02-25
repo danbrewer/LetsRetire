@@ -4,10 +4,7 @@ import { Demographics } from "./cDemographics.js";
 import { FiscalData } from "./cFiscalData.js";
 import { FixedIncomeStreams } from "./cFixedIncomeStreams.js";
 import { Inputs } from "./cInputs.js";
-import {
-  PERIODIC_FREQUENCY,
-  constsJS_FILING_STATUS,
-} from "./consts.js";
+import { PERIODIC_FREQUENCY, constsJS_FILING_STATUS } from "./consts.js";
 import { ReportingYear } from "./cReporting.js";
 import { Taxes } from "./cTaxes.js";
 import { TransactionCategory } from "./cTransaction.js";
@@ -42,7 +39,7 @@ class WorkingYearCalculator {
     this.#inputs = inputs;
     this.#accountYear = accountYear;
     this.#demographics = Demographics.CreateUsing(inputs, false, true);
-    this.#fiscalData = FiscalData.CreateUsing(inputs, inputs.startingYear);
+    this.#fiscalData = FiscalData.CreateUsing(inputs);
     this.#reportingYear = reportingYear;
 
     this.#fixedIncomeStreams = FixedIncomeStreams.CreateUsing(
@@ -60,6 +57,11 @@ class WorkingYearCalculator {
       this.#fiscalData.inflationRate;
 
     this.#reportingYear.ReportData.year = this.#fiscalData.taxYear;
+
+    this.#reportingYear.ReportData.demographics_isRetired =
+      this.#demographics.isRetired;
+
+    this.#reportingYear.ReportData.spending_taper_rate = this.#fiscalData.speningTaperRate;
 
     this.#reportingYear.ReportData.demographics_isWidowed =
       !this.#demographics.isWidowed;

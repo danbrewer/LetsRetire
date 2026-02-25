@@ -150,6 +150,8 @@ class ReportData extends BaseReports {
     this.demographics_numberOfDependents = 0;
     this.demographics_hasPartner = false;
     this.demographics_isWidowed = false;
+    this.demographics_isRetired = false;
+
     this.demographics_spendingBasisYear = 0;
 
     // WAGES AND COMPENSATION
@@ -203,6 +205,7 @@ class ReportData extends BaseReports {
     this.spending_shortfall = 0;
     this.spending_surplus = 0;
     this.spending_basis = 0;
+    this.spending_taper_rate = 0;
 
     // TAXES
     this.taxes_grossIncome = 0;

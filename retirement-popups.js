@@ -483,6 +483,15 @@ function showAnnualSpendBreakdown(data) {
     </div>
     `;
 
+  if (data.demographics_isRetired){
+    breakdownHtml += `
+     <div class="ss-breakdown-item">
+        <span class="ss-breakdown-label">Spending reduction rate:</span>
+        <span class="ss-breakdown-value">${(data.spending_taper_rate * 100).toFixed(2)}%</span>
+    </div>
+    `;
+  }
+
   breakdownHtml += `
    <div class="ss-breakdown-item breakdown-accent">
         <span class="ss-breakdown-label">Spend:</span>
