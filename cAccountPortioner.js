@@ -497,72 +497,82 @@ class AccountPortioner {
     return 0;
   }
 
-  get portionedGrossAmountCombined() {
+  get portionedGross401kAmountCombined() {
     const result =
       this.trad401kAccountPortions?.combinedFinalWithdrawalGross ?? 0;
     return Math.max(result, 0);
   }
-  get subjectGrossFundsAvailable() {
+
+  get subjectGross401kFundsAvailable() {
     const result = this.#demographics.isSubjectEligibleFor401k
       ? this.#accountYear.getAvailableFunds([ACCOUNT_TYPES.SUBJECT_401K])
       : 0;
     return result;
   }
 
-  get partnerGrossFundsAvailable() {
+  get partnerGross401kFundsAvailable() {
     const result = this.#demographics.isPartnerEligibleFor401k
       ? this.#accountYear.getAvailableFunds([ACCOUNT_TYPES.PARTNER_401K])
       : 0;
     return result;
   }
 
-  get combinedGrossFundsAvailable() {
-    return this.subjectGrossFundsAvailable + this.partnerGrossFundsAvailable;
-  }
-
-  get subjectPortion() {
-    if (this.combinedGrossFundsAvailable === 0) return 0;
-
-    if (!this.#demographics.hasPartner) return 1;
-
-    return this.subjectGrossFundsAvailable / this.combinedGrossFundsAvailable;
-  }
-
-  get partnerPortion() {
-    if (this.combinedGrossFundsAvailable === 0) return 0;
-
-    if (!this.#demographics.hasPartner) return 0;
-
-    return 1 - this.subjectPortion;
-  }
-
-  get combinedGrossWithdrawalAmount() {
-    // Take the lesser of the portioned gross amount and the available funds
-    return Math.min(
-      this.portionedGrossAmountCombined,
-      this.combinedGrossFundsAvailable
+  get combinedGross401kFundsAvailable() {
+    return (
+      this.subjectGross401kFundsAvailable + this.partnerGross401kFundsAvailable
     );
   }
 
-  get subjectGrossWithdrawalAmount() {
-    return this.subjectPortion * this.combinedGrossWithdrawalAmount;
+  // get subject401kPortion() {
+  //   if (this.combinedGross401kFundsAvailable === 0) return 0;
+
+  //   if (!this.#demographics.hasPartner) return 1;
+
+  //   return (
+  //     this.subjectGross401kFundsAvailable / this.combinedGross401kFundsAvailable
+  //   );
+  // }
+
+  // get partner401kPortion() {
+  //   if (this.combinedGross401kFundsAvailable === 0) return 0;
+
+  //   if (!this.#demographics.hasPartner) return 0;
+
+  //   return 1 - this.subject401kPortion;
+  // }
+
+  get combinedGross401kWithdrawalAmount() {
+    return this.#final401kPortions?.combinedFinalWithdrawalGross ?? 0;
+    // Take the lesser of the portioned gross amount and the available funds
+    return Math.min(
+      this.portionedGross401kAmountCombined,
+      this.combinedGross401kFundsAvailable
+    );
   }
 
-  get subjectNetWithdrawalAmount() {
+  get subjectGross401kWithdrawalAmount() {
+    return this.#final401kPortions?.subjectFinalWithdrawalGross ?? 0;
+    // return this.subject401kPortion * this.combinedGross401kWithdrawalAmount;
+  }
+
+  get subjectNet401kWithdrawalAmount() {
+    return this.#final401kPortions?.subjectFinalWithdrawalNet;
     const actualAmount = Common.convertGross401kToActual401k(
-      this.subjectGrossWithdrawalAmount,
+      this.subjectGross401kWithdrawalAmount,
       this.#fiscalData.flatTrad401kWithholdingRate ?? 0
     );
     return actualAmount;
   }
 
-  get partnerGrossWithdrawalAmount() {
-    return this.partnerPortion * this.combinedGrossWithdrawalAmount;
+  get partnerGross401kWithdrawalAmount() {
+    return this.#final401kPortions?.partnerFinalWithdrawalGross ?? 0;
+    // return this.partner401kPortion * this.combinedGross401kWithdrawalAmount;
   }
 
-  get partnerNetWithdrawalAmount(){
+  get partnerNetWithdrawalAmount() {
+    return this.#final401kPortions?.partnerFinalWithdrawalNet ?? 0;
     const actualAmount = Common.convertGross401kToActual401k(
-      this.partnerGrossWithdrawalAmount,
+      this.partnerGross401kWithdrawalAmount,
       this.#fiscalData.flatTrad401kWithholdingRate ?? 0
     );
     return actualAmount;

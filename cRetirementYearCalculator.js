@@ -871,8 +871,10 @@ class RetirementYearCalculator {
   #processSubjectPeriodic401kIncome(memo) {
     if (!this.#accountPortioner) return;
 
-    const grossAmount = this.#accountPortioner.subjectGrossWithdrawalAmount;
-    const takehomeAmount = this.#accountPortioner.subjectNetWithdrawalAmount;
+    const grossAmount =
+      this.#accountPortioner.subjectGross401kWithdrawalAmount.asCurrency();
+    const takehomeAmount =
+      this.#accountPortioner.subjectNet401kWithdrawalAmount.asCurrency();
 
     this.#accountYear.processAsPeriodicTransfers(
       ACCOUNT_TYPES.SUBJECT_401K,
@@ -908,8 +910,10 @@ class RetirementYearCalculator {
   #processPartnerPeriodic401kIncome(memo) {
     if (!this.#accountPortioner) return;
 
-    const grossAmount = this.#accountPortioner.partnerGrossWithdrawalAmount;
-    const takehomeAmount = this.#accountPortioner.partnerNetWithdrawalAmount;
+    const grossAmount =
+      this.#accountPortioner.partnerGross401kWithdrawalAmount.asCurrency();
+    const takehomeAmount =
+      this.#accountPortioner.partnerNetWithdrawalAmount.asCurrency();
 
     this.#accountYear.processAsPeriodicTransfers(
       ACCOUNT_TYPES.PARTNER_401K,

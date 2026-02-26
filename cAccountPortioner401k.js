@@ -8,7 +8,7 @@ class AccountPortioner401k {
   /** @type {number} */
   #ask;
   /** @type {number} */
-  #totalCashAllocatedForSpend;
+  #totalFundsAvailable;
   /** @type {FiscalData} */
   #fiscalData;
 
@@ -21,15 +21,15 @@ class AccountPortioner401k {
   constructor(trad401kFunds, ask, totalFundsAvailable, fiscalData) {
     this.#trad401kFunds = trad401kFunds;
     this.#ask = ask;
-    this.#totalCashAllocatedForSpend = totalFundsAvailable;
+    this.#totalFundsAvailable = totalFundsAvailable;
     this.#fiscalData = fiscalData;
   }
 
   get #percentageOfTotalAllocatedSpendFundsThatIsActualized401k() {
-    if (this.#totalCashAllocatedForSpend === 0) return 0;
+    if (this.#totalFundsAvailable === 0) return 0;
     return (
       this.#trad401kFunds.combined401kTakehomeAvailable /
-      this.#totalCashAllocatedForSpend
+      this.#totalFundsAvailable
     );
   }
 
@@ -76,7 +76,7 @@ class AccountPortioner401k {
     return Common.convertActual401kToGross401k(
       this.partnerFinalWithdrawalNet,
       this.#fiscalData.flatTrad401kWithholdingRate ?? 0
-    );
+    ).asCurrency();
   }
 
   get combinedFinalWithdrawalGross() {
@@ -86,6 +86,7 @@ class AccountPortioner401k {
   }
 
   get combinedFinalWithdrawalNet() {
+    return this.subjectFinalWithdrawalNet + this.partnerFinalWithdrawalNet;
     return Common.convertGross401kToActual401k(
       this.combinedFinalWithdrawalGross,
       this.#fiscalData.flatTrad401kWithholdingRate ?? 0
