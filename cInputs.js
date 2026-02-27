@@ -9,6 +9,13 @@ import { ACCOUNT_TYPES } from "./cAccount.js";
  * @property {number} amount - Extra spending amount for that year
  *
  * @typedef {Partial<Inputs>} InputsOptions
+ *
+ * @typedef {Object} WithdrawalLimitOverride
+ * @property {number} year
+ * @property {number} trad401kLimit
+ * @property {number} rothLimit
+ * @property {number} savingsLimit
+ *
  */
 
 class Inputs {
@@ -99,6 +106,7 @@ class Inputs {
         ACCOUNT_TYPES.SUBJECT_ROTH_IRA,
       ],
       pensionAnnuities = [],
+      withdrawalLimits = [],
 
       // Savings contribution knobs
       subjectWorkingYearSavingsContributionFixedAmount = 0,
@@ -142,6 +150,9 @@ class Inputs {
 
     /** @type {PensionAnnuity[]} */
     this.pensionAnnuities = pensionAnnuities;
+
+    /** @type {WithdrawalLimitOverride[]} */
+    this.withdrawalLimits = withdrawalLimits;
 
     /** @type {number} */
     this.subject401kStartAge = subject401kStartAge;
@@ -619,6 +630,17 @@ class Inputs {
       (rye) => rye.year === this.#retirementYearIndex + 1
     );
     return spendingOverride ? spendingOverride.amount : 0;
+  }
+
+  /**
+   * @returns @type { WithdrawalLimitOverride | null }
+   */
+  get withdrawalCaps() {
+    const withdrawalLimits =
+      this.withdrawalLimits.find(
+        (rye) => rye.year === this.#retirementYearIndex + 1
+      ) ?? null;
+    return withdrawalLimits;
   }
 
   /**

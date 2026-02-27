@@ -72,7 +72,8 @@ class RetirementYearCalculator {
     this.#accountPortioner = AccountPortioner.CreateFrom(
       this.#accountYear,
       this.#fiscalData,
-      this.#demographics
+      this.#demographics,
+      this.#inputs
     );
 
     this.#adjustableIncomeStreams = new AdjustableIncomeStreams(

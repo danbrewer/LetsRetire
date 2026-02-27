@@ -52,10 +52,19 @@ class AccountPortioner401k {
   }
 
   get subjectFinalWithdrawalNet() {
+    // RMD always takes precedence if it's more than the desired withdrawal
     return Math.max(
       this.#subjectActualizedPortionOf401kAsk,
       this.#trad401kFunds.subject401kRMDActualized
     ).asCurrency();
+  }
+
+  get usingSubjectRMD() {
+    return this.#trad401kFunds.subject401kRMDActualized > this.#subjectActualizedPortionOf401kAsk;
+  }
+
+  get usingPartnerRMD(){
+    return this.#trad401kFunds.partner401kRMDActualized > this.#partnerActualizedPortionOf401kAsk;
   }
 
   get subjectFinalWithdrawalGross() {
@@ -66,6 +75,7 @@ class AccountPortioner401k {
   }
 
   get partnerFinalWithdrawalNet() {
+    // RMD always takes precedence if it's more than the desired withdrawal
     return Math.max(
       this.#partnerActualizedPortionOf401kAsk,
       this.#trad401kFunds.partner401kRMDActualized

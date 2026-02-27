@@ -6,6 +6,7 @@ import { EnumBase } from "./cEnum.js";
 import { Trad401kAvailabilityManager } from "./cTrad401kAvailabilityManager.js";
 import { AccountPortioner401k } from "./cAccountPortioner401k.js";
 import { Common } from "./cCommon.js";
+import { Inputs } from "./cInputs.js";
 
 const ProportionStrategyNames = /** @type {const} */ ({
   EqualShares: "equalShares",
@@ -75,6 +76,8 @@ class AccountPortioner {
   #fiscalData;
   /** @type {Demographics} */
   #demographics;
+  /** @type {Inputs} */
+  #inputs;
 
   /** @type {number} */
   #totalActualWithdrawals = 0;
@@ -115,15 +118,18 @@ class AccountPortioner {
    * @param {AccountingYear} accountYear
    * @param {FiscalData} fiscalData
    * @param {Demographics} demographics
+   * @param {Inputs} inputs
    */
-  constructor(accountYear, fiscalData, demographics) {
+  constructor(accountYear, fiscalData, demographics, inputs) {
     this.#accountYear = accountYear;
     this.#demographics = demographics;
     this.#fiscalData = fiscalData;
+    this.#inputs = inputs;
     this.#trad401kAccountPortioner = new Trad401kAvailabilityManager(
       this.#fiscalData,
       this.#demographics,
-      this.#accountYear
+      this.#accountYear,
+      this.#inputs
     );
   }
 
@@ -556,7 +562,7 @@ class AccountPortioner {
   }
 
   get subjectNet401kWithdrawalAmount() {
-    return this.#final401kPortions?.subjectFinalWithdrawalNet;
+    return this.#final401kPortions?.subjectFinalWithdrawalNet ?? 0;
     const actualAmount = Common.convertGross401kToActual401k(
       this.subjectGross401kWithdrawalAmount,
       this.#fiscalData.flatTrad401kWithholdingRate ?? 0
@@ -582,13 +588,15 @@ class AccountPortioner {
    * @param {AccountingYear} accountYear
    * @param {FiscalData} fiscalData
    * @param {Demographics} demographics
+   * @param {Inputs} inputs
    * @returns {AccountPortioner}
    */
-  static CreateFrom(accountYear, fiscalData, demographics) {
+  static CreateFrom(accountYear, fiscalData, demographics, inputs) {
     const portioner = new AccountPortioner(
       accountYear,
       fiscalData,
-      demographics
+      demographics,
+      inputs
     );
     return portioner;
   }
