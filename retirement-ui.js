@@ -23,9 +23,15 @@ import { createHelpIcon } from "./retirement-ui-help.js";
 import { showToast } from "./retirement-ui-toast.js";
 import { PensionAnnuityStorage } from "./cPensionAnnuityStorage.js";
 import { PensionAnnuityManager } from "./cPensionAnnuityManager.js";
-import { openPensionCreateModal, openPensionEditModal } from "./retirement-ui-pension-modal.js";
+import {
+  openPensionCreateModal,
+  openPensionEditModal,
+} from "./retirement-ui-pension-modal.js";
 import { openConfirmModal } from "./retirement-ui-confirm-modal.js";
 import { renderHealthcareExpensesFields } from "./cHealthcareExpenses.js";
+import { WithdrawalLimitManager } from "./cWithdrawalLimitsManager.js";
+import { openWithdrawalLimitCreateModal, openWithdrawalLimitEditModal } from "./retirement-ui-withdrawal-limit-modal.js";
+import { WithdrawalLimitStorage } from "./cWithdrawalLimitsStorage.js";
 
 const STORAGE_KEY = "retirement-calculator-inputs";
 
@@ -37,6 +43,12 @@ let pensionStorage = null;
 
 /** @type {PensionAnnuityManager|null} */
 let pensionManager = null;
+
+/** @type {WithdrawalLimitStorage|null} */
+let withdrawalLimitStorage = null;
+
+/** @type {WithdrawalLimitManager|null} */
+let withdrawalLimitManager = null;
 
 /**
  * @typedef OverrideFieldOptions
@@ -194,7 +206,7 @@ document.addEventListener("click", (e) => {
   const target = e.target;
   if (!(target instanceof Element)) return;
 
-  // list row buttons
+  // Pension list row buttons
   if (target.closest(".pension-row .edit")) {
     const btn = target.closest(".pension-row .edit");
     const id = btn?.getAttribute("data-id");
@@ -225,42 +237,35 @@ document.addEventListener("click", (e) => {
     closePensionModal();
     return;
   }
+
+  // Withdrawal limit list row buttons
+  if (target.closest(".withdrawal-limit-row .edit")) {
+    const btn = target.closest(".withdrawal-limit-row .edit");
+    const id = btn?.getAttribute("data-id");
+    if (!id || !withdrawalLimitManager) return;
+
+    openWithdrawalLimitEditModal(withdrawalLimitManager, id, {
+      renderWithdrawalLimitList,
+      markDirty,
+      doCalculations,
+      showToast,
+    },
+      num(UIField.CURRENT_YEAR),
+      num(UIField.SUBJECT_RETIRE_AGE),
+      num(UIField.SUBJECT_LIFESPAN),
+      num(UIField.PARTNER_RETIRE_AGE),
+      num(UIField.PARTNER_LIFESPAN));
+    return;
+  }
+
+  if (target.closest(".withdrawal-limit-row .delete")) {
+    const btn = target.closest(".withdrawal-limit-row .delete");
+    const id = btn?.getAttribute("data-id");
+    if (!id) return;
+    deleteWithdrawalLimit(id);
+    return;
+  }
 });
-
-// Add to the existing click event listener in setupEventListeners()
-// document.addEventListener("click", (e) => {
-//   const target = e.target;
-//   if (!(target instanceof Element)) return;
-
-//   if (target.matches(".pension-row .edit")) {
-//     const id = target.getAttribute("data-id");
-//     if (!id) {
-//       console.log("Pension ID not found for edit action");
-//       return;
-//     }
-//     editPension(id);
-//   }
-//   if (target.matches(".pension-row .delete")) {
-//     const id = target.getAttribute("data-id");
-//     if (!id) {
-//       console.log("Pension ID not found for delete action");
-//       return;
-//     }
-//     deletePension(id);
-//   }
-//   // Add new handlers for edit form
-//   if (target.matches(".save-pension")) {
-//     const id = target.getAttribute("data-id");
-//     if (!id) {
-//       console.log("Pension ID not found for save action");
-//       return;
-//     }
-//     savePensionEdit(id);
-//   }
-//   if (target.matches(".cancel-pension-edit")) {
-//     cancelPensionEdit();
-//   }
-// });
 
 // Events
 // Event listeners will be set up in setupEventListeners() after partials load
@@ -283,7 +288,6 @@ function setupEventListeners() {
     updateTaxFreeIncomeFieldsDisplayMode();
   });
 
-  
   $("addPensionBtn")?.addEventListener("click", () => {
     if (!pensionManager) return;
 
@@ -303,6 +307,30 @@ function setupEventListeners() {
         doCalculations,
         showToast,
       }
+    );
+  });
+
+  $("addWithdrawalLimitBtn")?.addEventListener("click", () => {
+    if (!withdrawalLimitManager) return;
+
+    openWithdrawalLimitCreateModal(
+      withdrawalLimitManager,
+      {
+        name: "New Withdrawal Limit",
+        year: num(UIField.CURRENT_YEAR),
+        amount: 0,
+      },
+      {
+        renderWithdrawalLimitList,
+        markDirty,
+        doCalculations,
+        showToast,
+      },
+      num(UIField.CURRENT_YEAR),
+      num(UIField.SUBJECT_RETIRE_AGE),
+      num(UIField.SUBJECT_LIFESPAN),
+      num(UIField.PARTNER_RETIRE_AGE),
+      num(UIField.PARTNER_LIFESPAN)
     );
   });
 }
@@ -507,7 +535,6 @@ function savePensionFromModal(id) {
   showToast("Success", "Pension updated successfully", "success");
 }
 
-
 /**
  * Delete a pension entry after user confirmation
  * @param {string} id - The pension ID to delete
@@ -530,6 +557,32 @@ function deletePension(id) {
       markDirty();
       doCalculations();
       showToast("Deleted", "Pension removed successfully", "success");
+    },
+  });
+}
+
+/**
+ * Delete a pension entry after user confirmation
+ * @param {string} id - The pension ID to delete
+ * @returns {void}
+ */
+function deleteWithdrawalLimit(id) {
+  if (!withdrawalLimitManager) return;
+
+  const withdrawalLimit = withdrawalLimitManager.getById(id);
+  if (!withdrawalLimit) return;
+
+  openConfirmModal({
+    title: "Delete Withdrawal Limit",
+    message: `Are you sure you want to delete this withdrawal limit? This action cannot be undone.`,
+    confirmText: "Delete",
+    cancelText: "Cancel",
+    onConfirm: () => {
+      withdrawalLimitManager?.delete(id);
+      renderWithdrawalLimitList();
+      markDirty();
+      doCalculations();
+      showToast("Deleted", "Withdrawal limit removed successfully", "success");
     },
   });
 }
@@ -1099,7 +1152,7 @@ function renderSpendingOverrideFields() {
     placeholder: "Auto",
     onBlur: handleSpendingFieldChange,
     startAge: num(UIField.SUBJECT_CURRENT_AGE),
-    startYear: num(UIField.CURRENT_YEAR)
+    startYear: num(UIField.CURRENT_YEAR),
   });
 }
 
@@ -1345,11 +1398,9 @@ function renderTaxableIncomeFields() {
     placeholder: "0",
     onBlur: handleTaxableIncomeFieldChange,
     startAge: num(UIField.SUBJECT_CURRENT_AGE),
-    startYear: num(UIField.CURRENT_YEAR)
+    startYear: num(UIField.CURRENT_YEAR),
   });
 }
-
-
 
 /**
  * @param {any} age
@@ -1694,15 +1745,55 @@ function renderPensionList() {
   });
 }
 
+function renderWithdrawalLimitList() {
+  const container = $("withdrawalLimitList");
+  if (!container) return;
+
+  if (!withdrawalLimitManager) return;
+
+  const list = withdrawalLimitManager.getAll();
+  container.innerHTML = "";
+
+  list.forEach((item) => {
+    const row = document.createElement("div");
+    row.className = "pension-row";
+
+    row.innerHTML = `
+      <div class="pension-info">
+        <strong>${item.name}</strong>
+        <div class="pension-details">${item.year}: $${item.amount.asCurrency()} 
+        </div>
+      </div>
+
+      <div class="pension-actions">
+        <button class="pension-btn pension-edit edit" data-id="${item.id}" title="Modify limits">
+          <span class="btn-icon">✏️</span>
+        </button>
+        <button class="pension-btn pension-delete delete" data-id="${item.id}" title="Remove limits">
+          <span class="btn-icon">❌</span>
+        </button>
+      </div>
+    `;
+
+    container.appendChild(row);
+  });
+}
+
 function initUI() {
-  loadPersistedInputs(); // ← ADD THIS FIRST
+  loadPersistedInputs();
 
   pensionStorage = new PensionAnnuityStorage(
     persistedInputs,
     savePersistedInputs
   );
 
+  withdrawalLimitStorage = new WithdrawalLimitStorage(
+    persistedInputs,
+    savePersistedInputs
+  );
+
   pensionManager = new PensionAnnuityManager(pensionStorage);
+  withdrawalLimitManager = new WithdrawalLimitManager(withdrawalLimitStorage);
 
   // Set up event listeners after partials are loaded
   setupEventListeners();
@@ -1717,6 +1808,7 @@ function initUI() {
   renderHealthcareExpensesFields();
   restorePersistedInputs(); // ← ADD THIS AFTER UI EXISTS
   renderPensionList();
+  renderWithdrawalLimitList();
   doCalculations();
   attachDirtyTracking();
 }

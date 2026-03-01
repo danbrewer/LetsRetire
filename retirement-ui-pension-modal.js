@@ -1,7 +1,12 @@
 // retirement-ui-pension-modal.js
 
+import { WithdrawalLimitManager } from "./cWithdrawalLimitsManager.js";
+
+
 /**
  * @typedef {import("./cPensionAnnuityManager.js").PensionAnnuityManager} PensionAnnuityManager
+ * @typedef {import("./cPensionAnnuityStorage.js").PensionAnnuityCreate} PensionAnnuityCreate
+ * @typedef {import("./cPensionAnnuityStorage.js").PensionAnnuity} PensionAnnuity
  */
 
 /**
@@ -50,7 +55,7 @@ export function closePensionModal() {
 export function openPensionCreateModal(pensionManager, defaults, deps) {
   closePensionModal();
 
-  /** @type {import("./cPensionAnnuityStorage.js").PensionAnnuityCreate} */
+  /** @type {PensionAnnuityCreate} */
   const draft = {
     owner: defaults.owner ?? "subject",
     name: defaults.name ?? "New Pension",
@@ -137,7 +142,7 @@ function focusName(inputKey) {
  * @property {"create"|"edit"} mode
  * @property {string} title
  * @property {string} inputKey
- * @property {import("./cPensionAnnuityStorage.js").PensionAnnuityCreate | import("./cPensionAnnuityStorage.js").PensionAnnuity} values
+ * @property {PensionAnnuityCreate | PensionAnnuity} values
  */
 
 /** @param {BuildModalArgs} args */
@@ -347,6 +352,7 @@ function wireModalEvents(args) {
 
         const nextBtn = buttonArray[newIndex];
         if (nextBtn) {
+          /* @ts-ignore */
           setOwner(nextBtn.dataset.owner || "subject");
         }
       }
