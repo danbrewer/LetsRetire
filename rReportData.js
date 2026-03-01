@@ -180,6 +180,9 @@ class ReportData extends BaseReports {
     this.income_subject401kWithholdings = 0;
     this.income_subject401kTakehome = 0;
 
+    this.income_subjectUsingRMD = false;
+    this.income_partnerUsingRMD = false;
+
     this.income_partner401kGross = 0;
     this.income_partner401kWithholdings = 0;
     this.income_partner401kTakehome = 0;
@@ -404,6 +407,11 @@ class ReportData extends BaseReports {
 
   get income_combined401kGross() {
     return this.income_subject401kGross + this.income_partner401kGross;
+  }
+
+  // Add an indicator to the grid (and popup) that RMD was used
+  get income_usingRMD(){
+    return this.income_subjectUsingRMD || this.income_partnerUsingRMD;
   }
 
   get income_combined401kWithholdings() {

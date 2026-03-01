@@ -100,7 +100,7 @@ class AccountPortioner {
   /** @type {boolean} */
   #drainSavingsAccount = false;
 
-  get drainSavings(){
+  get drainSavings() {
     return this.#drainSavingsAccount;
   }
 
@@ -118,7 +118,7 @@ class AccountPortioner {
   /** @type {boolean} */
   #drainRothAccounts = false;
 
-  get drainRothAccounts(){
+  get drainRothAccounts() {
     return this.#drainRothAccounts;
   }
 
@@ -306,7 +306,7 @@ class AccountPortioner {
           (this.#savingsWithdrawal = amt),
         getWithdrawal: () => this.#savingsWithdrawal ?? 0,
         min: MIN_WITHDRAWAL,
-        drainAccount:()=> this.#drainSavingsAccount = true
+        drainAccount: () => (this.#drainSavingsAccount = true),
       },
       {
         key: "roth",
@@ -315,7 +315,7 @@ class AccountPortioner {
           (this.#rothIraWithdrawal = amt),
         getWithdrawal: () => this.#rothIraWithdrawal ?? 0,
         min: MIN_WITHDRAWAL,
-        drainAccount:()=> this.#drainRothAccounts = true
+        drainAccount: () => (this.#drainRothAccounts = true),
       },
       // brokerage / HSA later
     ];
@@ -352,7 +352,10 @@ class AccountPortioner {
         acct.setWithdrawal(available);
         acct.drainAccount();
         ask -= available;
-        console.log(`${this.#accountYear.taxYear} Draining immaterial account ${acct.key}: $` + available);
+        console.log(
+          `${this.#accountYear.taxYear} Draining immaterial account ${acct.key}: $` +
+            available
+        );
       } else if (available > 0) {
         // PRESERVE: Account has material balance, save for later proportional allocation
         remainingGenericAccounts.push({
@@ -372,7 +375,7 @@ class AccountPortioner {
 
     // 401k accounts get special treatment because they're complex (RMDs, penalties, etc.)
     // But if the total 401k balance is immaterial, just drain it entirely to simplify
-
+    // debugger;
     let available401k =
       this.#trad401kAccountPortioner.combined401kTakehomeAvailable.asCurrency();
 
@@ -382,7 +385,7 @@ class AccountPortioner {
         totalSpendCapableFunds,
         MIN_WITHDRAWAL,
         MIN_PCT_OF_TOTAL
-      )
+      ) || this.#inputs.isWithdrawalCapped
     ) {
       // DRAIN 401k: Create a portioner that withdraws the entire immaterial balance
       this.#final401kPortions = new AccountPortioner401k(
@@ -411,9 +414,12 @@ class AccountPortioner {
     // The AccountPortioner401k class handles all this complexity using policy rules
 
     // Calculate total remaining funds (for proportional weighting)
-    let fundsForWeighting =
-      remainingGenericAccounts.reduce((s, a) => s + a.available, 0) +
-      available401k;
+    let fundsForWeighting = remainingGenericAccounts.reduce(
+      (s, a) => s + a.available,
+      0
+    );
+
+    fundsForWeighting += available401k;
 
     fundsForWeighting = Math.max(fundsForWeighting, 0).asCurrency();
 
@@ -585,6 +591,18 @@ class AccountPortioner {
       this.#fiscalData.flatTrad401kWithholdingRate ?? 0
     );
     return actualAmount;
+  }
+
+  get usingSubjectRMD(){
+    return this.#final401kPortions?.usingSubjectRMD ?? false;
+  }
+
+  get usingPartnerRMD(){
+    return this.#final401kPortions?.usingPartnerRMD ?? false;
+  }
+
+  get usingRMD(){
+    return this.#final401kPortions?.usingRMD ?? false;
   }
 
   get partnerGross401kWithdrawalAmount() {

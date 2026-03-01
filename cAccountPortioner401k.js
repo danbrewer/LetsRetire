@@ -4,7 +4,7 @@ import { Trad401kAvailabilityManager } from "./cTrad401kAvailabilityManager.js";
 
 class AccountPortioner401k {
   /** @type {Trad401kAvailabilityManager} */
-  #trad401kFunds;
+  #trad401kAvailabilityManager;
   /** @type {number} */
   #ask;
   /** @type {number} */
@@ -13,13 +13,13 @@ class AccountPortioner401k {
   #fiscalData;
 
   /**
-   * @param {Trad401kAvailabilityManager} trad401kFunds
+   * @param {Trad401kAvailabilityManager} trad401kAvailabilityManager
    * @param {number} ask
    * @param {number} totalFundsAvailable
    * @param {FiscalData} fiscalData
    */
-  constructor(trad401kFunds, ask, totalFundsAvailable, fiscalData) {
-    this.#trad401kFunds = trad401kFunds;
+  constructor(trad401kAvailabilityManager, ask, totalFundsAvailable, fiscalData) {
+    this.#trad401kAvailabilityManager = trad401kAvailabilityManager;
     this.#ask = ask;
     this.#totalFundsAvailable = totalFundsAvailable;
     this.#fiscalData = fiscalData;
@@ -28,7 +28,7 @@ class AccountPortioner401k {
   get #percentageOfTotalAllocatedSpendFundsThatIsActualized401k() {
     if (this.#totalFundsAvailable === 0) return 0;
     return (
-      this.#trad401kFunds.combined401kTakehomeAvailable /
+      this.#trad401kAvailabilityManager.combined401kTakehomeAvailable /
       this.#totalFundsAvailable
     );
   }
@@ -41,7 +41,7 @@ class AccountPortioner401k {
 
   get #subjectActualizedPortionOf401kAsk() {
     return (
-      this.#actualized401kPortionOfAsk * this.#trad401kFunds.subjectPortion
+      this.#actualized401kPortionOfAsk * this.#trad401kAvailabilityManager.subjectPortion
     ).asCurrency();
   }
 
@@ -55,16 +55,20 @@ class AccountPortioner401k {
     // RMD always takes precedence if it's more than the desired withdrawal
     return Math.max(
       this.#subjectActualizedPortionOf401kAsk,
-      this.#trad401kFunds.subject401kRMDActualized
+      this.#trad401kAvailabilityManager.subject401kRMDActualized
     ).asCurrency();
   }
 
   get usingSubjectRMD() {
-    return this.#trad401kFunds.subject401kRMDActualized > this.#subjectActualizedPortionOf401kAsk;
+    return this.#trad401kAvailabilityManager.subject401kRMDActualized > this.#subjectActualizedPortionOf401kAsk;
   }
 
   get usingPartnerRMD(){
-    return this.#trad401kFunds.partner401kRMDActualized > this.#partnerActualizedPortionOf401kAsk;
+    return this.#trad401kAvailabilityManager.partner401kRMDActualized > this.#partnerActualizedPortionOf401kAsk;
+  }
+
+  get usingRMD(){
+    return this.usingPartnerRMD || this.usingSubjectRMD;
   }
 
   get subjectFinalWithdrawalGross() {
@@ -78,7 +82,7 @@ class AccountPortioner401k {
     // RMD always takes precedence if it's more than the desired withdrawal
     return Math.max(
       this.#partnerActualizedPortionOf401kAsk,
-      this.#trad401kFunds.partner401kRMDActualized
+      this.#trad401kAvailabilityManager.partner401kRMDActualized
     ).asCurrency();
   }
 

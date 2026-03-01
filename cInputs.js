@@ -12,9 +12,7 @@ import { ACCOUNT_TYPES } from "./cAccount.js";
  *
  * @typedef {Object} WithdrawalLimitOverride
  * @property {number} year
- * @property {number} trad401kLimit
- * @property {number} rothLimit
- * @property {number} savingsLimit
+ * @property {number} amount
  *
  */
 
@@ -638,9 +636,13 @@ class Inputs {
   get withdrawalCaps() {
     const withdrawalLimits =
       this.withdrawalLimits.find(
-        (rye) => rye.year === this.#retirementYearIndex + 1
+        (rye) => rye.year === this.currentYear// this.#retirementYearIndex + 1
       ) ?? null;
     return withdrawalLimits;
+  }
+
+  get isWithdrawalCapped(){
+    return this.withdrawalCaps !== null;
   }
 
   /**

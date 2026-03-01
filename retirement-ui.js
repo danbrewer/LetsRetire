@@ -841,6 +841,8 @@ function parseInputParameters() {
 
   const pensionAnnuities = pensionManager ? pensionManager.getAll() : [];
 
+  const withdrawalLimits = withdrawalLimitManager ? withdrawalLimitManager.getAll() : [];
+
   /** @type {import("./cInputs.js").InputsOptions} */
   const inputArgs = {
     // Ages / timeline
@@ -876,6 +878,7 @@ function parseInputParameters() {
     // partnerPensionSurvivorship: partnerPensionSurvivorship,
 
     pensionAnnuities: pensionAnnuities,
+    withdrawalLimits: withdrawalLimits,
 
     // Employment and contributions
     subjectStartingSalary: subjectStartingSalary,

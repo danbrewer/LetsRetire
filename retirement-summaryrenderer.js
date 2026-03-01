@@ -608,6 +608,12 @@ const columnGroups = [
           money("income", calc.reportData.income_combined401kTakehome, {
             index,
             action: "show401kBreakdown",
+            badge: calc.reportData.income_usingRMD
+              ? {
+                  emoji: "💸",
+                  tooltip: "Required Minimum Distribution (RMD) applied",
+                }
+              : undefined,
           }),
       },
 
@@ -705,6 +711,12 @@ const columnGroups = [
           money("income", calc.reportData.income_combined401kGross, {
             index,
             action: "show401kGrossBreakdown",
+            badge: calc.reportData.income_usingRMD
+              ? {
+                  emoji: "💸",
+                  tooltip: "Required Minimum Distribution (RMD) applied",
+                }
+              : undefined,
           }),
       },
       {

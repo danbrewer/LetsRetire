@@ -907,6 +907,8 @@ class RetirementYearCalculator {
       withholdingAmount.asCurrency();
     this.#reportingYear.ReportData.income_subject401kTakehome =
       takehomeAmount.asCurrency();
+    this.#reportingYear.ReportData.income_subjectUsingRMD =
+      this.#accountPortioner.usingSubjectRMD;
   }
 
   /**

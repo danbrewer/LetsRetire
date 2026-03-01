@@ -45,8 +45,13 @@ class Trad401kAvailabilityManager {
   }
 
   get #subject401kGrossAvailable() {
-    const withdrawalCap =
-      this.#inputs.withdrawalCaps?.trad401kLimit ?? Infinity;
+    // debugger;
+    let withdrawalCap =
+      this.#inputs.withdrawalCaps?.amount ?? Infinity;
+    if (withdrawalCap < Infinity){
+      withdrawalCap *= this.subjectPortion;
+    }
+
     const actualAvailable = this.#subject401kBalance;
     return Math.min(actualAvailable, withdrawalCap);
   }
@@ -64,8 +69,11 @@ class Trad401kAvailabilityManager {
   }
 
   get #partner401kGrossAvailable() {
-    const withdrawalCap =
-      this.#inputs.withdrawalCaps?.trad401kLimit ?? Infinity;
+    let withdrawalCap =
+      this.#inputs.withdrawalCaps?.amount ?? Infinity;
+    if (withdrawalCap < Infinity){
+      withdrawalCap *= this.partnerPortion
+    }
     const actualAvailable = this.#partner401kBalance;
 
     return Math.min(actualAvailable, withdrawalCap);
