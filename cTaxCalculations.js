@@ -114,8 +114,8 @@ class TaxCalculations {
 
     // debugger;
     const taxBrackets = this.getTaxBrackets(fiscalData, demographics);
-    console.log(`Brackets for year: ${fiscalData.taxYear}`);
-    console.log(JSON.stringify(taxBrackets, null, 2));
+    // console.log(`Brackets for year: ${fiscalData.taxYear}`);
+    // console.log(JSON.stringify(taxBrackets, null, 2));
     // taxBrackets.dump("Calculating federal income tax with brackets:");
     for (const { upTo, rate } of taxBrackets) {
       const slice = Math.min(taxableIncome, upTo) - prev;

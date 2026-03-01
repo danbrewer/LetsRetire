@@ -829,7 +829,7 @@ function parseInputParameters() {
     applyInflationToIncomeValue
   );
 
-  console.log("taxableIncomeOverrides", taxableIncomeOverrides);
+  // console.log("taxableIncomeOverrides", taxableIncomeOverrides);
 
   const taxFreeIncomeOverrides = harvestAgeOverrides(
     "taxFreeIncome",
@@ -920,7 +920,7 @@ function parseInputParameters() {
     // order: order,
   };
 
-  console.log(JSON.stringify(inputArgs, null, 2));
+  // console.log(JSON.stringify(inputArgs, null, 2));
   // inputArgs.dump("inputArgs");
 
   const inputs = new Inputs(inputArgs);
@@ -1031,7 +1031,7 @@ function loadExample() {
     subjectRetireAge: 62,
     subjectLifespan: 95,
     subject401kStartAge: 62,
-    subjectPensionStartAge: 65,
+    // subjectPensionStartAge: 65,
     subjectSalary: 174500,
     subjectSalaryGrowth: 2.0,
     subjectSavingsMonthly: 0,
@@ -1044,7 +1044,7 @@ function loadExample() {
     partnerRetireAge: 62,
     partnerLifespan: 98,
     partner401kStartAge: 62,
-    partnerPensionStartAge: 65,
+    // partnerPensionStartAge: 65,
     partnerSalary: 0,
     partnerSalaryGrowth: 0,
     partnerRothMonthly: 0,
@@ -1078,12 +1078,12 @@ function loadExample() {
     ssWithholdingRate: 20,
     ssCola: 2.5,
 
-    subjectPensionMonthly: 3700,
-    subjectPensionWithholdingRate: 20,
-    subjectPensionSurvivorship: 50,
-    partnerPensionMonthly: 500,
-    partnerPensionWithholdingRate: 20,
-    partnerPensionSurvivorship: 50,
+    // subjectPensionMonthly: 3700,
+    // subjectPensionWithholdingRate: 20,
+    // subjectPensionSurvivorship: 50,
+    // partnerPensionMonthly: 500,
+    // partnerPensionWithholdingRate: 20,
+    // partnerPensionSurvivorship: 50,
 
     filingStatus: constsJS_FILING_STATUS.MARRIED_FILING_JOINTLY,
     withholdingsDefaultRate: 15,
