@@ -30,7 +30,10 @@ import {
 import { openConfirmModal } from "./retirement-ui-confirm-modal.js";
 import { renderHealthcareExpensesFields } from "./cHealthcareExpenses.js";
 import { WithdrawalLimitManager } from "./cWithdrawalLimitsManager.js";
-import { openWithdrawalLimitCreateModal, openWithdrawalLimitEditModal } from "./retirement-ui-withdrawal-limit-modal.js";
+import {
+  openWithdrawalLimitCreateModal,
+  openWithdrawalLimitEditModal,
+} from "./retirement-ui-withdrawal-limit-modal.js";
 import { WithdrawalLimitStorage } from "./cWithdrawalLimitsStorage.js";
 
 const STORAGE_KEY = "retirement-calculator-inputs";
@@ -203,12 +206,43 @@ document.addEventListener("keydown", (e) => {
 });
 
 document.addEventListener("click", (e) => {
+  
   const target = e.target;
-  if (!(target instanceof Element)) return;
+  if (!(target instanceof HTMLElement)) return;
+
+  if (target.closest('[data-remove-withdrawal-limit]')){
+      const btn = target.closest("[data-remove-withdrawal-limit]");
+      const id = btn?.getAttribute("data-id");
+      if (!id) return;
+      deleteWithdrawalLimit(id);
+      return;
+    }
+
+   if (target.closest("[data-edit-withdrawal-limit]")) {
+     const btn = target.closest("[data-edit-withdrawal-limit]");
+     const id = btn?.getAttribute("data-id");
+     if (!id || !withdrawalLimitManager) return;
+     openWithdrawalLimitEditModal(
+       withdrawalLimitManager,
+       id,
+       {
+         renderWithdrawalLimitList,
+         markDirty,
+         doCalculations,
+         showToast,
+       },
+       num(UIField.CURRENT_YEAR),
+       num(UIField.SUBJECT_RETIRE_AGE),
+       num(UIField.SUBJECT_LIFESPAN),
+       num(UIField.PARTNER_RETIRE_AGE),
+       num(UIField.PARTNER_LIFESPAN)
+     );
+     return;
+   }
 
   // Pension list row buttons
-  if (target.closest(".pension-row .edit")) {
-    const btn = target.closest(".pension-row .edit");
+  if (target.closest("[data-edit-pension]")) {
+    const btn = target.closest("[data-edit-pension]");
     const id = btn?.getAttribute("data-id");
     if (!id || !pensionManager) return;
 
@@ -221,8 +255,8 @@ document.addEventListener("click", (e) => {
     return;
   }
 
-  if (target.closest(".pension-row .delete")) {
-    const btn = target.closest(".pension-row .delete");
+  if (target.closest("[data-remove-pension]")) {
+    const btn = target.closest("[data-remove-pension]");
     const id = btn?.getAttribute("data-id");
     if (!id) return;
     deletePension(id);
@@ -235,34 +269,6 @@ document.addEventListener("click", (e) => {
     target.closest(".pension-cancel")
   ) {
     closePensionModal();
-    return;
-  }
-
-  // Withdrawal limit list row buttons
-  if (target.closest(".withdrawal-limit-row .edit")) {
-    const btn = target.closest(".withdrawal-limit-row .edit");
-    const id = btn?.getAttribute("data-id");
-    if (!id || !withdrawalLimitManager) return;
-
-    openWithdrawalLimitEditModal(withdrawalLimitManager, id, {
-      renderWithdrawalLimitList,
-      markDirty,
-      doCalculations,
-      showToast,
-    },
-      num(UIField.CURRENT_YEAR),
-      num(UIField.SUBJECT_RETIRE_AGE),
-      num(UIField.SUBJECT_LIFESPAN),
-      num(UIField.PARTNER_RETIRE_AGE),
-      num(UIField.PARTNER_LIFESPAN));
-    return;
-  }
-
-  if (target.closest(".withdrawal-limit-row .delete")) {
-    const btn = target.closest(".withdrawal-limit-row .delete");
-    const id = btn?.getAttribute("data-id");
-    if (!id) return;
-    deleteWithdrawalLimit(id);
     return;
   }
 });
@@ -1732,10 +1738,10 @@ function renderPensionList() {
       </div>
 
       <div class="pension-actions">
-        <button class="pension-btn pension-edit edit" data-id="${item.id}" title="Modify pension details">
+        <button class="pension-btn pension-edit edit" data-edit-pension data-id="${item.id}" title="Modify pension details">
           <span class="btn-icon">✏️</span>
         </button>
-        <button class="pension-btn pension-delete delete" data-id="${item.id}" title="Remove pension">
+        <button class="pension-btn pension-delete delete" data-remove-pension data-id="${item.id}" title="Remove pension">
           <span class="btn-icon">❌</span>
         </button>
       </div>
@@ -1757,6 +1763,7 @@ function renderWithdrawalLimitList() {
   list.forEach((item) => {
     const row = document.createElement("div");
     row.className = "pension-row";
+    row.dataset.rowType = "withdrawal-limit";
 
     row.innerHTML = `
       <div class="pension-info">
@@ -1766,10 +1773,10 @@ function renderWithdrawalLimitList() {
       </div>
 
       <div class="pension-actions">
-        <button class="pension-btn pension-edit edit" data-id="${item.id}" title="Modify limits">
+        <button class="pension-btn pension-edit edit" data-edit-withdrawal-limit data-id="${item.id}" title="Modify limits">
           <span class="btn-icon">✏️</span>
         </button>
-        <button class="pension-btn pension-delete delete" data-id="${item.id}" title="Remove limits">
+        <button class="pension-btn pension-delete delete" data-remove-withdrawal-limit data-id="${item.id}" title="Remove limits">
           <span class="btn-icon">❌</span>
         </button>
       </div>
