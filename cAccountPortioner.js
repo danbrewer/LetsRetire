@@ -97,6 +97,13 @@ class AccountPortioner {
   /** @type {number} */
   #savingsWithdrawal = 0;
 
+  /** @type {boolean} */
+  #drainSavingsAccount = false;
+
+  get drainSavings(){
+    return this.#drainSavingsAccount;
+  }
+
   get savingsWithdrawal() {
     return this.#savingsWithdrawal.asCurrency();
   }
@@ -106,6 +113,13 @@ class AccountPortioner {
 
   get rothIraWithdrawal() {
     return this.#rothIraWithdrawal.asCurrency();
+  }
+
+  /** @type {boolean} */
+  #drainRothAccounts = false;
+
+  get drainRothAccounts(){
+    return this.#drainRothAccounts;
   }
 
   get trad401kWithdrawal() {
@@ -292,6 +306,7 @@ class AccountPortioner {
           (this.#savingsWithdrawal = amt),
         getWithdrawal: () => this.#savingsWithdrawal ?? 0,
         min: MIN_WITHDRAWAL,
+        drainAccount:()=> this.#drainSavingsAccount = true
       },
       {
         key: "roth",
@@ -300,6 +315,7 @@ class AccountPortioner {
           (this.#rothIraWithdrawal = amt),
         getWithdrawal: () => this.#rothIraWithdrawal ?? 0,
         min: MIN_WITHDRAWAL,
+        drainAccount:()=> this.#drainRothAccounts = true
       },
       // brokerage / HSA later
     ];
@@ -334,8 +350,9 @@ class AccountPortioner {
       ) {
         // DRAIN: Withdraw entire balance and reduce our ask accordingly
         acct.setWithdrawal(available);
+        acct.drainAccount();
         ask -= available;
-        console.log(`Draining immaterial account ${acct.key}: $` + available);
+        console.log(`${this.#accountYear.taxYear} Draining immaterial account ${acct.key}: $` + available);
       } else if (available > 0) {
         // PRESERVE: Account has material balance, save for later proportional allocation
         remainingGenericAccounts.push({

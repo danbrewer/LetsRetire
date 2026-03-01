@@ -575,11 +575,15 @@ class RetirementYearCalculator {
 
     const withdrawalAmount = Math.min(amount, avaiableFunds);
 
+    const transferType = this.#accountPortioner?.drainSavings
+      ? PERIODIC_FREQUENCY.ANNUAL_LEADING
+      : PERIODIC_FREQUENCY.MONTHLY;
+
     this.#accountYear.processAsPeriodicTransfers(
       ACCOUNT_TYPES.SAVINGS,
       ACCOUNT_TYPES.CASH,
       withdrawalAmount,
-      PERIODIC_FREQUENCY.MONTHLY,
+      transferType,
       TransactionCategory.CashTransfer
     );
   }
@@ -970,18 +974,21 @@ class RetirementYearCalculator {
       combinedAvaiableRothFunds
     );
 
+    const transfertype = this.#accountPortioner?.drainRothAccounts
+      ? PERIODIC_FREQUENCY.ANNUAL_LEADING
+      : PERIODIC_FREQUENCY.MONTHLY;
+
     const subjectShare = subjectAvailableRothFunds / combinedAvaiableRothFunds;
     const subjectShareAmount = (
       subjectShare * actualRothWithdrawal
     ).asCurrency();
 
     if (subjectShareAmount > 0) {
-      // Reduce the account balance by the net received amount
       this.#accountYear.processAsPeriodicTransfers(
         ACCOUNT_TYPES.SUBJECT_ROTH_IRA,
         ACCOUNT_TYPES.CASH,
         subjectShareAmount,
-        PERIODIC_FREQUENCY.MONTHLY,
+        transfertype,
         TransactionCategory.IncomeNet
       );
 
@@ -1000,7 +1007,7 @@ class RetirementYearCalculator {
         ACCOUNT_TYPES.PARTNER_ROTH_IRA,
         ACCOUNT_TYPES.CASH,
         partnerShareAmount,
-        PERIODIC_FREQUENCY.MONTHLY,
+        transfertype,
         TransactionCategory.IncomeNet
       );
 
