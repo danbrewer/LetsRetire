@@ -204,7 +204,7 @@ class ReportData extends BaseReports {
 
     // SPENDING AND ASK
     this.ask = 0;
-    this.spend = 0;
+    this.actualSpend = 0;
     this.spending_overriding = false;
     this.takeHome = 0;
     this.spending_shortfall = 0;
@@ -412,7 +412,7 @@ class ReportData extends BaseReports {
   }
 
   // Add an indicator to the grid (and popup) that RMD was used
-  get income_usingRMD(){
+  get income_usingRMD() {
     return this.income_subjectUsingRMD || this.income_partnerUsingRMD;
   }
 

@@ -283,7 +283,13 @@ class AccountPortioner {
 
     // The "ask" is how much we need to withdraw from accounts to meet spending goals
     // Formula: Total Annual Spending - Available Cash = Amount Needed from Accounts
-    const annualSpend = this.#fiscalData.spend.asCurrency();
+    let annualSpend = this.#fiscalData.spend.asCurrency();
+
+    // Reduce spending by 25% if either the subject or partner is not living
+    if (this.#demographics.isWidowed) {
+      annualSpend *= 0.75;
+    }
+
     let ask = annualSpend - cashOnHand.asCurrency();
 
     this.#ask = ask; // Store for external access

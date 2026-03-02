@@ -61,7 +61,8 @@ class WorkingYearCalculator {
     this.#reportingYear.ReportData.demographics_isRetired =
       this.#demographics.isRetired;
 
-    this.#reportingYear.ReportData.spending_taper_rate = this.#fiscalData.speningTaperRate;
+    this.#reportingYear.ReportData.spending_taper_rate =
+      this.#fiscalData.speningTaperRate;
 
     this.#reportingYear.ReportData.demographics_isWidowed =
       !this.#demographics.isWidowed;
@@ -503,7 +504,7 @@ class WorkingYearCalculator {
     this.#reportingYear.ReportData.ask = spend;
     this.#reportingYear.ReportData.spending_overriding =
       this.#fiscalData.overridingSpend;
-    this.#reportingYear.ReportData.spend = actualSpend;
+    this.#reportingYear.ReportData.actualSpend = actualSpend;
 
     this.#accountYear.processAsPeriodicWithdrawals(
       ACCOUNT_TYPES.CASH,

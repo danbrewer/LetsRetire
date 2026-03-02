@@ -147,7 +147,7 @@ class RetirementYearData extends BaseYearData {
   }
 
   get spend() {
-    return this.#reportData.spend;
+    return this.#reportData.actualSpend;
   }
 
   get incomeBreakdown() {

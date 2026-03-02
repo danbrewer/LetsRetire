@@ -992,7 +992,7 @@ function showTotalCashBreakdown(data) {
         <span class="ss-breakdown-value">${data.income_miscTaxFreeIncome.asWholeDollars()}</span>
     </div>`;
   }
-  debugger;
+  // debugger;
   breakdownHtml += `    
     <div class="ss-breakdown-item breakdown-accent">
         <span class="ss-breakdown-label">Total:</span>

@@ -438,7 +438,7 @@ class RetirementYearCalculator {
 
     let spend = this.#fiscalData.spend.asCurrency();
 
-    this.#demographics.spouseIsLiving;
+    // this.#demographics.spouseIsLiving;
     // Reduce spending by 25% if either the subject or partner is not living
     if (this.#demographics.isWidowed) {
       spend *= 0.75;
@@ -447,7 +447,7 @@ class RetirementYearCalculator {
     const actualSpend = Math.min(cash, spend);
 
     this.#reportingYear.ReportData.ask = spend;
-    this.#reportingYear.ReportData.spend = actualSpend.asCurrency();
+    this.#reportingYear.ReportData.actualSpend = actualSpend.asCurrency();
     this.#reportingYear.ReportData.spending_overriding =
       this.#fiscalData.overridingSpend;
     this.#reportingYear.ReportData.takeHome = cash.asCurrency();
