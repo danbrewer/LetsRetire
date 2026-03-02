@@ -684,19 +684,19 @@ const columnGroups = [
       {
         label: "SS Gross",
         render: (calc, index) =>
-          money("income", calc.reportData.ss_subjectSsGross, {
+          money("income", calc.reportData.ss_combinedGross, {
             index,
             action: "showSsGrossBreakdown",
           }),
       },
-      {
-        label: "SS Gross (Partner)",
-        render: (calc, index) =>
-          money("income", calc.reportData.ss_partnerSsGross, {
-            index,
-            action: "showSsGrossBreakdown",
-          }),
-      },
+      // {
+      //   label: "SS Gross (Partner)",
+      //   render: (calc, index) =>
+      //     money("income", calc.reportData.ss_partnerSsGross, {
+      //       index,
+      //       action: "showSsGrossBreakdown",
+      //     }),
+      // },
       {
         label: "Pensions/Annuities",
         render: (calc, index) =>

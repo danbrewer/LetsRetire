@@ -18,7 +18,12 @@ class AccountPortioner401k {
    * @param {number} totalFundsAvailable
    * @param {FiscalData} fiscalData
    */
-  constructor(trad401kAvailabilityManager, ask, totalFundsAvailable, fiscalData) {
+  constructor(
+    trad401kAvailabilityManager,
+    ask,
+    totalFundsAvailable,
+    fiscalData
+  ) {
     this.#trad401kAvailabilityManager = trad401kAvailabilityManager;
     this.#ask = ask;
     this.#totalFundsAvailable = totalFundsAvailable;
@@ -41,7 +46,8 @@ class AccountPortioner401k {
 
   get #subjectActualizedPortionOf401kAsk() {
     return (
-      this.#actualized401kPortionOfAsk * this.#trad401kAvailabilityManager.subjectPortion
+      this.#actualized401kPortionOfAsk *
+      this.#trad401kAvailabilityManager.subjectPortion
     ).asCurrency();
   }
 
@@ -60,14 +66,28 @@ class AccountPortioner401k {
   }
 
   get usingSubjectRMD() {
-    return this.#trad401kAvailabilityManager.subject401kRMDActualized > this.#subjectActualizedPortionOf401kAsk;
+    return (
+      this.#trad401kAvailabilityManager.subject401kRMDActualized >
+      this.#subjectActualizedPortionOf401kAsk
+    );
   }
 
-  get usingPartnerRMD(){
-    return this.#trad401kAvailabilityManager.partner401kRMDActualized > this.#partnerActualizedPortionOf401kAsk;
+  get usingPartnerRMD() {
+    return (
+      this.#trad401kAvailabilityManager.partner401kRMDActualized >
+      this.#partnerActualizedPortionOf401kAsk
+    );
   }
 
-  get usingRMD(){
+  get subjectRMD() {
+    return this.#trad401kAvailabilityManager.subject401kRMDGross;
+  }
+
+  get partnerRMD() {
+    return this.#trad401kAvailabilityManager.partner401kRMDGross;
+  }
+
+  get usingRMD() {
     return this.usingPartnerRMD || this.usingSubjectRMD;
   }
 

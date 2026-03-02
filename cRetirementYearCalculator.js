@@ -909,6 +909,8 @@ class RetirementYearCalculator {
       takehomeAmount.asCurrency();
     this.#reportingYear.ReportData.income_subjectUsingRMD =
       this.#accountPortioner.usingSubjectRMD;
+    this.#reportingYear.ReportData.income_subjectRMD =
+      this.#accountPortioner.subjectRMD;
   }
 
   /**
@@ -948,6 +950,10 @@ class RetirementYearCalculator {
       withholdingAmount.asCurrency();
     this.#reportingYear.ReportData.income_partner401kTakehome +=
       takehomeAmount.asCurrency();
+    this.#reportingYear.ReportData.income_partnerUsingRMD =
+      this.#accountPortioner.usingPartnerRMD;
+    this.#reportingYear.ReportData.income_partnerRMD =
+      this.#accountPortioner.partnerRMD;
   }
 
   #drawRothPortions() {

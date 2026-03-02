@@ -385,7 +385,8 @@ class AccountPortioner {
         totalSpendCapableFunds,
         MIN_WITHDRAWAL,
         MIN_PCT_OF_TOTAL
-      ) || this.#inputs.isWithdrawalCapped
+      ) ||
+      this.#inputs.isWithdrawalCapped
     ) {
       // DRAIN 401k: Create a portioner that withdraws the entire immaterial balance
       this.#final401kPortions = new AccountPortioner401k(
@@ -593,15 +594,23 @@ class AccountPortioner {
     return actualAmount;
   }
 
-  get usingSubjectRMD(){
+  get usingSubjectRMD() {
     return this.#final401kPortions?.usingSubjectRMD ?? false;
   }
 
-  get usingPartnerRMD(){
+  get usingPartnerRMD() {
     return this.#final401kPortions?.usingPartnerRMD ?? false;
   }
 
-  get usingRMD(){
+  get subjectRMD() {
+    return this.#final401kPortions?.subjectRMD ?? 0;
+  }
+
+  get partnerRMD() {
+    return this.#final401kPortions?.partnerRMD ?? 0;
+  }
+
+  get usingRMD() {
     return this.#final401kPortions?.usingRMD ?? false;
   }
 

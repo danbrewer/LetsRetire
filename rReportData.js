@@ -179,6 +179,7 @@ class ReportData extends BaseReports {
     this.income_subject401kGross = 0;
     this.income_subject401kWithholdings = 0;
     this.income_subject401kTakehome = 0;
+    this.income_subjectRMD = 0;
 
     this.income_subjectUsingRMD = false;
     this.income_partnerUsingRMD = false;
@@ -186,6 +187,7 @@ class ReportData extends BaseReports {
     this.income_partner401kGross = 0;
     this.income_partner401kWithholdings = 0;
     this.income_partner401kTakehome = 0;
+    this.income_partnerRMD = 0;
 
     this.income_subjectPensionGross = 0;
     this.income_subjectPensionWithholdings = 0;

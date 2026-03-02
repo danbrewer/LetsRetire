@@ -196,7 +196,7 @@ function showSsGrossBreakdown(data) {
   }
 
   const popup = ensurePopup("ss", "Social Security Gross");
-  
+
   const combinedSsGross =
     (data.ss_subjectSsGross || 0) + (data.ss_partnerSsGross || 0);
   // Build the breakdown content
@@ -435,16 +435,30 @@ function show401kGrossBreakdown(data) {
     <div class="ss-breakdown-item">
         <span class="ss-breakdown-label">Subject (Annual):</span>
         <span class="ss-breakdown-value">${data.income_subject401kGross.asWholeDollars()}</span>
-    </div>
-    `;
+    </div>`;
+
+  // Add RMD hint for subject if applicable
+  if (data.income_subjectRMD > 0) {
+    breakdownHtml += `
+    <div style="font-size: 12px; color: var(--muted); margin-left: 16px; margin-top: 4px;">
+        RMD: ${data.income_subjectRMD.asWholeDollars()}
+    </div>`;
+  }
 
   if (data.demographics_hasPartner) {
     breakdownHtml += `
     <div class="ss-breakdown-item">
         <span class="ss-breakdown-label">Partner:</span>
         <span class="ss-breakdown-value">${data.income_partner401kGross.asWholeDollars()}</span>
-    </div>
-    `;
+    </div>`;
+
+    // Add RMD hint for partner if applicable
+    if (data.income_partnerRMD > 0) {
+      breakdownHtml += `
+    <div style="font-size: 12px; color: var(--muted); margin-left: 16px; margin-top: 4px;">
+        RMD: ${data.income_partnerRMD.asWholeDollars()}
+    </div>`;
+    }
   }
 
   breakdownHtml += `
@@ -483,7 +497,7 @@ function showAnnualSpendBreakdown(data) {
     </div>
     `;
 
-  if (data.demographics_isRetired){
+  if (data.demographics_isRetired) {
     breakdownHtml += `
      <div class="ss-breakdown-item">
         <span class="ss-breakdown-label">Spending reduction rate:</span>
@@ -608,7 +622,7 @@ function showPensionBreakdown(data) {
     </div>
     `;
     return acc;
-  }, '');
+  }, "");
 
   bd += `
       <div class="ss-breakdown-item breakdown-accent">
@@ -963,7 +977,7 @@ function showTotalCashBreakdown(data) {
     </div>
     `;
 
-  if (data.income_miscTaxableIncomeTakehome > 0){
+  if (data.income_miscTaxableIncomeTakehome > 0) {
     breakdownHtml += `
     <div class="ss-breakdown-item">
         <span class="ss-breakdown-label">Miscellaneous Taxable Income:</span>
@@ -971,7 +985,7 @@ function showTotalCashBreakdown(data) {
     </div>`;
   }
 
-  if (data.income_miscTaxFreeIncome > 0){
+  if (data.income_miscTaxFreeIncome > 0) {
     breakdownHtml += `
     <div class="ss-breakdown-item">
         <span class="ss-breakdown-label">Miscellaneous Tax-Free Income:</span>
