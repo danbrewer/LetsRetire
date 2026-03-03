@@ -1,5 +1,8 @@
+import { generateCSV } from "./retirement-summaryrenderer.js";
+
 export function exportCSV() {
-  throw new Error("CSV export is currently disabled.");
+  generateCSV();
+  // throw new Error("CSV export is currently disabled.");
   // const rows = win.__rows || [];
   // if (!calculations.length) {
   //   showToast(

@@ -869,13 +869,8 @@ function parseInputParameters() {
     partnerRetireAge: partnerRetireAge,
     partnerSsMonthly: partnerSsMonthly,
     partnerSsStartAge: partnerSsStartAge,
-    // partnerPenMonthly: partnerPenMonthly,
-    // partnerPenStartAge: partnerPenStartAge,
     partner401kStartAge: partner401kStartAge,
     partnerLifeSpan: partnerLifeSpan,
-    // partnerTaxSS: withholdingsSs,
-    // partnerPensionWithholdings: partnerPensionWithholdings,
-    // partnerPensionSurvivorship: partnerPensionSurvivorship,
 
     pensionAnnuities: pensionAnnuities,
     withdrawalLimits: withdrawalLimits,

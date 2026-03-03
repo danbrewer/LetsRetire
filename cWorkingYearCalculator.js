@@ -92,7 +92,7 @@ class WorkingYearCalculator {
     this.#processMiscIncome();
     this.#processTaxFreeIncome();
     this.#processRothIraContributions();
-    this.#processSavingsContributions();
+    // this.#processSavingsContributions();
 
     this.#processMonthlySpending();
 
@@ -209,7 +209,7 @@ class WorkingYearCalculator {
     this.#reportingYear.ReportData.retirementAcct_partnerRothBalance =
       this.#accountYear.getEndingBalance(ACCOUNT_TYPES.PARTNER_ROTH_IRA);
 
-    this.#reportingYear.ReportData.savings_OpeningBalance =
+    this.#reportingYear.ReportData.savings_YearBeginBalance =
       this.#accountYear.getStartingBalance(ACCOUNT_TYPES.SAVINGS);
     // this.#reportingYear.ReportData.savings_Deposits = this.#accountYear
     //   .getDeposits(ACCOUNT_TYPES.SAVINGS)
@@ -217,7 +217,7 @@ class WorkingYearCalculator {
     this.#reportingYear.ReportData.savings_Withdrawals = this.#accountYear
       .getWithdrawals(ACCOUNT_TYPES.SAVINGS)
       .asCurrency();
-    this.#reportingYear.ReportData.savings_Balance =
+    this.#reportingYear.ReportData.savings_YearEndBalance =
       this.#accountYear.getEndingBalance(ACCOUNT_TYPES.SAVINGS);
   }
 
@@ -246,7 +246,7 @@ class WorkingYearCalculator {
         TransactionCategory.Withholdings
       );
 
-      this.#reportingYear.ReportData.income_miscIncomeWithholdings =
+      this.#reportingYear.ReportData.withholdings_miscTaxableIncome =
         withholdings;
 
       const takeHomeAmount = miscIncome - withholdings;
@@ -278,64 +278,64 @@ class WorkingYearCalculator {
     this.#reportingYear.ReportData.income_miscTaxFreeIncome = taxFreeIncome;
   }
 
-  #processSavingsContributions() {
-    const subjectDesiredSavingsContribution = Math.max(
-      this.#fixedIncomeStreams.subjectSavingsContributionVariable,
-      this.#fixedIncomeStreams.subjectSavingsContributionFixed
-    ).asCurrency();
+  // #processSavingsContributions() {
+  //   const subjectDesiredSavingsContribution = Math.max(
+  //     this.#fixedIncomeStreams.subjectSavingsContributionVariable,
+  //     this.#fixedIncomeStreams.subjectSavingsContributionFixed
+  //   ).asCurrency();
 
-    const partnerDesiredSavingsContribution = Math.max(
-      this.#fixedIncomeStreams.partnerSavingsContributionVariable,
-      this.#fixedIncomeStreams.partnerSavingsContributionFixed
-    ).asCurrency();
+  //   const partnerDesiredSavingsContribution = Math.max(
+  //     this.#fixedIncomeStreams.partnerSavingsContributionVariable,
+  //     this.#fixedIncomeStreams.partnerSavingsContributionFixed
+  //   ).asCurrency();
 
-    const desiredTransferAmount =
-      subjectDesiredSavingsContribution + partnerDesiredSavingsContribution;
+  //   const desiredTransferAmount =
+  //     subjectDesiredSavingsContribution + partnerDesiredSavingsContribution;
 
-    if (desiredTransferAmount <= 0) return;
+  //   if (desiredTransferAmount <= 0) return;
 
-    let availableCash = this.#accountYear.getEndingBalance(ACCOUNT_TYPES.CASH);
+  //   let availableCash = this.#accountYear.getEndingBalance(ACCOUNT_TYPES.CASH);
 
-    if (availableCash <= 0) return;
+  //   if (availableCash <= 0) return;
 
-    const actualTransferAmount = Math.min(
-      availableCash,
-      subjectDesiredSavingsContribution
-    );
+  //   const actualTransferAmount = Math.min(
+  //     availableCash,
+  //     subjectDesiredSavingsContribution
+  //   );
 
-    this.#accountYear.processAsPeriodicTransfers(
-      ACCOUNT_TYPES.CASH,
-      ACCOUNT_TYPES.SAVINGS,
-      actualTransferAmount,
-      PERIODIC_FREQUENCY.MONTHLY,
-      TransactionCategory.AutoTransfer,
-      "Combined contrib."
-    );
+  //   this.#accountYear.processAsPeriodicTransfers(
+  //     ACCOUNT_TYPES.CASH,
+  //     ACCOUNT_TYPES.SAVINGS,
+  //     actualTransferAmount,
+  //     PERIODIC_FREQUENCY.MONTHLY,
+  //     TransactionCategory.AutoTransfer,
+  //     "Combined contrib."
+  //   );
 
-    // this.#reportingYear.ReportData.savings_Deposits += actualTransferAmount;
+  //   // this.#reportingYear.ReportData.savings_Deposits += actualTransferAmount;
 
-    this.#reportingYear.ReportData.retirementAcct_subjectSavingsContributions +=
-      actualTransferAmount;
+  //   this.#reportingYear.ReportData.retirementAcct_subjectSavingsContributions +=
+  //     actualTransferAmount;
 
-    availableCash -= actualTransferAmount;
+  //   availableCash -= actualTransferAmount;
 
-    const actualPartnerTransferAmount = Math.min(
-      availableCash,
-      partnerDesiredSavingsContribution
-    );
+  //   const actualPartnerTransferAmount = Math.min(
+  //     availableCash,
+  //     partnerDesiredSavingsContribution
+  //   );
 
-    this.#accountYear.processAsPeriodicTransfers(
-      ACCOUNT_TYPES.CASH,
-      ACCOUNT_TYPES.SAVINGS,
-      actualPartnerTransferAmount,
-      PERIODIC_FREQUENCY.MONTHLY,
-      TransactionCategory.AutoTransfer,
-      "Combined contrib."
-    );
+  //   this.#accountYear.processAsPeriodicTransfers(
+  //     ACCOUNT_TYPES.CASH,
+  //     ACCOUNT_TYPES.SAVINGS,
+  //     actualPartnerTransferAmount,
+  //     PERIODIC_FREQUENCY.MONTHLY,
+  //     TransactionCategory.AutoTransfer,
+  //     "Combined contrib."
+  //   );
 
-    this.#reportingYear.ReportData.retirementAcct_partnerSavingsContributions +=
-      actualPartnerTransferAmount;
-  }
+  //   this.#reportingYear.ReportData.retirementAcct_partnerSavingsContributions +=
+  //     actualPartnerTransferAmount;
+  // }
 
   #processWagesAndCompensation() {
     // Subject wages and compensation
@@ -377,7 +377,7 @@ class WorkingYearCalculator {
         TransactionCategory.Withholdings
       );
 
-      this.#reportingYear.ReportData.income_subjectWagesWithholdings =
+      this.#reportingYear.ReportData.withholdings_subjectWages =
         this.#fixedIncomeStreams.career.subjectWagesAndCompensationEstimatedWithholdings;
 
       this.#accountYear.processAsPeriodicTransfers(
@@ -446,7 +446,7 @@ class WorkingYearCalculator {
         TransactionCategory.Withholdings
       );
 
-      this.#reportingYear.ReportData.income_partnerWagesWithholdings =
+      this.#reportingYear.ReportData.withholdings_partnerWages =
         this.#fixedIncomeStreams.career.partnerWagesAndCompensationEstimatedWithholdings;
 
       this.#accountYear.processAsPeriodicTransfers(
@@ -487,6 +487,8 @@ class WorkingYearCalculator {
     // Any income left after spending goes into savings
 
     const cash = this.#accountYear.getEndingBalance(ACCOUNT_TYPES.CASH);
+
+    this.#reportingYear.ReportData.takeHome = cash.asCurrency();
 
     if (cash <= 0) {
       console.warn("Warning: No cash available to cover spending.");
@@ -643,7 +645,7 @@ class WorkingYearCalculator {
     this.#reportingYear.ReportData.taxes_nonTaxableIncome =
       actualTaxes.nonTaxableIncome.asCurrency();
 
-    const withholdings = Math.max(
+    const withholdingsTotal = Math.max(
       this.#accountYear.getAnnualRevenues(
         ACCOUNT_TYPES.TAXES,
         TransactionCategory.Withholdings
@@ -651,15 +653,15 @@ class WorkingYearCalculator {
       0
     );
 
-    this.#reportingYear.ReportData.taxes_totalWithholdings = withholdings;
+    this.#reportingYear.ReportData.withholdings_total = withholdingsTotal;
 
-    const taxesOwed = federalIncomeTaxOwed - withholdings;
+    const taxesOwed = federalIncomeTaxOwed - withholdingsTotal;
 
     this.#accountYear.processAsPeriodicWithdrawals(
       ACCOUNT_TYPES.TAXES,
       TransactionCategory.TaxPayment,
       TransactionRoutes.External,
-      Math.min(federalIncomeTaxOwed, withholdings),
+      Math.min(federalIncomeTaxOwed, withholdingsTotal),
       PERIODIC_FREQUENCY.ANNUAL_TRAILING
     );
 

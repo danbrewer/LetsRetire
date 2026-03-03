@@ -137,7 +137,7 @@ class RetirementYearCalculator {
         TransactionCategory.Withholdings
       );
 
-      this.#reportingYear.ReportData.income_miscIncomeWithholdings =
+      this.#reportingYear.ReportData.withholdings_miscTaxableIncome =
         withholdings;
 
       const takeHomeAmount = miscIncome - withholdings;
@@ -205,7 +205,7 @@ class RetirementYearCalculator {
         TransactionCategory.Withholdings
       );
 
-      this.#reportingYear.ReportData.income_subjectWagesWithholdings =
+      this.#reportingYear.ReportData.withholdings_subjectWages =
         this.#fixedIncomeStreams.retirement.subjectWagesAndCompensationEstimatedWithholdings;
 
       this.#accountYear.processAsPeriodicTransfers(
@@ -275,7 +275,7 @@ class RetirementYearCalculator {
         TransactionCategory.Withholdings
       );
 
-      this.#reportingYear.ReportData.income_partnerWagesWithholdings =
+      this.#reportingYear.ReportData.withholdings_partnerWages =
         this.#fixedIncomeStreams.retirement.partnerWagesAndCompensationEstimatedWithholdings;
 
       this.#accountYear.processAsPeriodicTransfers(
@@ -376,7 +376,7 @@ class RetirementYearCalculator {
     this.#reportingYear.ReportData.taxes_nonTaxableIncome =
       this.#ssBreakdown.nonTaxableAmount.asCurrency();
 
-    const withholdings = Math.max(
+    const withholdingsTotal = Math.max(
       this.#accountYear.getAnnualRevenues(
         ACCOUNT_TYPES.TAXES,
         TransactionCategory.Withholdings
@@ -384,9 +384,9 @@ class RetirementYearCalculator {
       0
     );
 
-    this.#reportingYear.ReportData.taxes_totalWithholdings = withholdings;
+    this.#reportingYear.ReportData.withholdings_total = withholdingsTotal;
 
-    const taxesOwed = federalIncomeTaxOwed - withholdings;
+    const taxesOwed = federalIncomeTaxOwed - withholdingsTotal;
 
     this.#accountYear.processAsPeriodicWithdrawals(
       ACCOUNT_TYPES.TAXES,
@@ -604,16 +604,16 @@ class RetirementYearCalculator {
 
     this.#reportingYear.ReportData.ss_subjectSsGross +=
       this.#fixedIncomeStreams.subjectSsGross ?? 0;
-    this.#reportingYear.ReportData.ss_subjectSsWithholdings +=
+    this.#reportingYear.ReportData.withholdings_subjectSs +=
       this.#fixedIncomeStreams.subjectSsWithholdings ?? 0;
-    this.#reportingYear.ReportData.ss_subjectSsTakehome +=
+    this.#reportingYear.ReportData.income_subjectSsTakehome +=
       this.#fixedIncomeStreams.subjectSsActualIncome ?? 0;
 
     this.#reportingYear.ReportData.ss_partnerSsGross +=
       this.#fixedIncomeStreams.partnerSsGross ?? 0;
-    this.#reportingYear.ReportData.ss_partnerSsWithholdings +=
+    this.#reportingYear.ReportData.withholdings_partnerSs +=
       this.#fixedIncomeStreams.partnerSsWithholdings ?? 0;
-    this.#reportingYear.ReportData.ss_partnerSsTakehome +=
+    this.#reportingYear.ReportData.income_ssPartnerTakehome +=
       this.#fixedIncomeStreams.partnerSsActualIncome ?? 0;
 
     this.#reportingYear.ReportData.ss_subjectSsTaxable =
@@ -700,14 +700,14 @@ class RetirementYearCalculator {
 
     this.#reportingYear.ReportData.income_subjectPensionGross =
       this.#fixedIncomeStreams?.subjectPensionGross ?? 0;
-    this.#reportingYear.ReportData.income_subjectPensionWithholdings =
+    this.#reportingYear.ReportData.withholdings_subjectPension =
       this.#fixedIncomeStreams?.subjectPensionWithholdings ?? 0;
     this.#reportingYear.ReportData.income_subjectPensionTakehome =
       this.#fixedIncomeStreams?.subjectPensionActualIncome ?? 0;
 
     this.#reportingYear.ReportData.income_partnerPensionGross =
       this.#fixedIncomeStreams?.partnerPensionGross ?? 0;
-    this.#reportingYear.ReportData.income_partnerPensionWithholdings =
+    this.#reportingYear.ReportData.withholdings_partnerPension =
       this.#fixedIncomeStreams?.partnerPensionWithholdings ?? 0;
     this.#reportingYear.ReportData.income_partnerPensionTakehome =
       this.#fixedIncomeStreams?.partnerPensionActualIncome ?? 0;
@@ -741,7 +741,7 @@ class RetirementYearCalculator {
     this.#reportingYear.ReportData.retirementAcct_partnerRothBalance =
       this.#accountYear.getEndingBalance(ACCOUNT_TYPES.PARTNER_ROTH_IRA);
 
-    this.#reportingYear.ReportData.savings_OpeningBalance =
+    this.#reportingYear.ReportData.savings_YearBeginBalance =
       this.#accountYear.getStartingBalance(ACCOUNT_TYPES.SAVINGS);
     // this.#reportingYear.ReportData.savings_Deposits = this.#accountYear
     //   .getDeposits(ACCOUNT_TYPES.SAVINGS)
@@ -749,7 +749,7 @@ class RetirementYearCalculator {
     this.#reportingYear.ReportData.savings_Withdrawals = this.#accountYear
       .getWithdrawals(ACCOUNT_TYPES.SAVINGS)
       .asCurrency();
-    this.#reportingYear.ReportData.savings_Balance =
+    this.#reportingYear.ReportData.savings_YearEndBalance =
       this.#accountYear.getEndingBalance(ACCOUNT_TYPES.SAVINGS);
   }
 
@@ -903,7 +903,7 @@ class RetirementYearCalculator {
 
     this.#reportingYear.ReportData.income_subject401kGross =
       grossAmount.asCurrency();
-    this.#reportingYear.ReportData.income_subject401kWithholdings =
+    this.#reportingYear.ReportData.withholdings_subject401k =
       withholdingAmount.asCurrency();
     this.#reportingYear.ReportData.income_subject401kTakehome =
       takehomeAmount.asCurrency();
@@ -946,7 +946,7 @@ class RetirementYearCalculator {
 
     this.#reportingYear.ReportData.income_partner401kGross =
       grossAmount.asCurrency();
-    this.#reportingYear.ReportData.income_partner401kWithholdings +=
+    this.#reportingYear.ReportData.withholdings_partner401k +=
       withholdingAmount.asCurrency();
     this.#reportingYear.ReportData.income_partner401kTakehome +=
       takehomeAmount.asCurrency();

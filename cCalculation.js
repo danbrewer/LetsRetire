@@ -26,7 +26,7 @@ class Calculation {
   }
 
   /** @returns {Readonly<ReportData>} */
-  get reportData(){
+  get reportData() {
     return this.#yearData.reportData;
   }
 
@@ -184,7 +184,7 @@ class Calculation {
   }
 
   get partnerSsWithholdings() {
-    const result = this.#yearData.reportData.ss_partnerSsWithholdings;
+    const result = this.#yearData.reportData.withholdings_partnerSs;
     //  accountYear
     //   .getWithdrawals(
     //     ACCOUNT_TYPES.PARTNER_SOCIAL_SECURITY,

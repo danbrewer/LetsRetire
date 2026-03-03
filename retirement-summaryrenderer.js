@@ -6,6 +6,7 @@ import { Calculation, Calculations } from "./cCalculation.js";
 import { drawChart } from "./retirement-ui-chart.js";
 import { Inputs } from "./cInputs.js";
 import { popupActions } from "./retirement-popups.js";
+import { ReportData } from "./rReportData.js";
 
 /** @type {string | null} */
 let draggedGroupId = null;
@@ -608,12 +609,12 @@ const columnGroups = [
           money("income", calc.reportData.income_combined401kTakehome, {
             index,
             action: "show401kBreakdown",
-            badge: calc.reportData.income_usingRMD
-              ? {
-                  emoji: "💸",
-                  tooltip: "Required Minimum Distribution (RMD) applied",
-                }
-              : undefined,
+            // badge: calc.reportData.income_usingRMD
+            //   ? {
+            //       emoji: "💸",
+            //       tooltip: "Required Minimum Distribution (RMD) applied",
+            //     }
+            //   : undefined,
           }),
       },
 
@@ -741,7 +742,7 @@ const columnGroups = [
       {
         label: "Withholdings",
         render: (calc, index) =>
-          money("outgoing", calc.reportData.income_total_withholdings, {
+          money("outgoing", calc.reportData.withholdings_total, {
             index,
             action: "showWithholdingsBreakdown",
           }),
@@ -785,7 +786,7 @@ const columnGroups = [
       {
         label: "Savings Bal",
         render: (calc, index) =>
-          money("neutral", calc.reportData.savings_Balance, {
+          money("neutral", calc.reportData.savings_YearEndBalance, {
             index,
             action: "showSavingsBalanceBreakdown",
           }),
@@ -803,13 +804,13 @@ const columnGroups = [
       {
         label: "Roth Bal",
         render: (calc) =>
-          money("neutral", calc.reportData.balances_combinedRoth),
+          money("neutral", calc.reportData.balances_yearEndRothCombined),
       },
 
       {
         label: "Total Bal",
         render: (calc, index) =>
-          money("neutral", calc.reportData.balances_total, {
+          money("neutral", calc.reportData.balances_yearEndtotal, {
             index,
             action: "showAccountBalances",
           }),
@@ -845,6 +846,67 @@ function buildSummaryRow(calculation, index) {
   }
 
   return tr(...cells);
+}
+
+function generateCSV() {
+  const calculations = currentCalculations?.getAllCalculations();
+  if (!calculations || calculations.length === 0) return;
+
+  // Get all the field names from ReportData.dumpOrder
+  const fields = ReportData.dumpOrder;
+
+  // Create CSV headers
+  const headers = fields.join(",");
+
+  // Create CSV rows for each calculation
+  const rows = calculations.map((calc) => {
+    return fields
+      .map((field) => {
+        // Get the value from reportData for this field
+        // @ts-ignore - Dynamic property access for CSV export
+        let value = calc.reportData[field];
+
+        // Handle different value types
+        if (value === null || value === undefined) {
+          return "";
+        }
+
+        // If it's a number with currency formatting, extract the numeric value
+        if (typeof value === "object" && value.asCurrency) {
+          value = value.asCurrency();
+        } else if (typeof value === "object" && value.asWholeDollars) {
+          value = value.asWholeDollars();
+        }
+
+        // Convert to string and escape CSV special characters
+        let stringValue = String(value);
+
+        // If the value contains commas, quotes, or newlines, wrap in quotes and escape quotes
+        if (
+          stringValue.includes(",") ||
+          stringValue.includes('"') ||
+          stringValue.includes("\n")
+        ) {
+          stringValue = '"' + stringValue.replace(/"/g, '""') + '"';
+        }
+
+        return stringValue;
+      })
+      .join(",");
+  });
+
+  // Combine headers and rows
+  const csv = [headers, ...rows].join("\n");
+
+  const blob = new Blob([csv], { type: "text/csv" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "retirement_results.csv";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
 }
 
 ///////////////////////////////////////////////////////////////
@@ -967,7 +1029,7 @@ function generateOutputAndSummary(inputs, calculations) {
   if (kpiEndBal) {
     kpiEndBal.textContent = Math.max(
       0,
-      lastCalculation.reportData.balances_total
+      lastCalculation.reportData.balances_yearEndtotal
     ).asWholeDollars();
   }
 
@@ -982,7 +1044,7 @@ function generateOutputAndSummary(inputs, calculations) {
 
   if (firstCalculation && kpiTax) {
     kpiTax.textContent =
-      firstCalculation.reportData.balances_total.asWholeDollars();
+      firstCalculation.reportData.balances_yearEndtotal.asWholeDollars();
   }
 
   //   /////////////////////////////////////////////////////////////
@@ -992,7 +1054,7 @@ function generateOutputAndSummary(inputs, calculations) {
   drawChart(
     allCalcs.map((calc) => ({
       x: calc.year,
-      y: calc.reportData.balances_total,
+      y: calc.reportData.balances_yearEndtotal,
       age: calc.age,
     }))
   );
@@ -1004,4 +1066,5 @@ export {
   saveColumnLayout,
   regenerateTable,
   buildColumnMenu,
+  generateCSV,
 };

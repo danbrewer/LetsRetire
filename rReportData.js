@@ -6,26 +6,22 @@ class ReportData extends BaseReports {
     // DEMOGRAPHICS
     "demographics_subjectAge",
     "demographics_partnerAge",
-    "demographics_isMarriedFilingJointly",
-    "demographics_numberOfDependents",
     "demographics_filingStatus",
     // WAGES AND COMPENSATION
 
     "ask",
     "takeHome",
-    "spend",
+    // "spend",
     "spending_shortfall",
     "spending_surplus",
 
     "income_subjectGrossWages",
     "income_subject401kContribution",
-    "income_subjectEstimatedWithholdings",
     "income_subjectPayrollDeductions",
     "income_subjectTakehomeWages",
 
     "income_partnerGrossWages",
     "income_partner401kContribution",
-    "income_partnerEstimatedWithholdings",
     "income_partnerPayrollDeductions",
     "income_partnerTakehomeWages",
 
@@ -33,42 +29,44 @@ class ReportData extends BaseReports {
     "income_wagesTaxExempt",
 
     "income_miscIncomeGross",
-    "income_miscIncomeWithholdings",
-    "income_miscIncomeTakehome",
-
-    "income_additionalWithholdings",
     "income_savingsInterest",
 
     "income_taxableIncome",
-    "income_taxFreeIncome",
 
     // RETIREMENT INCOME
     "income_subject401kGross",
-    "income_subject401kWithholdings",
     "income_subject401kTakehome",
     "income_partner401kGross",
-    "income_partner401kWithholdings",
     "income_partner401kTakehome",
     "income_subjectPensionGross",
-    "income_subjectPensionWithholdings",
     "income_subjectPensionTakehome",
     "income_partnerPensionGross",
-    "income_partnerPensionWithholdings",
     "income_partnerPensionTakehome",
-    "income_subjectSsTakehome",
-    "income_partnerSsTakehome",
+    // "income_subjectSsTakehome",
+    // "income_partnerSsTakehome",
+
+    "withholdings_subjectWages",
+    "withholdings_partnerWages",
+    "withholdings_subjectSs",
+    "withholdings_partnerSs",
+    "withholdings_subject401k",
+    "withholdings_partner401k",
+    "withholdings_subjectPension",
+    "withholdings_partnerPension",
+    "withholdings_miscTaxableIncome",
+    "withholdings_total",
 
     "income_total_net",
     "income_total_gross",
-    "income_total_withholdings",
 
-    "savings_OpeningBalance",
+    "savings_YearBeginBalance",
     "savings_Withdrawals",
-    "savings_Deposits",
-    "savings_Balance",
+    // "savings_Deposits",
     "savings_Interest",
-    "retirementAcct_subjectSavingsContributions",
-    "retirementAcct_partnerSavingsContributions",
+    "savings_YearEndBalance",
+
+    // "retirementAcct_subjectSavingsContributions",
+    // "retirementAcct_partnerSavingsContributions",
 
     // TAXES
     "taxes_grossIncome",
@@ -76,26 +74,18 @@ class ReportData extends BaseReports {
     "taxes_standardDeduction",
     "taxes_taxableIncome",
 
-    "taxes_subjectWagesWithholdings",
-    "taxes_partnerWagesWithholdings",
-    "taxes_subject401kWithholdings",
-    "taxes_partner401kWithholdings",
-    "taxes_totalWithholdings",
-
     "taxes_federalIncomeTaxOwed",
     "taxes_overPayment",
     "taxes_underPayment",
 
     // SOCIAL SECURITY
     "ss_subjectSsGross",
-    "ss_subjectSsWithholdings",
     "ss_subjectSsTakehome",
 
     "ss_subjectSsTaxable",
     "ss_subjectSsNonTaxable",
 
     "ss_partnerSsGross",
-    "ss_partnerSsWithholdings",
     "ss_partnerSsTakehome",
     "ss_partnerSsTaxable",
     "ss_partnerSsNonTaxable",
@@ -147,7 +137,7 @@ class ReportData extends BaseReports {
     // DEMOGRAPHICS
     this.demographics_subjectAge = "";
     this.demographics_partnerAge = "";
-    this.demographics_numberOfDependents = 0;
+    // this.demographics_numberOfDependents = 0;
     this.demographics_hasPartner = false;
     this.demographics_isWidowed = false;
     this.demographics_isRetired = false;
@@ -158,18 +148,15 @@ class ReportData extends BaseReports {
     this.income_subjectGrossWages = 0;
     this.income_wagesWithholdingRate = 0;
     this.income_subject401kContribution = 0;
-    this.income_subjectWagesWithholdings = 0;
     this.income_subjectPayrollDeductions = 0;
     this.income_subjectTakehomeWages = 0;
 
     this.income_partnerGrossWages = 0;
     this.income_partner401kContribution = 0;
     this.income_partnerPayrollDeductions = 0;
-    this.income_partnerWagesWithholdings = 0;
     this.income_partnerTakehomeWages = 0;
 
     this.income_miscIncomeGross = 0;
-    this.income_miscIncomeWithholdings = 0;
     this.income_miscTaxableIncomeTakehome = 0;
 
     this.income_miscTaxFreeIncome = 0;
@@ -177,7 +164,6 @@ class ReportData extends BaseReports {
     this.income_savingsInterest = 0;
 
     this.income_subject401kGross = 0;
-    this.income_subject401kWithholdings = 0;
     this.income_subject401kTakehome = 0;
     this.income_subjectRMD = 0;
 
@@ -185,22 +171,20 @@ class ReportData extends BaseReports {
     this.income_partnerUsingRMD = false;
 
     this.income_partner401kGross = 0;
-    this.income_partner401kWithholdings = 0;
     this.income_partner401kTakehome = 0;
     this.income_partnerRMD = 0;
 
     this.income_subjectPensionGross = 0;
-    this.income_subjectPensionWithholdings = 0;
+
     this.income_subjectPensionTakehome = 0;
 
     this.income_partnerPensionGross = 0;
-    this.income_partnerPensionWithholdings = 0;
     this.income_partnerPensionTakehome = 0;
 
-    this.savings_OpeningBalance = 0;
+    this.savings_YearBeginBalance = 0;
     // this.savings_Deposits = 0;
     this.savings_Withdrawals = 0;
-    this.savings_Balance = 0;
+    this.savings_YearEndBalance = 0;
 
     // SPENDING AND ASK
     this.ask = 0;
@@ -219,10 +203,21 @@ class ReportData extends BaseReports {
     this.taxes_taxableIncome = 0;
     this.taxes_nonTaxableIncome = 0;
 
-    this.taxes_totalWithholdings = 0;
     this.taxes_overPayment = 0;
     this.taxes_underPayment = 0;
     this.taxes_federalIncomeTaxOwed = 0;
+
+    this.withholdings_subjectWages = 0;
+    this.withholdings_partnerWages = 0;
+    this.withholdings_partner401k = 0;
+    this.withholdings_subjectPension = 0;
+    this.withholdings_subjectSs = 0;
+    this.withholdings_partnerSs = 0;
+    this.withholdings_partnerPension = 0;
+    this.withholdings_subject401k = 0;
+    this.withholdings_miscTaxableIncome = 0;
+
+    this.withholdings_total = 0;
 
     this.taxes_401kWithholdingRate = 0;
     this.taxes_pensionWithholdingRate = 0;
@@ -231,11 +226,9 @@ class ReportData extends BaseReports {
     // SOCIAL SECURITY
     this.ss_withholdingRate = 0;
     this.ss_subjectSsGross = 0;
-    this.ss_subjectSsWithholdings = 0;
-    this.ss_subjectSsTakehome = 0;
+    this.income_subjectSsTakehome = 0;
     this.ss_partnerSsGross = 0;
-    this.ss_partnerSsWithholdings = 0;
-    this.ss_partnerSsTakehome = 0;
+    this.income_ssPartnerTakehome = 0;
     this.ss_subjectSsTaxable = 0;
     this.ss_partnerSsTaxable = 0;
 
@@ -248,8 +241,8 @@ class ReportData extends BaseReports {
 
     // RETIREMENT ACCOUNTS
 
-    this.retirementAcct_subjectSavingsContributions = 0;
-    this.retirementAcct_partnerSavingsContributions = 0;
+    // this.retirementAcct_subjectSavingsContributions = 0;
+    // this.retirementAcct_partnerSavingsContributions = 0;
 
     // Interest earned during the year
     this.retirementAcct_subject401kInterest = 0;
@@ -285,7 +278,7 @@ class ReportData extends BaseReports {
 
   // SOCIAL SECURITY
 
-  get ss_totalSsGross() {
+  get income_SsGross() {
     return this.ss_subjectSsGross + this.ss_partnerSsGross;
   }
 
@@ -305,18 +298,18 @@ class ReportData extends BaseReports {
     return this.ss_subjectSsNonTaxable + this.ss_partnerSsNonTaxable;
   }
 
-  get taxes_subjectWagesWithholdings() {
-    return this.income_subjectWagesWithholdings;
-  }
-  get taxes_partnerWagesWithholdings() {
-    return this.income_partnerWagesWithholdings;
-  }
-  get taxes_subject401kWithholdings() {
-    return this.income_subject401kWithholdings;
-  }
-  get taxes_partner401kWithholdings() {
-    return this.income_partner401kWithholdings;
-  }
+  // get withholdings_subjectWages() {
+  //   return this.income_subjectWagesWithholdings;
+  // }
+  // get withholdings_partnerWages() {
+  //   return this.income_partnerWagesWithholdings;
+  // }
+  // get withholdings_subject401k() {
+  //   return this.income_subject401kWithholdings;
+  // }
+  // get withholdings_partner401k() {
+  //   return this.income_partner401kWithholdings;
+  // }
   get savings_Interest() {
     return this.income_savingsInterest;
   }
@@ -338,33 +331,30 @@ class ReportData extends BaseReports {
     ).asCurrency();
   }
 
-  get income_wagesTaxable() {
-    return (
-      this.income_subjectTakehomeWages +
-      this.income_partnerTakehomeWages +
-      this.income_subjectWagesWithholdings +
-      this.income_partnerWagesWithholdings
-    ).asCurrency();
-  }
+  // get income_wagesTaxable() {
+  //   return (
+  //     this.income_subjectTakehomeWages +
+  //     this.income_partnerTakehomeWages +
+  //     this.withholdings_subjectWages +
+  //     this.withholdings_partnerWages
+  //   ).asCurrency();
+  // }
 
-  get income_wagesTaxExempt() {
-    return (
-      this.income_subjectPayrollDeductions +
-      this.income_partnerPayrollDeductions +
-      this.income_subject401kContribution +
-      this.income_partner401kContribution
-    ).asCurrency();
-  }
+  // get income_wagesTaxExempt() {
+  //   return (
+  //     this.income_subjectPayrollDeductions +
+  //     this.income_partnerPayrollDeductions +
+  //     this.income_subject401kContribution +
+  //     this.income_partner401kContribution
+  //   ).asCurrency();
+  // }
 
   get income_combinedTakehomeWages() {
     return this.income_subjectTakehomeWages + this.income_partnerTakehomeWages;
   }
 
-  get income_combinedWagesWithholdings() {
-    return (
-      this.income_subjectWagesWithholdings +
-      this.income_partnerWagesWithholdings
-    );
+  get withholdings_combinedWages() {
+    return this.withholdings_subjectWages + this.withholdings_partnerWages;
   }
 
   get income_combinedWagesGross() {
@@ -382,23 +372,20 @@ class ReportData extends BaseReports {
     return this.ss_subjectSsGross + this.ss_partnerSsGross;
   }
 
-  get ss_combinedWithholdings() {
-    return this.ss_subjectSsWithholdings + this.ss_partnerSsWithholdings;
+  get withholdings_combinedSs() {
+    return this.withholdings_subjectSs + this.withholdings_partnerSs;
   }
 
   get ss_combinedTakehome() {
-    return this.ss_subjectSsTakehome + this.ss_partnerSsTakehome;
+    return this.income_subjectSsTakehome + this.income_ssPartnerTakehome;
   }
 
   get income_combinedPensionGross() {
     return this.income_subjectPensionGross + this.income_partnerPensionGross;
   }
 
-  get income_combinedPensionWithholdings() {
-    return (
-      this.income_subjectPensionWithholdings +
-      this.income_partnerPensionWithholdings
-    );
+  get withholdings_combinedPension() {
+    return this.withholdings_subjectPension + this.withholdings_partnerPension;
   }
 
   get income_combinedPensionTakehome() {
@@ -416,10 +403,8 @@ class ReportData extends BaseReports {
     return this.income_subjectUsingRMD || this.income_partnerUsingRMD;
   }
 
-  get income_combined401kWithholdings() {
-    return (
-      this.income_subject401kWithholdings + this.income_partner401kWithholdings
-    );
+  get withholdings_combined401k() {
+    return this.withholdings_subject401k + this.withholdings_partner401k;
   }
 
   get income_combined401kTakehome() {
@@ -440,18 +425,18 @@ class ReportData extends BaseReports {
     );
   }
 
-  get balances_combinedRoth() {
+  get balances_yearEndRothCombined() {
     return (
       this.retirementAcct_subjectRothBalance +
       this.retirementAcct_partnerRothBalance
     );
   }
 
-  get balances_total() {
+  get balances_yearEndtotal() {
     return (
       this.balances_combined401k +
-      this.balances_combinedRoth +
-      this.savings_Balance
+      this.balances_yearEndRothCombined +
+      this.savings_YearEndBalance
     );
   }
 
@@ -472,8 +457,8 @@ class ReportData extends BaseReports {
       this.income_partner401kTakehome +
       this.income_subjectPensionTakehome +
       this.income_partnerPensionTakehome +
-      this.ss_subjectSsTakehome +
-      this.ss_partnerSsTakehome +
+      this.income_subjectSsTakehome +
+      this.income_ssPartnerTakehome +
       this.savings_Withdrawals +
       this.retirementAcct_partnerRothWithdrawals +
       this.retirementAcct_subjectRothWithdrawals +
@@ -490,26 +475,26 @@ class ReportData extends BaseReports {
       this.income_partner401kGross +
       this.income_subjectPensionGross +
       this.income_partnerPensionGross +
-      this.ss_totalSsGross +
+      this.income_SsGross +
       this.income_savingsInterest;
 
     return result.asCurrency();
   }
 
-  get income_total_withholdings() {
-    const result =
-      this.income_subjectWagesWithholdings +
-      this.income_partnerWagesWithholdings +
-      this.income_subject401kWithholdings +
-      this.income_partner401kWithholdings +
-      this.income_subjectPensionWithholdings +
-      this.income_partnerPensionWithholdings +
-      this.ss_subjectSsWithholdings +
-      this.ss_partnerSsWithholdings +
-      this.income_miscIncomeWithholdings;
+  // get income_total_withholdings() {
+  //   const result =
+  //     this.withholdings_subjectWages +
+  //     this.withholdings_partnerWages +
+  //     this.withholdings_subject401k +
+  //     this.withholdings_partner401k +
+  //     this.withholdings_subjectPension +
+  //     this.withholdings_partnerPension +
+  //     this.withholdings_subjectSs +
+  //     this.withholdings_partnerSs +
+  //     this.withholdings_miscIncome;
 
-    return result.asCurrency();
-  }
+  //   return result.asCurrency();
+  // }
 
   get taxes_effectiveTaxRate() {
     if (this.income_total_gross === 0) return 0;
