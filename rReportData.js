@@ -7,11 +7,11 @@ class ReportData extends BaseReports {
     "demographics_subjectAge",
     "demographics_partnerAge",
     "demographics_filingStatus",
-    // WAGES AND COMPENSATION
 
-    "ask",
+    // WAGES AND COMPENSATION
+    "projectedSpend",
     "takeHome",
-    // "spend",
+    "actualSpend",
     "spending_shortfall",
     "spending_surplus",
 
@@ -187,7 +187,7 @@ class ReportData extends BaseReports {
     this.savings_YearEndBalance = 0;
 
     // SPENDING AND ASK
-    this.ask = 0;
+    this.projectedSpend = 0;
     this.actualSpend = 0;
     this.spending_overriding = false;
     this.takeHome = 0;

@@ -509,7 +509,7 @@ function showAnnualSpendBreakdown(data) {
   breakdownHtml += `
    <div class="ss-breakdown-item breakdown-accent">
         <span class="ss-breakdown-label">Spend:</span>
-        <span class="ss-breakdown-value">${data.ask.asWholeDollars()}</span>
+        <span class="ss-breakdown-value">${data.projectedSpend.asWholeDollars()}</span>
     </div>`;
 
   popup.setContent(breakdownHtml);

@@ -556,7 +556,7 @@ const columnGroups = [
           if (calc.reportData.spending_overriding) {
             warnings.push(`⚠️ Overriding spending`);
           }
-          return money("outgoing", calc.reportData.ask, {
+          return money("outgoing", calc.reportData.projectedSpend, {
             action: "showAnnualSpendBreakdown",
             index,
             badge:
@@ -999,7 +999,7 @@ function generateOutputAndSummary(inputs, calculations) {
 
   for (const calc of allCalcs) {
     const totalNet = calc.reportData.income_total_net;
-    const ask = calc.reportData.ask;
+    const ask = calc.reportData.projectedSpend;
 
     if (totalNet < ask) {
       fullyFunded = false;

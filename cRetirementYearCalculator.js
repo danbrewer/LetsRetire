@@ -446,7 +446,7 @@ class RetirementYearCalculator {
 
     const actualSpend = Math.min(cash, spend);
 
-    this.#reportingYear.ReportData.ask = spend;
+    this.#reportingYear.ReportData.projectedSpend = spend;
     this.#reportingYear.ReportData.actualSpend = actualSpend.asCurrency();
     this.#reportingYear.ReportData.spending_overriding =
       this.#fiscalData.overridingSpend;
