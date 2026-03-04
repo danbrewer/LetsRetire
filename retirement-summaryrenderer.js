@@ -588,7 +588,7 @@ const columnGroups = [
       {
         label: "SS (Net)",
         render: (calc, index) =>
-          money("income", calc.reportData.ss_combinedTakehome, {
+          money("income", calc.reportData.income_combinedSsTakehome, {
             index,
             action: "showSsBreakdown",
           }),
@@ -647,7 +647,7 @@ const columnGroups = [
             );
           }
 
-          return money("income", calc.reportData.income_total_net, {
+          return money("income", calc.reportData.income_total_takehome, {
             index,
             action: "showTotalCashBreakdown",
             badge:
@@ -723,7 +723,7 @@ const columnGroups = [
       {
         label: "Misc Gross",
         render: (calc) =>
-          money("income", calc.reportData.income_miscIncomeGross),
+          money("income", calc.reportData.income_miscTaxableIncomeGross),
       },
       {
         label: "Total Gross",
@@ -866,6 +866,20 @@ function generateCSV() {
         // @ts-ignore - Dynamic property access for CSV export
         let value = calc.reportData[field];
 
+        // If undefined, try to find a getter with the same name
+        if (value === undefined) {
+          // Check if there's a getter on the object or its prototype chain
+          let obj = calc.reportData;
+          while (obj) {
+            const descriptor = Object.getOwnPropertyDescriptor(obj, field);
+            if (descriptor && descriptor.get) {
+              value = descriptor.get.call(calc.reportData);
+              break;
+            }
+            obj = Object.getPrototypeOf(obj);
+          }
+        }
+
         // Handle different value types
         if (value === null || value === undefined) {
           return "";
@@ -998,7 +1012,7 @@ function generateOutputAndSummary(inputs, calculations) {
   let fullyFunded = true;
 
   for (const calc of allCalcs) {
-    const totalNet = calc.reportData.income_total_net;
+    const totalNet = calc.reportData.income_total_takehome;
     const ask = calc.reportData.projectedSpend;
 
     if (totalNet < ask) {

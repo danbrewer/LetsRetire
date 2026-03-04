@@ -124,7 +124,7 @@ class RetirementYearCalculator {
         PERIODIC_FREQUENCY.MONTHLY
       );
 
-      this.#reportingYear.ReportData.income_miscIncomeGross = miscIncome;
+      this.#reportingYear.ReportData.income_miscTaxableIncomeGross = miscIncome;
 
       const withholdings =
         this.#fixedIncomeStreams.miscTaxableIncomeWithholdings;
@@ -602,23 +602,23 @@ class RetirementYearCalculator {
     this.#reportingYear.ReportData.taxes_ssWithholdingRate =
       this.#inputs.flatSsWithholdingRate;
 
-    this.#reportingYear.ReportData.ss_subjectSsGross +=
+    this.#reportingYear.ReportData.income_subjectSsGross +=
       this.#fixedIncomeStreams.subjectSsGross ?? 0;
     this.#reportingYear.ReportData.withholdings_subjectSs +=
       this.#fixedIncomeStreams.subjectSsWithholdings ?? 0;
     this.#reportingYear.ReportData.income_subjectSsTakehome +=
       this.#fixedIncomeStreams.subjectSsActualIncome ?? 0;
 
-    this.#reportingYear.ReportData.ss_partnerSsGross +=
+    this.#reportingYear.ReportData.income_partnerSsGross +=
       this.#fixedIncomeStreams.partnerSsGross ?? 0;
     this.#reportingYear.ReportData.withholdings_partnerSs +=
       this.#fixedIncomeStreams.partnerSsWithholdings ?? 0;
-    this.#reportingYear.ReportData.income_ssPartnerTakehome +=
+    this.#reportingYear.ReportData.income_partnerSsTakehome +=
       this.#fixedIncomeStreams.partnerSsActualIncome ?? 0;
 
-    this.#reportingYear.ReportData.ss_subjectSsTaxable =
+    this.#reportingYear.ReportData.ss_subjectTaxable =
       ssBreakdown.subjectTaxablePortion;
-    this.#reportingYear.ReportData.ss_partnerSsTaxable =
+    this.#reportingYear.ReportData.ss_partnerTaxable =
       ssBreakdown.partnerTaxablePortion;
     this.#reportingYear.ReportData.ss_provisionalIncome =
       ssBreakdown.provisionalIncome;

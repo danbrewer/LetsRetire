@@ -233,7 +233,7 @@ class WorkingYearCalculator {
         PERIODIC_FREQUENCY.MONTHLY
       );
 
-      this.#reportingYear.ReportData.income_miscIncomeGross = miscIncome;
+      this.#reportingYear.ReportData.income_miscTaxableIncomeGross = miscIncome;
 
       const withholdings =
         this.#fixedIncomeStreams.miscTaxableIncomeWithholdings;

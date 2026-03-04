@@ -46,15 +46,15 @@ function showSsBreakdown(data) {
   // const content = document.getElementById("ssBreakdownContent");
 
   const combinedSsGross =
-    (data.ss_subjectSsGross || 0) + (data.ss_partnerSsGross || 0);
+    (data.income_subjectSsGross || 0) + (data.income_partnerSsGross || 0);
   const combinedSsTaxable =
-    (data.ss_subjectSsTaxable || 0) + (data.ss_partnerSsTaxable || 0);
+    (data.ss_subjectTaxable || 0) + (data.ss_partnerTaxable || 0);
   const combinedSsNonTaxable =
     (data.ss_subjectSsNonTaxable || 0) + (data.ss_partnerSsNonTaxable || 0);
   const combinedSsWithholdings =
     (data.withholdings_subjectSs || 0) + (data.withholdings_partnerSs || 0);
   const combinedSsTakehome =
-    (data.income_subjectSsTakehome || 0) + (data.income_ssPartnerTakehome || 0);
+    (data.income_subjectSsTakehome || 0) + (data.income_partnerSsTakehome || 0);
   // Build the breakdown content
   let breakdownHtml = `
     <div class="ss-breakdown-item">
@@ -62,7 +62,7 @@ function showSsBreakdown(data) {
         <span class="ss-breakdown-value">${data.year}</span>
     </div>
     <div class="ss-breakdown-item">
-        <span class="ss-breakdown-label">SS Gross (Annual):</span>
+        <span class="ss-breakdown-label">SS Benefits (combined):</span>
         <span class="ss-breakdown-value">${fmt(combinedSsGross)}</span>
     </div>
     <div class="ss-breakdown-item">
@@ -82,7 +82,7 @@ function showSsBreakdown(data) {
             <div class="ss-breakdown-item" style="border: none; padding: 4px 0;">
             <span class="ss-breakdown-label">Other Taxable Income:</span>
             <span class="ss-breakdown-value">${fmt(
-              data.income_taxableIncome || 0
+              data.ss_NonSsTaxableIncome || 0
             )}</span>
             </div>
             <div class="ss-breakdown-item" style="border: none; padding: 4px 0;">
@@ -198,7 +198,7 @@ function showSsGrossBreakdown(data) {
   const popup = ensurePopup("ss", "Social Security Gross");
 
   const combinedSsGross =
-    (data.ss_subjectSsGross || 0) + (data.ss_partnerSsGross || 0);
+    (data.income_subjectSsGross || 0) + (data.income_partnerSsGross || 0);
   // Build the breakdown content
   let breakdownHtml = `
     <div class="ss-breakdown-item">
@@ -207,11 +207,11 @@ function showSsGrossBreakdown(data) {
     </div>
     <div class="ss-breakdown-item">
         <span class="ss-breakdown-label">Subject SS Gross:</span>
-        <span class="ss-breakdown-value">${data.ss_subjectSsGross.asWholeDollars()}</span>
+        <span class="ss-breakdown-value">${data.income_subjectSsGross.asWholeDollars()}</span>
     </div>
     <div class="ss-breakdown-item">
         <span class="ss-breakdown-label">Partner SS Gross:</span>
-        <span class="ss-breakdown-value">${data.ss_partnerSsGross.asWholeDollars()}</span>
+        <span class="ss-breakdown-value">${data.income_partnerSsGross.asWholeDollars()}</span>
     </div>
     <div class="ss-breakdown-item breakdown-accent">
         <span class="ss-breakdown-label">Total:</span>
@@ -957,7 +957,7 @@ function showTotalCashBreakdown(data) {
     </div>
     <div class="ss-breakdown-item">
         <span class="ss-breakdown-label">Combined Social Security:</span>
-        <span class="ss-breakdown-value">${data.ss_combinedTakehome.asWholeDollars()}</span>
+        <span class="ss-breakdown-value">${data.income_combinedSsTakehome.asWholeDollars()}</span>
     </div>
     <div class="ss-breakdown-item">
         <span class="ss-breakdown-label">Combined Pension:</span>
@@ -996,7 +996,7 @@ function showTotalCashBreakdown(data) {
   breakdownHtml += `    
     <div class="ss-breakdown-item breakdown-accent">
         <span class="ss-breakdown-label">Total:</span>
-        <span class="ss-breakdown-value">${data.income_total_net.asWholeDollars()}</span>
+        <span class="ss-breakdown-value">${data.income_total_takehome.asWholeDollars()}</span>
     </div>`;
 
   popup.setContent(breakdownHtml);
