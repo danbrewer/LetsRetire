@@ -1,4 +1,4 @@
-import { generateCSV } from "./retirement-summaryrenderer.js";
+import { generateCSV, generateJSON } from "./retirement-summaryrenderer.js";
 
 export function exportCSV() {
   generateCSV();
@@ -100,7 +100,8 @@ export function exportCSV() {
 }
 
 export function exportJSON() {
-  throw new Error("JSON export is currently disabled.");
+  generateJSON();
+  // throw new Error("JSON export is currently disabled.");
   // const inputs = {};
   // // Collect all input values including spending overrides
   // document.querySelectorAll("input, select").forEach((input) => {

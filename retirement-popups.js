@@ -683,19 +683,19 @@ function showSavingsRothBreakdown(data) {
   let breakdownHtml = `
     <div class="ss-breakdown-item">
       <span class="ss-breakdown-label">Savings withdrawal:</span>
-      <span class="ss-breakdown-value">${data.savings_Withdrawals.asWholeDollars()}</span>
+      <span class="ss-breakdown-value">${data.account_savingsWithdrawals.asWholeDollars()}</span>
     </div>
     <div class="ss-breakdown-item">
         <span class="ss-breakdown-label">Subject Roth withdrawal:</span>
-        <span class="ss-breakdown-value">${data.retirementAcct_subjectRothWithdrawals.asWholeDollars()}</span>
+        <span class="ss-breakdown-value">${data.account_subjectRothWithdrawals.asWholeDollars()}</span>
     </div>
     <div class="ss-breakdown-item">
         <span class="ss-breakdown-label">Partner Roth withdrawal:</span>
-        <span class="ss-breakdown-value">${data.retirementAcct_partnerRothWithdrawals.asWholeDollars()}</span>
+        <span class="ss-breakdown-value">${data.account_partnerRothWithdrawals.asWholeDollars()}</span>
     </div>
         <div class="ss-breakdown-item breakdown-accent">
         <span class="ss-breakdown-label">Subject Roth withdrawal:</span>
-        <span class="ss-breakdown-value">${(data.savings_Withdrawals + data.income_combinedRothTakehome).asWholeDollars()}</span>
+        <span class="ss-breakdown-value">${(data.account_savingsWithdrawals + data.income_combinedRothTakehome).asWholeDollars()}</span>
     </div>
     `;
 
@@ -714,19 +714,19 @@ function showSavingsBalanceBreakdown(data) {
   const popup = ensurePopup("savingsBalance", "Savings Balance Breakdown");
 
   const deposits =
-    // data.retirementAcct_subjectSavingsContributions +
-    // data.retirementAcct_partnerSavingsContributions +
+    // data.account_subjectSavingsContributions +
+    // data.account_partnerSavingsContributions +
     data.spending_surplus;
 
   // Build the breakdown content
   let breakdownHtml = `
     <div class="ss-breakdown-item">
       <span class="ss-breakdown-label">Opening balance</span>
-      <span class="ss-breakdown-value">${data.savings_YearBeginBalance.asWholeDollars()}</span>
+      <span class="ss-breakdown-value">${data.account_savingsYearBeginBalance.asWholeDollars()}</span>
     </div>
     <div class="ss-breakdown-item">
         <span class="ss-breakdown-label">Withdrawals:</span>
-        <span class="ss-breakdown-value">${data.savings_Withdrawals.asWholeDollars()}</span>
+        <span class="ss-breakdown-value">${data.account_savingsWithdrawals.asWholeDollars()}</span>
     </div>
     <div class="ss-breakdown-item">
         <span class="ss-breakdown-label">Deposits:</span>
@@ -734,7 +734,7 @@ function showSavingsBalanceBreakdown(data) {
     </div>
      <div class="ss-breakdown-item">
         <span class="ss-breakdown-label">Interest earned:</span>
-        <span class="ss-breakdown-value">${data.savings_Interest.asWholeDollars()}</span>
+        <span class="ss-breakdown-value">${data.account_savingsInterest.asWholeDollars()}</span>
     </div>
     <div class="ss-breakdown-item">
         <span class="ss-breakdown-label">Tax refund:</span>
@@ -746,7 +746,7 @@ function showSavingsBalanceBreakdown(data) {
     </div>
     <div class="ss-breakdown-item breakdown-accent">
         <span class="ss-breakdown-label">Closing balance:</span>
-        <span class="ss-breakdown-value">${data.savings_YearEndBalance.asWholeDollars()}</span>
+        <span class="ss-breakdown-value">${data.account_savingsYearEndBalance.asWholeDollars()}</span>
     </div>
     `;
 
@@ -765,8 +765,7 @@ function show401kBalanceBreakdown(data) {
   const popup = ensurePopup("401kBalance", "401k Balance Breakdown");
 
   const total401kBalance =
-    data.retirementAcct_subject401kBalance +
-    data.retirementAcct_partner401kBalance;
+    data.account_subject401kBalance + data.account_partner401kBalance;
 
   // Build the breakdown content
   let breakdownHtml = `
@@ -774,11 +773,11 @@ function show401kBalanceBreakdown(data) {
       <strong style="color: var(--accent);">Subject:</strong>
       <div class="ss-breakdown-item">
         <span class="ss-breakdown-label">Opening balance</span>
-        <span class="ss-breakdown-value">${data.retirementAcct_subject401kOpenBalance.asWholeDollars()}</span>
+        <span class="ss-breakdown-value">${data.account_subject401kOpenBalance.asWholeDollars()}</span>
       </div>
       <div class="ss-breakdown-item">
           <span class="ss-breakdown-label">Withdrawals:</span>
-          <span class="ss-breakdown-value">${data.retirementAcct_subject401kWithdrawals.asWholeDollars()}</span>
+          <span class="ss-breakdown-value">${data.account_subject401kWithdrawals.asWholeDollars()}</span>
       </div>
       <div class="ss-breakdown-item">
           <span class="ss-breakdown-label">Deposits:</span>
@@ -786,11 +785,11 @@ function show401kBalanceBreakdown(data) {
       </div>
       <div class="ss-breakdown-item">
           <span class="ss-breakdown-label">Interest earned:</span>
-          <span class="ss-breakdown-value">${data.retirementAcct_subject401kInterest.asWholeDollars()}</span>
+          <span class="ss-breakdown-value">${data.account_subject401kInterest.asWholeDollars()}</span>
       </div>
       <div class="ss-breakdown-item">
           <span class="ss-breakdown-label">Closing balance:</span>
-          <span class="ss-breakdown-value">${data.retirementAcct_subject401kBalance.asWholeDollars()}</span>
+          <span class="ss-breakdown-value">${data.account_subject401kBalance.asWholeDollars()}</span>
       </div>
     </div>
     `;
@@ -801,11 +800,11 @@ function show401kBalanceBreakdown(data) {
       <strong style="color: var(--accent);">Partner:</strong>
       <div class="ss-breakdown-item">
         <span class="ss-breakdown-label">Opening balance</span>
-        <span class="ss-breakdown-value">${data.retirementAcct_partner401kOpenBalance.asWholeDollars()}</span>
+        <span class="ss-breakdown-value">${data.account_partner401kOpenBalance.asWholeDollars()}</span>
       </div>
       <div class="ss-breakdown-item">
           <span class="ss-breakdown-label">Withdrawals:</span>
-          <span class="ss-breakdown-value">${data.retirementAcct_partner401kWithdrawals.asWholeDollars()}</span>
+          <span class="ss-breakdown-value">${data.account_partner401kWithdrawals.asWholeDollars()}</span>
       </div>
       <div class="ss-breakdown-item">
           <span class="ss-breakdown-label">Deposits:</span> 
@@ -813,11 +812,11 @@ function show401kBalanceBreakdown(data) {
       </div>
       <div class="ss-breakdown-item">
           <span class="ss-breakdown-label">Interest earned:</span>
-          <span class="ss-breakdown-value">${data.retirementAcct_partner401kInterest.asWholeDollars()}</span>
+          <span class="ss-breakdown-value">${data.account_partner401kInterest.asWholeDollars()}</span>
       </div>
       <div class="ss-breakdown-item">
           <span class="ss-breakdown-label">Closing balance:</span>
-          <span class="ss-breakdown-value">${data.retirementAcct_partner401kBalance.asWholeDollars()}</span>
+          <span class="ss-breakdown-value">${data.account_partner401kBalance.asWholeDollars()}</span>
       </div>
     </div>
       `;
@@ -848,23 +847,23 @@ function showAccountBalances(data) {
   let breakdownHtml = `
     <div class="ss-breakdown-item">
       <span class="ss-breakdown-label">Savings:</span>
-      <span class="ss-breakdown-value">${data.savings_YearEndBalance.asWholeDollars()}</span>
+      <span class="ss-breakdown-value">${data.account_savingsYearEndBalance.asWholeDollars()}</span>
     </div>
     <div class="ss-breakdown-item">
         <span class="ss-breakdown-label">Subject Roth IRA:</span>
-        <span class="ss-breakdown-value">${data.retirementAcct_subjectRothBalance.asWholeDollars()}</span>
+        <span class="ss-breakdown-value">${data.account_subjectRothBalance.asWholeDollars()}</span>
     </div>
     <div class="ss-breakdown-item">
         <span class="ss-breakdown-label">Partner Roth IRA:</span>
-        <span class="ss-breakdown-value">${data.retirementAcct_partnerRothBalance.asWholeDollars()}</span>
+        <span class="ss-breakdown-value">${data.account_partnerRothBalance.asWholeDollars()}</span>
     </div>
         <div class="ss-breakdown-item">
         <span class="ss-breakdown-label">Subject 401k:</span>
-        <span class="ss-breakdown-value">${data.retirementAcct_subject401kBalance.asWholeDollars()}</span>
+        <span class="ss-breakdown-value">${data.account_subject401kBalance.asWholeDollars()}</span>
     </div>
     <div class="ss-breakdown-item">
         <span class="ss-breakdown-label">Partner 401k:</span>
-        <span class="ss-breakdown-value">${data.retirementAcct_partner401kBalance.asWholeDollars()}</span>
+        <span class="ss-breakdown-value">${data.account_partner401kBalance.asWholeDollars()}</span>
     </div>
         <div class="ss-breakdown-item breakdown-accent">
         <span class="ss-breakdown-label">Total:</span>
@@ -969,7 +968,7 @@ function showTotalCashBreakdown(data) {
     </div>
     <div class="ss-breakdown-item">
         <span class="ss-breakdown-label">Savings:</span>
-        <span class="ss-breakdown-value">${data.savings_Withdrawals.asWholeDollars()}</span>
+        <span class="ss-breakdown-value">${data.account_savingsWithdrawals.asWholeDollars()}</span>
     </div>
     <div class="ss-breakdown-item">
         <span class="ss-breakdown-label">Roth Withdrawals:</span>

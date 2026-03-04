@@ -253,7 +253,7 @@ class Calculation {
   }
 
   get savingsWithdrawal() {
-    const result = this.#yearData.reportData.savings_Withdrawals; // TODO: add savingsWithdrawal to RetirementYearData
+    const result = this.#yearData.reportData.account_savingsWithdrawals; // TODO: add savingsWithdrawal to RetirementYearData
 
     // const result = this.#yearData.accountYear
     //   .getWithdrawals(ACCOUNT_TYPES.SAVINGS, TransactionCategory.CashTransfer)

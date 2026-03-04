@@ -623,7 +623,7 @@ const columnGroups = [
         render: (calc, index) => {
           return money(
             "income",
-            calc.reportData.savings_Withdrawals +
+            calc.reportData.account_savingsWithdrawals +
               calc.reportData.income_combinedRothTakehome,
             { index, action: "showSavingsRothBreakdown" }
           );
@@ -679,7 +679,7 @@ const columnGroups = [
       {
         label: "Taxable Interest",
         render: (calc) =>
-          money("income", calc.reportData.income_savingsInterest),
+          money("income", calc.reportData.account_savingsInterest),
       },
 
       {
@@ -786,7 +786,7 @@ const columnGroups = [
       {
         label: "Savings Bal",
         render: (calc, index) =>
-          money("neutral", calc.reportData.savings_YearEndBalance, {
+          money("neutral", calc.reportData.account_savingsYearEndBalance, {
             index,
             action: "showSavingsBalanceBreakdown",
           }),
@@ -885,12 +885,12 @@ function generateCSV() {
           return "";
         }
 
-        // If it's a number with currency formatting, extract the numeric value
-        if (typeof value === "object" && value.asCurrency) {
-          value = value.asCurrency();
-        } else if (typeof value === "object" && value.asWholeDollars) {
-          value = value.asWholeDollars();
-        }
+        // // If it's a number with currency formatting, extract the numeric value
+        // if (typeof value === "object" && value.asCurrency) {
+        //   value = value.asCurrency();
+        // } else if (typeof value === "object" && value.asWholeDollars) {
+        //   value = value.asWholeDollars();
+        // }
 
         // Convert to string and escape CSV special characters
         let stringValue = String(value);
@@ -917,6 +917,61 @@ function generateCSV() {
   const a = document.createElement("a");
   a.href = url;
   a.download = "retirement_results.csv";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function generateJSON() {
+  const calculations = currentCalculations?.getAllCalculations();
+  if (!calculations || calculations.length === 0) return;
+
+  // Get all the field names from ReportData.dumpOrder
+  const fields = ReportData.dumpOrder;
+
+  // Create JSON array with each calculation as an object
+  const jsonData = calculations.map((calc) => {
+    const row = /** @type {Record<string, any>} */ ({});
+
+    fields.forEach((field) => {
+      // Get the value from reportData for this field
+      // @ts-ignore - Dynamic property access for JSON export
+      let value = calc.reportData[field];
+
+      // If undefined, try to find a getter with the same name
+      if (value === undefined) {
+        // Check if there's a getter on the object or its prototype chain
+        let obj = calc.reportData;
+        while (obj) {
+          const descriptor = Object.getOwnPropertyDescriptor(obj, field);
+          if (descriptor && descriptor.get) {
+            value = descriptor.get.call(calc.reportData);
+            break;
+          }
+          obj = Object.getPrototypeOf(obj);
+        }
+      }
+
+      // Handle different value types
+      if (value === null || value === undefined) {
+        row[field] = null;
+      } else {
+        // Keep primitive values as is
+        row[field] = value;
+      }
+    });
+
+    return row;
+  });
+
+  const json = JSON.stringify(jsonData, null, 2);
+
+  const blob = new Blob([json], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "retirement_results.json";
   document.body.appendChild(a);
   a.click();
   a.remove();
@@ -1081,4 +1136,5 @@ export {
   regenerateTable,
   buildColumnMenu,
   generateCSV,
+  generateJSON,
 };

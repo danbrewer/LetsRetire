@@ -295,7 +295,7 @@ class RetirementYearCalculator {
   #applySavingsInterest() {
     this.#accountYear.recordInterestEarnedForYear(ACCOUNT_TYPES.SAVINGS);
 
-    this.#reportingYear.ReportData.income_savingsInterest = this.#accountYear
+    this.#reportingYear.ReportData.account_savingsInterest = this.#accountYear
       .getDeposits(ACCOUNT_TYPES.SAVINGS, TransactionCategory.Interest)
       .asCurrency();
 
@@ -306,11 +306,11 @@ class RetirementYearCalculator {
     this.#accountYear.recordInterestEarnedForYear(ACCOUNT_TYPES.SUBJECT_401K);
     this.#accountYear.recordInterestEarnedForYear(ACCOUNT_TYPES.PARTNER_401K);
 
-    this.#reportingYear.ReportData.retirementAcct_subject401kInterest =
+    this.#reportingYear.ReportData.account_subject401kInterest =
       this.#accountYear
         .getDeposits(ACCOUNT_TYPES.SUBJECT_401K, TransactionCategory.Interest)
         .asCurrency();
-    this.#reportingYear.ReportData.retirementAcct_partner401kInterest =
+    this.#reportingYear.ReportData.account_partner401kInterest =
       this.#accountYear
         .getDeposits(ACCOUNT_TYPES.PARTNER_401K, TransactionCategory.Interest)
         .asCurrency();
@@ -326,14 +326,14 @@ class RetirementYearCalculator {
       ACCOUNT_TYPES.PARTNER_ROTH_IRA
     );
 
-    this.#reportingYear.ReportData.retirementAcct_subjectRothInterest =
+    this.#reportingYear.ReportData.account_subjectRothInterest =
       this.#accountYear
         .getDeposits(
           ACCOUNT_TYPES.SUBJECT_ROTH_IRA,
           TransactionCategory.Interest
         )
         .asCurrency();
-    this.#reportingYear.ReportData.retirementAcct_partnerRothInterest =
+    this.#reportingYear.ReportData.account_partnerRothInterest =
       this.#accountYear
         .getDeposits(
           ACCOUNT_TYPES.PARTNER_ROTH_IRA,
@@ -677,22 +677,22 @@ class RetirementYearCalculator {
   }
 
   #generateReportData() {
-    this.#reportingYear.ReportData.retirementAcct_subject401kOpenBalance =
+    this.#reportingYear.ReportData.account_subject401kOpenBalance =
       this.#accountYear.getStartingBalance(ACCOUNT_TYPES.SUBJECT_401K);
-    this.#reportingYear.ReportData.retirementAcct_subject401kWithdrawals =
+    this.#reportingYear.ReportData.account_subject401kWithdrawals =
       this.#accountYear.getWithdrawals(ACCOUNT_TYPES.SUBJECT_401K).asCurrency();
-    this.#reportingYear.ReportData.retirementAcct_subject401kDeposits =
+    this.#reportingYear.ReportData.account_subject401kDeposits =
       this.#accountYear.getDeposits(ACCOUNT_TYPES.SUBJECT_401K).asCurrency();
-    this.#reportingYear.ReportData.retirementAcct_subject401kBalance =
+    this.#reportingYear.ReportData.account_subject401kBalance =
       this.#accountYear.getEndingBalance(ACCOUNT_TYPES.SUBJECT_401K);
 
-    this.#reportingYear.ReportData.retirementAcct_partner401kOpenBalance =
+    this.#reportingYear.ReportData.account_partner401kOpenBalance =
       this.#accountYear.getStartingBalance(ACCOUNT_TYPES.PARTNER_401K);
-    this.#reportingYear.ReportData.retirementAcct_partner401kWithdrawals =
+    this.#reportingYear.ReportData.account_partner401kWithdrawals =
       this.#accountYear.getWithdrawals(ACCOUNT_TYPES.PARTNER_401K).asCurrency();
-    this.#reportingYear.ReportData.retirementAcct_partner401kDeposits =
+    this.#reportingYear.ReportData.account_partner401kDeposits =
       this.#accountYear.getDeposits(ACCOUNT_TYPES.PARTNER_401K).asCurrency();
-    this.#reportingYear.ReportData.retirementAcct_partner401kBalance =
+    this.#reportingYear.ReportData.account_partner401kBalance =
       this.#accountYear.getEndingBalance(ACCOUNT_TYPES.PARTNER_401K);
 
     this.#reportingYear.ReportData.taxes_pensionWithholdingRate =
@@ -715,41 +715,40 @@ class RetirementYearCalculator {
     this.#reportingYear.ReportData.income_pensionBreakdowns =
       this.#fixedIncomeStreams.pensionAnnunityBreakdowns;
 
-    this.#reportingYear.ReportData.retirementAcct_subjectRothOpenBalance =
+    this.#reportingYear.ReportData.account_subjectRothOpenBalance =
       this.#accountYear.getStartingBalance(ACCOUNT_TYPES.SUBJECT_ROTH_IRA);
-    this.#reportingYear.ReportData.retirementAcct_subjectRothWithdrawals =
+    this.#reportingYear.ReportData.account_subjectRothWithdrawals =
       this.#accountYear
         .getWithdrawals(ACCOUNT_TYPES.SUBJECT_ROTH_IRA)
         .asCurrency();
-    this.#reportingYear.ReportData.retirementAcct_subjectRothDeposits =
+    this.#reportingYear.ReportData.account_subjectRothDeposits =
       this.#accountYear
         .getDeposits(ACCOUNT_TYPES.SUBJECT_ROTH_IRA)
         .asCurrency();
-    this.#reportingYear.ReportData.retirementAcct_subjectRothBalance =
+    this.#reportingYear.ReportData.account_subjectRothBalance =
       this.#accountYear.getEndingBalance(ACCOUNT_TYPES.SUBJECT_ROTH_IRA);
 
-    this.#reportingYear.ReportData.retirementAcct_partnerRothOpenBalance =
+    this.#reportingYear.ReportData.account_partnerRothOpenBalance =
       this.#accountYear.getStartingBalance(ACCOUNT_TYPES.PARTNER_ROTH_IRA);
-    this.#reportingYear.ReportData.retirementAcct_partnerRothWithdrawals =
+    this.#reportingYear.ReportData.account_partnerRothWithdrawals =
       this.#accountYear
         .getWithdrawals(ACCOUNT_TYPES.PARTNER_ROTH_IRA)
         .asCurrency();
-    this.#reportingYear.ReportData.retirementAcct_partnerRothDeposits =
+    this.#reportingYear.ReportData.account_partnerRothDeposits =
       this.#accountYear
         .getDeposits(ACCOUNT_TYPES.PARTNER_ROTH_IRA)
         .asCurrency();
-    this.#reportingYear.ReportData.retirementAcct_partnerRothBalance =
+    this.#reportingYear.ReportData.account_partnerRothBalance =
       this.#accountYear.getEndingBalance(ACCOUNT_TYPES.PARTNER_ROTH_IRA);
 
-    this.#reportingYear.ReportData.savings_YearBeginBalance =
+    this.#reportingYear.ReportData.account_savingsYearBeginBalance =
       this.#accountYear.getStartingBalance(ACCOUNT_TYPES.SAVINGS);
-    // this.#reportingYear.ReportData.savings_Deposits = this.#accountYear
-    //   .getDeposits(ACCOUNT_TYPES.SAVINGS)
-    //   .asCurrency();
-    this.#reportingYear.ReportData.savings_Withdrawals = this.#accountYear
-      .getWithdrawals(ACCOUNT_TYPES.SAVINGS)
+    this.#reportingYear.ReportData.account_savingsDeposits = this.#accountYear
+      .getDeposits(ACCOUNT_TYPES.SAVINGS)
       .asCurrency();
-    this.#reportingYear.ReportData.savings_YearEndBalance =
+    this.#reportingYear.ReportData.account_savingsWithdrawals =
+      this.#accountYear.getWithdrawals(ACCOUNT_TYPES.SAVINGS).asCurrency();
+    this.#reportingYear.ReportData.account_savingsYearEndBalance =
       this.#accountYear.getEndingBalance(ACCOUNT_TYPES.SAVINGS);
   }
 
@@ -1000,7 +999,7 @@ class RetirementYearCalculator {
         TransactionCategory.IncomeNet
       );
 
-      this.#reportingYear.ReportData.retirementAcct_subjectRothWithdrawals +=
+      this.#reportingYear.ReportData.account_subjectRothWithdrawals +=
         subjectShareAmount.asCurrency();
     }
 
@@ -1019,7 +1018,7 @@ class RetirementYearCalculator {
         TransactionCategory.IncomeNet
       );
 
-      this.#reportingYear.ReportData.retirementAcct_partnerRothWithdrawals +=
+      this.#reportingYear.ReportData.account_partnerRothWithdrawals +=
         partnerShareAmount;
     }
   }

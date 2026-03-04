@@ -80,12 +80,6 @@ class ReportData extends BaseReports {
     "income_total_gross",
     "income_total_takehome",
 
-    "savings_YearBeginBalance",
-    "savings_Withdrawals",
-    // "savings_Deposits",
-    "savings_Interest",
-    "savings_YearEndBalance",
-
     // TAXES
     "taxes_grossIncome",
     "taxes_adjustedGrossIncome",
@@ -116,29 +110,36 @@ class ReportData extends BaseReports {
     "ss_tier2TaxableAmount",
 
     // RETIREMENT ACCOUNT ACTIVITY
-    "retirementAcct_subject401kOpenBalance",
-    "retirementAcct_subject401kWithdrawals",
-    "retirementAcct_subject401kDeposits",
-    "retirementAcct_subject401kBalance",
-    "retirementAcct_subject401kInterest",
+    "account_savingsYearBeginBalance",
+    "account_savingsWithdrawals",
+    "account_savingsDeposits",
+    "account_savingsYearEndBalance",
 
-    "retirementAcct_partner401kOpenBalance",
-    "retirementAcct_partner401kDeposits",
-    "retirementAcct_partner401kWithdrawals",
-    "retirementAcct_partner401kBalance",
-    "retirementAcct_partner401kInterest",
+    "account_subject401kOpenBalance",
+    "account_subject401kWithdrawals",
+    "account_subject401kDeposits",
+    "account_subject401kBalance",
 
-    "retirementAcct_subjectRothOpenBalance",
-    "retirementAcct_subjectRothDeposits",
-    "retirementAcct_subjectRothWithdrawals",
-    "retirementAcct_subjectRothBalance",
-    "retirementAcct_subjectRothInterest",
+    "account_partner401kOpenBalance",
+    "account_partner401kDeposits",
+    "account_partner401kWithdrawals",
+    "account_partner401kBalance",
 
-    "retirementAcct_partnerRothOpenBalance",
-    "retirementAcct_partnerRothDeposits",
-    "retirementAcct_partnerRothWithdrawals",
-    "retirementAcct_partnerRothBalance",
-    "retirementAcct_partnerRothInterest",
+    "account_subjectRothOpenBalance",
+    "account_subjectRothDeposits",
+    "account_subjectRothWithdrawals",
+    "account_subjectRothBalance",
+
+    "account_partnerRothOpenBalance",
+    "account_partnerRothDeposits",
+    "account_partnerRothWithdrawals",
+    "account_partnerRothBalance",
+
+    "account_savingsInterest",
+    "account_subject401kInterest",
+    "account_partner401kInterest",
+    "account_subjectRothInterest",
+    "account_partnerRothInterest",
   ];
   constructor() {
     super();
@@ -175,7 +176,7 @@ class ReportData extends BaseReports {
 
     this.income_miscTaxFreeIncome = 0;
 
-    this.income_savingsInterest = 0;
+    this.account_savingsInterest = 0;
 
     this.income_subject401kGross = 0;
     this.income_subject401kTakehome = 0;
@@ -197,11 +198,6 @@ class ReportData extends BaseReports {
     this.income_partnerSsGross = 0;
     this.income_subjectSsTakehome = 0;
     this.income_partnerSsTakehome = 0;
-
-    this.savings_YearBeginBalance = 0;
-    // this.savings_Deposits = 0;
-    this.savings_Withdrawals = 0;
-    this.savings_YearEndBalance = 0;
 
     // SPENDING AND ASK
     this.projectedSpend = 0;
@@ -253,34 +249,40 @@ class ReportData extends BaseReports {
 
     // RETIREMENT ACCOUNTS
 
-    // this.retirementAcct_subjectSavingsContributions = 0;
-    // this.retirementAcct_partnerSavingsContributions = 0;
+    // this.account_subjectSavingsContributions = 0;
+    // this.account_partnerSavingsContributions = 0;
 
     // Interest earned during the year
-    this.retirementAcct_subject401kInterest = 0;
-    this.retirementAcct_partner401kInterest = 0;
-    this.retirementAcct_subjectRothInterest = 0;
-    this.retirementAcct_partnerRothInterest = 0;
+    this.account_savingsYearBeginBalance = 0;
+    // this.savings_Deposits = 0;
+    this.account_savingsWithdrawals = 0;
+    this.account_savingsDeposits = 0;
+    this.account_savingsYearEndBalance = 0;
 
-    this.retirementAcct_subject401kOpenBalance = 0;
-    this.retirementAcct_subject401kWithdrawals = 0;
-    this.retirementAcct_subject401kDeposits = 0;
-    this.retirementAcct_subject401kBalance = 0;
+    this.account_subject401kInterest = 0;
+    this.account_partner401kInterest = 0;
+    this.account_subjectRothInterest = 0;
+    this.account_partnerRothInterest = 0;
 
-    this.retirementAcct_partner401kOpenBalance = 0;
-    this.retirementAcct_partner401kWithdrawals = 0;
-    this.retirementAcct_partner401kDeposits = 0;
-    this.retirementAcct_partner401kBalance = 0;
+    this.account_subject401kOpenBalance = 0;
+    this.account_subject401kWithdrawals = 0;
+    this.account_subject401kDeposits = 0;
+    this.account_subject401kBalance = 0;
 
-    this.retirementAcct_subjectRothOpenBalance = 0;
-    this.retirementAcct_subjectRothWithdrawals = 0;
-    this.retirementAcct_subjectRothDeposits = 0;
-    this.retirementAcct_subjectRothBalance = 0;
+    this.account_partner401kOpenBalance = 0;
+    this.account_partner401kWithdrawals = 0;
+    this.account_partner401kDeposits = 0;
+    this.account_partner401kBalance = 0;
 
-    this.retirementAcct_partnerRothOpenBalance = 0;
-    this.retirementAcct_partnerRothWithdrawals = 0;
-    this.retirementAcct_partnerRothDeposits = 0;
-    this.retirementAcct_partnerRothBalance = 0;
+    this.account_subjectRothOpenBalance = 0;
+    this.account_subjectRothWithdrawals = 0;
+    this.account_subjectRothDeposits = 0;
+    this.account_subjectRothBalance = 0;
+
+    this.account_partnerRothOpenBalance = 0;
+    this.account_partnerRothWithdrawals = 0;
+    this.account_partnerRothDeposits = 0;
+    this.account_partnerRothBalance = 0;
 
     this.demographics_filingStatus = "";
 
@@ -322,9 +324,9 @@ class ReportData extends BaseReports {
   // get withholdings_partner401k() {
   //   return this.income_partner401kWithholdings;
   // }
-  get savings_Interest() {
-    return this.income_savingsInterest;
-  }
+  // get savings_Interest() {
+  //   return this.account_savingsInterest;
+  // }
 
   get ss_NonSsTaxableIncome() {
     return (
@@ -335,7 +337,7 @@ class ReportData extends BaseReports {
       this.income_partner401kContribution -
       this.income_partnerPayrollDeductions +
       this.income_miscTaxableIncomeGross +
-      this.savings_Interest +
+      this.account_savingsInterest +
       this.income_subject401kGross +
       this.income_partner401kGross +
       this.income_subjectPensionGross +
@@ -424,31 +426,24 @@ class ReportData extends BaseReports {
   }
 
   get balances_combined401k() {
-    return (
-      this.retirementAcct_subject401kBalance +
-      this.retirementAcct_partner401kBalance
-    );
+    return this.account_subject401kBalance + this.account_partner401kBalance;
   }
 
   get income_combinedRothTakehome() {
     return (
-      this.retirementAcct_subjectRothWithdrawals +
-      this.retirementAcct_partnerRothWithdrawals
+      this.account_subjectRothWithdrawals + this.account_partnerRothWithdrawals
     );
   }
 
   get balances_yearEndRothCombined() {
-    return (
-      this.retirementAcct_subjectRothBalance +
-      this.retirementAcct_partnerRothBalance
-    );
+    return this.account_subjectRothBalance + this.account_partnerRothBalance;
   }
 
   get balances_yearEndtotal() {
     return (
       this.balances_combined401k +
       this.balances_yearEndRothCombined +
-      this.savings_YearEndBalance
+      this.account_savingsYearEndBalance
     );
   }
 
@@ -470,9 +465,9 @@ class ReportData extends BaseReports {
       this.income_subjectPensionTakehome +
       this.income_partnerPensionTakehome +
       this.income_combinedSsTakehome +
-      this.savings_Withdrawals +
-      this.retirementAcct_partnerRothWithdrawals +
-      this.retirementAcct_subjectRothWithdrawals +
+      this.account_savingsWithdrawals +
+      this.account_partnerRothWithdrawals +
+      this.account_subjectRothWithdrawals +
       this.income_miscTaxFreeIncome
     ).asCurrency();
   }
@@ -487,7 +482,7 @@ class ReportData extends BaseReports {
       this.income_subjectPensionGross +
       this.income_partnerPensionGross +
       this.income_combinedSsGross +
-      this.income_savingsInterest;
+      this.account_savingsInterest;
 
     return result.asCurrency();
   }
