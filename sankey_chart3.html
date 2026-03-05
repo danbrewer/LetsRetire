@@ -2,8 +2,9 @@
 <html lang="en">
 
 <head>
-    <meta charset="utf-8">
-    <title>Retirement Cash Flow - Sankey</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Retirement Cash Flow - Sankey (ECharts)</title>
 
     <script src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>
 
@@ -11,40 +12,31 @@
         body {
             font-family: Arial, sans-serif;
             background: #fafafa;
-        }
-
-        #chart {
-            width: 100%;
-            height: 600px;
+            margin: 0;
+            padding: 18px;
         }
 
         h2 {
             text-align: center;
+            margin: 6px 0 14px;
+        }
+
+        #chart {
+            width: 100%;
+            height: 640px;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
         }
     </style>
 </head>
 
 <body>
-
-    <h2>2037 Retirement Cash Flow</h2>
-
+    <h2>Retirement Cash Flow</h2>
     <div id="chart"></div>
 
     <script>
-
-        const data2037 = {
-            ssGross: 55066,
-            pensionGross: 49620,
-            k401Gross: 18050,
-
-            ssWithhold: 11013,
-            pensionWithhold: 7845,
-            k401Withhold: 3249,
-
-            netIncome: 115768,
-            spending: 115768
-        };
-
+        // --- your year-calcs object (trimmed to fields used by this prototype) ---
         const c = {
                 "year": 2035,
                 "demographics_subjectAge": "70",
@@ -151,78 +143,99 @@
 
         const chart = echarts.init(document.getElementById("chart"));
 
-        const option = {
+        // --- helpers: include only positive-value links; nodes auto-derived from links ---
+        const links = [];
+        const nodes = new Map(); // name -> { name, depth }
 
+        const num = (v) => (v == null ? 0 : Number(v));
+        const pos = (v) => Math.max(0, Math.round(num(v) * 100) / 100);
+
+        const addNode = (name, depth) => {
+            if (!nodes.has(name)) nodes.set(name, { name, depth });
+        };
+
+        // Depth is the "column" index. This is what keeps the diagram structured.
+        const addLink = (target, source, value, sourceDepth, targetDepth) => {
+            const v = pos(value);
+            if (v <= 0) return;
+
+            addNode(source, sourceDepth);
+            addNode(target, targetDepth);
+            links.push({ source, target, value: v });
+        };
+
+        // --- column / depth plan ---
+        // 0 = Income Sources
+        // 1 = Gross Income / Withholdings
+        // 2 = Cash (Take-Home) / Taxes
+        // 3 = Spending + reconciliation outputs
+
+            const grossIncome = c.income_total_takehome - c.income_savingsInterest;
+
+        // Income → Gross
+            addLink("Cash", "Savings Withdrawals", c.account_savingsWithdrawals, 0, 1);
+            addLink("Cash", "Pension", c.income_combinedPensionTakehome, 0, 1);
+            addLink("Cash", "Social Security", c.income_combinedSsTakehome, 0, 1);
+            addLink("Cash", "401k Withdrawals", c.income_combined401kTakehome, 0, 1);
+
+            addLink("Spending", "Cash", c.actualSpend, 1, 2);
+
+            addLink("Withholdings", "Social Security", c.withholdings_combinedSs, 0, 1);
+            addLink("Withholdings", "Pension", c.withholdings_combinedPension, 0, 1);
+            addLink("Withholdings", "401k Withdrawals", c.withholdings_combined401k, 0, 1);
+
+            // Savings Withdrawal → Cash
+            addLink("Savings", "Savings Interest", c.account_savingsInterest, 0, 2);
+
+            // Gross → Withholdings
+            // addLink("Gross Income", "Withholdings", c.withholdings_total, 1, 2);
+
+            // Gross → Cash
+            // addLink("Cash", "Gross Income", c.income_total_takehome, 1, 2);
+
+            addLink("Taxes", "Withholdings", c.taxes_federalIncomeTaxOwed, 1, 2);
+            if (c.taxes_underPayment > 0) {
+                addLink("Taxes", "Savings Withdrawals", c.taxes_underPayment, 0, 1);
+            }
+            if (c.taxes_overPayment > 0){
+                addLink("Savings", "Withholdings", c.taxes_overPayment, 1, 2);
+            }
+
+        // --- optional dev sanity log ---
+        console.log("Nodes:", Array.from(nodes.values()));
+        console.log("Links:", links);
+
+        const option = {
+            title: { text: `Year ${c.year}`, left: "center" },
             tooltip: {
                 trigger: "item",
-                triggerOn: "mousemove"
-            },
-
-            series: [
-                {
-                    type: "sankey",
-
-                    nodeAlign: "left",
-
-                    emphasis: {
-                        focus: "adjacency"
-                    },
-
-                    data: [
-                        { name: "Gross Income" },
-                        { name: "Social Security" },
-                        { name: "Pension" },
-                        { name: "401k Withdrawals" },
-                        { name: "Cash" },
-                        {name: "Interest"},
-
-                        { name: "Savings Withdrawal"},
-
-                        { name: "Spending" },
-
-                        {name: "Withholdings"},
-
-                    ],
-
-                    links: [
-                        {source: "Gross Income", target: "Social Security", value: c.income_combinedSsGross},
-                        { source: "Gross Income", target: "Pension", value: c.income_combinedPensionGross },
-                        { source: "Gross Income", target: "401k Withdrawals", value: c.income_combined401kGross },
-                        { source: "Gross Income", target: "Savings Withdrawal", value: c.account_savingsWithdrawals },
-                        { source: "Gross Income", target: "Interest", value: c.account_savingsInterest },
-                    
-                    // Gross Income
-                        { source: "Social Security", target: "Cash", value: c.income_combinedSsTakehome },
-                        { source: "Pension", target: "Cash", value: c.income_combinedPensionTakehome},
-                        { source: "401k Withdrawals", target: "Cash", value: c.income_combined401kTakehome },
-                        { source: "Savings Withdrawal", target: "Cash", value: c.account_savingsWithdrawals },
-
-                        { source: "Pension", target: "Withholdings", value: c.withholdings_combinedPension },
-                        { source: "Social Security", target: "Withholdings", value: c.withholdings_combinedSs },
-                        { source: "401k Withdrawals", target: "Withholdings", value: c.withholdings_combined401k },
-
-                        {source: "Interest", target: "Savings", value: c.account_savingsWithdrawals }
-                        // { source: "Cash", target: "Spending", value: c.income_total_takehome }
-
-                    ],
-
-                    lineStyle: {
-                        color: "gradient",
-                        curveness: 0.5
-                    },
-
-                    label: {
-                        fontSize: 14
+                triggerOn: "mousemove",
+                formatter: (p) => {
+                    if (p.dataType === "edge") {
+                        const v = Number(p.data.value);
+                        return `${p.data.source} → ${p.data.target}<br/><b>$${v.toLocaleString()}</b>`;
                     }
-
+                    return `<b>${p.name}</b>`;
                 }
-            ]
+            },
+            series: [{
+                type: "sankey",
+                nodeAlign: "left",
+                emphasis: { focus: "adjacency" },
+
+                // IMPORTANT: nodes are derived from links, and each node includes a `depth`
+                // which keeps the chart in your desired columns.
+                data: Array.from(nodes.values()),
+                links,
+
+                lineStyle: { color: "gradient", curveness: 0.5 },
+                label: { fontSize: 13 }
+            }]
         };
 
         chart.setOption(option);
-
+        window.addEventListener("resize", () => chart.resize());
     </script>
-
 </body>
 
 </html>

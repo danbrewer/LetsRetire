@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Retirement Cash Flow - Sankey</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #fafafa;
+        }
+
+        #chart {
+            width: 100%;
+            height: 600px;
+        }
+
+        h2 {
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h2>Retirement Cash Flow</h2>
+
+    <div id="chart"></div>
+
+    <!-- <script>
+
+        const data2037 = {
+            ssGross: 55066,
+            pensionGross: 49620,
+            k401Gross: 18050,
+
+            ssWithhold: 11013,
+            pensionWithhold: 7845,
+            k401Withhold: 3249,
+
+            netIncome: 115768,
+            spending: 115768
+        };
+
+        const c = {
+                "year": 2035,
+                "demographics_subjectAge": "70",
+                "demographics_partnerAge": "66",
+                "demographics_filingStatus": "Married Filing Jointly",
+                "projectedSpend": 112427,
+                "takeHome": 112427,
+                "actualSpend": 112427,
+                "spending_shortfall": 0,
+                "spending_surplus": 0,
+                "spending_basis": 100000,
+                "spending_taper_rate": 0.01,
+                "income_subjectGrossWages": 0,
+                "income_subject401kContribution": 0,
+                "income_subjectPayrollDeductions": 0,
+                "withholdings_subjectWages": 0,
+                "income_subjectTakehomeWages": 0,
+                "income_partnerGrossWages": 0,
+                "income_partner401kContribution": 0,
+                "income_partnerPayrollDeductions": 0,
+                "withholdings_partnerWages": 0,
+                "income_partnerTakehomeWages": 0,
+                "income_subjectSsGross": 37445,
+                "withholdings_subjectSs": 7489,
+                "income_subjectSsTakehome": 29956,
+                "income_partnerSsGross": 14968,
+                "withholdings_partnerSs": 2994,
+                "income_partnerSsTakehome": 11974,
+                "income_combinedSsGross": 52413,
+                "income_combinedSsTakehome": 41930,
+                "income_subject401kGross": 13730,
+                "withholdings_subject401k": 2471,
+                "income_subject401kTakehome": 11259,
+                "income_partner401kGross": 3993,
+                "withholdings_partner401k": 719,
+                "income_partner401kTakehome": 3274,
+                "income_combined401kGross": 17723,
+                "income_combined401kTakehome": 14533,
+                "income_miscTaxableIncomeGross": 0,
+                "withholdings_miscTaxableIncome": 0,
+                "income_miscTaxableIncomeTakehome": 0,
+                "income_savingsInterest": null,
+                "income_subjectPensionGross": 43260,
+                "withholdings_subjectPension": 6891,
+                "income_subjectPensionTakehome": 36369,
+                "income_partnerPensionGross": 6360,
+                "withholdings_partnerPension": 954,
+                "income_partnerPensionTakehome": 5406,
+                "income_combinedPensionGross": 49620,
+                "income_combinedPensionTakehome": 41775,
+                "income_total_gross": 134255,
+                "income_total_takehome": 112427,
+                "taxes_grossIncome": 134255,
+                "taxes_adjustedGrossIncome": 126393,
+                "taxes_standardDeduction": 37378,
+                "taxes_taxableIncome": 89015,
+                "withholdings_total": 21518,
+                "taxes_federalIncomeTaxOwed": 10071,
+                "taxes_overPayment": 11447,
+                "taxes_underPayment": 0,
+                "ss_subjectTaxable": 31809,
+                "ss_subjectSsNonTaxable": 5636,
+                "ss_partnerTaxable": 12742,
+                "ss_partnerSsNonTaxable": 2226,
+                "ss_NonSsTaxableIncome": 81842,
+                "ss_totalSsTaxable": 44551,
+                "ss_totalSsNonTaxable": 7862,
+                "ss_provisionalIncome": 108049,
+                "ss_threshold1": 32000,
+                "ss_threshold2": 44000,
+                "ss_nonSocialSecurityTaxableIncome": 81842,
+                "ss_tier1TaxableAmount": 6000,
+                "ss_tier2TaxableAmount": 54442,
+                "account_savingsYearBeginBalance": 484359,
+                "account_savingsWithdrawals": 14189,
+                "account_savingsDeposits": 25946,
+                "account_savingsYearEndBalance": 496116,
+                "account_subject401kOpenBalance": 468719,
+                "account_subject401kWithdrawals": 13730,
+                "account_subject401kDeposits": 14031,
+                "account_subject401kBalance": 469020,
+                "account_partner401kOpenBalance": 136316,
+                "account_partner401kDeposits": 4080,
+                "account_partner401kWithdrawals": 3993,
+                "account_partner401kBalance": 136403,
+                "account_subjectRothOpenBalance": 0,
+                "account_subjectRothDeposits": 0,
+                "account_subjectRothWithdrawals": 0,
+                "account_subjectRothBalance": 0,
+                "account_partnerRothOpenBalance": 0,
+                "account_partnerRothDeposits": 0,
+                "account_partnerRothWithdrawals": 0,
+                "account_partnerRothBalance": 0,
+                "account_savingsInterest": 14499,
+                "account_subject401kInterest": 14031,
+                "account_partner401kInterest": 4080,
+                "account_subjectRothInterest": 0,
+                "account_partnerRothInterest": 0,
+                "withholdings_combined401k": 3190,
+                "withholdings_combinedPension": 7845,
+                "withholdings_combinedSs": 10483,
+                "withholdings_combinedWages": 0
+            };
+
+        const chart = echarts.init(document.getElementById("chart"));
+
+        const option = {
+
+            tooltip: {
+                trigger: "item",
+                triggerOn: "mousemove"
+            },
+
+            series: [
+                {
+                    type: "sankey",
+
+                    nodeAlign: "left",
+
+                    emphasis: {
+                        focus: "adjacency"
+                    },
+
+                    data: [
+                        { name: "Gross Income" },
+                        { name: "Social Security" },
+                        { name: "Pension" },
+                        { name: "401k Withdrawals" },
+                        { name: "Cash" },
+                        {name: "Interest"},
+
+                        { name: "Savings Withdrawal"},
+
+                        { name: "Spending" },
+
+                        {name: "Withholdings"},
+
+                    ],
+
+                    links: [
+                        {source: "Gross Income", target: "Social Security", value: c.income_combinedSsGross},
+                        { source: "Gross Income", target: "Pension", value: c.income_combinedPensionGross },
+                        { source: "Gross Income", target: "401k Withdrawals", value: c.income_combined401kGross },
+                        { source: "Gross Income", target: "Savings Withdrawal", value: c.account_savingsWithdrawals },
+                        { source: "Gross Income", target: "Interest", value: c.account_savingsInterest },
+                    
+                    // Gross Income
+                        { source: "Social Security", target: "Cash", value: c.income_combinedSsTakehome },
+                        { source: "Pension", target: "Cash", value: c.income_combinedPensionTakehome},
+                        { source: "401k Withdrawals", target: "Cash", value: c.income_combined401kTakehome },
+                        { source: "Savings Withdrawal", target: "Cash", value: c.account_savingsWithdrawals },
+
+                        { source: "Pension", target: "Withholdings", value: c.withholdings_combinedPension },
+                        { source: "Social Security", target: "Withholdings", value: c.withholdings_combinedSs },
+                        { source: "401k Withdrawals", target: "Withholdings", value: c.withholdings_combined401k },
+
+                        {source: "Interest", target: "Savings", value: c.account_savingsWithdrawals }
+                        // { source: "Cash", target: "Spending", value: c.income_total_takehome }
+
+                    ],
+
+                    lineStyle: {
+                        color: "gradient",
+                        curveness: 0.5
+                    },
+
+                    label: {
+                        fontSize: 14
+                    }
+
+                }
+            ]
+        };
+
+        chart.setOption(option);
+
+    </script> -->
+
+    <script>
+        // ---- keep your existing year-calcs object ----
+                const c = {
+                        "year": 2035,
+                        "demographics_subjectAge": "70",
+                        "demographics_partnerAge": "66",
+                        "demographics_filingStatus": "Married Filing Jointly",
+                        "projectedSpend": 112427,
+                        "takeHome": 112427,
+                        "actualSpend": 112427,
+                        "spending_shortfall": 0,
+                        "spending_surplus": 0,
+                        "spending_basis": 100000,
+                        "spending_taper_rate": 0.01,
+                        "income_subjectGrossWages": 0,
+                        "income_subject401kContribution": 0,
+                        "income_subjectPayrollDeductions": 0,
+                        "withholdings_subjectWages": 0,
+                        "income_subjectTakehomeWages": 0,
+                        "income_partnerGrossWages": 0,
+                        "income_partner401kContribution": 0,
+                        "income_partnerPayrollDeductions": 0,
+                        "withholdings_partnerWages": 0,
+                        "income_partnerTakehomeWages": 0,
+                        "income_subjectSsGross": 37445,
+                        "withholdings_subjectSs": 7489,
+                        "income_subjectSsTakehome": 29956,
+                        "income_partnerSsGross": 14968,
+                        "withholdings_partnerSs": 2994,
+                        "income_partnerSsTakehome": 11974,
+                        "income_combinedSsGross": 52413,
+                        "income_combinedSsTakehome": 41930,
+                        "income_subject401kGross": 13730,
+                        "withholdings_subject401k": 2471,
+                        "income_subject401kTakehome": 11259,
+                        "income_partner401kGross": 3993,
+                        "withholdings_partner401k": 719,
+                        "income_partner401kTakehome": 3274,
+                        "income_combined401kGross": 17723,
+                        "income_combined401kTakehome": 14533,
+                        "income_miscTaxableIncomeGross": 0,
+                        "withholdings_miscTaxableIncome": 0,
+                        "income_miscTaxableIncomeTakehome": 0,
+                        "income_savingsInterest": null,
+                        "income_subjectPensionGross": 43260,
+                        "withholdings_subjectPension": 6891,
+                        "income_subjectPensionTakehome": 36369,
+                        "income_partnerPensionGross": 6360,
+                        "withholdings_partnerPension": 954,
+                        "income_partnerPensionTakehome": 5406,
+                        "income_combinedPensionGross": 49620,
+                        "income_combinedPensionTakehome": 41775,
+                        "income_total_gross": 134255,
+                        "income_total_takehome": 112427,
+                        "taxes_grossIncome": 134255,
+                        "taxes_adjustedGrossIncome": 126393,
+                        "taxes_standardDeduction": 37378,
+                        "taxes_taxableIncome": 89015,
+                        "withholdings_total": 21518,
+                        "taxes_federalIncomeTaxOwed": 10071,
+                        "taxes_overPayment": 11447,
+                        "taxes_underPayment": 0,
+                        "ss_subjectTaxable": 31809,
+                        "ss_subjectSsNonTaxable": 5636,
+                        "ss_partnerTaxable": 12742,
+                        "ss_partnerSsNonTaxable": 2226,
+                        "ss_NonSsTaxableIncome": 81842,
+                        "ss_totalSsTaxable": 44551,
+                        "ss_totalSsNonTaxable": 7862,
+                        "ss_provisionalIncome": 108049,
+                        "ss_threshold1": 32000,
+                        "ss_threshold2": 44000,
+                        "ss_nonSocialSecurityTaxableIncome": 81842,
+                        "ss_tier1TaxableAmount": 6000,
+                        "ss_tier2TaxableAmount": 54442,
+                        "account_savingsYearBeginBalance": 484359,
+                        "account_savingsWithdrawals": 14189,
+                        "account_savingsDeposits": 25946,
+                        "account_savingsYearEndBalance": 496116,
+                        "account_subject401kOpenBalance": 468719,
+                        "account_subject401kWithdrawals": 13730,
+                        "account_subject401kDeposits": 14031,
+                        "account_subject401kBalance": 469020,
+                        "account_partner401kOpenBalance": 136316,
+                        "account_partner401kDeposits": 4080,
+                        "account_partner401kWithdrawals": 3993,
+                        "account_partner401kBalance": 136403,
+                        "account_subjectRothOpenBalance": 0,
+                        "account_subjectRothDeposits": 0,
+                        "account_subjectRothWithdrawals": 0,
+                        "account_subjectRothBalance": 0,
+                        "account_partnerRothOpenBalance": 0,
+                        "account_partnerRothDeposits": 0,
+                        "account_partnerRothWithdrawals": 0,
+                        "account_partnerRothBalance": 0,
+                        "account_savingsInterest": 14499,
+                        "account_subject401kInterest": 14031,
+                        "account_partner401kInterest": 4080,
+                        "account_subjectRothInterest": 0,
+                        "account_partnerRothInterest": 0,
+                        "withholdings_combined401k": 3190,
+                        "withholdings_combinedPension": 7845,
+                        "withholdings_combinedSs": 10483,
+                        "withholdings_combinedWages": 0
+                    };
+
+
+        const chart = echarts.init(document.getElementById("chart"));
+
+        // ---- helpers ----
+        const num = (v) => (v == null ? 0 : Number(v));
+        const pos = (v) => Math.max(0, Math.round(num(v) * 100) / 100);
+
+        const links = [];
+        const nodes = new Set();
+
+        const addNode = (name) => nodes.add(name);
+        const addLink = (source, target, value) => {
+            const v = pos(value);
+            if (v > 0) {
+                addNode(source);
+                addNode(target);
+                links.push({ source, target, value: v });
+            }
+        };
+
+        // ---- node names ----
+        const N = {
+            ss: "Social Security (Gross)",
+            pension: "Pension (Gross)",
+            k401: "401k Withdrawals (Gross)",
+            savingsW: "Savings Withdrawals",
+            interest: "Savings Interest",
+
+            gross: "Gross Income",
+            withhold: "Withholdings",
+            taxesOwed: "Taxes Owed (Federal)",
+            refund: "Refund",
+            underpay: "Underpayment",
+
+            cash: "Cash (Take-Home)",
+            spending: "Spending",
+            surplus: "Surplus"
+        };
+
+        // ---- sources -> gross income ----
+        addLink(N.ss, N.gross, c.income_combinedSsGross);
+        addLink(N.pension, N.gross, c.income_combinedPensionGross);
+        addLink(N.k401, N.gross, c.income_combined401kGross);
+        addLink(N.savingsW, N.gross, c.account_savingsWithdrawals);
+        addLink(N.interest, N.gross, c.account_savingsInterest);
+
+        // ---- gross -> withholdings + cash ----
+        // Withholdings: cash withheld during the year
+        addLink(N.gross, N.withhold, c.withholdings_total);
+
+        // Cash (take-home) is after withholdings per your model
+        addLink(N.gross, N.cash, c.income_total_takehome);
+
+        // ---- withholdings -> taxes owed + refund/underpay reconciliation ----
+        addLink(N.withhold, N.taxesOwed, c.taxes_federalIncomeTaxOwed);
+        addLink(N.withhold, N.refund, c.taxes_overPayment);
+        addLink(N.withhold, N.underpay, c.taxes_underPayment);
+
+        // ---- cash -> spending (+ surplus if any) ----
+        addLink(N.cash, N.spending, c.actualSpend);
+        addLink(N.cash, N.surplus, c.spending_surplus);
+
+        // ---- optional sanity check (helpful during dev) ----
+        // In your model these should line up:
+        // withholdings_total ≈ taxes_owed + refund - underpay  (depending on sign conventions)
+        // We won't block rendering if it doesn't.
+        const w = pos(c.withholdings_total);
+        const owed = pos(c.taxes_federalIncomeTaxOwed);
+        const ref = pos(c.taxes_overPayment);
+        const under = pos(c.taxes_underPayment);
+        const recon = pos(owed + ref + under);
+        console.log("Withholdings:", w, "Reconcile (owed+refund+underpay):", recon);
+
+        const option = {
+            title: { text: `Year: ${c.year}`, left: "center" },
+            tooltip: {
+                trigger: "item",
+                triggerOn: "mousemove",
+                formatter: (p) => {
+                    if (p.dataType === "edge") {
+                        return `${p.data.source} → ${p.data.target}<br/><b>${Number(p.data.value).toLocaleString()}</b>`;
+                    }
+                    return `<b>${p.name}</b>`;
+                }
+            },
+            series: [{
+                type: "sankey",
+                nodeAlign: "left",
+                emphasis: { focus: "adjacency" },
+                data: Array.from(nodes).map(name => ({ name })),
+                links,
+                lineStyle: { color: "gradient", curveness: 0.5 },
+                label: { fontSize: 13 }
+            }]
+        };
+
+        chart.setOption(option);
+        window.addEventListener("resize", () => chart.resize());
+    </script>
+
+</body>
+
+</html>

@@ -140,6 +140,15 @@ class ReportData extends BaseReports {
     "account_partner401kInterest",
     "account_subjectRothInterest",
     "account_partnerRothInterest",
+
+    "withholdings_combined401k",
+    "withholdings_combinedPension",
+    "withholdings_combinedSs",
+    "withholdings_combinedWages",
+
+
+
+    // "total_withholdings",
   ];
   constructor() {
     super();
@@ -457,17 +466,22 @@ class ReportData extends BaseReports {
 
   get income_total_takehome() {
     return (
-      this.income_subjectTakehomeWages +
-      this.income_partnerTakehomeWages +
+      this.income_combinedTakehomeWages +
+      // this.income_subjectTakehomeWages +
+      // this.income_partnerTakehomeWages +
       this.income_miscTaxableIncomeTakehome +
-      this.income_subject401kTakehome +
-      this.income_partner401kTakehome +
-      this.income_subjectPensionTakehome +
-      this.income_partnerPensionTakehome +
+      this.income_combined401kTakehome +
+      // this.income_subject401kTakehome +
+      // this.income_partner401kTakehome +
+      this.income_combinedPensionTakehome +
+      // this.income_subjectPensionTakehome +
+      // this.income_partnerPensionTakehome +
       this.income_combinedSsTakehome +
+
       this.account_savingsWithdrawals +
-      this.account_partnerRothWithdrawals +
-      this.account_subjectRothWithdrawals +
+      this.income_combinedRothTakehome +
+      // this.account_partnerRothWithdrawals +
+      // this.account_subjectRothWithdrawals +
       this.income_miscTaxFreeIncome
     ).asCurrency();
   }
@@ -486,6 +500,16 @@ class ReportData extends BaseReports {
 
     return result.asCurrency();
   }
+
+  // get total_withholdings() {
+  //   return (
+  //     this.withholdings_combined401k +
+  //     this.withholdings_combinedPension +
+  //     this.withholdings_combinedSs +
+  //     this.withholdings_combinedWages +
+  //     this.w
+  //   ).asCurrency();
+  // }
 
   // get income_total_withholdings() {
   //   const result =
