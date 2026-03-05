@@ -147,21 +147,18 @@
         const links = [];
         const nodes = new Map(); // name -> { name, depth }
 
-        const num = (v) => (v == null ? 0 : Number(v));
-        const pos = (v) => Math.max(0, Math.round(num(v) * 100) / 100);
-
         const addNode = (name, depth) => {
             if (!nodes.has(name)) nodes.set(name, { name, depth });
         };
 
         // Depth is the "column" index. This is what keeps the diagram structured.
         const addLink = (target, source, value, sourceDepth, targetDepth) => {
-            const v = pos(value);
-            if (v <= 0) return;
+            
+            if (value < 0) return;
 
             addNode(source, sourceDepth);
             addNode(target, targetDepth);
-            links.push({ source, target, value: v });
+            links.push({ source, target, value});
         };
 
         const netIncome = c.income_total_takehome - c.income_savingsInterest - c.account_savingsWithdrawals;
@@ -212,7 +209,6 @@
         console.log("Links:", links);
 
         const option = {
-            // title: { text: `Year ${c.year}`, left: "center" },
             tooltip: {
                 trigger: "item",
                 triggerOn: "mousemove",
