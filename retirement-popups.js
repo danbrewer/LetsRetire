@@ -1015,8 +1015,11 @@ function showCashFlowDiagram(c) {
     return; // No SS data to show
   }
 
-  debugger;
-  const popup = ensurePopup("cashFlow", `Cash Flow ${c.year}`);
+  // debugger;
+  const popup = ensurePopup("cashFlow", `Cash Flow`);
+
+  // Update title for each call since popup instance is reused
+  popup.setTitle(`Cash Flow ${c.year}`);
 
   // Build the breakdown content
   let breakdownHtml = `
