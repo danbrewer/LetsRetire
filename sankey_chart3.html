@@ -170,38 +170,48 @@
         // 2 = Cash (Take-Home) / Taxes
         // 3 = Spending + reconciliation outputs
 
-            const grossIncome = c.income_total_takehome - c.income_savingsInterest;
+        const netIncome = c.income_total_takehome - c.income_savingsInterest - c.account_savingsWithdrawals;
+
+        const INCOME_NET = "Income (net)";
+        const PENSION = "Pension";
+        const SOCIAL_SECURITY = "Social Security";
+        const WITHDRAWALS_401K = "401k Withdrawals";
+        const CASH = "Cash";
+        const SAVINGS_WITHDRAWALS = "Savings (Withdrawals)";
+        const WITHHOLDINGS = "Withholdings";
+        const PROJECTED_SPENDING = "Projected Spending";
+        const SAVINGS_DEPOSITS = "Savings (Deposits)";
+        const SAVINGS_INTEREST = "Savings Interest";
+        const TAXES_DUE = "Taxes Due";
+        const FEDERAL_TAXES_PAID = "Federal Taxes Paid";
+        const TAX_REFUND = "Tax Refund";
 
         // Income → Gross
-            addLink("Cash", "Savings (Withdrawals)", c.account_savingsWithdrawals, 0, 1);
-            addLink("Cash", "Pension", c.income_combinedPensionTakehome, 0, 1);
-            addLink("Cash", "Social Security", c.income_combinedSsTakehome, 0, 1);
-            addLink("Cash", "401k Withdrawals", c.income_combined401kTakehome, 0, 1);
+        addLink(INCOME_NET, PENSION, c.income_combinedPensionTakehome, 0, 1);
+        addLink(INCOME_NET, SOCIAL_SECURITY, c.income_combinedSsTakehome, 0, 1);
+        addLink(INCOME_NET, WITHDRAWALS_401K, c.income_combined401kTakehome, 0, 1);
+        addLink(CASH, SAVINGS_WITHDRAWALS, c.account_savingsWithdrawals, 1, 2);
+        addLink(WITHHOLDINGS, SOCIAL_SECURITY, c.withholdings_combinedSs, 0, 1);
+        addLink(WITHHOLDINGS, PENSION, c.withholdings_combinedPension, 0, 1);
+        addLink(WITHHOLDINGS, WITHDRAWALS_401K, c.withholdings_combined401k, 0, 1);
 
-            addLink("Projected Spending", "Cash", c.actualSpend, 1, 3);
+        addLink(CASH, INCOME_NET, netIncome, 1, 2);
 
-            addLink("Withholdings", "Social Security", c.withholdings_combinedSs, 0, 1);
-            addLink("Withholdings", "Pension", c.withholdings_combinedPension, 0, 1);
-            addLink("Withholdings", "401k Withdrawals", c.withholdings_combined401k, 0, 1);
+        addLink(PROJECTED_SPENDING, CASH, c.actualSpend, 1, 3);
 
-            // Savings Withdrawal → Cash
-            addLink("Savings (Deposits)", "Savings Interest", c.account_savingsInterest, 2, 3);
 
-            // Gross → Withholdings
-            // addLink("Gross Income", "Withholdings", c.withholdings_total, 1, 2);
+        addLink(SAVINGS_DEPOSITS, SAVINGS_INTEREST, c.account_savingsInterest, 2, 3);
 
-            // Gross → Cash
-            // addLink("Cash", "Gross Income", c.income_total_takehome, 1, 2);
+        addLink(TAXES_DUE, WITHHOLDINGS, c.taxes_federalIncomeTaxOwed, 1, 2);
+        addLink(FEDERAL_TAXES_PAID, TAXES_DUE, c.taxes_federalIncomeTaxOwed, 2, 3);
 
-            addLink("Taxes Due", "Withholdings", c.taxes_federalIncomeTaxOwed, 1, 2);
-            addLink("Federal Taxes Paid", "Taxes Due", c.taxes_federalIncomeTaxOwed, 2, 3);
-            if (c.taxes_underPayment > 0) {
-                addLink("Taxes", "Savings Withdrawals", c.taxes_underPayment, 0, 1);
-            }
-            if (c.taxes_overPayment > 0){
-                addLink("Tax Refund", "Withholdings", c.taxes_overPayment, 1, 2);
-                addLink("Savings (Deposits)", "Tax Refund", c.taxes_overPayment, 2,3);
-            }
+        if (c.taxes_underPayment > 0) {
+            addLink(TAXES_DUE, SAVINGS_WITHDRAWALS, c.taxes_underPayment, 1, 2);
+        }
+        if (c.taxes_overPayment > 0){
+            addLink(TAX_REFUND, WITHHOLDINGS, c.taxes_overPayment, 1, 2);
+            addLink(SAVINGS_DEPOSITS, TAX_REFUND, c.taxes_overPayment, 2,3);
+        }
 
         // --- optional dev sanity log ---
         console.log("Nodes:", Array.from(nodes.values()));
