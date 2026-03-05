@@ -173,19 +173,19 @@
             const grossIncome = c.income_total_takehome - c.income_savingsInterest;
 
         // Income → Gross
-            addLink("Cash", "Savings Withdrawals", c.account_savingsWithdrawals, 0, 1);
+            addLink("Cash", "Savings (Withdrawals)", c.account_savingsWithdrawals, 0, 1);
             addLink("Cash", "Pension", c.income_combinedPensionTakehome, 0, 1);
             addLink("Cash", "Social Security", c.income_combinedSsTakehome, 0, 1);
             addLink("Cash", "401k Withdrawals", c.income_combined401kTakehome, 0, 1);
 
-            addLink("Spending", "Cash", c.actualSpend, 1, 2);
+            addLink("Projected Spending", "Cash", c.actualSpend, 1, 3);
 
             addLink("Withholdings", "Social Security", c.withholdings_combinedSs, 0, 1);
             addLink("Withholdings", "Pension", c.withholdings_combinedPension, 0, 1);
             addLink("Withholdings", "401k Withdrawals", c.withholdings_combined401k, 0, 1);
 
             // Savings Withdrawal → Cash
-            addLink("Savings", "Savings Interest", c.account_savingsInterest, 0, 2);
+            addLink("Savings (Deposits)", "Savings Interest", c.account_savingsInterest, 2, 3);
 
             // Gross → Withholdings
             // addLink("Gross Income", "Withholdings", c.withholdings_total, 1, 2);
@@ -193,12 +193,14 @@
             // Gross → Cash
             // addLink("Cash", "Gross Income", c.income_total_takehome, 1, 2);
 
-            addLink("Taxes", "Withholdings", c.taxes_federalIncomeTaxOwed, 1, 2);
+            addLink("Taxes Due", "Withholdings", c.taxes_federalIncomeTaxOwed, 1, 2);
+            addLink("Federal Taxes Paid", "Taxes Due", c.taxes_federalIncomeTaxOwed, 2, 3);
             if (c.taxes_underPayment > 0) {
                 addLink("Taxes", "Savings Withdrawals", c.taxes_underPayment, 0, 1);
             }
             if (c.taxes_overPayment > 0){
-                addLink("Savings", "Withholdings", c.taxes_overPayment, 1, 2);
+                addLink("Tax Refund", "Withholdings", c.taxes_overPayment, 1, 2);
+                addLink("Savings (Deposits)", "Tax Refund", c.taxes_overPayment, 2,3);
             }
 
         // --- optional dev sanity log ---
