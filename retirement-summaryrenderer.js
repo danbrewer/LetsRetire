@@ -835,7 +835,14 @@ function buildSummaryRow(calculation, index) {
     ? `${r.demographics_subjectAge} / ${r.demographics_partnerAge}`
     : r.demographics_subjectAge;
 
-  const cells = [textTd("neutral", r.year), textTd("neutral", age)];
+  const yearLink = calcLink({
+    className: "calc-link breakdown-link",
+    index: index,
+    action: "showCashFlowDiagram",
+    text: String(r.year),
+  });
+
+  const cells = [td("neutral", yearLink), textTd("neutral", age)];
 
   for (const group of getOrderedGroups()) {
     if (!group.visible) continue;

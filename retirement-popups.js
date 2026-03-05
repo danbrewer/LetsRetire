@@ -1015,138 +1015,182 @@ function showCashFlowDiagram(c) {
     return; // No SS data to show
   }
 
-  const popup = ensurePopup("ss", "Social Security Gross");
+  debugger;
+  const popup = ensurePopup("cashFlow", `Cash Flow ${c.year}`);
 
   // Build the breakdown content
   let breakdownHtml = `
-      <h2>Cash Flow ${c.year}</h2>
       <div id="sankey-chart"></div>
     `;
 
-  const chart = echarts.init(document.getElementById("chart"));
-
-  // --- helpers: include only positive-value links; nodes auto-derived from links ---
-  /**
-   * @type {{ source: string; target: string; value: number; }[]}
-   */
-  const links = [];
-  const nodes = new Map(); // name -> { name, depth }
-
-  const num = (/** @type {any} */ v) => (v == null ? 0 : Number(v));
-  const pos = (/** @type {any} */ v) =>
-    Math.max(0, Math.round(num(v) * 100) / 100);
-
-  /**
-   *
-   * @param {string} name
-   * @param {number} depth
-   */
-  const addNode = (name, depth) => {
-    if (!nodes.has(name)) nodes.set(name, { name, depth });
-  };
-
-  // Depth is the "column" index. This is what keeps the diagram structured.
-  /**
-   *
-   * @param {string} target
-   * @param {string} source
-   * @param {number} value
-   * @param {number} sourceDepth
-   * @param {number} targetDepth
-   * @returns
-   */
-  const addLink = (target, source, value, sourceDepth, targetDepth) => {
-    // const v = pos(value);
-    if (value <= 0) return;
-
-    addNode(source, sourceDepth);
-    addNode(target, targetDepth);
-    links.push({ source, target, value });
-  };
-
-  const netIncome =
-    c.income_total_takehome -
-    c.account_savingsInterest -
-    c.account_savingsWithdrawals;
-
-  const INCOME_NET = "Income (net)";
-  const PENSION = "Pension";
-  const SOCIAL_SECURITY = "Social Security";
-  const WITHDRAWALS_401K = "401k Withdrawals";
-  const CASH = "Cash";
-  const SAVINGS_WITHDRAWALS = "Savings (Withdrawals)";
-  const WITHHOLDINGS = "Withholdings";
-  const PROJECTED_SPENDING = "Projected Spending";
-  const SAVINGS_DEPOSITS = "Savings (Deposits)";
-  const SAVINGS_INTEREST = "Savings Interest";
-  const TAXES_DUE = "Taxes Due";
-  const FEDERAL_TAXES_PAID = "Federal Taxes Paid";
-  const TAX_REFUND = "Tax Refund";
-
-  // Income → Gross
-  addLink(INCOME_NET, PENSION, c.income_combinedPensionTakehome, 0, 1);
-  addLink(INCOME_NET, SOCIAL_SECURITY, c.income_combinedSsTakehome, 0, 1);
-  addLink(INCOME_NET, WITHDRAWALS_401K, c.income_combined401kTakehome, 0, 1);
-  addLink(CASH, SAVINGS_WITHDRAWALS, c.account_savingsWithdrawals, 1, 2);
-  addLink(WITHHOLDINGS, SOCIAL_SECURITY, c.withholdings_combinedSs, 0, 1);
-  addLink(WITHHOLDINGS, PENSION, c.withholdings_combinedPension, 0, 1);
-  addLink(WITHHOLDINGS, WITHDRAWALS_401K, c.withholdings_combined401k, 0, 1);
-
-  addLink(CASH, INCOME_NET, netIncome, 1, 2);
-
-  addLink(PROJECTED_SPENDING, CASH, c.actualSpend, 1, 3);
-
-  addLink(SAVINGS_DEPOSITS, SAVINGS_INTEREST, c.account_savingsInterest, 2, 3);
-
-  addLink(TAXES_DUE, WITHHOLDINGS, c.taxes_federalIncomeTaxOwed, 1, 2);
-  addLink(FEDERAL_TAXES_PAID, TAXES_DUE, c.taxes_federalIncomeTaxOwed, 2, 3);
-
-  if (c.taxes_underPayment > 0) {
-    addLink(TAXES_DUE, SAVINGS_WITHDRAWALS, c.taxes_underPayment, 1, 2);
-  }
-  if (c.taxes_overPayment > 0) {
-    addLink(TAX_REFUND, WITHHOLDINGS, c.taxes_overPayment, 1, 2);
-    addLink(SAVINGS_DEPOSITS, TAX_REFUND, c.taxes_overPayment, 2, 3);
-  }
-
-  // --- optional dev sanity log ---
-  console.log("Nodes:", Array.from(nodes.values()));
-  console.log("Links:", links);
-
-  const option = {
-    tooltip: {
-      trigger: "item",
-      triggerOn: "mousemove",
-      formatter: (/** @type {{ dataType: string; data: { value: any; source: any; target: any; }; name: any; }} */ p) => {
-        if (p.dataType === "edge") {
-          const v = Number(p.data.value);
-          return `${p.data.source} → ${p.data.target}<br/><b>$${v.toLocaleString()}</b>`;
-        }
-        return `<b>${p.name}</b>`;
-      },
-    },
-    series: [
-      {
-        type: "sankey",
-        nodeAlign: "left",
-        emphasis: { focus: "adjacency" },
-
-        // IMPORTANT: nodes are derived from links, and each node includes a `depth`
-        // which keeps the chart in your desired columns.
-        data: Array.from(nodes.values()),
-        links,
-
-        lineStyle: { color: "gradient", curveness: 0.5 },
-        label: { fontSize: 13 },
-      },
-    ],
-  };
-
-  chart.setOption(option);
-  window.addEventListener("resize", () => chart.resize());
-
+  // Set the popup content first so the DOM element exists
   popup.setContent(breakdownHtml);
+
+  // Apply larger sizing for cash flow popup
+  const popupContent = popup.root.querySelector(".ss-popup-content");
+  if (popupContent instanceof HTMLElement) {
+    popupContent.style.maxWidth = "95vw";
+    popupContent.style.width = "95vw";
+    popupContent.style.maxHeight = "70vh";
+    popupContent.style.height = "70vh";
+  }
+
   popup.show();
+
+  // Initialize chart after DOM is ready
+  setTimeout(() => {
+    const chartElement = document.getElementById("sankey-chart");
+    if (!chartElement) {
+      console.error("Chart element not found");
+      return;
+    }
+
+    const chart = echarts.init(chartElement);
+
+    // --- helpers: include only positive-value links; nodes auto-derived from links ---
+    /**
+     * @type {{ source: string; target: string; value: number; }[]}
+     */
+    const links = [];
+    const nodes = new Map(); // name -> { name, depth }
+
+    const num = (/** @type {any} */ v) => (v == null ? 0 : Number(v));
+    const pos = (/** @type {any} */ v) =>
+      Math.max(0, Math.round(num(v) * 100) / 100);
+
+    /**
+     *
+     * @param {string} name
+     * @param {number} depth
+     */
+    const addNode = (name, depth) => {
+      if (!nodes.has(name)) nodes.set(name, { name, depth });
+    };
+
+    // Depth is the "column" index. This is what keeps the diagram structured.
+    /**
+     *
+     * @param {string} target
+     * @param {string} source
+     * @param {number} value
+     * @param {number} sourceDepth
+     * @param {number} targetDepth
+     * @returns
+     */
+    const addLink = (target, source, value, sourceDepth, targetDepth) => {
+      // const v = pos(value);
+      if (value <= 0) return;
+
+      addNode(source, sourceDepth);
+      addNode(target, targetDepth);
+      links.push({ source, target, value });
+    };
+
+    // debugger;
+    const netIncome =
+      c.income_total_takehome -
+      // c.account_savingsInterest -
+      c.account_savingsWithdrawals;
+
+    const INCOME_NET = "Income (net)";
+    const PENSION = "Pension";
+    const WAGES = "Wages";
+    const SOCIAL_SECURITY = "Social Security";
+    const WITHDRAWALS_401K = "401k Withdrawals";
+    const CASH = "Cash";
+    const SAVINGS_WITHDRAWALS = "Savings (Withdrawals)";
+    const WITHHOLDINGS = "Withholdings";
+    const PROJECTED_SPENDING = "Projected Spending";
+    const SAVINGS_DEPOSITS = "Savings (Deposits)";
+    const SAVINGS_INTEREST = "Savings Interest";
+    const TAXES_DUE = "Taxes Due";
+    const FEDERAL_TAXES_PAID = "Federal Taxes Paid";
+    const TAX_REFUND = "Tax Refund";
+
+    // Income → Gross
+    addLink(INCOME_NET, WAGES, c.income_combinedTakehomeWages, 0, 1);
+    addLink(INCOME_NET, PENSION, c.income_combinedPensionTakehome, 0, 1);
+    addLink(INCOME_NET, SOCIAL_SECURITY, c.income_combinedSsTakehome, 0, 1);
+    addLink(INCOME_NET, WITHDRAWALS_401K, c.income_combined401kTakehome, 0, 1);
+    addLink(CASH, SAVINGS_WITHDRAWALS, c.account_savingsWithdrawals, 1, 2);
+    addLink(WITHHOLDINGS, WAGES, c.withholdings_combinedWages, 0, 1);
+    addLink(WITHHOLDINGS, SOCIAL_SECURITY, c.withholdings_combinedSs, 0, 1);
+    addLink(WITHHOLDINGS, PENSION, c.withholdings_combinedPension, 0, 1);
+    addLink(WITHHOLDINGS, WITHDRAWALS_401K, c.withholdings_combined401k, 0, 1);
+
+    addLink(SAVINGS_DEPOSITS, CASH, c.spending_surplus, 2, 3);
+
+    addLink(CASH, INCOME_NET, netIncome, 1, 2);
+
+    addLink(PROJECTED_SPENDING, CASH, c.actualSpend, 1, 3);
+
+    addLink(
+      SAVINGS_DEPOSITS,
+      SAVINGS_INTEREST,
+      c.account_savingsInterest,
+      2,
+      3
+    );
+
+    addLink(TAXES_DUE, WITHHOLDINGS, c.taxes_federalIncomeTaxOwed, 1, 2);
+    addLink(FEDERAL_TAXES_PAID, TAXES_DUE, c.taxes_federalIncomeTaxOwed, 2, 3);
+
+    if (c.taxes_underPayment > 0) {
+      addLink(TAXES_DUE, SAVINGS_WITHDRAWALS, c.taxes_underPayment, 1, 2);
+    }
+    if (c.taxes_overPayment > 0) {
+      addLink(TAX_REFUND, WITHHOLDINGS, c.taxes_overPayment, 1, 2);
+      addLink(SAVINGS_DEPOSITS, TAX_REFUND, c.taxes_overPayment, 2, 3);
+    }
+
+    // --- optional dev sanity log ---
+    console.log("Nodes:", Array.from(nodes.values()));
+    console.log("Links:", links);
+
+    const option = {
+      backgroundColor: "#eddcb8",
+      tooltip: {
+        trigger: "item",
+        triggerOn: "mousemove",
+        formatter: (
+          /** @type {{ dataType: string; data: { value: any; source: any; target: any; }; name: any; }} */ p
+        ) => {
+          if (p.dataType === "edge") {
+            const v = Number(p.data.value);
+            return `${p.data.source} → ${p.data.target}<br/><b>$${v.toLocaleString()}</b>`;
+          }
+          return `<b>${p.name}</b>`;
+        },
+      },
+      series: [
+        {
+          type: "sankey",
+          nodeAlign: "left",
+          emphasis: { focus: "adjacency" },
+
+          // IMPORTANT: nodes are derived from links, and each node includes a `depth`
+          // which keeps the chart in your desired columns.
+          data: Array.from(nodes.values()),
+          links,
+
+          lineStyle: { color: "gradient", curveness: 0.5 },
+          label: {
+            fontSize: 14,
+            fontWeight: "bold",
+            color: "#4d4d4d",
+          },
+          itemStyle: {
+            borderWidth: 2,
+          },
+          nodeGap: 20,
+          nodeWidth: 20,
+        },
+      ],
+    };
+
+    chart.setOption(option);
+    window.addEventListener("resize", () => chart.resize());
+  }, 0); // End setTimeout
 }
 
 export { showSsBreakdown };
