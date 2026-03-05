@@ -32,7 +32,7 @@
 </head>
 
 <body>
-    <h2>Retirement Cash Flow</h2>
+    <h2>Cash Flow 2035</h2>
     <div id="chart"></div>
 
     <script>
@@ -164,12 +164,6 @@
             links.push({ source, target, value: v });
         };
 
-        // --- column / depth plan ---
-        // 0 = Income Sources
-        // 1 = Gross Income / Withholdings
-        // 2 = Cash (Take-Home) / Taxes
-        // 3 = Spending + reconciliation outputs
-
         const netIncome = c.income_total_takehome - c.income_savingsInterest - c.account_savingsWithdrawals;
 
         const INCOME_NET = "Income (net)";
@@ -218,7 +212,7 @@
         console.log("Links:", links);
 
         const option = {
-            title: { text: `Year ${c.year}`, left: "center" },
+            // title: { text: `Year ${c.year}`, left: "center" },
             tooltip: {
                 trigger: "item",
                 triggerOn: "mousemove",
