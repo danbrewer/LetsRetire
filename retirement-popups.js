@@ -1078,15 +1078,28 @@ function showCashFlowDiagram(c) {
      * @param {number} value
      * @param {number} sourceDepth
      * @param {number} targetDepth
+     * @param {string} description - Human-readable description of this flow
      * @returns
      */
-    const addLink = (target, source, value, sourceDepth, targetDepth) => {
+    const addLink = (
+      target,
+      source,
+      value,
+      sourceDepth,
+      targetDepth,
+      description = null
+    ) => {
       // const v = pos(value);
       if (value <= 0) return;
 
       addNode(source, sourceDepth);
       addNode(target, targetDepth);
-      links.push({ source, target, value });
+      links.push({
+        source,
+        target,
+        value,
+        description: description || `${source} flows to ${target}`,
+      });
     };
 
     // debugger;
@@ -1113,39 +1126,145 @@ function showCashFlowDiagram(c) {
     // debugger;
 
     // Income → Gross
-    addLink(INCOME_NET, WAGES, c.income_combinedTakehomeWages, 0, 1);
-    addLink(INCOME_NET, PENSION, c.income_combinedPensionTakehome, 0, 1);
-    addLink(INCOME_NET, SOCIAL_SECURITY, c.income_combinedSsTakehome, 0, 1);
-    addLink(INCOME_NET, WITHDRAWALS_401K, c.income_combined401kTakehome, 0, 1);
-    addLink(CASH, SAVINGS_WITHDRAWALS, c.transfer_savingsToCash, 1, 2);
-    addLink(WITHHOLDINGS, WAGES, c.withholdings_combinedWages, 0, 1);
-    addLink(WITHHOLDINGS, SOCIAL_SECURITY, c.withholdings_combinedSs, 0, 1);
-    addLink(WITHHOLDINGS, PENSION, c.withholdings_combinedPension, 0, 1);
-    addLink(WITHHOLDINGS, WITHDRAWALS_401K, c.withholdings_combined401k, 0, 1);
+    addLink(
+      INCOME_NET,
+      WAGES,
+      c.income_combinedTakehomeWages,
+      0,
+      1,
+      "Take-home wages after taxes and deductions"
+    );
+    addLink(
+      INCOME_NET,
+      PENSION,
+      c.income_combinedPensionTakehome,
+      0,
+      1,
+      "Takehome pensions/annuities after withholdings"
+    );
+    addLink(
+      INCOME_NET,
+      SOCIAL_SECURITY,
+      c.income_combinedSsTakehome,
+      0,
+      1,
+      "Takehome Social Security after withholdings"
+    );
+    addLink(
+      INCOME_NET,
+      WITHDRAWALS_401K,
+      c.income_combined401kTakehome,
+      0,
+      1,
+      "Takehome 401k withdrawals after withholdings"
+    );
+    addLink(
+      CASH,
+      SAVINGS_WITHDRAWALS,
+      c.transfer_savingsToCash,
+      1,
+      2,
+      "Money withdrawn from savings account"
+    );
+    addLink(
+      WITHHOLDINGS,
+      WAGES,
+      c.withholdings_combinedWages,
+      0,
+      1,
+      "Federal taxes withheld from wages"
+    );
+    addLink(
+      WITHHOLDINGS,
+      SOCIAL_SECURITY,
+      c.withholdings_combinedSs,
+      0,
+      1,
+      "Taxes withheld from Social Security"
+    );
+    addLink(
+      WITHHOLDINGS,
+      PENSION,
+      c.withholdings_combinedPension,
+      0,
+      1,
+      "Taxes withheld from pension"
+    );
+    addLink(
+      WITHHOLDINGS,
+      WITHDRAWALS_401K,
+      c.withholdings_combined401k,
+      0,
+      1,
+      "Taxes withheld from 401k withdrawals"
+    );
 
-    addLink(SAVINGS_DEPOSITS, CASH, c.transfer_cashToSavings, 2, 3);
+    addLink(
+      SAVINGS_DEPOSITS,
+      CASH,
+      c.transfer_cashToSavings,
+      2,
+      3,
+      "Surplus cash deposited into savings"
+    );
 
-    addLink(CASH, INCOME_NET, netIncome, 1, 2);
+    addLink(CASH, INCOME_NET, netIncome, 1, 2, "Net income available as cash");
 
-    addLink(PROJECTED_SPENDING, CASH, c.actualSpend, 1, 3);
+    addLink(
+      PROJECTED_SPENDING,
+      CASH,
+      c.actualSpend,
+      1,
+      3,
+      "Cash used for living expenses and spending"
+    );
 
     addLink(
       SAVINGS_DEPOSITS,
       SAVINGS_INTEREST,
       c.account_savingsInterest,
       2,
-      3
+      3,
+      "Interest earned on savings account balance"
     );
 
-    addLink(TAXES_DUE, WITHHOLDINGS, c.withholdings_total, 1, 2);
-    addLink(FEDERAL_TAXES_PAID, TAXES_DUE, c.taxes_federalIncomeTaxOwed, 2, 3);
+    addLink(
+      TAXES_DUE,
+      WITHHOLDINGS,
+      c.withholdings_total,
+      1,
+      2,
+      "Tax withholdings applied to tax liability"
+    );
+    addLink(
+      FEDERAL_TAXES_PAID,
+      TAXES_DUE,
+      c.taxes_federalIncomeTaxOwed,
+      2,
+      3,
+      "Federal income taxes paid to IRS"
+    );
 
     if (c.transfer_savingsToTaxes > 0) {
-      addLink(TAXES_DUE, SAVINGS_WITHDRAWALS, c.transfer_savingsToTaxes, 1, 2);
+      addLink(
+        TAXES_DUE,
+        SAVINGS_WITHDRAWALS,
+        c.transfer_savingsToTaxes,
+        1,
+        2,
+        "Additional taxes paid from savings (tax shortfall)"
+      );
     }
     if (c.transfer_taxesToSavings > 0) {
       // addLink(TAX_REFUND, WITHHOLDINGS, c.transfer_taxesToSavings, 1, 2);
-      addLink(SAVINGS_DEPOSITS, TAXES_DUE, c.transfer_taxesToSavings, 2, 3);
+      addLink(
+        SAVINGS_DEPOSITS,
+        TAXES_DUE,
+        c.transfer_taxesToSavings,
+        2,
+        3,
+        "Tax refund deposited into savings (overpayment)"
+      );
     }
 
     // --- optional dev sanity log ---
@@ -1184,7 +1303,9 @@ function showCashFlowDiagram(c) {
         ) => {
           if (p.dataType === "edge") {
             const v = Number(p.data.value);
-            return `${p.data.source} → ${p.data.target}<br/><b>$${v.toLocaleString()}</b>`;
+            const description =
+              p.data.description || `${p.data.source} → ${p.data.target}`;
+            return `${description}<br/><b>$${v.toLocaleString()}</b>`;
           } else if (p.dataType === "node") {
             // Try multiple ways to get the value
             const nodeTotal =
