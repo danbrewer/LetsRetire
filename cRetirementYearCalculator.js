@@ -406,7 +406,7 @@ class RetirementYearCalculator {
         PERIODIC_FREQUENCY.ANNUAL_TRAILING,
         TransactionCategory.TaxRefund
       );
-      this.#reportingYear.ReportData.taxes_overPayment = refundAmount;
+      this.#reportingYear.ReportData.transfer_taxesToSavings = refundAmount;
     }
 
     if (taxesOwed > 0) {
@@ -426,7 +426,7 @@ class RetirementYearCalculator {
         PERIODIC_FREQUENCY.ANNUAL_TRAILING,
         TransactionCategory.TaxPayment
       );
-      this.#reportingYear.ReportData.taxes_underPayment = withdrawalAmount;
+      this.#reportingYear.ReportData.transfer_savingsToTaxes = withdrawalAmount;
     }
     // debugger;
   }
@@ -479,7 +479,7 @@ class RetirementYearCalculator {
         TransactionCategory.SurplusIncome
       );
 
-      this.#reportingYear.ReportData.spending_surplus = this.surplusSpend;
+      this.#reportingYear.ReportData.transfer_cashToSavings = this.surplusSpend;
     }
 
     if (this.surplusSpend < 0) {
@@ -505,7 +505,8 @@ class RetirementYearCalculator {
         TransactionCategory.IncomeShortfall
       );
 
-      this.#reportingYear.ReportData.spending_shortfall = -this.surplusSpend;
+      this.#reportingYear.ReportData.transfer_savingsToCash =
+        -this.surplusSpend;
 
       this.#accountYear.processAsPeriodicWithdrawals(
         ACCOUNT_TYPES.CASH,
@@ -586,11 +587,9 @@ class RetirementYearCalculator {
       transferType,
       TransactionCategory.CashTransfer
     );
-  }
 
-  // #applySavingsInterest() {
-  //   this.#accountYear.recordInterestEarnedForYear(ACCOUNT_TYPES.SAVINGS);
-  // }
+    this.#reportingYear.ReportData.transfer_savingsToCash += withdrawalAmount;
+  }
 
   #determineSocialSecurityBreakdown() {
     const ssBreakdown = SsBenefitsCalculator.CalculateSsBreakdown(

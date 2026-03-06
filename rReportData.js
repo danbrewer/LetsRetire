@@ -146,8 +146,6 @@ class ReportData extends BaseReports {
     "withholdings_combinedSs",
     "withholdings_combinedWages",
 
-
-
     // "total_withholdings",
   ];
   constructor() {
@@ -213,8 +211,8 @@ class ReportData extends BaseReports {
     this.actualSpend = 0;
     this.spending_overriding = false;
     this.takeHome = 0;
-    this.spending_shortfall = 0;
-    this.spending_surplus = 0;
+    this.transfer_savingsToCash = 0;
+    this.transfer_cashToSavings = 0;
     this.spending_basis = 0;
     this.spending_taper_rate = 0;
 
@@ -225,8 +223,8 @@ class ReportData extends BaseReports {
     this.taxes_taxableIncome = 0;
     this.taxes_nonTaxableIncome = 0;
 
-    this.taxes_overPayment = 0;
-    this.taxes_underPayment = 0;
+    this.transfer_taxesToSavings = 0;
+    this.transfer_savingsToTaxes = 0;
     this.taxes_federalIncomeTaxOwed = 0;
 
     this.withholdings_subjectWages = 0;
@@ -477,8 +475,7 @@ class ReportData extends BaseReports {
       // this.income_subjectPensionTakehome +
       // this.income_partnerPensionTakehome +
       this.income_combinedSsTakehome +
-
-      this.account_savingsWithdrawals +
+      this.transfer_savingsToCash +
       this.income_combinedRothTakehome +
       // this.account_partnerRothWithdrawals +
       // this.account_subjectRothWithdrawals +

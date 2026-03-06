@@ -623,7 +623,7 @@ const columnGroups = [
         render: (calc, index) => {
           return money(
             "income",
-            calc.reportData.account_savingsWithdrawals +
+            calc.reportData.transfer_savingsToCash +
               calc.reportData.income_combinedRothTakehome,
             { index, action: "showSavingsRothBreakdown" }
           );
@@ -758,11 +758,12 @@ const columnGroups = [
       {
         label: "Shortfall",
         render: (calc, _) =>
-          money("outgoing", calc.reportData.taxes_underPayment),
+          money("outgoing", calc.reportData.transfer_savingsToTaxes),
       },
       {
         label: "Refund",
-        render: (calc, _) => money("income", calc.reportData.taxes_overPayment),
+        render: (calc, _) =>
+          money("income", calc.reportData.transfer_taxesToSavings),
       },
       {
         label: "Effective Tax Rate",

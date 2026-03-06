@@ -1088,7 +1088,7 @@ function loadExample() {
     withholdingsWages: 15,
     withholdings401k: 18,
     // withholdingsSS: 15,
-    withholdingsPension: 18,
+    // withholdingsPension: 18,
   };
   // const ex = {
   //   currentAge: 60,

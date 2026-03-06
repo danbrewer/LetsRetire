@@ -529,7 +529,7 @@ class WorkingYearCalculator {
         TransactionCategory.SurplusIncome
       );
 
-      this.#reportingYear.ReportData.spending_surplus = this.surplusSpend;
+      this.#reportingYear.ReportData.transfer_cashToSavings = this.surplusSpend;
     }
 
     if (this.surplusSpend < 0) {
@@ -555,7 +555,8 @@ class WorkingYearCalculator {
         TransactionCategory.IncomeShortfall
       );
 
-      this.#reportingYear.ReportData.spending_shortfall = -this.surplusSpend;
+      this.#reportingYear.ReportData.transfer_savingsToCash =
+        -this.surplusSpend;
 
       this.#accountYear.processAsPeriodicWithdrawals(
         ACCOUNT_TYPES.CASH,
@@ -674,7 +675,7 @@ class WorkingYearCalculator {
         PERIODIC_FREQUENCY.ANNUAL_TRAILING,
         TransactionCategory.TaxRefund
       );
-      this.#reportingYear.ReportData.taxes_overPayment = refundAmount;
+      this.#reportingYear.ReportData.transfer_taxesToSavings = refundAmount;
     }
 
     if (taxesOwed > 0) {
@@ -694,7 +695,7 @@ class WorkingYearCalculator {
         PERIODIC_FREQUENCY.ANNUAL_TRAILING,
         TransactionCategory.TaxPayment
       );
-      this.#reportingYear.ReportData.taxes_underPayment = withdrawalAmount;
+      this.#reportingYear.ReportData.transfer_savingsToTaxes = withdrawalAmount;
     }
   }
 }

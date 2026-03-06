@@ -197,7 +197,7 @@ class RetirementYearData extends BaseYearData {
   }
 
   get cashFromSavings() {
-    return this.#reportData.account_savingsWithdrawals.asCurrency();
+    return this.#reportData.transfer_savingsToCash.asCurrency();
   }
 
   get cashFrom401k() {

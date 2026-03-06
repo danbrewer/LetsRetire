@@ -279,20 +279,20 @@ function showTaxesBreakdown(data) {
     </div>
     `;
 
-  if (data.taxes_underPayment > 0) {
+  if (data.transfer_savingsToTaxes > 0) {
     breakdownHtml += `
       <div class="ss-breakdown-item">
           <span class="ss-breakdown-label">Taxes due:</span>
-          <span class="ss-breakdown-value">${data.taxes_underPayment.asWholeDollars()}</span>
+          <span class="ss-breakdown-value">${data.transfer_savingsToTaxes.asWholeDollars()}</span>
       </div>
     `;
   }
 
-  if (data.taxes_overPayment > 0) {
+  if (data.transfer_taxesToSavings > 0) {
     breakdownHtml += `
       <div class="ss-breakdown-item">
           <span class="ss-breakdown-label">Refund:</span>
-          <span class="ss-breakdown-value">${data.taxes_overPayment.asWholeDollars()}</span>
+          <span class="ss-breakdown-value">${data.transfer_taxesToSavings.asWholeDollars()}</span>
       </div>
     `;
   }
@@ -721,7 +721,7 @@ function showSavingsBalanceBreakdown(data) {
   const deposits =
     // data.account_subjectSavingsContributions +
     // data.account_partnerSavingsContributions +
-    data.spending_surplus;
+    data.transfer_cashToSavings;
 
   // Build the breakdown content
   let breakdownHtml = `
@@ -743,11 +743,11 @@ function showSavingsBalanceBreakdown(data) {
     </div>
     <div class="ss-breakdown-item">
         <span class="ss-breakdown-label">Tax refund:</span>
-        <span class="ss-breakdown-value">${data.taxes_overPayment.asWholeDollars()}</span>
+        <span class="ss-breakdown-value">${data.transfer_taxesToSavings.asWholeDollars()}</span>
     </div>
     <div class="ss-breakdown-item">
         <span class="ss-breakdown-label">Taxes owed:</span>
-        <span class="ss-breakdown-value">${data.taxes_underPayment.asWholeDollars()}</span>
+        <span class="ss-breakdown-value">${data.transfer_savingsToTaxes.asWholeDollars()}</span>
     </div>
     <div class="ss-breakdown-item breakdown-accent">
         <span class="ss-breakdown-label">Closing balance:</span>
@@ -973,7 +973,7 @@ function showTotalCashBreakdown(data) {
     </div>
     <div class="ss-breakdown-item">
         <span class="ss-breakdown-label">Savings:</span>
-        <span class="ss-breakdown-value">${data.account_savingsWithdrawals.asWholeDollars()}</span>
+        <span class="ss-breakdown-value">${data.transfer_savingsToCash.asWholeDollars()}</span>
     </div>
     <div class="ss-breakdown-item">
         <span class="ss-breakdown-label">Roth Withdrawals:</span>
@@ -1057,9 +1057,9 @@ function showCashFlowDiagram(c) {
     const links = [];
     const nodes = new Map(); // name -> { name, depth }
 
-    const num = (/** @type {any} */ v) => (v == null ? 0 : Number(v));
-    const pos = (/** @type {any} */ v) =>
-      Math.max(0, Math.round(num(v) * 100) / 100);
+    // const num = (/** @type {any} */ v) => (v == null ? 0 : Number(v));
+    // const pos = (/** @type {any} */ v) =>
+    //   Math.max(0, Math.round(num(v) * 100) / 100);
 
     /**
      *
@@ -1093,7 +1093,7 @@ function showCashFlowDiagram(c) {
     const netIncome =
       c.income_total_takehome -
       // c.account_savingsInterest -
-      c.account_savingsWithdrawals;
+      c.transfer_savingsToCash;
 
     const INCOME_NET = "Income (net)";
     const PENSION = "Pension";
@@ -1106,22 +1106,24 @@ function showCashFlowDiagram(c) {
     const PROJECTED_SPENDING = "Projected Spending";
     const SAVINGS_DEPOSITS = "Savings (Deposits)";
     const SAVINGS_INTEREST = "Savings Interest";
-    const TAXES_DUE = "Taxes Due";
+    const TAXES_DUE = "Taxes";
     const FEDERAL_TAXES_PAID = "Federal Taxes Paid";
     const TAX_REFUND = "Tax Refund";
+
+    // debugger;
 
     // Income → Gross
     addLink(INCOME_NET, WAGES, c.income_combinedTakehomeWages, 0, 1);
     addLink(INCOME_NET, PENSION, c.income_combinedPensionTakehome, 0, 1);
     addLink(INCOME_NET, SOCIAL_SECURITY, c.income_combinedSsTakehome, 0, 1);
     addLink(INCOME_NET, WITHDRAWALS_401K, c.income_combined401kTakehome, 0, 1);
-    addLink(CASH, SAVINGS_WITHDRAWALS, c.account_savingsWithdrawals, 1, 2);
+    addLink(CASH, SAVINGS_WITHDRAWALS, c.transfer_savingsToCash, 1, 2);
     addLink(WITHHOLDINGS, WAGES, c.withholdings_combinedWages, 0, 1);
     addLink(WITHHOLDINGS, SOCIAL_SECURITY, c.withholdings_combinedSs, 0, 1);
     addLink(WITHHOLDINGS, PENSION, c.withholdings_combinedPension, 0, 1);
     addLink(WITHHOLDINGS, WITHDRAWALS_401K, c.withholdings_combined401k, 0, 1);
 
-    addLink(SAVINGS_DEPOSITS, CASH, c.spending_surplus, 2, 3);
+    addLink(SAVINGS_DEPOSITS, CASH, c.transfer_cashToSavings, 2, 3);
 
     addLink(CASH, INCOME_NET, netIncome, 1, 2);
 
@@ -1135,32 +1137,59 @@ function showCashFlowDiagram(c) {
       3
     );
 
-    addLink(TAXES_DUE, WITHHOLDINGS, c.taxes_federalIncomeTaxOwed, 1, 2);
+    addLink(TAXES_DUE, WITHHOLDINGS, c.withholdings_total, 1, 2);
     addLink(FEDERAL_TAXES_PAID, TAXES_DUE, c.taxes_federalIncomeTaxOwed, 2, 3);
 
-    if (c.taxes_underPayment > 0) {
-      addLink(TAXES_DUE, SAVINGS_WITHDRAWALS, c.taxes_underPayment, 1, 2);
+    if (c.transfer_savingsToTaxes > 0) {
+      addLink(TAXES_DUE, SAVINGS_WITHDRAWALS, c.transfer_savingsToTaxes, 1, 2);
     }
-    if (c.taxes_overPayment > 0) {
-      addLink(TAX_REFUND, WITHHOLDINGS, c.taxes_overPayment, 1, 2);
-      addLink(SAVINGS_DEPOSITS, TAX_REFUND, c.taxes_overPayment, 2, 3);
+    if (c.transfer_taxesToSavings > 0) {
+      // addLink(TAX_REFUND, WITHHOLDINGS, c.transfer_taxesToSavings, 1, 2);
+      addLink(SAVINGS_DEPOSITS, TAXES_DUE, c.transfer_taxesToSavings, 2, 3);
     }
 
     // --- optional dev sanity log ---
-    console.log("Nodes:", Array.from(nodes.values()));
-    console.log("Links:", links);
+
+    // Calculate total values for each node
+    const nodeValues = new Map();
+
+    // Calculate based on outgoing flows (source nodes)
+    for (const link of links) {
+      nodeValues.set(
+        link.source,
+        (nodeValues.get(link.source) || 0) + link.value
+      );
+    }
+
+    // For target nodes that don't have outgoing flows, use their incoming flow
+    for (const link of links) {
+      if (!nodeValues.has(link.target)) {
+        nodeValues.set(link.target, link.value);
+      }
+    }
+
+    // Add calculated values to node data
+    const nodesWithValues = Array.from(nodes.values()).map((node) => ({
+      ...node,
+      value: nodeValues.get(node.name) || 0,
+    }));
 
     const option = {
-      backgroundColor: "#eddcb8",
+      backgroundColor: "#ece9e5",
       tooltip: {
         trigger: "item",
         triggerOn: "mousemove",
         formatter: (
-          /** @type {{ dataType: string; data: { value: any; source: any; target: any; }; name: any; }} */ p
+          /** @type {{ dataType: string; data: any; name: any; value: any; }} */ p
         ) => {
           if (p.dataType === "edge") {
             const v = Number(p.data.value);
             return `${p.data.source} → ${p.data.target}<br/><b>$${v.toLocaleString()}</b>`;
+          } else if (p.dataType === "node") {
+            // Try multiple ways to get the value
+            const nodeTotal =
+              nodeValues.get(p.name) || p.value || p.data?.value || 0;
+            return `<b>${p.name}</b><br/>Total: <b>$${nodeTotal.toLocaleString()}</b>`;
           }
           return `<b>${p.name}</b>`;
         },
@@ -1173,7 +1202,7 @@ function showCashFlowDiagram(c) {
 
           // IMPORTANT: nodes are derived from links, and each node includes a `depth`
           // which keeps the chart in your desired columns.
-          data: Array.from(nodes.values()),
+          data: nodesWithValues,
           links,
 
           lineStyle: { color: "gradient", curveness: 0.5 },
