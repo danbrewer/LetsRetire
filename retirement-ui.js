@@ -319,6 +319,14 @@ document.addEventListener("reports:run", (e) => {
       </div>
     `);
 
+    const popupContent = popup.root.querySelector(".ss-popup-content");
+    if (popupContent instanceof HTMLElement) {
+      popupContent.style.maxWidth = "95vw";
+      popupContent.style.width = "95vw";
+      popupContent.style.maxHeight = "70vh";
+      popupContent.style.height = "70vh";
+    }
+
     const refreshButton = popup.root.querySelector("#refreshReportBtn");
     if (!(refreshButton instanceof HTMLButtonElement)) return;
 
@@ -333,6 +341,7 @@ document.addEventListener("reports:run", (e) => {
   };
 
   renderReportOutput(year, `Initial report loaded for year ${year}.`);
+
   popup.show();
 });
 
