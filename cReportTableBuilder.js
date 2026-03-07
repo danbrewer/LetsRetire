@@ -17,6 +17,11 @@
  *
  *
  * @typedef {ReportCell[]} ReportRow
+ *
+ *
+ * @typedef {Object} InlineSubReport
+ * @property {string} [title]
+ * @property {ReportTableBuilder} builder
  */
 
 export class ReportTableBuilder {
@@ -26,6 +31,9 @@ export class ReportTableBuilder {
 
     /** @type {ReportRow[]} */
     this.rows = [];
+
+    /** @type {Map<number, InlineSubReport>} */
+    this.subReportsByRow = new Map();
 
     this.zebra = false;
     this.stickyHeader = false;
@@ -77,6 +85,63 @@ export class ReportTableBuilder {
 
     this.rows.push(cells);
 
+    return this;
+  }
+
+  /**
+   * Attach a subreport to an existing row index.
+   *
+   * @param {number} rowIndex
+   * @param {ReportTableBuilder} subReportBuilder
+   * @param {string} [title]
+   * @returns {ReportTableBuilder}
+   */
+  addSubReportToRow(rowIndex, subReportBuilder, title = "") {
+    if (!Number.isInteger(rowIndex) || rowIndex < 0 || rowIndex >= this.rows.length) {
+      console.warn(`Invalid rowIndex (${rowIndex}) for subreport.`);
+      return this;
+    }
+
+    if (!(subReportBuilder instanceof ReportTableBuilder)) {
+      console.warn("subReportBuilder must be a ReportTableBuilder instance.");
+      return this;
+    }
+
+    this.subReportsByRow.set(rowIndex, {
+      title,
+      builder: subReportBuilder,
+    });
+
+    return this;
+  }
+
+  /**
+   * Attach a subreport to the most recently added row.
+   *
+   * @param {ReportTableBuilder} subReportBuilder
+   * @param {string} [title]
+   * @returns {ReportTableBuilder}
+   */
+  addSubReportForLastRow(subReportBuilder, title = "") {
+    if (this.rows.length === 0) {
+      console.warn("Cannot add subreport: no rows exist yet.");
+      return this;
+    }
+
+    return this.addSubReportToRow(this.rows.length - 1, subReportBuilder, title);
+  }
+
+  /**
+   * Convenience helper to add a row and immediately attach a subreport.
+   *
+   * @param {ReportRow} cells
+   * @param {ReportTableBuilder} subReportBuilder
+   * @param {string} [title]
+   * @returns {ReportTableBuilder}
+   */
+  addRowWithSubReport(cells, subReportBuilder, title = "") {
+    this.addRow(cells);
+    this.addSubReportForLastRow(subReportBuilder, title);
     return this;
   }
 
@@ -151,6 +216,33 @@ export class ReportTableBuilder {
       });
 
       tbody.appendChild(row);
+
+      const subReport = this.subReportsByRow.get(rowIndex);
+      if (subReport) {
+        const subReportRow = document.createElement("tr");
+        const subReportCell = document.createElement("td");
+
+        subReportCell.colSpan = this.columns.length;
+        subReportCell.style.padding = "10px 12px 14px 24px";
+        subReportCell.style.borderBottom = "1px solid #ddd";
+        subReportCell.style.background = "rgba(255,255,255,0.02)";
+
+        if (subReport.title) {
+          const titleElement = document.createElement("div");
+          titleElement.textContent = subReport.title;
+          titleElement.style.fontWeight = "600";
+          titleElement.style.marginBottom = "8px";
+          titleElement.style.color = "#333";
+          subReportCell.appendChild(titleElement);
+        }
+
+        const nestedTable = subReport.builder.build();
+        nestedTable.style.width = "100%";
+        subReportCell.appendChild(nestedTable);
+
+        subReportRow.appendChild(subReportCell);
+        tbody.appendChild(subReportRow);
+      }
     });
 
     table.appendChild(tbody);

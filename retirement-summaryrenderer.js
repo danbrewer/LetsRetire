@@ -894,6 +894,27 @@ function generateSummaryByCategoryReport(year, accountType) {
   };
 }
 
+/**
+ * @param {number} year
+ * @param {string} accountType
+ * @returns {{ year: number; accountType: string; details: import("./cAccountAnalyzer.js").TransactionsByCategoryReport[] } | null}
+ */
+function generateCategoryDetailReport(year, accountType) {
+  const calculations = currentCalculations?.getAllCalculations();
+  if (!calculations || calculations.length === 0) return null;
+
+  const calc = calculations.find((c) => c.year === year);
+  if (!calc) return null;
+
+  const analyzer = AccountAnalyzer.CreateUsing(calc.accountYear, accountType);
+
+  return {
+    year,
+    accountType,
+    details: analyzer.computeCategoryDetails(),
+  };
+}
+
 function generateCSV() {
   const calculations = currentCalculations?.getAllCalculations();
   if (!calculations || calculations.length === 0) return;
@@ -1185,4 +1206,5 @@ export {
   generateJSON,
   generateTestCategorySummaryDump,
   generateSummaryByCategoryReport,
+  generateCategoryDetailReport
 };

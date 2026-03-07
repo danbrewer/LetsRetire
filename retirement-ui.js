@@ -20,6 +20,7 @@ import {
   buildColumnMenu,
   generateOutputAndSummary,
   generateSummaryByCategoryReport,
+  generateCategoryDetailReport,
   loadColumnLayout,
 } from "./retirement-summaryrenderer.js";
 import { createHelpIcon } from "./retirement-ui-help.js";
@@ -277,6 +278,74 @@ document.addEventListener("reports:run", (e) => {
     return `<div style="overflow:auto; max-height:40vh; border:1px solid var(--border); border-radius:8px;">${tableElement.outerHTML}</div>`;
   };
 
+  /** @param {string} selectedYear */
+  const renderCategoryDetailTable = (selectedYear) => {
+    const report = generateCategoryDetailReport(
+      Number(selectedYear),
+      accountType
+    );
+    if (!report) {
+      return `<div style="font-size:12px; color:var(--muted);">No report data available for year ${selectedYear}.</div>`;
+    }
+
+    const table = new ReportTableBuilder()
+      .addColumn("Category", 24, "left", "text", false)
+      .addColumn("Inflows", 18, "right", "currency", true)
+      .addColumn("Outflows", 18, "right", "currency", true)
+      .addColumn("Balance", 18, "right", "currency", true)
+      .addColumn("Count", 12, "right", "number", true)
+      .enableStickyHeader();
+
+    for (const detail of report.details) {
+      let inflows = 0;
+      let outflows = 0;
+
+      for (const tx of detail.transactions) {
+        const amount = Number(tx.amount) || 0;
+        if (tx.transactionType === "Deposit") {
+          inflows += amount;
+        } else if (tx.transactionType === "Withdrawal") {
+          outflows += amount;
+        }
+      }
+
+      table.addRow([
+        String(detail.category || "Unknown"),
+        inflows,
+        outflows,
+        Number(detail.total) || 0,
+        Number(detail.count) || 0,
+      ]);
+
+      const subReportTable = new ReportTableBuilder()
+        .addColumn("Date", 20, "left", "text", false)
+        .addColumn("Type", 16, "left", "text", false)
+        .addColumn("Memo", 44, "left", "text", false)
+        .addColumn("Amount", 20, "right", "currency", false);
+
+      for (const tx of detail.transactions) {
+        const amount = Number(tx.amount) || 0;
+        const signedAmount =
+          tx.transactionType === "Withdrawal" ? -amount : amount;
+
+        subReportTable.addRow([
+          String(tx.date || ""),
+          String(tx.transactionType || "Unknown"),
+          String(tx.memo || ""),
+          signedAmount,
+        ]);
+      }
+
+      table.addSubReportForLastRow(
+        subReportTable,
+        `Transactions (${detail.transactions.length})`
+      );
+    }
+
+    const tableElement = table.build();
+    return `<div style="overflow:auto; max-height:40vh; border:1px solid var(--border); border-radius:8px;">${tableElement.outerHTML}</div>`;
+  };
+
   /**
    * @param {string} selectedYear
    * @returns {string}
@@ -284,6 +353,9 @@ document.addEventListener("reports:run", (e) => {
   const renderReportContent = (selectedYear) => {
     if (reportType === "Summary by Category") {
       return renderSummaryByCategoryTable(selectedYear);
+    }
+    if (reportType === "Details by Category") {
+      return renderCategoryDetailTable(selectedYear);
     }
 
     return `<div style="font-size:12px; color:var(--muted);">Stub content: report rendering for '${reportType}' will be added here for year ${selectedYear}.</div>`;

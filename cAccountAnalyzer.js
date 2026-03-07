@@ -671,6 +671,74 @@ class AccountAnalyzer {
       .asCurrency();
   }
 
+  /**
+   * Computes detailed category report data for the current tax year.
+   * Sister method to dumpCategoryDetails(), similar in structure to computeCategorySummaries().
+   *
+   * @returns {TransactionsByCategoryReport[]}
+   */
+  computeCategoryDetails() {
+    /** @type {(TransactionsByCategoryReport & { inflows: number; outflows: number })[]} */
+    const details = [];
+
+    const transactions = this.getTransactionsGroupedByCategory();
+
+    for (const [category, txns] of transactions) {
+      /** @type {TransactionReport[]} */
+      const transactionDetails = [];
+
+      let inflows = 0;
+      let outflows = 0;
+
+      for (const t of txns) {
+        if (t.date.getFullYear() !== this.#accountYear.taxYear) continue;
+
+        const amount = Number(t.amount) || 0;
+
+        if (t.transactionType === TransactionType.Deposit) {
+          inflows += amount;
+        }
+
+        if (t.transactionType === TransactionType.Withdrawal) {
+          outflows += amount;
+        }
+
+        transactionDetails.push({
+          transactionType: TransactionType.toName(t.transactionType) || "Unknown",
+          category,
+          memo: String(t.memo || ""),
+          amount,
+          date: DateFunctions.formatDateYYYYMMDD(t.date),
+        });
+      }
+
+      details.push({
+        category,
+        transactions: transactionDetails,
+        total: inflows - outflows,
+        count: transactionDetails.length,
+        inflows,
+        outflows,
+      });
+    }
+
+    const sortedDetails = details.sort((a, b) => {
+      const aHasInflows = a.inflows > 0;
+      const bHasInflows = b.inflows > 0;
+
+      if (aHasInflows && !bHasInflows) return -1;
+      if (!aHasInflows && bHasInflows) return 1;
+
+      if (aHasInflows && bHasInflows) return b.inflows - a.inflows;
+
+      return b.outflows - a.outflows;
+    });
+
+    return sortedDetails.map(({ inflows: _, outflows: __, ...result }) =>
+      result
+    );
+  }
+
   computeCategorySummaries() {
     const summaries = [];
 
