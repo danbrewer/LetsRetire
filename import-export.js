@@ -30,6 +30,7 @@ export function openReportsPopup() {
     .join("");
 
   const reportTypeOptions = [
+    "Summary by Category",
     "Bogus Report A",
     "Bogus Report B",
     "Bogus Report C",

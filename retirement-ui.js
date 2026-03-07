@@ -19,6 +19,7 @@ import {
 import {
   buildColumnMenu,
   generateOutputAndSummary,
+  generateSummaryByCategoryReport,
   loadColumnLayout,
 } from "./retirement-summaryrenderer.js";
 import { createHelpIcon } from "./retirement-ui-help.js";
@@ -38,6 +39,7 @@ import {
 } from "./retirement-ui-withdrawal-limit-modal.js";
 import { WithdrawalLimitStorage } from "./cWithdrawalLimitsStorage.js";
 import { ensurePopup } from "./popup-engine.js";
+import { ReportTableBuilder } from "./cReportTableBuilder.js";
 
 const STORAGE_KEY = "retirement-calculator-inputs";
 
@@ -242,6 +244,51 @@ document.addEventListener("reports:run", (e) => {
   const availableYears = getReportOutputYears(year);
   const popup = ensurePopup("reportOutput", "Report Output");
 
+  /** @param {string} selectedYear */
+  const renderSummaryByCategoryTable = (selectedYear) => {
+    const report = generateSummaryByCategoryReport(
+      Number(selectedYear),
+      accountType
+    );
+    if (!report) {
+      return `<div style="font-size:12px; color:var(--muted);">No report data available for year ${selectedYear}.</div>`;
+    }
+
+    const table = new ReportTableBuilder()
+      .addColumn("Category", 25, "left", "text", false)
+      .addColumn("Inflows", 18, "right", "currency", true)
+      .addColumn("Outflows", 18, "right", "currency", true)
+      .addColumn("Balance", 18, "right", "currency", true)
+      .addColumn("Count", 12, "right", "number", true)
+      .enableStickyHeader();
+
+    for (const summary of report.summaries) {
+      table.addRow([
+        String(summary.category || "Unknown"),
+        Number(summary.inflows) || 0,
+        Number(summary.outflows) || 0,
+        Number(summary.balance) || 0,
+        Number(summary.count) || 0,
+      ]);
+    }
+
+    const tableElement = table.build();
+
+    return `<div style="overflow:auto; max-height:40vh; border:1px solid var(--border); border-radius:8px;">${tableElement.outerHTML}</div>`;
+  };
+
+  /**
+   * @param {string} selectedYear
+   * @returns {string}
+   */
+  const renderReportContent = (selectedYear) => {
+    if (reportType === "Summary by Category") {
+      return renderSummaryByCategoryTable(selectedYear);
+    }
+
+    return `<div style="font-size:12px; color:var(--muted);">Stub content: report rendering for '${reportType}' will be added here for year ${selectedYear}.</div>`;
+  };
+
   /**
    * @param {string} selectedYear
    * @param {string} [statusMessage]
@@ -268,7 +315,7 @@ document.addEventListener("reports:run", (e) => {
           <button id="refreshReportBtn" type="button">Refresh Report</button>
         </div>
         <div style="font-size:12px; color:var(--accent);">${statusMessage}</div>
-        <div style="font-size:12px; color:var(--muted);">Stub content: report rendering will be added here for year ${selectedYear}.</div>
+        ${renderReportContent(selectedYear)}
       </div>
     `);
 

@@ -858,20 +858,40 @@ function buildSummaryRow(calculation, index) {
   return tr(...cells);
 }
 
-function generateTestCategorySummaryDump(){
-   const calculations = currentCalculations?.getAllCalculations();
-   if (!calculations || calculations.length === 0) return;
+function generateTestCategorySummaryDump() {
+  const calculations = currentCalculations?.getAllCalculations();
+  if (!calculations || calculations.length === 0) return;
 
-   const calc = calculations[10];
-   const reportData = calc.reportData;
+  const calc = calculations[10];
+  const reportData = calc.reportData;
 
-   const analyzer = AccountAnalyzer.CreateUsing(
-     calc.accountYear,
-     ACCOUNT_TYPES.SAVINGS
-   );
+  const analyzer = AccountAnalyzer.CreateUsing(
+    calc.accountYear,
+    ACCOUNT_TYPES.SAVINGS
+  );
 
-   dumpCategorySummaries(reportData, analyzer.computeCategorySummaries());
+  dumpCategorySummaries(reportData, analyzer.computeCategorySummaries());
+}
 
+/**
+ * @param {number} year
+ * @param {string} accountType
+ * @returns {{ year: number; accountType: string; summaries: { category: string; inflows: number; outflows: number; balance: number; count: number; }[] } | null}
+ */
+function generateSummaryByCategoryReport(year, accountType) {
+  const calculations = currentCalculations?.getAllCalculations();
+  if (!calculations || calculations.length === 0) return null;
+
+  const calc = calculations.find((c) => c.year === year);
+  if (!calc) return null;
+
+  const analyzer = AccountAnalyzer.CreateUsing(calc.accountYear, accountType);
+
+  return {
+    year,
+    accountType,
+    summaries: analyzer.computeCategorySummaries(),
+  };
 }
 
 function generateCSV() {
@@ -1163,5 +1183,6 @@ export {
   buildColumnMenu,
   generateCSV,
   generateJSON,
-  generateTestCategorySummaryDump
+  generateTestCategorySummaryDump,
+  generateSummaryByCategoryReport,
 };
