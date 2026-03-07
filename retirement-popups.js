@@ -1493,161 +1493,39 @@ function showCashFlowDiagram(data) {
  * @param {{ category: string; inflows: number; outflows: number; balance: number; count: number; }[]} summaries
  */
 export function dumpCategorySummaries(data, summaries) {
-  //
-  // const fieldLayout = {
-  //   category: 15,
-  //   inflows: 10,
-  //   outflows: 10,
-  //   balance: 10,
-  //   tranCount: 18,
-  //   grandTotalLabel: 15,
-  //   grandTotal: 10,
-  //   spacer: 3,
-  // };
-
-  // const table = document.createElement("table");
-  // const headers = document.createElement("tr");
-  // headers.innerHTML = `
-  //   <th style="width: ${fieldLayout.category}%">${StringFunctions.padAndAlign("Category", fieldLayout.category)}</th>
-  //   <th style="width: ${fieldLayout.inflows}%">${StringFunctions.padAndAlign("Inflows", fieldLayout.inflows, "right")}</th>
-  //   <th style="width: ${fieldLayout.outflows}%">${StringFunctions.padAndAlign("Outflows", fieldLayout.outflows, "right")}</th>
-  //   <th style="width: ${fieldLayout.balance}%">${StringFunctions.padAndAlign("Total", fieldLayout.balance, "right")}</th>
-  //   <th style="width: ${fieldLayout.tranCount}%">${StringFunctions.padAndAlign("Transaction Count", fieldLayout.tranCount, "right")}</th>
-  // `;
-  // table.appendChild(headers);
-
-  // const sortedTransactions = [...transactions].sort((a, b) => {
-  //   const [catA, txnsA] = a;
-  //   const [catB, txnsB] = b;
-
-  //   const inflowsA = txnsA
-  //     .filter(
-  //       (t) =>
-  //         t.transactionType === TransactionType.Deposit &&
-  //         t.date.getFullYear() === data.year
-  //     )
-  //     .reduce((sum, t) => sum + t.amount, 0);
-
-  //   const outflowsA = txnsA
-  //     .filter(
-  //       (t) =>
-  //         t.transactionType === TransactionType.Withdrawal &&
-  //         t.date.getFullYear() === data.year
-  //     )
-  //     .reduce((sum, t) => sum + t.amount, 0);
-
-  //   const inflowsB = txnsB
-  //     .filter(
-  //       (t) =>
-  //         t.transactionType === TransactionType.Deposit &&
-  //         t.date.getFullYear() === data.year
-  //     )
-  //     .reduce((sum, t) => sum + t.amount, 0);
-
-  //   const outflowsB = txnsB
-  //     .filter(
-  //       (t) =>
-  //         t.transactionType === TransactionType.Withdrawal &&
-  //         t.date.getFullYear() === data.year
-  //     )
-  //     .reduce((sum, t) => sum + t.amount, 0);
-
-  //   const aHasInflows = inflowsA > 0;
-  //   const bHasInflows = inflowsB > 0;
-
-  //   // inflow categories always come first
-  //   if (aHasInflows && !bHasInflows) return -1;
-  //   if (!aHasInflows && bHasInflows) return 1;
-
-  //   // both have inflows -> sort by inflows desc
-  //   if (aHasInflows && bHasInflows) return inflowsB - inflowsA;
-
-  //   // both have 0 inflows -> sort by outflows desc
-  //   return outflowsB - outflowsA;
-  // });
-
-  // let categoryBalance = 0;
-  // let categoryInflows = 0;
-  // let categoryOutflows = 0;
-  // let transactionCountTotal = 0;
-  // let grandTotal = 0;
-  // // debugger;
-  // for (const [category, txns] of sortedTransactions) {
-  //   const inflows = txns
-  //     .filter(
-  //       (t) =>
-  //         t.transactionType === TransactionType.Deposit &&
-  //         t.date.getFullYear() === data.year
-  //     )
-  //     .reduce((sum, t) => sum + t.amount, 0);
-  //   categoryInflows += inflows.asCurrency();
-  //   const outflows = txns
-  //     .filter(
-  //       (t) =>
-  //         t.transactionType === TransactionType.Withdrawal &&
-  //         t.date.getFullYear() === data.year
-  //     )
-  //     .reduce((sum, t) => sum + t.amount, 0);
-  //   categoryOutflows += outflows.asCurrency();
-  //   categoryBalance = inflows - outflows;
-  //   grandTotal += categoryBalance.asCurrency();
-  //   const count = txns.length;
-  //   transactionCountTotal += count;
-
-  //   const detailData = document.createElement("tr");
-  //   detailData.innerHTML = `
-  //     <td>${StringFunctions.padAndAlign(category, fieldLayout.category)}</td>
-  //     <td>${StringFunctions.padAndAlign(inflows.asCurrency(), fieldLayout.inflows, "right")}</td>
-  //     <td>${StringFunctions.padAndAlign(outflows.asCurrency(), fieldLayout.outflows, "right")}</td>
-  //     <td>${StringFunctions.padAndAlign(categoryBalance.asCurrency(), fieldLayout.balance, "right")}</td>
-  //     <td>${StringFunctions.padAndAlign(count.toString(), fieldLayout.tranCount, "right")}</td>
-  //   `;
-  //   table.appendChild(detailData);
-  // }
-
-  // const grandTotalRow = document.createElement("tr");
-  // grandTotalRow.innerHTML = `
-  //   <th>${StringFunctions.padAndAlign("Grand Total:", fieldLayout.grandTotalLabel)}</th>
-  //   <td>${StringFunctions.padAndAlign(categoryInflows.asCurrency(), fieldLayout.inflows, "right")}</td>
-  //   <td>${StringFunctions.padAndAlign(categoryOutflows.asCurrency(), fieldLayout.outflows, "right")}</td>
-  //   <td>${StringFunctions.padAndAlign(grandTotal.asCurrency(), fieldLayout.balance, "right")}</td>
-  //   <td>${StringFunctions.padAndAlign(transactionCountTotal.toString(), fieldLayout.tranCount, "right")}</td>
-  // `;
-  // table.appendChild(grandTotalRow);
-
-  // const tableBody = document.createElement("tbody");
-  // tableBody.appendChild(headers);
-  // for (const detailData of table.children) {
-  //   tableBody.appendChild(detailData);
-  // }
-  // table.appendChild(tableBody);
-
-  // const tableHTML = table.outerHTML;
+  if (!summaries || !Array.isArray(summaries)) {
+    console.error("Invalid summaries data:", summaries);
+    return;
+  }
 
   const table = new ReportTableBuilder()
-    .addColumn("Category", 20)
-    .addColumn("Inflows", 15, "right", "currency", true)
-    .addColumn("Outflows", 15, "right", "currency", true)
-    .addColumn("Balance", 15, "right", "currency", true)
-    .addColumn("Transactions", 10, "right", "number", true)
-    .enableZebra()
+    .addColumn("Category", 25, "left", "text", false)
+    .addColumn("Inflows", 18, "right", "currency", true)
+    .addColumn("Outflows", 18, "right", "currency", true)
+    .addColumn("Balance", 18, "right", "currency", true)
+    .addColumn("Count", 12, "right", "number", true)
     .enableStickyHeader();
 
   for (const summary of summaries) {
+    // Ensure all values are properly defined and typed
+    const safeCategory = String(summary.category || "Unknown");
+    const safeInflows = Number(summary.inflows) || 0;
+    const safeOutflows = Number(summary.outflows) || 0;
+    const safeBalance = Number(summary.balance) || 0;
+    const safeCount = Number(summary.count) || 0;
+
     table.addRow([
-      summary.category,
-      summary.inflows,
-      summary.outflows,
-      summary.balance,
-      summary.count,
+      safeCategory,
+      safeInflows,
+      safeOutflows,
+      safeBalance,
+      safeCount,
     ]);
   }
 
-  // debugger;
   const tableElement = table.build();
 
   const popup = ensurePopup("categorySummaries", "Category Summary Report");
-
   popup.setContent(tableElement.outerHTML);
 
   // Apply larger sizing for cash flow popup

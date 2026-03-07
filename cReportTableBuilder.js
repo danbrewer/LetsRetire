@@ -1,21 +1,21 @@
 /**
  * @typedef {"left" | "right" | "center"} ColumnAlignment
- * 
- * 
+ *
+ *
  * @typedef {"currency" | "number" | "text"} ColumnFormat
- * 
- * 
+ *
+ *
  * @typedef {Object} ReportColumn
  * @property {string} label
  * @property {number} widthPercent
  * @property {ColumnAlignment} align
  * @property {ColumnFormat} format
  * @property {boolean} total
- * 
- * 
+ *
+ *
  * @typedef {string | number} ReportCell
  *
- * 
+ *
  * @typedef {ReportCell[]} ReportRow
  */
 
@@ -63,7 +63,16 @@ export class ReportTableBuilder {
    */
   addRow(cells) {
     if (cells.length !== this.columns.length) {
-      throw new Error("Row length must match column count");
+      console.warn(
+        `Row length (${cells.length}) does not match column count (${this.columns.length})`
+      );
+      // Pad with empty strings or truncate to match
+      while (cells.length < this.columns.length) {
+        cells.push("");
+      }
+      if (cells.length > this.columns.length) {
+        cells = cells.slice(0, this.columns.length);
+      }
     }
 
     this.rows.push(cells);
@@ -87,27 +96,28 @@ export class ReportTableBuilder {
   build() {
     const table = document.createElement("table");
 
-    if (this.zebra) {
-      table.classList.add("ss-zebra");
-    }
-
     const thead = document.createElement("thead");
     const headerRow = document.createElement("tr");
 
     for (const col of this.columns) {
-      const th = document.createElement("th");
+        const th = document.createElement("th");
 
-      th.textContent = col.label;
-      th.style.width = `${col.widthPercent}%`;
-      th.style.textAlign = col.align;
-
-      if (this.stickyHeader) {
-        th.style.position = "sticky";
-        th.style.top = "0";
+        th.textContent = col.label;
+        th.style.width = `${col.widthPercent}%`;
+        th.style.textAlign = col.align;
+        th.style.padding = "8px";
+        th.style.borderBottom = "2px solid #333";
+        th.style.fontWeight = "bold";
+        th.style.color = "#333"; // Ensure dark text for headers
         th.style.background = "white";
-      }
+    
+        if (this.stickyHeader) {
+            th.style.position = "sticky";
+            th.style.top = "0";
+            
+        }
 
-      headerRow.appendChild(th);
+        headerRow.appendChild(th);
     }
 
     thead.appendChild(headerRow);
@@ -117,19 +127,25 @@ export class ReportTableBuilder {
 
     this.rows.forEach((rowCells, rowIndex) => {
       const row = document.createElement("tr");
-
-      if (this.zebra && rowIndex % 2 === 1) {
-        row.style.background = "#fafafa";
-      }
+      row.style.color = "#333"; // Consistent dark text for all rows
 
       rowCells.forEach((value, i) => {
         const td = document.createElement("td");
 
         const column = this.columns[i];
 
-        td.style.textAlign = column.align;
+        if (!column) {
+          console.warn(`No column definition for index ${i}`);
+          return;
+        }
 
-        td.textContent = this.formatValue(value, column.format);
+        td.style.textAlign = column.align;
+        td.style.padding = "8px";
+        td.style.borderBottom = "1px solid #ddd";
+        td.style.color = "#ffffffcd"; // Explicit dark text for data cells
+
+        const formattedValue = this.formatValue(value, column.format);
+        td.textContent = formattedValue;
 
         row.appendChild(td);
       });
@@ -148,9 +164,16 @@ export class ReportTableBuilder {
       totals.forEach((value, i) => {
         const th = document.createElement("th");
 
-        th.style.textAlign = this.columns[i].align;
+        if (this.columns[i]) {
+          th.style.textAlign = this.columns[i].align;
+        }
+        th.style.padding = "8px";
+        th.style.borderTop = "2px solid #333";
+        th.style.fontWeight = "bold";
+        th.style.color = "#333"; // Ensure dark text for footer cells
+        th.style.background = "white";
 
-        th.textContent = value;
+        th.textContent = value || "";
 
         row.appendChild(th);
       });
@@ -196,11 +219,16 @@ export class ReportTableBuilder {
   }
 
   /**
-     * 
-     * @param {ReportCell} value
-     * @param {string} format
-     */
+   *
+   * @param {ReportCell} value
+   * @param {string} format
+   */
   formatValue(value, format) {
+    // Handle null, undefined, or empty values
+    if (value == null || value === "") {
+      return "";
+    }
+
     if (typeof value === "number") {
       if (format === "currency") {
         return value.toLocaleString(undefined, {
