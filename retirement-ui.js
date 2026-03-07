@@ -236,7 +236,8 @@ document.addEventListener("reports:run", (e) => {
 
   const year = String(e.detail?.year ?? "").trim();
   const reportType = String(e.detail?.reportType ?? "").trim();
-  if (!year || !reportType) return;
+  const accountType = String(e.detail?.accountType ?? "").trim();
+  if (!year || !reportType || !accountType) return;
 
   const availableYears = getReportOutputYears(year);
   const popup = ensurePopup("reportOutput", "Report Output");
@@ -258,6 +259,7 @@ document.addEventListener("reports:run", (e) => {
     popup.setContent(`
       <div style="display:grid; gap:12px;">
         <div><strong>Report Type:</strong> ${reportType}</div>
+        <div><strong>Account Type:</strong> ${accountType}</div>
         <div style="display:grid; gap:6px;">
           <label for="reportOutputYearSelect">Report Year</label>
           <select id="reportOutputYearSelect">${yearOptions}</select>

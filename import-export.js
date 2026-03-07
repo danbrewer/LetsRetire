@@ -4,6 +4,7 @@ import {
   generateTestCategorySummaryDump,
 } from "./retirement-summaryrenderer.js";
 import { ensurePopup } from "./popup-engine.js";
+import { ACCOUNT_TYPES } from "./cAccount.js";
 
 function getAvailableReportYears() {
   const yearCells = Array.from(
@@ -36,6 +37,12 @@ export function openReportsPopup() {
     .map((type) => `<option value="${type}">${type}</option>`)
     .join("");
 
+  const accountTypeOptions = Object.values(ACCOUNT_TYPES)
+    .map(
+      (accountType) => `<option value="${accountType}">${accountType}</option>`
+    )
+    .join("");
+
   popup.setContent(`
     <div style="display:grid; gap:12px;">
       <div style="display:grid; gap:6px;">
@@ -45,6 +52,10 @@ export function openReportsPopup() {
       <div style="display:grid; gap:6px;">
         <label for="reportTypeSelect">Report Type</label>
         <select id="reportTypeSelect">${reportTypeOptions}</select>
+      </div>
+      <div style="display:grid; gap:6px;">
+        <label for="reportAccountTypeSelect">Account Type</label>
+        <select id="reportAccountTypeSelect">${accountTypeOptions}</select>
       </div>
       <div>
         <button id="runReportBtn" type="button">Run Report</button>
@@ -57,9 +68,13 @@ export function openReportsPopup() {
     runReportBtn.addEventListener("click", () => {
       const yearSelect = popup.root.querySelector("#reportYearSelect");
       const typeSelect = popup.root.querySelector("#reportTypeSelect");
+      const accountTypeSelect = popup.root.querySelector(
+        "#reportAccountTypeSelect"
+      );
       if (
         !(yearSelect instanceof HTMLSelectElement) ||
-        !(typeSelect instanceof HTMLSelectElement)
+        !(typeSelect instanceof HTMLSelectElement) ||
+        !(accountTypeSelect instanceof HTMLSelectElement)
       ) {
         return;
       }
@@ -67,6 +82,7 @@ export function openReportsPopup() {
       const reportRequest = {
         year: yearSelect.value,
         reportType: typeSelect.value,
+        accountType: accountTypeSelect.value,
       };
 
       document.dispatchEvent(
