@@ -37,6 +37,9 @@ export class ReportTableBuilder {
 
     this.zebra = false;
     this.stickyHeader = false;
+    this.stickyHeaderOffsetPx = 0;
+    this.stickyHeaderDepth = 0;
+    this.autoStickySubReportHeaders = true;
   }
 
   /**
@@ -150,9 +153,47 @@ export class ReportTableBuilder {
     return this;
   }
 
-  enableStickyHeader() {
+  enableStickyHeader(
+    offsetPx = this.stickyHeaderOffsetPx,
+    depth = this.stickyHeaderDepth
+  ) {
     this.stickyHeader = true;
+    this.stickyHeaderOffsetPx = Math.max(0, Number(offsetPx) || 0);
+    this.stickyHeaderDepth = Math.max(0, Number(depth) || 0);
     return this;
+  }
+
+  disableStickyHeader() {
+    this.stickyHeader = false;
+    return this;
+  }
+
+  /**
+   * Controls whether parent sticky headers automatically enable sticky headers
+   * for nested subreports.
+   *
+   * @param {boolean} enabled
+   * @returns {ReportTableBuilder}
+   */
+  setAutoStickySubReportHeaders(enabled = true) {
+    this.autoStickySubReportHeaders = Boolean(enabled);
+    return this;
+  }
+
+  /**
+   * @param {number} px
+   * @returns {ReportTableBuilder}
+   */
+  setStickyHeaderOffset(px) {
+    this.stickyHeaderOffsetPx = Math.max(0, Number(px) || 0);
+    return this;
+  }
+
+  /**
+   * @private
+   */
+  getEstimatedHeaderHeightPx() {
+    return 36;
   }
 
   /**
@@ -178,7 +219,8 @@ export class ReportTableBuilder {
     
         if (this.stickyHeader) {
             th.style.position = "sticky";
-            th.style.top = "0";
+          th.style.top = `${this.stickyHeaderOffsetPx}px`;
+          th.style.zIndex = `${100 - this.stickyHeaderDepth}`;
             
         }
 
@@ -234,6 +276,26 @@ export class ReportTableBuilder {
           titleElement.style.marginBottom = "8px";
           titleElement.style.color = "#333";
           subReportCell.appendChild(titleElement);
+        }
+
+        if (this.stickyHeader && this.autoStickySubReportHeaders) {
+          const nestedOffset =
+            this.stickyHeaderOffsetPx + this.getEstimatedHeaderHeightPx();
+
+          if (!subReport.builder.stickyHeader) {
+            subReport.builder.enableStickyHeader(
+              nestedOffset,
+              this.stickyHeaderDepth + 1
+            );
+          } else {
+            if (subReport.builder.stickyHeaderOffsetPx < nestedOffset) {
+              subReport.builder.setStickyHeaderOffset(nestedOffset);
+            }
+
+            if (subReport.builder.stickyHeaderDepth <= this.stickyHeaderDepth) {
+              subReport.builder.stickyHeaderDepth = this.stickyHeaderDepth + 1;
+            }
+          }
         }
 
         const nestedTable = subReport.builder.build();
