@@ -208,6 +208,29 @@ document.addEventListener("keydown", (e) => {
   }
 });
 
+/**
+ * @param {string} initialYear
+ * @returns {string[]}
+ */
+function getReportOutputYears(initialYear) {
+  const yearCells = Array.from(
+    document.querySelectorAll("#rows tr td:first-child")
+  );
+
+  const years = yearCells
+    .map((cell) => Number.parseInt(cell.textContent || "", 10))
+    .filter((value) => Number.isFinite(value))
+    .map((value) => String(value));
+
+  const uniqueYears = [...new Set(years)].sort((a, b) => Number(a) - Number(b));
+  if (!uniqueYears.includes(initialYear)) {
+    uniqueYears.push(initialYear);
+    uniqueYears.sort((a, b) => Number(a) - Number(b));
+  }
+
+  return uniqueYears;
+}
+
 document.addEventListener("reports:run", (e) => {
   if (!(e instanceof CustomEvent)) return;
 
@@ -215,14 +238,52 @@ document.addEventListener("reports:run", (e) => {
   const reportType = String(e.detail?.reportType ?? "").trim();
   if (!year || !reportType) return;
 
+  const availableYears = getReportOutputYears(year);
   const popup = ensurePopup("reportOutput", "Report Output");
-  popup.setContent(`
-    <div style="display:grid; gap:8px;">
-      <div><strong>Report Type:</strong> ${reportType}</div>
-      <div><strong>Report Year:</strong> ${year}</div>
-      <div style="font-size:12px; color:var(--muted);">Stub content: report rendering will be added here.</div>
-    </div>
-  `);
+
+  /**
+   * @param {string} selectedYear
+   * @param {string} [statusMessage]
+   */
+  const renderReportOutput = (selectedYear, statusMessage = "") => {
+    const yearOptions = availableYears
+      .map(
+        (availableYear) =>
+          `<option value="${availableYear}"${
+            availableYear === selectedYear ? " selected" : ""
+          }>${availableYear}</option>`
+      )
+      .join("");
+
+    popup.setContent(`
+      <div style="display:grid; gap:12px;">
+        <div><strong>Report Type:</strong> ${reportType}</div>
+        <div style="display:grid; gap:6px;">
+          <label for="reportOutputYearSelect">Report Year</label>
+          <select id="reportOutputYearSelect">${yearOptions}</select>
+        </div>
+        <div>
+          <button id="refreshReportBtn" type="button">Refresh Report</button>
+        </div>
+        <div style="font-size:12px; color:var(--accent);">${statusMessage}</div>
+        <div style="font-size:12px; color:var(--muted);">Stub content: report rendering will be added here for year ${selectedYear}.</div>
+      </div>
+    `);
+
+    const refreshButton = popup.root.querySelector("#refreshReportBtn");
+    if (!(refreshButton instanceof HTMLButtonElement)) return;
+
+    refreshButton.addEventListener("click", () => {
+      const yearSelect = popup.root.querySelector("#reportOutputYearSelect");
+      if (!(yearSelect instanceof HTMLSelectElement)) return;
+      renderReportOutput(
+        yearSelect.value,
+        `Report refreshed using year ${yearSelect.value}.`
+      );
+    });
+  };
+
+  renderReportOutput(year, `Initial report loaded for year ${year}.`);
   popup.show();
 });
 
