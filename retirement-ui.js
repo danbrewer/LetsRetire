@@ -37,6 +37,7 @@ import {
   openWithdrawalLimitEditModal,
 } from "./retirement-ui-withdrawal-limit-modal.js";
 import { WithdrawalLimitStorage } from "./cWithdrawalLimitsStorage.js";
+import { ensurePopup } from "./popup-engine.js";
 
 const STORAGE_KEY = "retirement-calculator-inputs";
 
@@ -214,7 +215,15 @@ document.addEventListener("reports:run", (e) => {
   const reportType = String(e.detail?.reportType ?? "").trim();
   if (!year || !reportType) return;
 
-  showToast("Report Request", `Stub: ${reportType} for year ${year}`, "info");
+  const popup = ensurePopup("reportOutput", "Report Output");
+  popup.setContent(`
+    <div style="display:grid; gap:8px;">
+      <div><strong>Report Type:</strong> ${reportType}</div>
+      <div><strong>Report Year:</strong> ${year}</div>
+      <div style="font-size:12px; color:var(--muted);">Stub content: report rendering will be added here.</div>
+    </div>
+  `);
+  popup.show();
 });
 
 document.addEventListener("click", (e) => {
