@@ -100,7 +100,11 @@ export class ReportTableBuilder {
    * @returns {ReportTableBuilder}
    */
   addSubReportToRow(rowIndex, subReportBuilder, title = "") {
-    if (!Number.isInteger(rowIndex) || rowIndex < 0 || rowIndex >= this.rows.length) {
+    if (
+      !Number.isInteger(rowIndex) ||
+      rowIndex < 0 ||
+      rowIndex >= this.rows.length
+    ) {
       console.warn(`Invalid rowIndex (${rowIndex}) for subreport.`);
       return this;
     }
@@ -131,7 +135,11 @@ export class ReportTableBuilder {
       return this;
     }
 
-    return this.addSubReportToRow(this.rows.length - 1, subReportBuilder, title);
+    return this.addSubReportToRow(
+      this.rows.length - 1,
+      subReportBuilder,
+      title
+    );
   }
 
   /**
@@ -206,25 +214,24 @@ export class ReportTableBuilder {
     const headerRow = document.createElement("tr");
 
     for (const col of this.columns) {
-        const th = document.createElement("th");
+      const th = document.createElement("th");
 
-        th.textContent = col.label;
-        th.style.width = `${col.widthPercent}%`;
-        th.style.textAlign = col.align;
-        th.style.padding = "8px";
-        th.style.borderBottom = "2px solid #333";
-        th.style.fontWeight = "bold";
-        th.style.color = "#333"; // Ensure dark text for headers
-        th.style.background = "white";
-    
-        if (this.stickyHeader) {
-            th.style.position = "sticky";
-          th.style.top = `${this.stickyHeaderOffsetPx}px`;
-          th.style.zIndex = `${100 - this.stickyHeaderDepth}`;
-            
-        }
+      th.textContent = col.label;
+      th.style.width = `${col.widthPercent}%`;
+      th.style.textAlign = col.align;
+      th.style.padding = "8px";
+      th.style.borderBottom = "2px solid #333";
+      th.style.fontWeight = "bold";
+      th.style.color = "#333"; // Ensure dark text for headers
+      th.style.background = "white";
 
-        headerRow.appendChild(th);
+      if (this.stickyHeader) {
+        th.style.position = "sticky";
+        th.style.top = `${this.stickyHeaderOffsetPx}px`;
+        th.style.zIndex = `${100 - this.stickyHeaderDepth}`;
+      }
+
+      headerRow.appendChild(th);
     }
 
     thead.appendChild(headerRow);
