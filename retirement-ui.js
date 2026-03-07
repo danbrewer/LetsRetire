@@ -14,6 +14,7 @@ import {
   genSummaryDumpPopup,
   handleJSONFile,
   importJSON,
+  openReportsPopup,
 } from "./import-export.js";
 import {
   buildColumnMenu,
@@ -206,40 +207,49 @@ document.addEventListener("keydown", (e) => {
   }
 });
 
+document.addEventListener("reports:run", (e) => {
+  if (!(e instanceof CustomEvent)) return;
+
+  const year = String(e.detail?.year ?? "").trim();
+  const reportType = String(e.detail?.reportType ?? "").trim();
+  if (!year || !reportType) return;
+
+  showToast("Report Request", `Stub: ${reportType} for year ${year}`, "info");
+});
+
 document.addEventListener("click", (e) => {
-  
   const target = e.target;
   if (!(target instanceof HTMLElement)) return;
 
-  if (target.closest('[data-remove-withdrawal-limit]')){
-      const btn = target.closest("[data-remove-withdrawal-limit]");
-      const id = btn?.getAttribute("data-id");
-      if (!id) return;
-      deleteWithdrawalLimit(id);
-      return;
-    }
+  if (target.closest("[data-remove-withdrawal-limit]")) {
+    const btn = target.closest("[data-remove-withdrawal-limit]");
+    const id = btn?.getAttribute("data-id");
+    if (!id) return;
+    deleteWithdrawalLimit(id);
+    return;
+  }
 
-   if (target.closest("[data-edit-withdrawal-limit]")) {
-     const btn = target.closest("[data-edit-withdrawal-limit]");
-     const id = btn?.getAttribute("data-id");
-     if (!id || !withdrawalLimitManager) return;
-     openWithdrawalLimitEditModal(
-       withdrawalLimitManager,
-       id,
-       {
-         renderWithdrawalLimitList,
-         markDirty,
-         doCalculations,
-         showToast,
-       },
-       num(UIField.CURRENT_YEAR),
-       num(UIField.SUBJECT_RETIRE_AGE),
-       num(UIField.SUBJECT_LIFESPAN),
-       num(UIField.PARTNER_RETIRE_AGE),
-       num(UIField.PARTNER_LIFESPAN)
-     );
-     return;
-   }
+  if (target.closest("[data-edit-withdrawal-limit]")) {
+    const btn = target.closest("[data-edit-withdrawal-limit]");
+    const id = btn?.getAttribute("data-id");
+    if (!id || !withdrawalLimitManager) return;
+    openWithdrawalLimitEditModal(
+      withdrawalLimitManager,
+      id,
+      {
+        renderWithdrawalLimitList,
+        markDirty,
+        doCalculations,
+        showToast,
+      },
+      num(UIField.CURRENT_YEAR),
+      num(UIField.SUBJECT_RETIRE_AGE),
+      num(UIField.SUBJECT_LIFESPAN),
+      num(UIField.PARTNER_RETIRE_AGE),
+      num(UIField.PARTNER_LIFESPAN)
+    );
+    return;
+  }
 
   // Pension list row buttons
   if (target.closest("[data-edit-pension]")) {
@@ -282,6 +292,7 @@ function setupEventListeners() {
   $("pdfBtn")?.addEventListener("click", generatePDFReport);
   $("csvBtn")?.addEventListener("click", exportCSV);
   $("testReport")?.addEventListener("click", genSummaryDumpPopup);
+  $("reportsBtn")?.addEventListener("click", openReportsPopup);
   $("exportJsonBtn")?.addEventListener("click", exportJSON);
   $("importJsonBtn")?.addEventListener("click", importJSON);
   $("jsonFileInput")?.addEventListener("change", handleJSONFile);
@@ -843,7 +854,9 @@ function parseInputParameters() {
 
   const pensionAnnuities = pensionManager ? pensionManager.getAll() : [];
 
-  const withdrawalLimits = withdrawalLimitManager ? withdrawalLimitManager.getAll() : [];
+  const withdrawalLimits = withdrawalLimitManager
+    ? withdrawalLimitManager.getAll()
+    : [];
 
   /** @type {import("./cInputs.js").InputsOptions} */
   const inputArgs = {

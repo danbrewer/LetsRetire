@@ -3,6 +3,84 @@ import {
   generateJSON,
   generateTestCategorySummaryDump,
 } from "./retirement-summaryrenderer.js";
+import { ensurePopup } from "./popup-engine.js";
+
+function getAvailableReportYears() {
+  const yearCells = Array.from(
+    document.querySelectorAll("#rows tr td:first-child")
+  );
+  const years = yearCells
+    .map((cell) => Number.parseInt(cell.textContent || "", 10))
+    .filter((year) => Number.isFinite(year));
+
+  if (years.length > 0) {
+    return [...new Set(years)].sort((a, b) => a - b);
+  }
+
+  return [new Date().getFullYear()];
+}
+
+export function openReportsPopup() {
+  const popup = ensurePopup("reports", "Reports");
+  const availableYears = getAvailableReportYears();
+
+  const yearOptions = availableYears
+    .map((year) => `<option value="${year}">${year}</option>`)
+    .join("");
+
+  const reportTypeOptions = [
+    "Bogus Report A",
+    "Bogus Report B",
+    "Bogus Report C",
+  ]
+    .map((type) => `<option value="${type}">${type}</option>`)
+    .join("");
+
+  popup.setContent(`
+    <div style="display:grid; gap:12px;">
+      <div style="display:grid; gap:6px;">
+        <label for="reportYearSelect">Report Year</label>
+        <select id="reportYearSelect">${yearOptions}</select>
+      </div>
+      <div style="display:grid; gap:6px;">
+        <label for="reportTypeSelect">Report Type</label>
+        <select id="reportTypeSelect">${reportTypeOptions}</select>
+      </div>
+      <div>
+        <button id="runReportBtn" type="button">Run Report</button>
+      </div>
+    </div>
+  `);
+
+  const runReportBtn = popup.root.querySelector("#runReportBtn");
+  if (runReportBtn instanceof HTMLButtonElement) {
+    runReportBtn.addEventListener("click", () => {
+      const yearSelect = popup.root.querySelector("#reportYearSelect");
+      const typeSelect = popup.root.querySelector("#reportTypeSelect");
+      if (
+        !(yearSelect instanceof HTMLSelectElement) ||
+        !(typeSelect instanceof HTMLSelectElement)
+      ) {
+        return;
+      }
+
+      const reportRequest = {
+        year: yearSelect.value,
+        reportType: typeSelect.value,
+      };
+
+      document.dispatchEvent(
+        new CustomEvent("reports:run", {
+          detail: reportRequest,
+        })
+      );
+
+      console.info("Run Report event dispatched (stub)", reportRequest);
+    });
+  }
+
+  popup.show();
+}
 
 export function genSummaryDumpPopup() {
   generateTestCategorySummaryDump();
