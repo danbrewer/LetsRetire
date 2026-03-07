@@ -120,10 +120,13 @@ class WorkingYearCalculator {
 
     return workingYearData;
   }
+
+
   #dumpAccountReports() {
     return;
 
     // WAGES AND COMPENSATION
+
     this.#accountYear.analyzers[
       ACCOUNT_TYPES.SUBJECT_WAGES
     ].dumpCategorySummaries();
@@ -276,65 +279,6 @@ class WorkingYearCalculator {
     }
     this.#reportingYear.ReportData.income_miscTaxFreeIncome = taxFreeIncome;
   }
-
-  // #processSavingsContributions() {
-  //   const subjectDesiredSavingsContribution = Math.max(
-  //     this.#fixedIncomeStreams.subjectSavingsContributionVariable,
-  //     this.#fixedIncomeStreams.subjectSavingsContributionFixed
-  //   ).asCurrency();
-
-  //   const partnerDesiredSavingsContribution = Math.max(
-  //     this.#fixedIncomeStreams.partnerSavingsContributionVariable,
-  //     this.#fixedIncomeStreams.partnerSavingsContributionFixed
-  //   ).asCurrency();
-
-  //   const desiredTransferAmount =
-  //     subjectDesiredSavingsContribution + partnerDesiredSavingsContribution;
-
-  //   if (desiredTransferAmount <= 0) return;
-
-  //   let availableCash = this.#accountYear.getEndingBalance(ACCOUNT_TYPES.CASH);
-
-  //   if (availableCash <= 0) return;
-
-  //   const actualTransferAmount = Math.min(
-  //     availableCash,
-  //     subjectDesiredSavingsContribution
-  //   );
-
-  //   this.#accountYear.processAsPeriodicTransfers(
-  //     ACCOUNT_TYPES.CASH,
-  //     ACCOUNT_TYPES.SAVINGS,
-  //     actualTransferAmount,
-  //     PERIODIC_FREQUENCY.MONTHLY,
-  //     TransactionCategory.AutoTransfer,
-  //     "Combined contrib."
-  //   );
-
-  //   // this.#reportingYear.ReportData.savings_Deposits += actualTransferAmount;
-
-  //   this.#reportingYear.ReportData.account_subjectSavingsContributions +=
-  //     actualTransferAmount;
-
-  //   availableCash -= actualTransferAmount;
-
-  //   const actualPartnerTransferAmount = Math.min(
-  //     availableCash,
-  //     partnerDesiredSavingsContribution
-  //   );
-
-  //   this.#accountYear.processAsPeriodicTransfers(
-  //     ACCOUNT_TYPES.CASH,
-  //     ACCOUNT_TYPES.SAVINGS,
-  //     actualPartnerTransferAmount,
-  //     PERIODIC_FREQUENCY.MONTHLY,
-  //     TransactionCategory.AutoTransfer,
-  //     "Combined contrib."
-  //   );
-
-  //   this.#reportingYear.ReportData.account_partnerSavingsContributions +=
-  //     actualPartnerTransferAmount;
-  // }
 
   #processWagesAndCompensation() {
     // Subject wages and compensation

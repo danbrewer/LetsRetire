@@ -5,8 +5,10 @@
 import { Calculation, Calculations } from "./cCalculation.js";
 import { drawChart } from "./retirement-ui-chart.js";
 import { Inputs } from "./cInputs.js";
-import { popupActions } from "./retirement-popups.js";
+import { dumpCategorySummaries, popupActions } from "./retirement-popups.js";
 import { ReportData } from "./rReportData.js";
+import { ACCOUNT_TYPES } from "./cAccount.js";
+import { AccountAnalyzer } from "./cAccountAnalyzer.js";
 
 /** @type {string | null} */
 let draggedGroupId = null;
@@ -856,6 +858,22 @@ function buildSummaryRow(calculation, index) {
   return tr(...cells);
 }
 
+function generateTestCategorySummaryDump(){
+   const calculations = currentCalculations?.getAllCalculations();
+   if (!calculations || calculations.length === 0) return;
+
+   const calc = calculations[10];
+   const reportData = calc.reportData;
+
+   const analyzer = AccountAnalyzer.CreateUsing(
+     calc.accountYear,
+     ACCOUNT_TYPES.SAVINGS
+   );
+
+   dumpCategorySummaries(reportData, analyzer.computeCategorySummaries());
+
+}
+
 function generateCSV() {
   const calculations = currentCalculations?.getAllCalculations();
   if (!calculations || calculations.length === 0) return;
@@ -1145,4 +1163,5 @@ export {
   buildColumnMenu,
   generateCSV,
   generateJSON,
+  generateTestCategorySummaryDump
 };

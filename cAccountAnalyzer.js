@@ -671,6 +671,51 @@ class AccountAnalyzer {
       .asCurrency();
   }
 
+  computeCategorySummaries() {
+    const summaries = [];
+
+    const transactions = this.getTransactionsGroupedByCategory();
+
+    for (const [category, txns] of transactions) {
+      let inflows = 0;
+      let outflows = 0;
+
+      for (const t of txns) {
+        if (t.date.getFullYear() !== this.#accountYear.taxYear) continue;
+
+        if (t.transactionType === TransactionType.Deposit) {
+          inflows += t.amount;
+        }
+
+        if (t.transactionType === TransactionType.Withdrawal) {
+          outflows += t.amount;
+        }
+      }
+
+      summaries.push({
+        category,
+        inflows,
+        outflows,
+        balance: inflows - outflows,
+        count: txns.length,
+      });
+    }
+
+    const sortedSummaries = summaries.sort((a, b) => {
+      const aHasInflows = a.inflows > 0;
+      const bHasInflows = b.inflows > 0;
+
+      if (aHasInflows && !bHasInflows) return -1;
+      if (!aHasInflows && bHasInflows) return 1;
+
+      if (aHasInflows && bHasInflows) return b.inflows - a.inflows;
+
+      return b.outflows - a.outflows;
+    });
+
+    return sortedSummaries;
+  }
+
   get endingBalance() {
     return this.#accountYear.getEndingBalance(this.#accountType).asCurrency();
   }

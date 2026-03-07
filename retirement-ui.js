@@ -11,6 +11,7 @@ import {
   exportCSV,
   exportJSON,
   generatePDFReport,
+  genSummaryDumpPopup,
   handleJSONFile,
   importJSON,
 } from "./import-export.js";
@@ -280,6 +281,7 @@ function setupEventListeners() {
   $("calcBtn")?.addEventListener("click", doCalculations);
   $("pdfBtn")?.addEventListener("click", generatePDFReport);
   $("csvBtn")?.addEventListener("click", exportCSV);
+  $("testReport")?.addEventListener("click", genSummaryDumpPopup);
   $("exportJsonBtn")?.addEventListener("click", exportJSON);
   $("importJsonBtn")?.addEventListener("click", importJSON);
   $("jsonFileInput")?.addEventListener("change", handleJSONFile);

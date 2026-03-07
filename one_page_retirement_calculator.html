@@ -4,7 +4,8 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>One‑Page Retirement Calculator</title>
-  <script src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>
+  <!-- <script src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script> -->
+  <script src="./echarts.min.js"></script>
   <!-- jsPDF library for PDF generation -->
   <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script> -->
   <style>
@@ -290,7 +291,7 @@
     }
 
     table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13px; }
-    th, td { border-bottom: 1px solid var(--border); padding: 8px; text-align: right; white-space: nowrap; }
+    th, td {border-bottom: 1px solid var(--border);padding: 8px;text-align: right;white-space: nowrap;}
     th:first-child, td:first-child, th:nth-child(2), td:nth-child(2) { text-align: left; }
     thead th { position: sticky; top: 0; background: #0d172b; z-index: 1; }
     tbody tr:hover { background: rgba(255,255,255,.03); }
@@ -1693,6 +1694,7 @@ details[open] .content {
   <div id="hamburgerMenu" class="hamburger-menu">
     <button id="pdfBtn">PDF Report</button>
     <button id="csvBtn">Export CSV</button>
+    <button id="testReport">Test Report</button>
     <button id="exportJsonBtn">Export JSON</button>
     <button id="importJsonBtn">Import JSON</button>
   

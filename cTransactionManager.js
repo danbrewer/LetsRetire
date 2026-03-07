@@ -68,6 +68,8 @@ class TransactionManager {
     yearArr.push(tx);
   }
 
+  
+
   // /**
   //  * @param {Transaction} transaction
   //  */

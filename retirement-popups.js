@@ -1,5 +1,8 @@
+import { ReportTableBuilder } from "./cReportTableBuilder.js";
+import { Transaction, TransactionType } from "./cTransaction.js";
 import { ensurePopup } from "./popup-engine.js";
 import { ReportData } from "./rReportData.js";
+import { StringFunctions } from "./utils.js";
 
 // Global declaration for ECharts (loaded via script tag in HTML)
 /** @type {any} */
@@ -7,6 +10,7 @@ const echarts = /** @type {any} */ (window).echarts;
 
 /**
  * @typedef {(data: import("./rReportData.js").ReportData) => void} PopupHandler
+ * @typedef {(data: import("./rReportData.js").ReportData, transactions: Map<string, Transaction[]>) => void} PopupTransactionHandler
  */
 
 const fmt = (/** @type {number} */ n) =>
@@ -15,6 +19,11 @@ const fmt = (/** @type {number} */ n) =>
     currency: "USD",
     maximumFractionDigits: 0,
   });
+
+/** @type {Record<string, PopupTransactionHandler>} */
+export const popupTransactionActions = {
+  dumpCategorySummaries,
+};
 
 /** @type {Record<string, PopupHandler>} */
 export const popupActions = {
@@ -1008,10 +1017,10 @@ function showTotalCashBreakdown(data) {
 }
 
 /**
- * @param {ReportData} c
+ * @param {ReportData} data
  */
-function showCashFlowDiagram(c) {
-  if (!c) {
+function showCashFlowDiagram(data) {
+  if (!data) {
     return; // No SS data to show
   }
 
@@ -1019,7 +1028,7 @@ function showCashFlowDiagram(c) {
   const popup = ensurePopup("cashFlow", `Cash Flow`);
 
   // Update title for each call since popup instance is reused
-  popup.setTitle(`Cash Flow ${c.year}`);
+  popup.setTitle(`Cash Flow ${data.year}`);
 
   // Build the breakdown content
   let breakdownHtml = `
@@ -1087,7 +1096,7 @@ function showCashFlowDiagram(c) {
       value,
       sourceDepth,
       targetDepth,
-      description = null
+      description = ""
     ) => {
       // const v = pos(value);
       if (value <= 0) return;
@@ -1104,9 +1113,9 @@ function showCashFlowDiagram(c) {
 
     // debugger;
     const netIncome =
-      c.income_total_takehome -
+      data.income_total_takehome -
       // c.account_savingsInterest -
-      c.transfer_savingsToCash;
+      data.transfer_savingsToCash;
 
     const INCOME_NET = "Income (net)";
     const PENSION = "Pension";
@@ -1129,7 +1138,7 @@ function showCashFlowDiagram(c) {
     addLink(
       INCOME_NET,
       WAGES,
-      c.income_combinedTakehomeWages,
+      data.income_combinedTakehomeWages,
       0,
       1,
       "Take-home wages after taxes and deductions"
@@ -1137,7 +1146,7 @@ function showCashFlowDiagram(c) {
     addLink(
       INCOME_NET,
       PENSION,
-      c.income_combinedPensionTakehome,
+      data.income_combinedPensionTakehome,
       0,
       1,
       "Takehome pensions/annuities after withholdings"
@@ -1145,7 +1154,7 @@ function showCashFlowDiagram(c) {
     addLink(
       INCOME_NET,
       SOCIAL_SECURITY,
-      c.income_combinedSsTakehome,
+      data.income_combinedSsTakehome,
       0,
       1,
       "Takehome Social Security after withholdings"
@@ -1153,7 +1162,7 @@ function showCashFlowDiagram(c) {
     addLink(
       INCOME_NET,
       WITHDRAWALS_401K,
-      c.income_combined401kTakehome,
+      data.income_combined401kTakehome,
       0,
       1,
       "Takehome 401k withdrawals after withholdings"
@@ -1161,7 +1170,7 @@ function showCashFlowDiagram(c) {
     addLink(
       CASH,
       SAVINGS_WITHDRAWALS,
-      c.transfer_savingsToCash,
+      data.transfer_savingsToCash,
       1,
       2,
       "Money withdrawn from savings account"
@@ -1169,7 +1178,7 @@ function showCashFlowDiagram(c) {
     addLink(
       WITHHOLDINGS,
       WAGES,
-      c.withholdings_combinedWages,
+      data.withholdings_combinedWages,
       0,
       1,
       "Federal taxes withheld from wages"
@@ -1177,7 +1186,7 @@ function showCashFlowDiagram(c) {
     addLink(
       WITHHOLDINGS,
       SOCIAL_SECURITY,
-      c.withholdings_combinedSs,
+      data.withholdings_combinedSs,
       0,
       1,
       "Taxes withheld from Social Security"
@@ -1185,7 +1194,7 @@ function showCashFlowDiagram(c) {
     addLink(
       WITHHOLDINGS,
       PENSION,
-      c.withholdings_combinedPension,
+      data.withholdings_combinedPension,
       0,
       1,
       "Taxes withheld from pension"
@@ -1193,7 +1202,7 @@ function showCashFlowDiagram(c) {
     addLink(
       WITHHOLDINGS,
       WITHDRAWALS_401K,
-      c.withholdings_combined401k,
+      data.withholdings_combined401k,
       0,
       1,
       "Taxes withheld from 401k withdrawals"
@@ -1202,7 +1211,7 @@ function showCashFlowDiagram(c) {
     addLink(
       SAVINGS_DEPOSITS,
       CASH,
-      c.transfer_cashToSavings,
+      data.transfer_cashToSavings,
       2,
       3,
       "Surplus cash deposited into savings"
@@ -1213,7 +1222,7 @@ function showCashFlowDiagram(c) {
     addLink(
       PROJECTED_SPENDING,
       CASH,
-      c.actualSpend,
+      data.actualSpend,
       1,
       3,
       "Cash used for living expenses and spending"
@@ -1222,7 +1231,7 @@ function showCashFlowDiagram(c) {
     addLink(
       SAVINGS_DEPOSITS,
       SAVINGS_INTEREST,
-      c.account_savingsInterest,
+      data.account_savingsInterest,
       2,
       3,
       "Interest earned on savings account balance"
@@ -1231,7 +1240,7 @@ function showCashFlowDiagram(c) {
     addLink(
       TAXES_DUE,
       WITHHOLDINGS,
-      c.withholdings_total,
+      data.withholdings_total,
       1,
       2,
       "Tax withholdings applied to tax liability"
@@ -1239,28 +1248,28 @@ function showCashFlowDiagram(c) {
     addLink(
       FEDERAL_TAXES_PAID,
       TAXES_DUE,
-      c.taxes_federalIncomeTaxOwed,
+      data.taxes_federalIncomeTaxOwed,
       2,
       3,
       "Federal income taxes paid to IRS"
     );
 
-    if (c.transfer_savingsToTaxes > 0) {
+    if (data.transfer_savingsToTaxes > 0) {
       addLink(
         TAXES_DUE,
         SAVINGS_WITHDRAWALS,
-        c.transfer_savingsToTaxes,
+        data.transfer_savingsToTaxes,
         1,
         2,
         "Additional taxes paid from savings (tax shortfall)"
       );
     }
-    if (c.transfer_taxesToSavings > 0) {
+    if (data.transfer_taxesToSavings > 0) {
       // addLink(TAX_REFUND, WITHHOLDINGS, c.transfer_taxesToSavings, 1, 2);
       addLink(
         SAVINGS_DEPOSITS,
         TAXES_DUE,
-        c.transfer_taxesToSavings,
+        data.transfer_taxesToSavings,
         2,
         3,
         "Tax refund deposited into savings (overpayment)"
@@ -1344,6 +1353,312 @@ function showCashFlowDiagram(c) {
     chart.setOption(option);
     window.addEventListener("resize", () => chart.resize());
   }, 0); // End setTimeout
+}
+
+// /** @param {Transaction[]} transactions */
+// function dumpCategorySummaries(transactions) {
+
+//   const fieldLayout = {
+//     category: 15,
+//     inflows: 10,
+//     outflows: 10,
+//     balance: 10,
+//     tranCount: 18,
+//     grandTotalLabel: 15,
+//     grandTotal: 10,
+//     spacer: 3,
+//   };
+
+//   const sortedTransactions = [...transactions].sort((a, b) => {
+//     const [catA, txnsA] = a;
+//     const [catB, txnsB] = b;
+
+//     const inflowsA = txnsA
+//       .filter(
+//         (t) =>
+//           t.transactionType === TransactionType.Deposit &&
+//           t.date.getFullYear() === this.#accountYear.taxYear
+//       )
+//       .reduce((sum, t) => sum + t.amount, 0);
+
+//     const outflowsA = txnsA
+//       .filter(
+//         (t) =>
+//           t.transactionType === TransactionType.Withdrawal &&
+//           t.date.getFullYear() === this.#accountYear.taxYear
+//       )
+//       .reduce((sum, t) => sum + t.amount, 0);
+
+//     const inflowsB = txnsB
+//       .filter(
+//         (t) =>
+//           t.transactionType === TransactionType.Deposit &&
+//           t.date.getFullYear() === this.#accountYear.taxYear
+//       )
+//       .reduce((sum, t) => sum + t.amount, 0);
+
+//     const outflowsB = txnsB
+//       .filter(
+//         (t) =>
+//           t.transactionType === TransactionType.Withdrawal &&
+//           t.date.getFullYear() === this.#accountYear.taxYear
+//       )
+//       .reduce((sum, t) => sum + t.amount, 0);
+
+//     const aHasInflows = inflowsA > 0;
+//     const bHasInflows = inflowsB > 0;
+
+//     // inflow categories always come first
+//     if (aHasInflows && !bHasInflows) return -1;
+//     if (!aHasInflows && bHasInflows) return 1;
+
+//     // both have inflows -> sort by inflows desc
+//     if (aHasInflows && bHasInflows) return inflowsB - inflowsA;
+
+//     // both have 0 inflows -> sort by outflows desc
+//     return outflowsB - outflowsA;
+//   });
+
+//   const table = document.createElement("table");
+//   const headers = document.createElement("tr");
+//   headers.innerHTML = `
+//   <th style="width: ${fieldLayout.category}%">${StringFunctions.padAndAlign("Category", fieldLayout.category)}</th>
+//   <th style="width: ${fieldLayout.inflows}%">${StringFunctions.padAndAlign("Inflows", fieldLayout.inflows, "right")}</th>
+//   <th style="width: ${fieldLayout.outflows}%">${StringFunctions.padAndAlign("Outflows", fieldLayout.outflows, "right")}</th>
+//   <th style="width: ${fieldLayout.balance}%">${StringFunctions.padAndAlign("Total", fieldLayout.balance, "right")}</th>
+//   <th style="width: ${fieldLayout.tranCount}%">${StringFunctions.padAndAlign("Transaction Count", fieldLayout.tranCount, "right")}</th>
+// `;
+//   table.appendChild(headers);
+
+//   let categoryBalance = 0;
+//   let categoryInflows = 0;
+//   let categoryOutflows = 0;
+//   let transactionCountTotal = 0;
+//   let grandTotal = 0;
+//   for (const [category, txns] of sortedTransactions) {
+//     const inflows = txns
+//       .filter(
+//         (t) =>
+//           t.transactionType === TransactionType.Deposit &&
+//           t.date.getFullYear() === this.#accountYear.taxYear
+//       )
+//       .reduce((sum, t) => sum + t.amount, 0);
+//     categoryInflows += inflows.asCurrency();
+//     const outflows = txns
+//       .filter(
+//         (t) =>
+//           t.transactionType === TransactionType.Withdrawal &&
+//           t.date.getFullYear() === this.#accountYear.taxYear
+//       )
+//       .reduce((sum, t) => sum + t.amount, 0);
+//     categoryOutflows += outflows.asCurrency();
+//     categoryBalance = inflows - outflows;
+//     grandTotal += categoryBalance.asCurrency();
+//     const count = txns.length;
+//     transactionCountTotal += count;
+
+//     const detailData = document.createElement("tr");
+//     detailData.innerHTML = `
+//     <td>${StringFunctions.padAndAlign(category, fieldLayout.category)}</td>
+//     <td>${StringFunctions.padAndAlign(inflows.asCurrency(), fieldLayout.inflows, "right")}</td>
+//     <td>${StringFunctions.padAndAlign(outflows.asCurrency(), fieldLayout.outflows, "right")}</td>
+//     <td>${StringFunctions.padAndAlign(categoryBalance.asCurrency(), fieldLayout.balance, "right")}</td>
+//     <td>${StringFunctions.padAndAlign(count.toString(), fieldLayout.tranCount, "right")}</td>
+//   `;
+//     table.appendChild(detailData);
+//   }
+
+//   const grandTotalRow = document.createElement("tr");
+//   grandTotalRow.innerHTML = `
+//   <th>${StringFunctions.padAndAlign("Grand Total:", fieldLayout.grandTotalLabel)}</th>
+//   <td>${StringFunctions.padAndAlign(categoryInflows.asCurrency(), fieldLayout.inflows, "right")}</td>
+//   <td>${StringFunctions.padAndAlign(categoryOutflows.asCurrency(), fieldLayout.outflows, "right")}</td>
+//   <td>${StringFunctions.padAndAlign(grandTotal.asCurrency(), fieldLayout.balance, "right")}</td>
+//   <td>${StringFunctions.padAndAlign(transactionCountTotal.toString(), fieldLayout.tranCount, "right")}</td>
+// `;
+//   table.appendChild(grandTotalRow);
+
+//   const tableBody = document.createElement("tbody");
+//   tableBody.appendChild(headers);
+//   for (const detailData of table.children) {
+//     tableBody.appendChild(detailData);
+//   }
+//   table.appendChild(tableBody);
+
+//   document.body.appendChild(table);
+// }
+
+/**
+ * @param {ReportData} data
+ * @param {{ category: string; inflows: number; outflows: number; balance: number; count: number; }[]} summaries
+ */
+export function dumpCategorySummaries(data, summaries) {
+  //
+  // const fieldLayout = {
+  //   category: 15,
+  //   inflows: 10,
+  //   outflows: 10,
+  //   balance: 10,
+  //   tranCount: 18,
+  //   grandTotalLabel: 15,
+  //   grandTotal: 10,
+  //   spacer: 3,
+  // };
+
+  // const table = document.createElement("table");
+  // const headers = document.createElement("tr");
+  // headers.innerHTML = `
+  //   <th style="width: ${fieldLayout.category}%">${StringFunctions.padAndAlign("Category", fieldLayout.category)}</th>
+  //   <th style="width: ${fieldLayout.inflows}%">${StringFunctions.padAndAlign("Inflows", fieldLayout.inflows, "right")}</th>
+  //   <th style="width: ${fieldLayout.outflows}%">${StringFunctions.padAndAlign("Outflows", fieldLayout.outflows, "right")}</th>
+  //   <th style="width: ${fieldLayout.balance}%">${StringFunctions.padAndAlign("Total", fieldLayout.balance, "right")}</th>
+  //   <th style="width: ${fieldLayout.tranCount}%">${StringFunctions.padAndAlign("Transaction Count", fieldLayout.tranCount, "right")}</th>
+  // `;
+  // table.appendChild(headers);
+
+  // const sortedTransactions = [...transactions].sort((a, b) => {
+  //   const [catA, txnsA] = a;
+  //   const [catB, txnsB] = b;
+
+  //   const inflowsA = txnsA
+  //     .filter(
+  //       (t) =>
+  //         t.transactionType === TransactionType.Deposit &&
+  //         t.date.getFullYear() === data.year
+  //     )
+  //     .reduce((sum, t) => sum + t.amount, 0);
+
+  //   const outflowsA = txnsA
+  //     .filter(
+  //       (t) =>
+  //         t.transactionType === TransactionType.Withdrawal &&
+  //         t.date.getFullYear() === data.year
+  //     )
+  //     .reduce((sum, t) => sum + t.amount, 0);
+
+  //   const inflowsB = txnsB
+  //     .filter(
+  //       (t) =>
+  //         t.transactionType === TransactionType.Deposit &&
+  //         t.date.getFullYear() === data.year
+  //     )
+  //     .reduce((sum, t) => sum + t.amount, 0);
+
+  //   const outflowsB = txnsB
+  //     .filter(
+  //       (t) =>
+  //         t.transactionType === TransactionType.Withdrawal &&
+  //         t.date.getFullYear() === data.year
+  //     )
+  //     .reduce((sum, t) => sum + t.amount, 0);
+
+  //   const aHasInflows = inflowsA > 0;
+  //   const bHasInflows = inflowsB > 0;
+
+  //   // inflow categories always come first
+  //   if (aHasInflows && !bHasInflows) return -1;
+  //   if (!aHasInflows && bHasInflows) return 1;
+
+  //   // both have inflows -> sort by inflows desc
+  //   if (aHasInflows && bHasInflows) return inflowsB - inflowsA;
+
+  //   // both have 0 inflows -> sort by outflows desc
+  //   return outflowsB - outflowsA;
+  // });
+
+  // let categoryBalance = 0;
+  // let categoryInflows = 0;
+  // let categoryOutflows = 0;
+  // let transactionCountTotal = 0;
+  // let grandTotal = 0;
+  // // debugger;
+  // for (const [category, txns] of sortedTransactions) {
+  //   const inflows = txns
+  //     .filter(
+  //       (t) =>
+  //         t.transactionType === TransactionType.Deposit &&
+  //         t.date.getFullYear() === data.year
+  //     )
+  //     .reduce((sum, t) => sum + t.amount, 0);
+  //   categoryInflows += inflows.asCurrency();
+  //   const outflows = txns
+  //     .filter(
+  //       (t) =>
+  //         t.transactionType === TransactionType.Withdrawal &&
+  //         t.date.getFullYear() === data.year
+  //     )
+  //     .reduce((sum, t) => sum + t.amount, 0);
+  //   categoryOutflows += outflows.asCurrency();
+  //   categoryBalance = inflows - outflows;
+  //   grandTotal += categoryBalance.asCurrency();
+  //   const count = txns.length;
+  //   transactionCountTotal += count;
+
+  //   const detailData = document.createElement("tr");
+  //   detailData.innerHTML = `
+  //     <td>${StringFunctions.padAndAlign(category, fieldLayout.category)}</td>
+  //     <td>${StringFunctions.padAndAlign(inflows.asCurrency(), fieldLayout.inflows, "right")}</td>
+  //     <td>${StringFunctions.padAndAlign(outflows.asCurrency(), fieldLayout.outflows, "right")}</td>
+  //     <td>${StringFunctions.padAndAlign(categoryBalance.asCurrency(), fieldLayout.balance, "right")}</td>
+  //     <td>${StringFunctions.padAndAlign(count.toString(), fieldLayout.tranCount, "right")}</td>
+  //   `;
+  //   table.appendChild(detailData);
+  // }
+
+  // const grandTotalRow = document.createElement("tr");
+  // grandTotalRow.innerHTML = `
+  //   <th>${StringFunctions.padAndAlign("Grand Total:", fieldLayout.grandTotalLabel)}</th>
+  //   <td>${StringFunctions.padAndAlign(categoryInflows.asCurrency(), fieldLayout.inflows, "right")}</td>
+  //   <td>${StringFunctions.padAndAlign(categoryOutflows.asCurrency(), fieldLayout.outflows, "right")}</td>
+  //   <td>${StringFunctions.padAndAlign(grandTotal.asCurrency(), fieldLayout.balance, "right")}</td>
+  //   <td>${StringFunctions.padAndAlign(transactionCountTotal.toString(), fieldLayout.tranCount, "right")}</td>
+  // `;
+  // table.appendChild(grandTotalRow);
+
+  // const tableBody = document.createElement("tbody");
+  // tableBody.appendChild(headers);
+  // for (const detailData of table.children) {
+  //   tableBody.appendChild(detailData);
+  // }
+  // table.appendChild(tableBody);
+
+  // const tableHTML = table.outerHTML;
+
+  const table = new ReportTableBuilder()
+    .addColumn("Category", 20)
+    .addColumn("Inflows", 15, "right", "currency", true)
+    .addColumn("Outflows", 15, "right", "currency", true)
+    .addColumn("Balance", 15, "right", "currency", true)
+    .addColumn("Transactions", 10, "right", "number", true)
+    .enableZebra()
+    .enableStickyHeader();
+
+  for (const summary of summaries) {
+    table.addRow([
+      summary.category,
+      summary.inflows,
+      summary.outflows,
+      summary.balance,
+      summary.count,
+    ]);
+  }
+
+  // debugger;
+  const tableElement = table.build();
+
+  const popup = ensurePopup("categorySummaries", "Category Summary Report");
+
+  popup.setContent(tableElement.outerHTML);
+
+  // Apply larger sizing for cash flow popup
+  const popupContent = popup.root.querySelector(".ss-popup-content");
+  if (popupContent instanceof HTMLElement) {
+    popupContent.style.maxWidth = "95vw";
+    popupContent.style.width = "95vw";
+    popupContent.style.maxHeight = "70vh";
+    popupContent.style.height = "70vh";
+  }
+  popup.show();
 }
 
 export { showSsBreakdown };

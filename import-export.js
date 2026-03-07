@@ -1,4 +1,12 @@
-import { generateCSV, generateJSON } from "./retirement-summaryrenderer.js";
+import {
+  generateCSV,
+  generateJSON,
+  generateTestCategorySummaryDump,
+} from "./retirement-summaryrenderer.js";
+
+export function genSummaryDumpPopup() {
+  generateTestCategorySummaryDump();
+}
 
 export function exportCSV() {
   generateCSV();
