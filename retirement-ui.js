@@ -294,7 +294,8 @@ document.addEventListener("reports:run", (e) => {
       .addColumn("Outflows", 18, "right", "currency", true)
       .addColumn("Balance", 18, "right", "currency", true)
       .addColumn("Count", 12, "right", "number", true)
-      .enableStickyHeader();
+      .enableStickyHeader()
+      .setStickyParentRowForSubReports(true);
 
     for (const detail of report.details) {
       let inflows = 0;

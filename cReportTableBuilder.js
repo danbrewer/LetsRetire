@@ -40,6 +40,7 @@ export class ReportTableBuilder {
     this.stickyHeaderOffsetPx = 0;
     this.stickyHeaderDepth = 0;
     this.autoStickySubReportHeaders = true;
+    this.stickyParentRowForSubReports = false;
   }
 
   /**
@@ -189,6 +190,17 @@ export class ReportTableBuilder {
   }
 
   /**
+   * Controls whether the parent row immediately preceding a subreport is sticky.
+   *
+   * @param {boolean} enabled
+   * @returns {ReportTableBuilder}
+   */
+  setStickyParentRowForSubReports(enabled = true) {
+    this.stickyParentRowForSubReports = Boolean(enabled);
+    return this;
+  }
+
+  /**
    * @param {number} px
    * @returns {ReportTableBuilder}
    */
@@ -201,6 +213,13 @@ export class ReportTableBuilder {
    * @private
    */
   getEstimatedHeaderHeightPx() {
+    return 36;
+  }
+
+  /**
+   * @private
+   */
+  getEstimatedDataRowHeightPx() {
     return 36;
   }
 
@@ -264,6 +283,22 @@ export class ReportTableBuilder {
         row.appendChild(td);
       });
 
+      if (
+        this.stickyParentRowForSubReports &&
+        this.subReportsByRow.has(rowIndex)
+      ) {
+        const stickyTop = this.stickyHeader
+          ? this.stickyHeaderOffsetPx + this.getEstimatedHeaderHeightPx()
+          : this.stickyHeaderOffsetPx;
+
+        for (const cell of row.cells) {
+          cell.style.position = "sticky";
+          cell.style.top = `${stickyTop}px`;
+          cell.style.zIndex = `${99 - this.stickyHeaderDepth}`;
+          cell.style.background = "var(--card, var(--bg, #0b1426))";
+        }
+      }
+
       tbody.appendChild(row);
 
       const subReport = this.subReportsByRow.get(rowIndex);
@@ -286,21 +321,30 @@ export class ReportTableBuilder {
         }
 
         if (this.stickyHeader && this.autoStickySubReportHeaders) {
-          const nestedOffset =
+          let nestedOffset =
             this.stickyHeaderOffsetPx + this.getEstimatedHeaderHeightPx();
 
+          if (this.stickyParentRowForSubReports) {
+            nestedOffset += this.getEstimatedDataRowHeightPx();
+          }
+
           if (!subReport.builder.stickyHeader) {
-            subReport.builder.enableStickyHeader(
-              nestedOffset,
-              this.stickyHeaderDepth + 1
-            );
+            const nestedDepth = this.stickyParentRowForSubReports
+              ? this.stickyHeaderDepth + 2
+              : this.stickyHeaderDepth + 1;
+
+            subReport.builder.enableStickyHeader(nestedOffset, nestedDepth);
           } else {
             if (subReport.builder.stickyHeaderOffsetPx < nestedOffset) {
               subReport.builder.setStickyHeaderOffset(nestedOffset);
             }
 
-            if (subReport.builder.stickyHeaderDepth <= this.stickyHeaderDepth) {
-              subReport.builder.stickyHeaderDepth = this.stickyHeaderDepth + 1;
+            const minimumNestedDepth = this.stickyParentRowForSubReports
+              ? this.stickyHeaderDepth + 2
+              : this.stickyHeaderDepth + 1;
+
+            if (subReport.builder.stickyHeaderDepth < minimumNestedDepth) {
+              subReport.builder.stickyHeaderDepth = minimumNestedDepth;
             }
           }
         }
