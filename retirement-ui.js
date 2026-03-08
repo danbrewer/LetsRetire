@@ -244,9 +244,13 @@ document.addEventListener("reports:run", (e) => {
 
   const availableYears = getReportOutputYears(year);
   const popup = ensurePopup("reportOutput", "Report Output");
+  /** @type {(() => void) | null} */
+  let pendingTableMount = null;
 
   /** @param {string} selectedYear */
   const renderSummaryByCategoryTable = (selectedYear) => {
+    pendingTableMount = null;
+
     const report = generateSummaryByCategoryReport(
       Number(selectedYear),
       accountType
@@ -280,6 +284,8 @@ document.addEventListener("reports:run", (e) => {
 
   /** @param {string} selectedYear */
   const renderCategoryDetailTable = (selectedYear) => {
+    pendingTableMount = null;
+
     const report = generateCategoryDetailReport(
       Number(selectedYear),
       accountType
@@ -344,7 +350,18 @@ document.addEventListener("reports:run", (e) => {
     }
 
     const tableElement = table.build();
-    return `<div style="overflow:auto; max-height:40vh; border:1px solid var(--border); border-radius:8px;">${tableElement.outerHTML}</div>`;
+    const mountId = "reportOutputCategoryDetailTableMount";
+
+    pendingTableMount = () => {
+      const mountTarget = popup.root.querySelector(`#${mountId}`);
+      if (!(mountTarget instanceof HTMLElement)) {
+        return;
+      }
+
+      mountTarget.replaceChildren(tableElement);
+    };
+
+    return `<div style="overflow:auto; max-height:40vh; border:1px solid var(--border); border-radius:8px;"><div id="${mountId}"></div></div>`;
   };
 
   /**
@@ -391,6 +408,11 @@ document.addEventListener("reports:run", (e) => {
         ${renderReportContent(selectedYear)}
       </div>
     `);
+
+    if (pendingTableMount) {
+      pendingTableMount();
+      pendingTableMount = null;
+    }
 
     const popupContent = popup.root.querySelector(".ss-popup-content");
     if (popupContent instanceof HTMLElement) {

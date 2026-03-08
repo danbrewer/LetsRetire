@@ -224,10 +224,171 @@ export class ReportTableBuilder {
   }
 
   /**
+   * @private
+   * @param {HTMLElement} element
+   * @returns {HTMLElement}
+   */
+  findNearestScrollContainer(element) {
+    let current = element.parentElement;
+
+    while (current) {
+      const computed = window.getComputedStyle(current);
+      const overflowY = computed.overflowY;
+      const isScrollable = /(auto|scroll|overlay)/.test(overflowY);
+
+      if (isScrollable && current.scrollHeight > current.clientHeight) {
+        return current;
+      }
+
+      current = current.parentElement;
+    }
+
+    if (document.scrollingElement instanceof HTMLElement) {
+      return document.scrollingElement;
+    }
+
+    return document.documentElement;
+  }
+
+  /**
+   * @private
+   * @param {HTMLTableRowElement} row
+   * @param {number} stickyTop
+   */
+  applyStickyParentRowStyles(row, stickyTop) {
+    for (const cell of row.cells) {
+      cell.style.position = "sticky";
+      cell.style.top = `${stickyTop}px`;
+      cell.style.zIndex = `${99 - this.stickyHeaderDepth}`;
+      cell.style.background = "var(--card, var(--bg, #0b1426))";
+      cell.style.transform = "translateY(0px)";
+      cell.style.willChange = "transform";
+      cell.style.transition = "transform 160ms ease-out";
+    }
+  }
+
+  /**
+   * @private
+   * @param {HTMLTableRowElement} row
+   * @param {number} offsetPx
+   */
+  setStickyParentRowPushOffset(row, offsetPx) {
+    const limitedOffset = Math.max(0, Number(offsetPx) || 0);
+
+    for (const cell of row.cells) {
+      cell.style.transform = `translateY(${-limitedOffset}px)`;
+    }
+  }
+
+  /**
+   * @private
+   * @param {HTMLTableRowElement} row
+   */
+  clearStickyParentRowStyles(row) {
+    for (const cell of row.cells) {
+      cell.style.position = "";
+      cell.style.top = "";
+      cell.style.zIndex = "";
+      cell.style.background = "";
+      cell.style.transform = "";
+      cell.style.willChange = "";
+      cell.style.transition = "";
+    }
+  }
+
+  /**
+   * @private
+   * @param {HTMLTableElement} table
+   * @param {{ parentRow: HTMLTableRowElement, subReportRow: HTMLTableRowElement }[]} stickyParentPairs
+   */
+  initializeStickyParentRowPushOff(table, stickyParentPairs) {
+    if (!this.stickyParentRowForSubReports || stickyParentPairs.length === 0) {
+      return;
+    }
+
+    const stickyTop = this.stickyHeader
+      ? this.stickyHeaderOffsetPx + this.getEstimatedHeaderHeightPx()
+      : this.stickyHeaderOffsetPx;
+
+    const scrollContainer = this.findNearestScrollContainer(table);
+    /** @type {HTMLTableRowElement | null} */
+    let activeParentRow = null;
+
+    const updateActiveStickyParent = () => {
+      const containerRect = scrollContainer.getBoundingClientRect();
+      const stickyLine = containerRect.top + stickyTop;
+
+      let activeIndex = -1;
+
+      for (let i = 0; i < stickyParentPairs.length; i += 1) {
+        const pair = stickyParentPairs[i];
+        const parentRect = pair.parentRow.getBoundingClientRect();
+        const subRect = pair.subReportRow.getBoundingClientRect();
+        const rowHeight = Math.max(
+          parentRect.height,
+          this.getEstimatedDataRowHeightPx()
+        );
+
+        const parentReachedStickyLine = parentRect.top <= stickyLine;
+        const subReportStillVisible = subRect.bottom > stickyLine;
+
+        if (parentReachedStickyLine && subReportStillVisible) {
+          activeIndex = i;
+        }
+      }
+
+      const nextActive =
+        activeIndex >= 0 ? stickyParentPairs[activeIndex].parentRow : null;
+
+      if (nextActive && activeParentRow !== nextActive) {
+        this.applyStickyParentRowStyles(nextActive, stickyTop);
+      }
+
+      if (activeParentRow && activeParentRow !== nextActive) {
+        this.clearStickyParentRowStyles(activeParentRow);
+      }
+
+      if (nextActive) {
+        const activePair = stickyParentPairs[activeIndex];
+        const nextPair = stickyParentPairs[activeIndex + 1] || null;
+        const activeRowRect = activePair.parentRow.getBoundingClientRect();
+        const activeRowHeight = Math.max(
+          activeRowRect.height,
+          this.getEstimatedDataRowHeightPx()
+        );
+
+        let pushOffset = 0;
+
+        if (nextPair) {
+          const nextParentTop = nextPair.parentRow.getBoundingClientRect().top;
+          const pushStart = stickyLine + activeRowHeight;
+
+          if (nextParentTop < pushStart) {
+            pushOffset = Math.min(activeRowHeight, pushStart - nextParentTop);
+          }
+        }
+
+        this.setStickyParentRowPushOffset(nextActive, pushOffset);
+      }
+
+      activeParentRow = nextActive;
+    };
+
+    scrollContainer.addEventListener("scroll", updateActiveStickyParent, {
+      passive: true,
+    });
+    window.addEventListener("resize", updateActiveStickyParent);
+
+    requestAnimationFrame(updateActiveStickyParent);
+  }
+
+  /**
    * @returns {HTMLTableElement}
    */
   build() {
     const table = document.createElement("table");
+    /** @type {{ parentRow: HTMLTableRowElement, subReportRow: HTMLTableRowElement }[]} */
+    const stickyParentPairs = [];
 
     const thead = document.createElement("thead");
     const headerRow = document.createElement("tr");
@@ -282,22 +443,6 @@ export class ReportTableBuilder {
 
         row.appendChild(td);
       });
-
-      if (
-        this.stickyParentRowForSubReports &&
-        this.subReportsByRow.has(rowIndex)
-      ) {
-        const stickyTop = this.stickyHeader
-          ? this.stickyHeaderOffsetPx + this.getEstimatedHeaderHeightPx()
-          : this.stickyHeaderOffsetPx;
-
-        for (const cell of row.cells) {
-          cell.style.position = "sticky";
-          cell.style.top = `${stickyTop}px`;
-          cell.style.zIndex = `${99 - this.stickyHeaderDepth}`;
-          cell.style.background = "var(--card, var(--bg, #0b1426))";
-        }
-      }
 
       tbody.appendChild(row);
 
@@ -355,6 +500,13 @@ export class ReportTableBuilder {
 
         subReportRow.appendChild(subReportCell);
         tbody.appendChild(subReportRow);
+
+        if (this.stickyParentRowForSubReports) {
+          stickyParentPairs.push({
+            parentRow: row,
+            subReportRow,
+          });
+        }
       }
     });
 
@@ -386,6 +538,10 @@ export class ReportTableBuilder {
       tfoot.appendChild(row);
       table.appendChild(tfoot);
     }
+
+    requestAnimationFrame(() => {
+      this.initializeStickyParentRowPushOff(table, stickyParentPairs);
+    });
 
     return table;
   }
