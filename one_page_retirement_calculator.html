@@ -1626,7 +1626,7 @@ details[open] .content {
       <!-- Results -->
       <section class="card">
         <div class="results">
-          <div class="summary">
+          <div id="keyPerformanceIndicators"  class="summary">
             <div class="kpi">
               <div class="label">Retirement Age</div>
               <div id="kpiDraw" class="value">—</div>
@@ -1644,20 +1644,20 @@ details[open] .content {
               <div id="kpiEndBal" class="value">—</div>
             </div>
           </div>
-          <div style="position: relative;">
+          <div id="balancesChart" style="position: relative;">
             <canvas id="chart" height="260"></canvas>
             <div id="chartTooltip" class="chart-tooltip">
               <div class="year"></div>
               <div class="balance"></div>
             </div>
           </div>
-          <div class="card" style="padding:0; overflow:auto; max-height: 50vh;">
+          <div id="retirementData" class="card" style="padding:0; overflow:auto; max-height: 50vh;">
             <table>
               <thead id="tableHead"></thead>
               <tbody id="rows"></tbody>
             </table>
           </div>
-          <div class="disclaimer">This is an educational, simplified model. It ignores many realities (RMDs, detailed SS
+          <div id="disclaimer" class="disclaimer">This is an educational, simplified model. It ignores many realities (RMDs, detailed SS
             taxability, brackets/credits, healthcare, sequence risk, etc.). Consult a fiduciary advisor and a tax
             professional for personalized guidance.</div>
         </div>
