@@ -5,6 +5,7 @@ import {
 } from "./retirement-summaryrenderer.js";
 import { ensurePopup } from "./popup-engine.js";
 import { ACCOUNT_TYPES } from "./cAccount.js";
+import { parseInputParameters, showToast } from "./retirement-ui.js";
 
 function getAvailableReportYears() {
   const yearCells = Array.from(
@@ -19,6 +20,53 @@ function getAvailableReportYears() {
   }
 
   return [new Date().getFullYear()];
+}
+
+/**
+ * 
+ * @param {Event} event 
+ * @returns 
+ */
+export function handleImportScenario(event) {
+  debugger;
+  if (!(event?.target instanceof HTMLInputElement)) return;
+
+  if (!event.target.files) return;
+
+  const file = event.target.files[0];
+  if (!file) return;
+  
+  if (!file.name.toLowerCase().endsWith(".json")) {
+    showToast("Invalid File", "Please select a JSON file.", "error");
+    return;
+  }
+
+  
+
+  showToast("Import Scenario", "File loaded!");
+}
+
+export function saveScenario(){
+  // throw new Error("JSON export is currently disabled.");
+  const inputs = parseInputParameters();
+  const exportData = {
+    version: "1.1",
+    exportDate: new Date().toISOString(),
+    description: "Retirement Calculator Scenario with Spending Overrides",
+    inputs: inputs,
+  };
+  const json = JSON.stringify(exportData, null, 2);
+  const blob = new Blob([json], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `retirement_scenario_${
+    new Date().toISOString().split("T")[0]
+  }.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
 }
 
 export function openReportsPopup() {
@@ -237,7 +285,7 @@ export function exportJSON() {
 
 export function importJSON() {
   throw new Error("JSON import is currently disabled.");
-  // const fileInput = $("jsonFileInput");
+  // const fileInput = $("jsonFileInputFile");
   // fileInput.click();
 }
 

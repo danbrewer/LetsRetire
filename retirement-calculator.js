@@ -18,45 +18,64 @@ import { WorkingYearCalculator } from "./cWorkingYearCalculator.js";
  */
 
 /**
- * @param {Calculations} calculations
  * @param {RetirementUIFunctions} UI
  */
-function calc(calculations, UI) {
+function calc(UI) {
   if (!UI) {
     throw new Error("UI must be provided explicitly");
   }
+
+  const inputs = UI.parseInputParameters();
+
+  if (!inputs) return null;
+
+  const calculations = initializeCalculationsFromInputs(inputs);
+
+  if (!calculations) return null;
+
+  // Generate final output
+  // generateOutputAndSummary(inputs, calculations); //, totalTaxes, maxDrawdown);
+  return { inputs, calculations };
+}
+
+/** 
+ * @param {Inputs | null} inputs
+ * @returns {Calculations | null} 
+ */
+function initializeCalculationsFromInputs(inputs){
+  const calculations = new Calculations();
+  if (!inputs) return null;
+
+  
+
   // Track previous ages to only regenerate spending fields when they change
   let lastRetireAge = null;
   let lastEndAge = null;
   let lastCurrentAge = null;
 
-  const inputs = UI.parseInputParameters();
-
-  if (!inputs) return;
-
   // Auto-regenerate spending override fields only if ages have changed
-  if (
-    inputs.subjectRetireAge > 0 &&
-    inputs.subjectLifeSpan > inputs.subjectRetireAge &&
-    (lastRetireAge !== inputs.subjectRetireAge ||
-      lastEndAge !== inputs.subjectLifeSpan)
-  ) {
-    UI.regenerateSpendingFields();
-    lastRetireAge = inputs.subjectRetireAge;
-    lastEndAge = inputs.subjectLifeSpan;
-  }
+  // if (
+  //   inputs.subjectRetireAge > 0 &&
+  //   inputs.subjectLifeSpan > inputs.subjectRetireAge &&
+  //   (lastRetireAge !== inputs.subjectRetireAge ||
+  //     lastEndAge !== inputs.subjectLifeSpan)
+  // ) {
+  //   UI.regenerateSpendingFields();
+  //   lastRetireAge = inputs.subjectRetireAge;
+  //   lastEndAge = inputs.subjectLifeSpan;
+  // }
 
   // Auto-regenerate income adjustment fields only if ages have changed
-  if (
-    inputs.initialAgeSubject > 0 &&
-    inputs.subjectLifeSpan > inputs.initialAgeSubject &&
-    (lastCurrentAge !== inputs.initialAgeSubject ||
-      lastEndAge !== inputs.subjectLifeSpan)
-  ) {
-    UI.regenerateTaxableIncomeFields();
-    UI.regenerateTaxFreeIncomeFields();
-    lastCurrentAge = inputs.initialAgeSubject;
-  }
+  // if (
+  //   inputs.initialAgeSubject > 0 &&
+  //   inputs.subjectLifeSpan > inputs.initialAgeSubject &&
+  //   (lastCurrentAge !== inputs.initialAgeSubject ||
+  //     lastEndAge !== inputs.subjectLifeSpan)
+  // ) {
+  //   UI.regenerateTaxableIncomeFields();
+  //   UI.regenerateTaxFreeIncomeFields();
+  //   lastCurrentAge = inputs.initialAgeSubject;
+  // }
 
   const transactionManager = new TransactionManager();
 
@@ -142,9 +161,7 @@ function calc(calculations, UI) {
     }
   }
 
-  // Generate final output
-  // generateOutputAndSummary(inputs, calculations); //, totalTaxes, maxDrawdown);
-  return { inputs, calculations };
+  return calculations;
 }
 
 // Helper to generate dynamic input values for a given year index

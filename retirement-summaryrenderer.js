@@ -514,7 +514,7 @@ function loadColumnLayout() {
 
 /** @type {Inputs | undefined} */
 let currentInputs;
-/** @type {Calculations | undefined} */
+/** @type {Calculations | null} */
 let currentCalculations;
 
 function regenerateTable() {
@@ -1057,7 +1057,7 @@ function generateJSON() {
 /**
  * Generate final summary, write table, and update KPIs
  * @param {Inputs | undefined} inputs
- * @param {Calculations | undefined} calculations
+ * @param {Calculations | null} calculations
  */
 function generateOutputAndSummary(inputs, calculations) {
   currentInputs = inputs;

@@ -12,9 +12,11 @@ import {
   exportJSON,
   generatePDFReport,
   genSummaryDumpPopup,
+  handleImportScenario,
   handleJSONFile,
   importJSON,
   openReportsPopup,
+  saveScenario,
 } from "./import-export.js";
 import {
   buildColumnMenu,
@@ -510,15 +512,24 @@ document.addEventListener("click", (e) => {
 // Events
 // Event listeners will be set up in setupEventListeners() after partials load
 
+function loadScenario() {
+  // debugger;
+  const fileInput = $("jsonFileInput");
+  fileInput?.click();
+}
+
 function setupEventListeners() {
   $("calcBtn")?.addEventListener("click", doCalculations);
   $("pdfBtn")?.addEventListener("click", generatePDFReport);
   $("csvBtn")?.addEventListener("click", exportCSV);
   $("testReport")?.addEventListener("click", genSummaryDumpPopup);
   $("reportsBtn")?.addEventListener("click", openReportsPopup);
+  $("loadScenario")?.addEventListener("click", loadScenario);
+  $("saveScenario")?.addEventListener("click", saveScenario);
+
   $("exportJsonBtn")?.addEventListener("click", exportJSON);
   $("importJsonBtn")?.addEventListener("click", importJSON);
-  $("jsonFileInput")?.addEventListener("change", handleJSONFile);
+  $("jsonFileInput")?.addEventListener("change", handleImportScenario);
   $("clearBtn")?.addEventListener("click", resetAll);
   $("useCurrentYearValues")?.addEventListener("change", function () {
     updateSpendingFieldsDisplayMode();
@@ -538,7 +549,7 @@ function setupEventListeners() {
       {
         owner: "subject",
         name: "New Pension",
-        startAge: num(UIField.SUBJECT_PENSION_START_AGE),
+        startAge: num(UIField.SUBJECT_RETIRE_AGE),
         monthlyAmount: 0,
         withholdingRate: 0.15,
         survivorshipPercent: 0,
@@ -1021,31 +1032,15 @@ function parseInputParameters() {
   const flatSsWithholdingRate = pct(num(UIField.SS_WITHHOLDING));
   const ssCola = pct(num(UIField.SS_COLA));
 
-  // // Pensions
-  // const subjectPensionMonthly = num(UIField.SUBJECT_PENSION_MONTHLY);
-  // const subjectPensionWithholdingRate = pct(
-  //   num(UIField.SUBJECT_PENSION_WITHHOLDING)
-  // );
-  // const subjectPensionSurvivorship = num(UIField.SUBJECT_PENSION_SURVIVORSHIP);
-  // const partnerPenMonthly = num(UIField.PARTNER_PENSION_MONTHLY);
-  // const partnerPensionWithholdings = pct(
-  //   num(UIField.PARTNER_PENSION_WITHHOLDING)
-  // );
-
-  // const partnerPensionSurvivorship = num(UIField.PARTNER_PENSION_SURVIVORSHIP);
-
   // Witholdings/Taxes
   const filingStatus = select(UIField.FILING_STATUS)?.value || "single";
   const withholdingsDefaultRate = pct(num(UIField.WITHHOLDINGS_DEFAULT));
   const flatWageWithholdingRate = pct(num(UIField.WITHHOLDINGS_WAGES)); // pct(num("flatWageWithholdingRate"));
   const withholdings401k = pct(num(UIField.WITHHOLDINGS_401K));
-  // const withholdingsSs = pct(num(UIField.WITHHOLDINGS_SS));
-  // const withholdingsPension = pct(num(UIField.WITHHOLDINGS_PENSION));
   const useRMD = checkbox(UIField.USE_RMD)?.checked ?? false;
   // const order = withdrawalOrder;
 
   /** @type {import("./cInputs.js").RetirementYearSpendingOverride[]} */
-  // const retirementYearSpendingOverride = [];
   const retirementYearSpendingOverrides = harvestAgeOverrides(
     "spending",
     subjectCurrentAge,
@@ -1064,8 +1059,6 @@ function parseInputParameters() {
     checkbox("useTaxableCurrentYearValues")?.checked ?? false,
     applyInflationToIncomeValue
   );
-
-  // console.log("taxableIncomeOverrides", taxableIncomeOverrides);
 
   const taxFreeIncomeOverrides = harvestAgeOverrides(
     "taxFreeIncome",
@@ -1089,7 +1082,6 @@ function parseInputParameters() {
     initialAgePartner: partnerCurrentAge,
     subjectRetireAge: subjectRetireAge,
     subjectSsStartAge: subjectSsStartAge,
-    // subjectPensionStartAge: subjectPensionStartAge,
     subject401kStartAge: subject401kStartAge,
     subjectLifeSpan: subjectLifeSpan,
 
@@ -1121,7 +1113,6 @@ function parseInputParameters() {
     partnerSalaryGrowthRate: partnerSalaryGrowthRate,
     subjectCareer401kContributionRate: subject401kContributionRate,
     subjectRothContributionRate: subjectRothMonthly,
-    // taxablePct: taxablePct,
     subjectEmp401kMatchRate: subjectEmp401kMatchRate,
     subject401kContributionRate: subject401kContributionRate,
 
@@ -1141,23 +1132,14 @@ function parseInputParameters() {
     // Income sources
     subjectSsMonthly: subjectSsMonthly,
     ssCola: ssCola,
-    // subjectPensionMonthly: subjectPensionMonthly,
-    // subjectPensionSurvivorship: subjectPensionSurvivorship,
 
     // Tax rates and settings
     filingStatus: filingStatus,
     useRMD: useRMD,
     flatSsWithholdingRate: flatSsWithholdingRate,
     flatCareerTrad401kWithholdingRate: withholdings401k,
-    // flatPensionWithholdingRate: subjectPensionWithholdingRate,
     flatWageWithholdingRate: flatWageWithholdingRate,
-
-    // Withdrawal order
-    // order: order,
   };
-
-  // console.log(JSON.stringify(inputArgs, null, 2));
-  // inputArgs.dump("inputArgs");
 
   const inputs = new Inputs(inputArgs);
 
@@ -1205,10 +1187,11 @@ export function getDirty() {
 }
 
 function doCalculations() {
-  const calculations = new Calculations();
-  const result = calc(calculations, DefaultUI);
+  const result = calc(DefaultUI);
+  if (!result) return;
+
   clearDirty();
-  generateOutputAndSummary(result?.inputs, result?.calculations);
+  generateOutputAndSummary(result.inputs, result.calculations);
 }
 
 function updateTaxFreeIncomeFieldsDisplayMode() {
@@ -1261,13 +1244,11 @@ function updateTaxFreeIncomeFieldsDisplayMode() {
 }
 
 function loadExample() {
-  // debugger;
   const ex = {
     subjectCurrentAge: 60,
     subjectRetireAge: 62,
     subjectLifespan: 95,
     subject401kStartAge: 62,
-    // subjectPensionStartAge: 65,
     subjectSalary: 174500,
     subjectSalaryGrowth: 2.0,
     subjectSavingsMonthly: 0,
@@ -1280,7 +1261,6 @@ function loadExample() {
     partnerRetireAge: 62,
     partnerLifespan: 98,
     partner401kStartAge: 62,
-    // partnerPensionStartAge: 65,
     partnerSalary: 0,
     partnerSalaryGrowth: 0,
     partnerRothMonthly: 0,
@@ -1314,65 +1294,12 @@ function loadExample() {
     ssWithholdingRate: 20,
     ssCola: 2.5,
 
-    // subjectPensionMonthly: 3700,
-    // subjectPensionWithholdingRate: 20,
-    // subjectPensionSurvivorship: 50,
-    // partnerPensionMonthly: 500,
-    // partnerPensionWithholdingRate: 20,
-    // partnerPensionSurvivorship: 50,
-
     filingStatus: constsJS_FILING_STATUS.MARRIED_FILING_JOINTLY,
     withholdingsDefaultRate: 15,
     withholdingsWages: 15,
     withholdings401k: 18,
-    // withholdingsSS: 15,
-    // withholdingsPension: 18,
   };
-  // const ex = {
-  //   currentAge: 60,
-  //   retireAge: 62,
-  //   endAge: 90,
-  //   inflation: 2.5,
-  //   spendingToday: 95000,
-  //   spendingDecline: 1.0,
-  //   partnerAge: 56,
-  //   partnerRetireAge: 62,
-  //   partnerSsMonthly: 1000,
-  //   partnerSsStart: 62,
-  //   partnerSsCola: 0.0,
-  //   partnerPenMonthly: 500,
-  //   partnerPenStart: 65,
-  //   partnerPenCola: 0,
-  //   partnerTaxSS: 10,
-  //   partnerTaxPension: 20,
-  //   salary: 174500,
-  //   salaryGrowth: 2.0,
-  //   pretaxPct: 0,
-  //   rothPct: 0,
-  //   taxablePct: 35,
-  //   matchCap: 0,
-  //   matchRate: 0,
-  //   balPre: 600000,
-  //   balRoth: 0,
-  //   balSavings: 500000,
-  //   retPre: 3.0,
-  //   retRoth: 0.0,
-  //   retTax: 3.0,
-  //   ssMonthly: 2500,
-  //   ssStart: 62,
-  //   ssCola: 2.5,
-  //   penMonthly: 3500,
-  //   penStart: 65,
-  //   penCola: 0,
-  //   taxPre: 15,
-  //   taxTaxable: 0,
-  //   taxRoth: 0,
-  //   taxSS: 10,
-  //   taxPension: 15,
-  //   order: "taxable,pretax,roth",
-  //   filingStatus: "married",
-  //   useRMD: true,
-  // };
+
   for (const [k, v] of Object.entries(ex)) {
     const el = $(k);
     if (el instanceof HTMLInputElement) {
@@ -2098,4 +2025,5 @@ export {
   resyncAllOpenDetails,
   detailsObservers,
   doCalculations,
+  showToast,
 };
