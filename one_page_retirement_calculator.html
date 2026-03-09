@@ -236,9 +236,6 @@
 
 
     .results {
-      --kpi-row-height: 116px;
-      --disclaimer-row-height: 46px;
-
       padding: 18px;
       display: grid;
       gap: 12px;
@@ -247,10 +244,10 @@
       max-height: 100%;
       overflow: hidden;
       grid-template-rows:
-        var(--kpi-row-height)
+        auto
         minmax(0, 1fr)
         minmax(0, 1fr)
-        var(--disclaimer-row-height);
+        auto;
     }
 
     #keyPerformanceIndicators,
@@ -486,9 +483,6 @@
     .disclaimer {
       color: var(--muted);
       font-size: 12px;
-      display: flex;
-      align-items: center;
-      overflow: hidden;
     }
     
     /* SS Breakdown Popup Styles */
