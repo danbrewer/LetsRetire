@@ -235,16 +235,37 @@
 
 
 
-    .results { 
-      /* Results panel scrolls independently from inputs */
+    .results {
+      --kpi-row-height: 116px;
+      --disclaimer-row-height: 46px;
 
-      padding: 18px; 
-      display: grid; 
-      gap: 12px; 
-
-      /* Allow grid children (tables, charts) to overflow correctly */
+      padding: 18px;
+      display: grid;
+      gap: 12px;
+      height: 100%;
       min-height: 0;
-      overflow-y: auto;
+      max-height: 100%;
+      overflow: hidden;
+      grid-template-rows:
+        var(--kpi-row-height)
+        minmax(0, 1fr)
+        minmax(0, 1fr)
+        var(--disclaimer-row-height);
+    }
+
+    #keyPerformanceIndicators,
+    #disclaimer,
+    #balancesChart,
+    #retirementData {
+      min-height: 0;
+    }
+
+    #retirementData {
+      overflow: auto;
+    }
+
+    #balancesChart canvas {
+      height: 100%;
     }
     .summary { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 10px; }
     @media (max-width: 900px){ .summary{ grid-template-columns: repeat(2, minmax(0,1fr)); } }
@@ -462,7 +483,13 @@
     .ok { color: #0b5; background: rgba(69,212,131,.15); border: 1px solid rgba(69,212,131,.3); }
     .alert { color: #ff6b6b; background: rgba(255,107,107,.15); border:1px solid rgba(255,107,107,.3); }
     .warn { color: #ffbf69; background: rgba(255,191,105,.15); border:1px solid rgba(255,191,105,.3); }
-    .disclaimer { color: var(--muted); font-size: 12px; }
+    .disclaimer {
+      color: var(--muted);
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      overflow: hidden;
+    }
     
     /* SS Breakdown Popup Styles */
     .ss-popup {
@@ -1625,7 +1652,7 @@ details[open] .content {
 
       <!-- Results -->
       <section class="card">
-        <div class="results">
+        <div id="results" class="results">
           <div id="keyPerformanceIndicators"  class="summary">
             <div class="kpi">
               <div class="label">Retirement Age</div>
@@ -1651,7 +1678,7 @@ details[open] .content {
               <div class="balance"></div>
             </div>
           </div>
-          <div id="retirementData" class="card" style="padding:0; overflow:auto; max-height: 50vh;">
+          <div id="retirementData" class="card" style="padding:0;">
             <table>
               <thead id="tableHead"></thead>
               <tbody id="rows"></tbody>
