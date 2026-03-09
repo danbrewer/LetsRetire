@@ -5,7 +5,11 @@ import {
 } from "./retirement-summaryrenderer.js";
 import { ensurePopup } from "./popup-engine.js";
 import { ACCOUNT_TYPES } from "./cAccount.js";
-import { parseInputParameters, showToast } from "./retirement-ui.js";
+import {
+  applyScenarioData,
+  collectScenarioData,
+  showToast,
+} from "./retirement-ui.js";
 
 function getAvailableReportYears() {
   const yearCells = Array.from(
@@ -23,37 +27,81 @@ function getAvailableReportYears() {
 }
 
 /**
- * 
- * @param {Event} event 
- * @returns 
+ *
+ * @param {Event} event
+ * @returns
  */
 export function handleImportScenario(event) {
-  debugger;
   if (!(event?.target instanceof HTMLInputElement)) return;
+  const fileInput = event.target;
 
-  if (!event.target.files) return;
+  if (!fileInput.files) return;
 
-  const file = event.target.files[0];
+  const file = fileInput.files[0];
   if (!file) return;
-  
+
   if (!file.name.toLowerCase().endsWith(".json")) {
     showToast("Invalid File", "Please select a JSON file.", "error");
     return;
   }
 
-  
+  const reader = new FileReader();
 
-  showToast("Import Scenario", "File loaded!");
+  reader.onload = () => {
+    try {
+      const raw = String(reader.result || "");
+      const parsed = JSON.parse(raw);
+      const scenarioPayload =
+        parsed && typeof parsed === "object" && parsed.scenario
+          ? parsed.scenario
+          : parsed;
+
+      if (!scenarioPayload || typeof scenarioPayload !== "object") {
+        showToast(
+          "Invalid Format",
+          "Scenario JSON must be an object.",
+          "error"
+        );
+        return;
+      }
+
+      const result = applyScenarioData(scenarioPayload);
+
+      showToast(
+        "Import Successful",
+        `Loaded ${result.loadedCount} inputs, ${result.pensionCount} pensions/annuities, and ${result.withdrawalLimitCount} withdrawal limits.`,
+        "success"
+      );
+    } catch (error) {
+      showToast(
+        "Import Error",
+        `Error reading JSON file: ${error instanceof Error ? error.message : String(error)}`,
+        "error"
+      );
+    } finally {
+      fileInput.value = "";
+    }
+  };
+
+  reader.onerror = () => {
+    showToast("Import Error", "Failed to read the selected file.", "error");
+    fileInput.value = "";
+  };
+
+  reader.readAsText(file);
 }
 
-export function saveScenario(){
-  // throw new Error("JSON export is currently disabled.");
-  const inputs = parseInputParameters();
+export function saveScenario() {
+  const scenario = collectScenarioData();
   const exportData = {
-    version: "1.1",
+    version: "1.2",
     exportDate: new Date().toISOString(),
-    description: "Retirement Calculator Scenario with Spending Overrides",
-    inputs: inputs,
+    description:
+      "Retirement Calculator Scenario with UI + pension/withdrawal state",
+    scenario,
+    inputs: scenario.inputs,
+    pensionAnnuities: scenario.pensionAnnuities,
+    withdrawalLimits: scenario.withdrawalLimits,
   };
   const json = JSON.stringify(exportData, null, 2);
   const blob = new Blob([json], { type: "application/json" });

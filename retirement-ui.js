@@ -467,11 +467,11 @@ document.addEventListener("click", (e) => {
         doCalculations,
         showToast,
       },
-      num(UIField.CURRENT_YEAR),
+      num(UIField.STARTING_YEAR),
       num(UIField.SUBJECT_RETIRE_AGE),
-      num(UIField.SUBJECT_LIFESPAN),
+      num(UIField.SUBJECT_TERMINAL_AGE),
       num(UIField.PARTNER_RETIRE_AGE),
-      num(UIField.PARTNER_LIFESPAN)
+      num(UIField.PARTNER_TERMINAL_AGE)
     );
     return;
   }
@@ -570,7 +570,7 @@ function setupEventListeners() {
       withdrawalLimitManager,
       {
         name: "New Withdrawal Limit",
-        year: num(UIField.CURRENT_YEAR),
+        year: num(UIField.STARTING_YEAR),
         amount: 0,
       },
       {
@@ -579,11 +579,11 @@ function setupEventListeners() {
         doCalculations,
         showToast,
       },
-      num(UIField.CURRENT_YEAR),
+      num(UIField.STARTING_YEAR),
       num(UIField.SUBJECT_RETIRE_AGE),
-      num(UIField.SUBJECT_LIFESPAN),
+      num(UIField.SUBJECT_TERMINAL_AGE),
       num(UIField.PARTNER_RETIRE_AGE),
-      num(UIField.PARTNER_LIFESPAN)
+      num(UIField.PARTNER_TERMINAL_AGE)
     );
   });
 }
@@ -973,7 +973,7 @@ function parseInputParameters() {
   // Subject information
   const subjectCurrentAge = num(UIField.SUBJECT_CURRENT_AGE);
   const subjectRetireAge = num(UIField.SUBJECT_RETIRE_AGE);
-  const subjectLifeSpan = num(UIField.SUBJECT_LIFESPAN);
+  const subjectLifeSpan = num(UIField.SUBJECT_TERMINAL_AGE);
   const subject401kStartAge = num(UIField.SUBJECT_401K_START_AGE);
   // const subjectPensionStartAge = num(UIField.SUBJECT_PENSION_START_AGE);
   const subjectSsStartAge = num(UIField.SUBJECT_SS_START_AGE);
@@ -993,7 +993,7 @@ function parseInputParameters() {
   // Partner information
   const partnerCurrentAge = num(UIField.PARTNER_CURRENT_AGE);
   const partnerRetireAge = num(UIField.PARTNER_RETIRE_AGE);
-  const partnerLifeSpan = num(UIField.PARTNER_LIFESPAN);
+  const partnerLifeSpan = num(UIField.PARTNER_TERMINAL_AGE);
   const partner401kStartAge = num(UIField.PARTNER_401K_START_AGE);
   // const partnerPenStartAge = num(UIField.PARTNER_PENSION_START_AGE);
   const partnerSsStartAge = num(UIField.PARTNER_SS_START_AGE);
@@ -1010,7 +1010,7 @@ function parseInputParameters() {
   // Annual spending and growth rates
   const workingYearsSpending = num(UIField.WORKING_YEARS_SPENDING);
   const retirementSpending = num(UIField.RETIREMENT_YEARS_SPENDING);
-  const currentYear = num(UIField.CURRENT_YEAR);
+  const currentYear = num(UIField.STARTING_YEAR);
   const inflationRate = pct(num(UIField.INFLATION));
   const spendingDecline = pct(num(UIField.SPENDING_DECLINE));
   // Balances and Returns
@@ -1200,7 +1200,7 @@ function updateTaxFreeIncomeFieldsDisplayMode() {
     throw new Error("Checkbox useTaxFreeCurrentYearValues not found");
   const useCurrentYear = useTaxableCurrentYearValues.checked;
   const currentAge = num(UIField.SUBJECT_CURRENT_AGE);
-  const endAge = num(UIField.SUBJECT_LIFESPAN);
+  const endAge = num(UIField.SUBJECT_TERMINAL_AGE);
 
   if (currentAge <= 0 || endAge <= currentAge) return;
 
@@ -1244,72 +1244,330 @@ function updateTaxFreeIncomeFieldsDisplayMode() {
 }
 
 function loadExample() {
-  const ex = {
-    subjectCurrentAge: 60,
-    subjectRetireAge: 62,
-    subjectLifespan: 95,
-    subject401kStartAge: 62,
-    subjectSalary: 174500,
-    subjectSalaryGrowth: 2.0,
-    subjectSavingsMonthly: 0,
-    subjectRothMonthly: 0,
-    subject401kContribution: 0,
-    subjectEmpMatchRate: 0,
-    subjectEmpMatchCap: 0,
+  applyScenarioData({
+    inputs: {
+      startingYear: 2025,
 
-    partnerCurrentAge: 56,
-    partnerRetireAge: 62,
-    partnerLifespan: 98,
-    partner401kStartAge: 62,
-    partnerSalary: 0,
-    partnerSalaryGrowth: 0,
-    partnerRothMonthly: 0,
-    partner401kContribution: 0,
-    partnerEmpMatchRate: 0,
-    partnerEmpMatchCap: 0,
+      subjectCurrentAge: 60,
+      subjectRetireAge: 62,
+      subjectTerminalAge: 95,
+      subject401kStartAge: 62,
+      subjectSalary: 174500,
+      subjectSalaryGrowth: 2.0,
+      subjectSavingsMonthly: 0,
+      subjectRothMonthly: 0,
+      subject401kContribution: 0,
+      subjectEmpMatchRate: 0,
+      subjectEmpMatchCap: 0,
 
-    currentYear: new Date().getFullYear(),
-    workingYearsSpending: 100000,
-    retirementYearsSpending: 100000,
-    inflation: 2.5, //2.5,
-    spendingDecline: 1.0,
+      partnerCurrentAge: 56,
+      partnerRetireAge: 62,
+      partnerTerminalAge: 98,
+      partner401kStartAge: 62,
+      partnerSalary: 0,
+      partnerSalaryGrowth: 0,
+      partnerRothMonthly: 0,
+      partner401kContribution: 0,
+      partnerEmpMatchRate: 0,
+      partnerEmpMatchCap: 0,
 
-    startingSavingsBalance: 530000,
-    savingsReturnRate: 3.0,
-    subject401kStartingBalance: 500000,
-    subject401kReturnRate: 3.0,
-    partner401kBalance: 115000,
-    partner401kReturnRate: 3.0,
-    subjectRothBalance: 1000,
-    subjectRothReturnRate: 3.0,
-    partnerRothBalance: 1000,
-    partnerRothReturnRate: 3.0,
+      workingYearsSpending: 100000,
+      retirementYearsSpending: 100000,
+      inflation: 2.5,
+      spendingDecline: 1.0,
 
-    subjectSsStartAge: 62,
-    subjectSsMonthly: 2750,
+      startingSavingsBalance: 530000,
+      savingsReturnRate: 3.0,
+      subject401kStartingBalance: 500000,
+      subject401kReturnRate: 3.0,
+      partner401kBalance: 115000,
+      partner401kReturnRate: 3.0,
+      subjectRothBalance: 1000,
+      subjectRothReturnRate: 3.0,
+      partnerRothBalance: 1000,
+      partnerRothReturnRate: 3.0,
 
-    partnerSsStartAge: 62,
-    partnerSsMonthly: 1133,
+      subjectSsStartAge: 62,
+      subjectSsMonthly: 2750,
 
-    ssWithholdingRate: 20,
-    ssCola: 2.5,
+      partnerSsStartAge: 62,
+      partnerSsMonthly: 1133,
 
-    filingStatus: constsJS_FILING_STATUS.MARRIED_FILING_JOINTLY,
-    withholdingsDefaultRate: 15,
-    withholdingsWages: 15,
-    withholdings401k: 18,
-  };
+      ssWithholdingRate: 20,
+      ssCola: 2.5,
 
-  for (const [k, v] of Object.entries(ex)) {
-    const el = $(k);
-    if (el instanceof HTMLInputElement) {
-      el.value = String(v);
-    } else if (el instanceof HTMLSelectElement) {
-      el.value = String(v);
-    } else {
-      console.warn(`Element with id '${k}' not found or not an input/select`);
+      filingStatus: constsJS_FILING_STATUS.MARRIED_FILING_JOINTLY,
+      withholdingsDefaultRate: 15,
+      withholdingsWages: 15,
+      withholdings401k: 18,
+    },
+    pensionAnnuities: [
+      {
+        owner: "subject",
+        name: "MFM - Dan",
+        startAge: 65,
+        monthlyAmount: 3300,
+        withholdingRate: 0.15,
+        survivorshipPercent: 1,
+        id: "2be16469-27ff-48ef-b5d1-c4271bbc3330",
+      },
+      {
+        owner: "partner",
+        name: "MFM - Kelli",
+        startAge: 65,
+        monthlyAmount: 550,
+        withholdingRate: 0.15,
+        survivorshipPercent: 0,
+        id: "64067f4e-ebb1-4781-9ecf-882876f4caea",
+      },
+    ],
+    withdrawalLimits: [],
+  });
+}
+
+/**
+ * @param {Record<string, unknown>} values
+ * @returns {number}
+ */
+function applyInputValues(values) {
+  let loadedCount = 0;
+
+  for (const [id, value] of Object.entries(values || {})) {
+    const element = document.getElementById(id);
+
+    if (element instanceof HTMLInputElement) {
+      if (element.type === "checkbox" || element.type === "radio") {
+        element.checked =
+          value === true || value === "true" || value === 1 || value === "1";
+      } else {
+        element.value = value == null ? "" : String(value);
+      }
+      loadedCount += 1;
+      continue;
+    }
+
+    if (element instanceof HTMLSelectElement) {
+      element.value = value == null ? "" : String(value);
+      loadedCount += 1;
+      continue;
+    }
+
+    if (element instanceof HTMLTextAreaElement) {
+      element.value = value == null ? "" : String(value);
+      loadedCount += 1;
     }
   }
+
+  return loadedCount;
+}
+
+/**
+ * @returns {Record<string, unknown>}
+ */
+function collectInputValues() {
+  /** @type {Record<string, unknown>} */
+  const values = {};
+
+  document.querySelectorAll("input, select, textarea").forEach((element) => {
+    const id = element.id;
+    if (!id || id === "jsonFileInput") {
+      return;
+    }
+
+    if (element instanceof HTMLInputElement) {
+      if (element.type === "checkbox" || element.type === "radio") {
+        values[id] = element.checked;
+      } else {
+        values[id] = element.value;
+      }
+      return;
+    }
+
+    if (
+      element instanceof HTMLSelectElement ||
+      element instanceof HTMLTextAreaElement
+    ) {
+      values[id] = element.value;
+    }
+  });
+
+  return values;
+}
+
+/**
+ * @returns {Record<string, string>}
+ */
+function collectCurrentYearBaseValues() {
+  /** @type {Record<string, string>} */
+  const values = {};
+
+  document
+    .querySelectorAll("input[data-current-year-value]")
+    .forEach((element) => {
+      if (!(element instanceof HTMLInputElement)) {
+        return;
+      }
+
+      const stored = element.getAttribute("data-current-year-value");
+      if (!stored || !element.id) {
+        return;
+      }
+
+      values[element.id] = stored;
+    });
+
+  return values;
+}
+
+/**
+ * @param {unknown[]} list
+ * @returns {import("./cPensionAnnuityStorage.js").PensionAnnuity[]}
+ */
+function normalizePensionAnnuities(list) {
+  if (!Array.isArray(list)) {
+    return [];
+  }
+
+  return list
+    .filter((item) => item && typeof item === "object")
+    .map((item) => {
+      const typed = /** @type {Record<string, unknown>} */ (item);
+      return {
+        id:
+          typeof typed.id === "string" && typed.id.length > 0
+            ? typed.id
+            : crypto.randomUUID(),
+        owner: typed.owner === "partner" ? "partner" : "subject",
+        name: String(typed.name ?? "Pension"),
+        startAge: Number(typed.startAge) || 0,
+        monthlyAmount: Number(typed.monthlyAmount) || 0,
+        withholdingRate: Number(typed.withholdingRate) || 0,
+        survivorshipPercent: Number(typed.survivorshipPercent) || 0,
+      };
+    });
+}
+
+/**
+ * @param {unknown[]} list
+ * @returns {import("./cWithdrawalLimitsStorage.js").WithdrawalLimit[]}
+ */
+function normalizeWithdrawalLimits(list) {
+  if (!Array.isArray(list)) {
+    return [];
+  }
+
+  return list
+    .filter((item) => item && typeof item === "object")
+    .map((item) => {
+      const typed = /** @type {Record<string, unknown>} */ (item);
+      return {
+        id:
+          typeof typed.id === "string" && typed.id.length > 0
+            ? typed.id
+            : crypto.randomUUID(),
+        name: String(typed.name ?? "Withdrawal Limit"),
+        year: Number(typed.year) || 0,
+        amount: Number(typed.amount) || 0,
+      };
+    });
+}
+
+/**
+ * @param {Record<string, unknown>} values
+ */
+function persistAppliedInputs(values) {
+  const nextPersistedInputs = { ...persistedInputs };
+
+  for (const [id, value] of Object.entries(values || {})) {
+    nextPersistedInputs[id] = value == null ? "" : String(value);
+  }
+
+  persistedInputs = nextPersistedInputs;
+
+  savePersistedInputs();
+}
+
+/**
+ * @typedef ScenarioPayload
+ * @property {Record<string, unknown>} [inputs]
+ * @property {Record<string, string>} [currentYearBaseValues]
+ * @property {unknown[]} [pensionAnnuities]
+ * @property {unknown[]} [withdrawalLimits]
+ */
+
+/**
+ * @returns {ScenarioPayload}
+ */
+function collectScenarioData() {
+  return {
+    inputs: collectInputValues(),
+    currentYearBaseValues: collectCurrentYearBaseValues(),
+    pensionAnnuities: pensionManager ? pensionManager.getAll() : [],
+    withdrawalLimits: withdrawalLimitManager
+      ? withdrawalLimitManager.getAll()
+      : [],
+  };
+}
+
+/**
+ * @param {ScenarioPayload | Record<string, unknown>} payload
+ * @returns {{loadedCount:number,pensionCount:number,withdrawalLimitCount:number}}
+ */
+function applyScenarioData(payload) {
+  const scenario = /** @type {ScenarioPayload} */ (payload || {});
+  const inputValues =
+    scenario.inputs && typeof scenario.inputs === "object"
+      ? scenario.inputs
+      : /** @type {Record<string, unknown>} */ (payload || {});
+
+  const loadedCountFirstPass = applyInputValues(inputValues);
+
+  renderSpendingOverrideFields();
+  renderTaxableIncomeFields();
+  renderTaxFreeIncomeFields();
+  renderHealthcareExpensesFields();
+
+  const loadedCountSecondPass = applyInputValues(inputValues);
+
+  const currentYearBaseValues = scenario.currentYearBaseValues || {};
+  Object.entries(currentYearBaseValues).forEach(([id, value]) => {
+    const element = document.getElementById(id);
+    if (!(element instanceof HTMLInputElement)) {
+      return;
+    }
+    element.setAttribute("data-current-year-value", String(value));
+  });
+
+  updateSpendingFieldsDisplayMode();
+  updateTaxableIncomeFieldsDisplayMode();
+  updateTaxFreeIncomeFieldsDisplayMode();
+
+  const pensionList = normalizePensionAnnuities(
+    scenario.pensionAnnuities || []
+  );
+  const withdrawalLimitList = normalizeWithdrawalLimits(
+    scenario.withdrawalLimits || []
+  );
+
+  if (pensionStorage) {
+    pensionStorage.setAll(pensionList);
+  }
+
+  if (withdrawalLimitStorage) {
+    withdrawalLimitStorage.setAll(withdrawalLimitList);
+  }
+
+  renderPensionList();
+  renderWithdrawalLimitList();
+
+  persistAppliedInputs(inputValues);
+  doCalculations();
+
+  return {
+    loadedCount: Math.max(loadedCountFirstPass, loadedCountSecondPass),
+    pensionCount: pensionList.length,
+    withdrawalLimitCount: withdrawalLimitList.length,
+  };
 }
 
 // Annual Spending Details Functions
@@ -1321,7 +1579,7 @@ function renderSpendingOverrideFields() {
     placeholder: "Auto",
     onBlur: handleSpendingFieldChange,
     startAge: num(UIField.SUBJECT_CURRENT_AGE),
-    startYear: num(UIField.CURRENT_YEAR),
+    startYear: num(UIField.STARTING_YEAR),
   });
 }
 
@@ -1444,8 +1702,8 @@ function updateSpendingFieldsDisplayMode() {
   const useCurrentYearValuesCheckbox = checkbox("useCurrentYearValues");
   const useCurrentYear =
     useCurrentYearValuesCheckbox && useCurrentYearValuesCheckbox.checked;
-  const retireAge = num("retireAge");
-  const endAge = num("endAge");
+  const retireAge = num(UIField.SUBJECT_CURRENT_AGE);
+  const endAge = num(UIField.PARTNER_TERMINAL_AGE);
 
   if (retireAge <= 0 || endAge <= retireAge) return;
 
@@ -1499,7 +1757,7 @@ function updateSpendingFieldsDisplayMode() {
  */
 export function generateOverrideFields(options) {
   const startAge = options.startAge;
-  const endAge = num(UIField.SUBJECT_LIFESPAN);
+  const endAge = num(UIField.SUBJECT_TERMINAL_AGE);
   let year = options.startYear;
 
   if (startAge <= 0 || endAge <= startAge) return;
@@ -1567,7 +1825,7 @@ function renderTaxableIncomeFields() {
     placeholder: "0",
     onBlur: handleTaxableIncomeFieldChange,
     startAge: num(UIField.SUBJECT_CURRENT_AGE),
-    startYear: num(UIField.CURRENT_YEAR),
+    startYear: num(UIField.STARTING_YEAR),
   });
 }
 
@@ -1662,7 +1920,7 @@ function updateTaxableIncomeFieldsDisplayMode() {
   const useCurrentYear =
     useTaxableCurrentYearValues && useTaxableCurrentYearValues.checked;
   const currentAge = num(UIField.SUBJECT_CURRENT_AGE);
-  const endAge = num(UIField.SUBJECT_LIFESPAN);
+  const endAge = num(UIField.SUBJECT_TERMINAL_AGE);
 
   if (currentAge <= 0 || endAge <= currentAge) return;
 
@@ -1715,7 +1973,7 @@ function renderTaxFreeIncomeFields() {
     placeholder: "0",
     onBlur: handleTaxFreeIncomeFieldChange,
     startAge: num(UIField.SUBJECT_CURRENT_AGE),
-    startYear: num(UIField.CURRENT_YEAR),
+    startYear: num(UIField.STARTING_YEAR),
   });
 }
 
@@ -2009,6 +2267,8 @@ function resyncAllOpenDetails(root = document) {
 
 export {
   parseInputParameters,
+  collectScenarioData,
+  applyScenarioData,
   resetAll,
   loadExample,
   renderTaxableIncomeFields as regenerateTaxableIncomeFields,

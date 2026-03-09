@@ -7,14 +7,14 @@ export class UIField {
   // ─────────────────────────
   static ORDER = "order";
   static FILING_STATUS = "filingStatus";
-  static CURRENT_YEAR = "currentYear";
+  static STARTING_YEAR = "startingYear";
 
   // ─────────────────────────
   // Subject
   // ─────────────────────────
   static SUBJECT_CURRENT_AGE = "subjectCurrentAge";
   static SUBJECT_RETIRE_AGE = "subjectRetireAge";
-  static SUBJECT_LIFESPAN = "subjectLifespan";
+  static SUBJECT_TERMINAL_AGE = "subjectTerminalAge";
   static SUBJECT_401K_START_AGE = "subject401kStartAge";
   static SUBJECT_PENSION_START_AGE = "subjectPensionStartAge";
   static SUBJECT_SS_START_AGE = "subjectSsStartAge";
@@ -39,7 +39,7 @@ export class UIField {
   // ─────────────────────────
   static PARTNER_CURRENT_AGE = "partnerCurrentAge";
   static PARTNER_RETIRE_AGE = "partnerRetireAge";
-  static PARTNER_LIFESPAN = "partnerLifespan";
+  static PARTNER_TERMINAL_AGE = "partnerTerminalAge";
   static PARTNER_401K_START_AGE = "partner401kStartAge";
   static PARTNER_PENSION_START_AGE = "partnerPensionStartAge";
   static PARTNER_SS_START_AGE = "partnerSsStartAge";

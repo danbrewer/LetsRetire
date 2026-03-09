@@ -10,7 +10,7 @@ export function renderHealthcareExpensesFields() {
     placeholder: "0",
     onBlur: handleHealthcareExpensesFieldChange,
     startAge: num(UIField.SUBJECT_CURRENT_AGE),
-    startYear: num(UIField.CURRENT_YEAR),
+    startYear: num(UIField.STARTING_YEAR),
   });
 }
 
@@ -37,4 +37,3 @@ function handleHealthcareExpensesFieldChange(age, event) {
     })
   );
 }
-
