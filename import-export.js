@@ -99,9 +99,9 @@ export function saveScenario() {
     description:
       "Retirement Calculator Scenario with UI + pension/withdrawal state",
     scenario,
-    inputs: scenario.inputs,
-    pensionAnnuities: scenario.pensionAnnuities,
-    withdrawalLimits: scenario.withdrawalLimits,
+    // inputs: scenario.inputs,
+    // pensionAnnuities: scenario.pensionAnnuities,
+    // withdrawalLimits: scenario.withdrawalLimits,
   };
   const json = JSON.stringify(exportData, null, 2);
   const blob = new Blob([json], { type: "application/json" });

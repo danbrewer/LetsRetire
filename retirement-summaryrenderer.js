@@ -1138,17 +1138,18 @@ function generateOutputAndSummary(inputs, calculations) {
     const ask = calc.reportData.projectedSpend;
 
     if (totalNet < ask) {
+      // debugger;
       fullyFunded = false;
       break; // stop immediately
     }
-    fundedTo = calc.age;
+    fundedTo = calc.taxYear;
   }
 
-  const kpiAge = divById("kpiAge");
+  const kpiYear = divById("kpiYear");
 
-  if (kpiAge) {
+  if (kpiYear) {
     // IMPORTANT: replaceChildren expects Nodes, not numbers
-    kpiAge.replaceChildren(
+    kpiYear.replaceChildren(
       String(fundedTo),
       el(
         "span",
@@ -1206,5 +1207,5 @@ export {
   generateJSON,
   generateTestCategorySummaryDump,
   generateSummaryByCategoryReport,
-  generateCategoryDetailReport
+  generateCategoryDetailReport,
 };
