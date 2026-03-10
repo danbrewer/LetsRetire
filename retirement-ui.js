@@ -213,6 +213,100 @@ export function num(id) {
   return Number(el.value || 0);
 }
 
+/**
+ * @param {number} age
+ * @returns {number}
+ */
+function getCalendarYearForAge(age) {
+  const currentAgeField = inputText(UIField.SUBJECT_CURRENT_AGE);
+  const startingYearField = inputText(UIField.STARTING_YEAR);
+
+  const currentAge = Number(currentAgeField?.value || 0);
+  const startingYear = Number(startingYearField?.value || 0);
+
+  if (!currentAge || !startingYear) {
+    return age;
+  }
+
+  return startingYear + (age - currentAge);
+}
+
+/**
+ * @returns {number}
+ */
+function getLastLivingCalendarYear() {
+  const startingYear = Number(inputText(UIField.STARTING_YEAR)?.value || 0);
+  const subjectCurrentAge = Number(
+    inputText(UIField.SUBJECT_CURRENT_AGE)?.value || 0
+  );
+  const subjectTerminalAge = Number(
+    inputText(UIField.SUBJECT_TERMINAL_AGE)?.value || 0
+  );
+
+  if (!startingYear || !subjectCurrentAge || !subjectTerminalAge) {
+    return startingYear;
+  }
+
+  const subjectLastYear =
+    startingYear + Math.max(0, subjectTerminalAge - subjectCurrentAge);
+
+  const partnerCurrentAge = Number(
+    inputText(UIField.PARTNER_CURRENT_AGE)?.value || 0
+  );
+  const partnerTerminalAge = Number(
+    inputText(UIField.PARTNER_TERMINAL_AGE)?.value || 0
+  );
+
+  if (partnerCurrentAge <= 0 || partnerTerminalAge <= 0) {
+    return subjectLastYear;
+  }
+
+  const partnerLastYear =
+    startingYear + Math.max(0, partnerTerminalAge - partnerCurrentAge);
+
+  return Math.max(subjectLastYear, partnerLastYear);
+}
+
+/**
+ * @returns {number}
+ */
+function getLastLivingSubjectAgeEquivalent() {
+  const subjectCurrentAge = Number(
+    inputText(UIField.SUBJECT_CURRENT_AGE)?.value || 0
+  );
+  const startingYear = Number(inputText(UIField.STARTING_YEAR)?.value || 0);
+  const lastLivingYear = getLastLivingCalendarYear();
+
+  if (!subjectCurrentAge || !startingYear || !lastLivingYear) {
+    return subjectCurrentAge;
+  }
+
+  return subjectCurrentAge + (lastLivingYear - startingYear);
+}
+
+/**
+ * @param {string} prefix
+ * @param {number} age
+ * @returns {string}
+ */
+function getOverrideFieldIdForAge(prefix, age) {
+  return `${prefix}_${getCalendarYearForAge(age)}`;
+}
+
+/**
+ * @param {string} prefix
+ * @param {number} age
+ * @returns {HTMLInputElement | null}
+ */
+function getOverrideFieldForAge(prefix, age) {
+  const yearBased = inputText(getOverrideFieldIdForAge(prefix, age));
+  if (yearBased) {
+    return yearBased;
+  }
+
+  return inputText(`${prefix}_${age}`);
+}
+
 const pct = (/** @type {number} */ v) => (isNaN(v) ? 0 : Number(v) / 100);
 
 // Global variable to store calculations for popup access
@@ -912,7 +1006,7 @@ function initializeHelpIcons() {
 }
 
 /**
- * Harvest override values from age-based override fields
+ * Harvest override values from dynamic override fields
  *
  * @param {string} prefix
  * @param {number} startAge
@@ -931,7 +1025,7 @@ function harvestAgeOverrides(
   const result = [];
 
   for (let age = startAge; age <= endAge; age++) {
-    const field = inputText(`${prefix}_${age}`);
+    const field = getOverrideFieldForAge(prefix, age);
     if (!field) continue;
 
     const raw = parseFloat(field.value);
@@ -1032,6 +1126,7 @@ function parseInputParameters() {
   const partner401kStartAge = num(UIField.PARTNER_401K_START_AGE);
   // const partnerPenStartAge = num(UIField.PARTNER_PENSION_START_AGE);
   const partnerSsStartAge = num(UIField.PARTNER_SS_START_AGE);
+  const lastLivingSubjectAgeEquivalent = getLastLivingSubjectAgeEquivalent();
 
   const partnerStartingSalary = num(UIField.PARTNER_SALARY);
   const partnerSalaryGrowthRate = pct(num(UIField.PARTNER_SALARY_GROWTH));
@@ -1079,7 +1174,7 @@ function parseInputParameters() {
   const retirementYearSpendingOverrides = harvestAgeOverrides(
     "spending",
     subjectCurrentAge,
-    subjectLifeSpan,
+    lastLivingSubjectAgeEquivalent,
     checkbox("useCurrentYearValues")?.checked ?? false,
     applyInflationToSpendingValue
   ).map((o) => ({
@@ -1090,7 +1185,7 @@ function parseInputParameters() {
   const taxableIncomeOverrides = harvestAgeOverrides(
     "taxableIncome",
     subjectCurrentAge,
-    subjectLifeSpan,
+    lastLivingSubjectAgeEquivalent,
     checkbox("useTaxableCurrentYearValues")?.checked ?? false,
     applyInflationToIncomeValue
   );
@@ -1098,7 +1193,7 @@ function parseInputParameters() {
   const taxFreeIncomeOverrides = harvestAgeOverrides(
     "taxFreeIncome",
     subjectCurrentAge,
-    subjectLifeSpan,
+    lastLivingSubjectAgeEquivalent,
     checkbox("useTaxFreeCurrentYearValues")?.checked ?? false,
     applyInflationToIncomeValue
   );
@@ -1244,12 +1339,12 @@ function updateTaxFreeIncomeFieldsDisplayMode(shouldRecalculate = true) {
     throw new Error("Checkbox useTaxFreeCurrentYearValues not found");
   const useCurrentYear = useTaxableCurrentYearValues.checked;
   const currentAge = num(UIField.SUBJECT_CURRENT_AGE);
-  const endAge = num(UIField.SUBJECT_TERMINAL_AGE);
+  const endAge = getLastLivingSubjectAgeEquivalent();
 
   if (currentAge <= 0 || endAge <= currentAge) return;
 
   for (let age = currentAge; age <= endAge; age++) {
-    const field = inputText(`taxFreeIncome_${age}`);
+    const field = getOverrideFieldForAge("taxFreeIncome", age);
 
     if (!field) continue;
 
@@ -1642,7 +1737,7 @@ function renderSpendingOverrideFields() {
 function getSpendingOverride(age) {
   let result = 0;
 
-  const field = inputText(`spending_${age}`);
+  const field = getOverrideFieldForAge("spending", age);
   if (field && field.value) {
     const value = parseFloat(field.value);
     if (isNaN(value)) {
@@ -1688,7 +1783,7 @@ function getSpendingOverride(age) {
  * @param {any} age
  */
 function setSpendingFieldValue(age) {
-  const field = inputText(`spending_${age}`);
+  const field = getOverrideFieldForAge("spending", age);
   if (field) {
     field.placeholder = `Auto`;
   }
@@ -1756,12 +1851,12 @@ function updateSpendingFieldsDisplayMode(shouldRecalculate = true) {
   const useCurrentYear =
     useCurrentYearValuesCheckbox && useCurrentYearValuesCheckbox.checked;
   const retireAge = num(UIField.SUBJECT_CURRENT_AGE);
-  const endAge = num(UIField.PARTNER_TERMINAL_AGE);
+  const endAge = getLastLivingSubjectAgeEquivalent();
 
   if (retireAge <= 0 || endAge <= retireAge) return;
 
   for (let age = retireAge; age <= endAge; age++) {
-    const field = inputText(`spending_${age}`);
+    const field = getOverrideFieldForAge("spending", age);
     if (!field) continue;
 
     const currentValue = parseFloat(field.value) || 0;
@@ -1812,24 +1907,42 @@ function updateSpendingFieldsDisplayMode(shouldRecalculate = true) {
  */
 export function generateOverrideFields(options) {
   const startAge = options.startAge;
-  const endAge = num(UIField.SUBJECT_TERMINAL_AGE);
-  let year = options.startYear;
-
-  if (startAge <= 0 || endAge <= startAge) return;
+  const startYear = options.startYear;
+  const endYear = getLastLivingCalendarYear();
 
   const grid = $(options.gridId);
   if (!grid) return;
 
+  const hintId = `${options.gridId}RangeHint`;
+  let hint = document.getElementById(hintId);
+
+  if (!(hint instanceof HTMLDivElement)) {
+    hint = document.createElement("div");
+    hint.id = hintId;
+    hint.className = "hint";
+    grid.parentElement?.insertBefore(hint, grid);
+  }
+
+  if (startAge <= 0 || endYear < startYear) {
+    hint.textContent = "";
+    grid.innerHTML = "";
+    return;
+  }
+
+  hint.textContent = `Years ${startYear}–${endYear} (last surviving year)`;
+
   grid.innerHTML = "";
 
-  for (let age = startAge; age <= endAge; age++) {
-    const id = `${options.prefix}_${age}`;
+  for (let year = startYear; year <= endYear; year++) {
+    const age = startAge + (year - startYear);
+    const id = `${options.prefix}_${year}`;
+    const legacyId = `${options.prefix}_${age}`;
 
     const div = document.createElement("div");
 
     div.innerHTML = `
       <label for="${id}">
-        ${year - 1} ${options.label}
+        ${year} ${options.label}
       </label>
       <input
         id="${id}"
@@ -1838,9 +1951,6 @@ export function generateOverrideFields(options) {
         placeholder="${options.placeholder}"
       />
     `;
-
-    year += 1;
-
     grid.appendChild(div);
 
     const field = inputText(id);
@@ -1849,6 +1959,8 @@ export function generateOverrideFields(options) {
     // Restore persisted value
     if (persistedInputs[id] !== undefined) {
       field.value = persistedInputs[id];
+    } else if (persistedInputs[legacyId] !== undefined) {
+      field.value = persistedInputs[legacyId];
     }
 
     // Persist on input
@@ -1888,7 +2000,7 @@ function renderTaxableIncomeFields() {
  * @param {any} age
  */
 function getTaxableIncomeOverride(age) {
-  const field = inputText(`taxableIncome_${age}`);
+  const field = getOverrideFieldForAge("taxableIncome", age);
   let result = 0;
   if (field && field.value) {
     const fieldValue = parseFloat(field.value);
@@ -1975,12 +2087,12 @@ function updateTaxableIncomeFieldsDisplayMode(shouldRecalculate = true) {
   const useCurrentYear =
     useTaxableCurrentYearValues && useTaxableCurrentYearValues.checked;
   const currentAge = num(UIField.SUBJECT_CURRENT_AGE);
-  const endAge = num(UIField.SUBJECT_TERMINAL_AGE);
+  const endAge = getLastLivingSubjectAgeEquivalent();
 
   if (currentAge <= 0 || endAge <= currentAge) return;
 
   for (let age = currentAge; age <= endAge; age++) {
-    const field = inputText(`taxableIncome_${age}`);
+    const field = getOverrideFieldForAge("taxableIncome", age);
     if (!field) continue;
 
     const currentValue = parseFloat(field.value) || 0;
@@ -2038,7 +2150,7 @@ function renderTaxFreeIncomeFields() {
  * @param {any} age
  */
 function getTaxFreeIncomeOverride(age) {
-  const field = inputText(`taxFreeIncome_${age}`);
+  const field = getOverrideFieldForAge("taxFreeIncome", age);
   let result = 0;
   if (field && field.value) {
     const fieldValue = parseFloat(field.value);
