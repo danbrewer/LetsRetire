@@ -110,6 +110,31 @@ Project/
 - **Visual Feedback**: Clear indication of surplus/deficit years
 - **Export Options**: Generate PDF reports of your projections
 
+## 💾 Scenario JSON Format
+
+Scenario exports now use schema **version 1.3**.
+
+- Dynamic year-based override inputs are stored in compact arrays instead of many flat keys.
+- Only non-default dynamic values are persisted.
+- Imports remain backward compatible with legacy flat keys such as `taxFreeIncome_2032`.
+
+Example (inside `scenario.inputs`):
+
+```json
+{
+  "taxFreeIncome": [
+    { "year_2032": "12000" },
+    { "year_2035": "9000" }
+  ],
+  "taxableIncome": [
+    { "year_2030": "4500" }
+  ],
+  "spending": [
+    { "year_2028": "98000" }
+  ]
+}
+```
+
 ## 🔄 Development Tips
 
 ### Live Server Benefits

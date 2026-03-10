@@ -46,7 +46,15 @@ import { ReportTableBuilder } from "./cReportTableBuilder.js";
 
 const STORAGE_KEY = "retirement-calculator-inputs";
 
-/** @type {Record<string, string>} */
+const DYNAMIC_YEAR_FIELD_PREFIXES = [
+  "spending",
+  "taxableIncome",
+  "taxFreeIncome",
+  "healthcareExpenses",
+  // Add other prefixes as needed
+];
+
+/** @type {Record<string, any>} */
 let persistedInputs = {};
 
 /** @type {PensionAnnuityStorage|null} */
@@ -314,13 +322,141 @@ const pct = (/** @type {number} */ v) => (isNaN(v) ? 0 : Number(v) / 100);
 /** @type {Calculation[]} */
 let calculations = [];
 
+/**
+ * @param {string} id
+ * @returns {{prefix:string, year:string} | null}
+ */
+function parseDynamicYearFieldId(id) {
+  if (typeof id !== "string") {
+    return null;
+  }
+
+  for (const prefix of DYNAMIC_YEAR_FIELD_PREFIXES) {
+    if (!id.startsWith(`${prefix}_`)) {
+      continue;
+    }
+
+    const year = id.slice(prefix.length + 1);
+    if (/^\d+$/.test(year)) {
+      return { prefix, year };
+    }
+  }
+
+  return null;
+}
+
+/**
+ * @param {string} id
+ * @param {unknown} value
+ * @returns {boolean}
+ */
+function shouldPersistValue(id, value) {
+  const dynamic = parseDynamicYearFieldId(id);
+  if (!dynamic) {
+    return true;
+  }
+
+  return String(value ?? "") !== "";
+}
+
+/**
+ * @param {Record<string, unknown>} values
+ * @returns {Record<string, unknown>}
+ */
+function expandDynamicInputArrays(values) {
+  /** @type {Record<string, unknown>} */
+  const expanded = {};
+
+  for (const [key, value] of Object.entries(values || {})) {
+    if (!DYNAMIC_YEAR_FIELD_PREFIXES.includes(key)) {
+      expanded[key] = value;
+      continue;
+    }
+
+    if (!Array.isArray(value)) {
+      continue;
+    }
+
+    value.forEach((entry) => {
+      if (!entry || typeof entry !== "object") {
+        return;
+      }
+
+      Object.entries(entry).forEach(([entryKey, entryValue]) => {
+        const yearMatch = /^year_(\d+)$/.exec(entryKey);
+        if (!yearMatch) {
+          return;
+        }
+
+        const id = `${key}_${yearMatch[1]}`;
+        expanded[id] = entryValue;
+      });
+    });
+  }
+
+  return expanded;
+}
+
+/**
+ * @param {Record<string, unknown>} values
+ * @returns {Record<string, unknown>}
+ */
+function compactDynamicInputArrays(values) {
+  /** @type {Record<string, unknown>} */
+  const compacted = {};
+
+  /** @type {Record<string, Array<Record<string, string>>>} */
+  const buckets = {
+    spending: [],
+    taxableIncome: [],
+    taxFreeIncome: [],
+    healthcareExpenses: [],
+    // Add other prefixes as needed
+  };
+
+  for (const [id, value] of Object.entries(values || {})) {
+    const parsed = parseDynamicYearFieldId(id);
+    if (!parsed) {
+      compacted[id] = value;
+      continue;
+    }
+
+    if (!shouldPersistValue(id, value)) {
+      continue;
+    }
+
+    if (parsed.prefix === "healthcareExpenses") {
+      debugger;
+      // Handle healthcareExpenses specific logic if needed
+    }
+
+    buckets[parsed.prefix].push({
+      [`year_${parsed.year}`]: String(value ?? ""),
+    });
+  }
+
+  DYNAMIC_YEAR_FIELD_PREFIXES.forEach((prefix) => {
+    const items = buckets[prefix];
+    if (items.length > 0) {
+      compacted[prefix] = items;
+    }
+  });
+
+  return compacted;
+}
+
 document.addEventListener("value-changed", (e) => {
   if (!(e instanceof CustomEvent)) return;
 
   const { id, value } = e.detail;
 
   // Persist value
-  persistedInputs[id] = value;
+  if (shouldPersistValue(id, value)) {
+    persistedInputs[id] = value == null ? "" : String(value);
+  } else {
+    delete persistedInputs[id];
+  }
+
   savePersistedInputs();
 
   markDirty();
@@ -1475,8 +1611,9 @@ function loadExample(options = {}) {
  */
 function applyInputValues(values) {
   let loadedCount = 0;
+  const expandedValues = expandDynamicInputArrays(values || {});
 
-  for (const [id, value] of Object.entries(values || {})) {
+  for (const [id, value] of Object.entries(expandedValues)) {
     const element = document.getElementById(id);
 
     if (element instanceof HTMLInputElement) {
@@ -1512,6 +1649,14 @@ function collectInputValues() {
   /** @type {Record<string, unknown>} */
   const values = {};
 
+  /** @type {Record<string, Array<Record<string, string>>>} */
+  const dynamicBuckets = {
+    spending: [],
+    taxableIncome: [],
+    taxFreeIncome: [],
+    healthcareExpenses: [],
+  };
+
   document.querySelectorAll("input, select, textarea").forEach((element) => {
     const id = element.id;
     if (!id || id === "jsonFileInput") {
@@ -1519,6 +1664,20 @@ function collectInputValues() {
     }
 
     if (element instanceof HTMLInputElement) {
+      const parsedDynamicField = parseDynamicYearFieldId(id);
+
+      if (parsedDynamicField) {
+        if (!shouldPersistValue(id, element.value)) {
+          return;
+        }
+
+        dynamicBuckets[parsedDynamicField.prefix].push({
+          [`year_${parsedDynamicField.year}`]: element.value,
+        });
+
+        return;
+      }
+
       if (element.type === "checkbox" || element.type === "radio") {
         values[id] = element.checked;
       } else {
@@ -1533,6 +1692,11 @@ function collectInputValues() {
     ) {
       values[id] = element.value;
     }
+  });
+
+  DYNAMIC_YEAR_FIELD_PREFIXES.forEach((prefix) => {
+    const bucket = dynamicBuckets[prefix];
+    values[prefix] = bucket;
   });
 
   return values;
@@ -1621,9 +1785,14 @@ function normalizeWithdrawalLimits(list) {
  */
 function persistAppliedInputs(values) {
   const nextPersistedInputs = { ...persistedInputs };
+  const expandedValues = expandDynamicInputArrays(values || {});
 
-  for (const [id, value] of Object.entries(values || {})) {
-    nextPersistedInputs[id] = value == null ? "" : String(value);
+  for (const [id, value] of Object.entries(expandedValues)) {
+    if (shouldPersistValue(id, value)) {
+      nextPersistedInputs[id] = value == null ? "" : String(value);
+    } else {
+      delete nextPersistedInputs[id];
+    }
   }
 
   persistedInputs = nextPersistedInputs;
@@ -1645,7 +1814,7 @@ function persistAppliedInputs(values) {
 function collectScenarioData() {
   return {
     inputs: collectInputValues(),
-    currentYearBaseValues: collectCurrentYearBaseValues(),
+    // currentYearBaseValues: collectCurrentYearBaseValues(),
     pensionAnnuities: pensionManager ? pensionManager.getAll() : [],
     withdrawalLimits: withdrawalLimitManager
       ? withdrawalLimitManager.getAll()
@@ -1675,14 +1844,14 @@ function applyScenarioData(payload, options = {}) {
 
   const loadedCountSecondPass = applyInputValues(inputValues);
 
-  const currentYearBaseValues = scenario.currentYearBaseValues || {};
-  Object.entries(currentYearBaseValues).forEach(([id, value]) => {
-    const element = document.getElementById(id);
-    if (!(element instanceof HTMLInputElement)) {
-      return;
-    }
-    element.setAttribute("data-current-year-value", String(value));
-  });
+  // const currentYearBaseValues = scenario.currentYearBaseValues || {};
+  // Object.entries(currentYearBaseValues).forEach(([id, value]) => {
+  //   const element = document.getElementById(id);
+  //   if (!(element instanceof HTMLInputElement)) {
+  //     return;
+  //   }
+  //   element.setAttribute("data-current-year-value", String(value));
+  // });
 
   updateSpendingFieldsDisplayMode(false);
   updateTaxableIncomeFieldsDisplayMode(false);
@@ -2283,14 +2452,23 @@ function attachDirtyTracking(root = document) {
 function loadPersistedInputs() {
   try {
     const json = localStorage.getItem(STORAGE_KEY);
-    persistedInputs = json ? JSON.parse(json) : {};
+    const parsed = json ? JSON.parse(json) : {};
+    if (!parsed || typeof parsed !== "object") {
+      persistedInputs = {};
+      return;
+    }
+
+    persistedInputs = /** @type {Record<string, any>} */ (
+      expandDynamicInputArrays(parsed)
+    );
   } catch {
     persistedInputs = {};
   }
 }
 
 function savePersistedInputs() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(persistedInputs));
+  const compacted = compactDynamicInputArrays(persistedInputs);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(compacted));
 }
 
 function restorePersistedInputs() {

@@ -94,7 +94,7 @@ export function handleImportScenario(event) {
 export function saveScenario() {
   const scenario = collectScenarioData();
   const exportData = {
-    version: "1.2",
+    version: "1.3",
     exportDate: new Date().toISOString(),
     description:
       "Retirement Calculator Scenario with UI + pension/withdrawal state",
