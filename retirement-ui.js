@@ -1578,28 +1578,28 @@ function loadExample(options = {}) {
         withholdingsDefaultRate: 15,
         withholdingsWages: 15,
         withholdings401k: 18,
+        pensionAnnuities: [
+          {
+            owner: "subject",
+            name: "MFM - Dan",
+            startAge: 65,
+            monthlyAmount: 3300,
+            withholdingRate: 0.15,
+            survivorshipPercent: 1,
+            id: "2be16469-27ff-48ef-b5d1-c4271bbc3330",
+          },
+          {
+            owner: "partner",
+            name: "MFM - Kelli",
+            startAge: 65,
+            monthlyAmount: 550,
+            withholdingRate: 0.15,
+            survivorshipPercent: 0,
+            id: "64067f4e-ebb1-4781-9ecf-882876f4caea",
+          },
+        ],
+        withdrawalLimits: [],
       },
-      pensionAnnuities: [
-        {
-          owner: "subject",
-          name: "MFM - Dan",
-          startAge: 65,
-          monthlyAmount: 3300,
-          withholdingRate: 0.15,
-          survivorshipPercent: 1,
-          id: "2be16469-27ff-48ef-b5d1-c4271bbc3330",
-        },
-        {
-          owner: "partner",
-          name: "MFM - Kelli",
-          startAge: 65,
-          monthlyAmount: 550,
-          withholdingRate: 0.15,
-          survivorshipPercent: 0,
-          id: "64067f4e-ebb1-4781-9ecf-882876f4caea",
-        },
-      ],
-      withdrawalLimits: [],
     },
     options
   );
@@ -1788,6 +1788,16 @@ function persistAppliedInputs(values) {
   const expandedValues = expandDynamicInputArrays(values || {});
 
   for (const [id, value] of Object.entries(expandedValues)) {
+    const element = document.getElementById(id);
+    const isPersistableElement =
+      element instanceof HTMLInputElement ||
+      element instanceof HTMLSelectElement ||
+      element instanceof HTMLTextAreaElement;
+
+    if (!isPersistableElement) {
+      continue;
+    }
+
     if (shouldPersistValue(id, value)) {
       nextPersistedInputs[id] = value == null ? "" : String(value);
     } else {
@@ -1804,21 +1814,22 @@ function persistAppliedInputs(values) {
  * @typedef ScenarioPayload
  * @property {Record<string, unknown>} [inputs]
  * @property {Record<string, string>} [currentYearBaseValues]
- * @property {unknown[]} [pensionAnnuities]
- * @property {unknown[]} [withdrawalLimits]
  */
 
 /**
  * @returns {ScenarioPayload}
  */
 function collectScenarioData() {
+  const inputs = collectInputValues();
+
+  inputs.pensionAnnuities = pensionManager ? pensionManager.getAll() : [];
+  inputs.withdrawalLimits = withdrawalLimitManager
+    ? withdrawalLimitManager.getAll()
+    : [];
+
   return {
-    inputs: collectInputValues(),
+    inputs,
     // currentYearBaseValues: collectCurrentYearBaseValues(),
-    pensionAnnuities: pensionManager ? pensionManager.getAll() : [],
-    withdrawalLimits: withdrawalLimitManager
-      ? withdrawalLimitManager.getAll()
-      : [],
   };
 }
 
@@ -1857,12 +1868,15 @@ function applyScenarioData(payload, options = {}) {
   updateTaxableIncomeFieldsDisplayMode(false);
   updateTaxFreeIncomeFieldsDisplayMode(false);
 
-  const pensionList = normalizePensionAnnuities(
-    scenario.pensionAnnuities || []
-  );
-  const withdrawalLimitList = normalizeWithdrawalLimits(
-    scenario.withdrawalLimits || []
-  );
+  const rawPensionAnnuities = Array.isArray(inputValues.pensionAnnuities)
+    ? inputValues.pensionAnnuities
+    : [];
+  const rawWithdrawalLimits = Array.isArray(inputValues.withdrawalLimits)
+    ? inputValues.withdrawalLimits
+    : [];
+
+  const pensionList = normalizePensionAnnuities(rawPensionAnnuities);
+  const withdrawalLimitList = normalizeWithdrawalLimits(rawWithdrawalLimits);
 
   if (pensionStorage) {
     pensionStorage.setAll(pensionList);
