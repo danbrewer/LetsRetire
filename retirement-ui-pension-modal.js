@@ -2,7 +2,6 @@
 
 import { WithdrawalLimitManager } from "./cWithdrawalLimitsManager.js";
 
-
 /**
  * @typedef {import("./cPensionAnnuityManager.js").PensionAnnuityManager} PensionAnnuityManager
  * @typedef {import("./cPensionAnnuityStorage.js").PensionAnnuityCreate} PensionAnnuityCreate
@@ -14,6 +13,7 @@ import { WithdrawalLimitManager } from "./cWithdrawalLimitsManager.js";
  * @property {() => void} renderPensionList
  * @property {() => void} markDirty
  * @property {() => void} doCalculations
+ * @property {() => void} [expandPensionSection]
  * @property {(title:string, message:string, kind:"success"|"error"|"info") => void} showToast
  */
 
@@ -377,6 +377,7 @@ function saveCreate(pensionManager, defaults, deps) {
   closePensionModal();
 
   deps.renderPensionList();
+  deps.expandPensionSection?.();
   deps.markDirty();
   deps.doCalculations();
   deps.showToast("Success", "Pension added successfully", "success");

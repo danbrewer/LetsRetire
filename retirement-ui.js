@@ -172,6 +172,36 @@ function $(id) {
 }
 
 /**
+ * @param {string} key
+ * @param {string} [revealSelector]
+ */
+function expandDetailsSection(key, revealSelector) {
+  const section = document.querySelector(`details[data-key="${key}"]`);
+  if (!(section instanceof HTMLDetailsElement)) return;
+
+  section.open = true;
+
+  requestAnimationFrame(() => {
+    const content = section.querySelector(".content");
+    if (content instanceof HTMLElement) {
+      content.getAnimations().forEach((animation) => animation.cancel());
+      content.style.height = "";
+      content.style.opacity = "";
+    }
+
+    /** @type {any} */ (window).resyncAllOpenDetails?.();
+    resyncAllOpenDetails();
+
+    if (revealSelector) {
+      const revealTarget = section.querySelector(revealSelector);
+      if (revealTarget instanceof HTMLElement) {
+        revealTarget.scrollIntoView({ block: "nearest" });
+      }
+    }
+  });
+}
+
+/**
  * @param {string} id
  * @returns {number}
  */
@@ -558,6 +588,11 @@ function setupEventListeners() {
         renderPensionList,
         markDirty,
         doCalculations,
+        expandPensionSection: () =>
+          expandDetailsSection(
+            "pension",
+            "#pensionList .pension-row:last-child"
+          ),
         showToast,
       }
     );
