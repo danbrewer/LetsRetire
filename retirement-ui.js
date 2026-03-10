@@ -1159,13 +1159,13 @@ function resetAll() {
   persistedInputs = {};
 
   loadExample();
-  doCalculations();
 }
 
 // Initialize when DOM is loaded
 document.addEventListener("DOMContentLoaded", function () {});
 
 let isDirty = false;
+let recalculationCount = 0;
 
 export function markDirty() {
   if (isDirty) return;
@@ -1190,11 +1190,20 @@ function doCalculations() {
   const result = calc(DefaultUI);
   if (!result) return;
 
+  recalculationCount += 1;
+  console.log(
+    `[Recalculate #${recalculationCount}] ${new Date().toISOString()}`,
+    {
+      isDirty,
+      startingYear: result.inputs?.startingYear,
+    }
+  );
+
   clearDirty();
   generateOutputAndSummary(result.inputs, result.calculations);
 }
 
-function updateTaxFreeIncomeFieldsDisplayMode() {
+function updateTaxFreeIncomeFieldsDisplayMode(shouldRecalculate = true) {
   const useTaxableCurrentYearValues = checkbox("useTaxFreeCurrentYearValues");
   if (!useTaxableCurrentYearValues)
     throw new Error("Checkbox useTaxFreeCurrentYearValues not found");
@@ -1240,89 +1249,94 @@ function updateTaxFreeIncomeFieldsDisplayMode() {
     }
   }
 
-  doCalculations();
+  if (shouldRecalculate) {
+    doCalculations();
+  }
 }
 
-function loadExample() {
-  applyScenarioData({
-    inputs: {
-      startingYear: 2025,
+function loadExample(options = {}) {
+  applyScenarioData(
+    {
+      inputs: {
+        startingYear: 2025,
 
-      subjectCurrentAge: 60,
-      subjectRetireAge: 62,
-      subjectTerminalAge: 95,
-      subject401kStartAge: 62,
-      subjectSalary: 174500,
-      subjectSalaryGrowth: 2.0,
-      subjectSavingsMonthly: 0,
-      subjectRothMonthly: 0,
-      subject401kContribution: 0,
-      subjectEmpMatchRate: 0,
-      subjectEmpMatchCap: 0,
+        subjectCurrentAge: 60,
+        subjectRetireAge: 62,
+        subjectTerminalAge: 95,
+        subject401kStartAge: 62,
+        subjectSalary: 174500,
+        subjectSalaryGrowth: 2.0,
+        subjectSavingsMonthly: 0,
+        subjectRothMonthly: 0,
+        subject401kContribution: 0,
+        subjectEmpMatchRate: 0,
+        subjectEmpMatchCap: 0,
 
-      partnerCurrentAge: 56,
-      partnerRetireAge: 62,
-      partnerTerminalAge: 98,
-      partner401kStartAge: 62,
-      partnerSalary: 0,
-      partnerSalaryGrowth: 0,
-      partnerRothMonthly: 0,
-      partner401kContribution: 0,
-      partnerEmpMatchRate: 0,
-      partnerEmpMatchCap: 0,
+        partnerCurrentAge: 56,
+        partnerRetireAge: 62,
+        partnerTerminalAge: 98,
+        partner401kStartAge: 62,
+        partnerSalary: 0,
+        partnerSalaryGrowth: 0,
+        partnerRothMonthly: 0,
+        partner401kContribution: 0,
+        partnerEmpMatchRate: 0,
+        partnerEmpMatchCap: 0,
 
-      workingYearsSpending: 100000,
-      retirementYearsSpending: 100000,
-      inflation: 2.5,
-      spendingDecline: 1.0,
+        workingYearsSpending: 100000,
+        retirementYearsSpending: 100000,
+        inflation: 2.5,
+        spendingDecline: 1.0,
 
-      startingSavingsBalance: 530000,
-      savingsReturnRate: 3.0,
-      subject401kStartingBalance: 500000,
-      subject401kReturnRate: 3.0,
-      partner401kBalance: 115000,
-      partner401kReturnRate: 3.0,
-      subjectRothBalance: 1000,
-      subjectRothReturnRate: 3.0,
-      partnerRothBalance: 1000,
-      partnerRothReturnRate: 3.0,
+        startingSavingsBalance: 530000,
+        savingsReturnRate: 3.0,
+        subject401kStartingBalance: 500000,
+        subject401kReturnRate: 3.0,
+        partner401kBalance: 115000,
+        partner401kReturnRate: 3.0,
+        subjectRothBalance: 1000,
+        subjectRothReturnRate: 3.0,
+        partnerRothBalance: 1000,
+        partnerRothReturnRate: 3.0,
 
-      subjectSsStartAge: 62,
-      subjectSsMonthly: 2750,
+        subjectSsStartAge: 62,
+        subjectSsMonthly: 2750,
 
-      partnerSsStartAge: 62,
-      partnerSsMonthly: 1133,
+        partnerSsStartAge: 62,
+        partnerSsMonthly: 1133,
 
-      ssWithholdingRate: 20,
-      ssCola: 2.5,
+        ssWithholdingRate: 20,
+        ssCola: 2.5,
 
-      filingStatus: constsJS_FILING_STATUS.MARRIED_FILING_JOINTLY,
-      withholdingsDefaultRate: 15,
-      withholdingsWages: 15,
-      withholdings401k: 18,
+        filingStatus: constsJS_FILING_STATUS.MARRIED_FILING_JOINTLY,
+        withholdingsDefaultRate: 15,
+        withholdingsWages: 15,
+        withholdings401k: 18,
+      },
+      pensionAnnuities: [
+        {
+          owner: "subject",
+          name: "MFM - Dan",
+          startAge: 65,
+          monthlyAmount: 3300,
+          withholdingRate: 0.15,
+          survivorshipPercent: 1,
+          id: "2be16469-27ff-48ef-b5d1-c4271bbc3330",
+        },
+        {
+          owner: "partner",
+          name: "MFM - Kelli",
+          startAge: 65,
+          monthlyAmount: 550,
+          withholdingRate: 0.15,
+          survivorshipPercent: 0,
+          id: "64067f4e-ebb1-4781-9ecf-882876f4caea",
+        },
+      ],
+      withdrawalLimits: [],
     },
-    pensionAnnuities: [
-      {
-        owner: "subject",
-        name: "MFM - Dan",
-        startAge: 65,
-        monthlyAmount: 3300,
-        withholdingRate: 0.15,
-        survivorshipPercent: 1,
-        id: "2be16469-27ff-48ef-b5d1-c4271bbc3330",
-      },
-      {
-        owner: "partner",
-        name: "MFM - Kelli",
-        startAge: 65,
-        monthlyAmount: 550,
-        withholdingRate: 0.15,
-        survivorshipPercent: 0,
-        id: "64067f4e-ebb1-4781-9ecf-882876f4caea",
-      },
-    ],
-    withdrawalLimits: [],
-  });
+    options
+  );
 }
 
 /**
@@ -1511,9 +1525,11 @@ function collectScenarioData() {
 
 /**
  * @param {ScenarioPayload | Record<string, unknown>} payload
+ * @param {{calculate?: boolean}} [options]
  * @returns {{loadedCount:number,pensionCount:number,withdrawalLimitCount:number}}
  */
-function applyScenarioData(payload) {
+function applyScenarioData(payload, options = {}) {
+  const { calculate = true } = options;
   const scenario = /** @type {ScenarioPayload} */ (payload || {});
   const inputValues =
     scenario.inputs && typeof scenario.inputs === "object"
@@ -1538,9 +1554,9 @@ function applyScenarioData(payload) {
     element.setAttribute("data-current-year-value", String(value));
   });
 
-  updateSpendingFieldsDisplayMode();
-  updateTaxableIncomeFieldsDisplayMode();
-  updateTaxFreeIncomeFieldsDisplayMode();
+  updateSpendingFieldsDisplayMode(false);
+  updateTaxableIncomeFieldsDisplayMode(false);
+  updateTaxFreeIncomeFieldsDisplayMode(false);
 
   const pensionList = normalizePensionAnnuities(
     scenario.pensionAnnuities || []
@@ -1561,7 +1577,9 @@ function applyScenarioData(payload) {
   renderWithdrawalLimitList();
 
   persistAppliedInputs(inputValues);
-  doCalculations();
+  if (calculate) {
+    doCalculations();
+  }
 
   return {
     loadedCount: Math.max(loadedCountFirstPass, loadedCountSecondPass),
@@ -1698,7 +1716,7 @@ function handleSpendingFieldChange(age, event) {
   );
 }
 
-function updateSpendingFieldsDisplayMode() {
+function updateSpendingFieldsDisplayMode(shouldRecalculate = true) {
   const useCurrentYearValuesCheckbox = checkbox("useCurrentYearValues");
   const useCurrentYear =
     useCurrentYearValuesCheckbox && useCurrentYearValuesCheckbox.checked;
@@ -1746,7 +1764,9 @@ function updateSpendingFieldsDisplayMode() {
     }
   }
 
-  doCalculations();
+  if (shouldRecalculate) {
+    doCalculations();
+  }
 }
 
 /**
@@ -1913,7 +1933,7 @@ function handleTaxableIncomeFieldChange(age, event) {
   );
 }
 
-function updateTaxableIncomeFieldsDisplayMode() {
+function updateTaxableIncomeFieldsDisplayMode(shouldRecalculate = true) {
   const useTaxableCurrentYearValues = checkbox(
     UIField.USE_TAXABLE_CURRENT_YEAR_VALUES
   );
@@ -1961,7 +1981,9 @@ function updateTaxableIncomeFieldsDisplayMode() {
     }
   }
 
-  doCalculations();
+  if (shouldRecalculate) {
+    doCalculations();
+  }
 }
 
 // Tax-free Income Adjustments Functions
@@ -2229,7 +2251,7 @@ function initUI() {
   loadColumnLayout();
   buildColumnMenu();
   initializeHelpIcons();
-  loadExample();
+  loadExample({ calculate: false });
   renderSpendingOverrideFields();
   renderTaxableIncomeFields();
   renderTaxFreeIncomeFields();
