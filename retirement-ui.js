@@ -776,16 +776,48 @@ function loadScenario() {
   fileInput?.click();
 }
 
+function hasPersistedScenarioData() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return false;
+
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+      return false;
+    }
+
+    return Object.keys(parsed).length > 0;
+  } catch {
+    return false;
+  }
+}
+
 function setupEventListeners() {
   $("calcBtn")?.addEventListener("click", doCalculations);
   $("pdfBtn")?.addEventListener("click", generatePDFReport);
   $("loadExampleBtn")?.addEventListener("click", () => {
-    loadExample({ replacePersistedInputs: true });
-    showToast(
-      "Example Loaded",
-      "Sample scenario applied and saved.",
-      "success"
-    );
+    const applySampleData = () => {
+      loadExample({ replacePersistedInputs: true });
+      showToast(
+        "Example Loaded",
+        "Sample scenario applied and saved.",
+        "success"
+      );
+    };
+
+    if (!hasPersistedScenarioData()) {
+      applySampleData();
+      return;
+    }
+
+    openConfirmModal({
+      title: "Overwrite Current Scenario?",
+      message:
+        "You already have scenario data saved locally. Loading sample input data will replace your current scenario.",
+      confirmText: "Overwrite",
+      cancelText: "Cancel",
+      onConfirm: applySampleData,
+    });
   });
   $("csvBtn")?.addEventListener("click", exportCSV);
   $("testReport")?.addEventListener("click", genSummaryDumpPopup);
