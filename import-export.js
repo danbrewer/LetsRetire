@@ -65,7 +65,9 @@ export function handleImportScenario(event) {
         return;
       }
 
-      const result = applyScenarioData(scenarioPayload);
+      const result = applyScenarioData(scenarioPayload, {
+        replacePersistedInputs: true,
+      });
 
       showToast(
         "Import Successful",
@@ -94,7 +96,7 @@ export function handleImportScenario(event) {
 export function saveScenario() {
   const scenario = collectScenarioData();
   const exportData = {
-    version: "1.3",
+    version: "1.4",
     exportDate: new Date().toISOString(),
     description:
       "Retirement Calculator Scenario with UI + pension/withdrawal state",

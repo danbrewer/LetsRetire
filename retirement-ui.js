@@ -781,6 +781,14 @@ function loadScenario() {
 function setupEventListeners() {
   $("calcBtn")?.addEventListener("click", doCalculations);
   $("pdfBtn")?.addEventListener("click", generatePDFReport);
+  $("loadExampleBtn")?.addEventListener("click", () => {
+    loadExample({ replacePersistedInputs: true });
+    showToast(
+      "Example Loaded",
+      "Sample scenario applied and saved.",
+      "success"
+    );
+  });
   $("csvBtn")?.addEventListener("click", exportCSV);
   $("testReport")?.addEventListener("click", genSummaryDumpPopup);
   $("reportsBtn")?.addEventListener("click", openReportsPopup);
@@ -1784,7 +1792,6 @@ function normalizeWithdrawalLimits(list) {
  * @param {Record<string, unknown>} values
  */
 function persistAppliedInputs(values) {
-  const nextPersistedInputs = { ...persistedInputs };
   const expandedValues = expandDynamicInputArrays(values || {});
 
   for (const [id, value] of Object.entries(expandedValues)) {
@@ -1799,13 +1806,11 @@ function persistAppliedInputs(values) {
     }
 
     if (shouldPersistValue(id, value)) {
-      nextPersistedInputs[id] = value == null ? "" : String(value);
+      persistedInputs[id] = value == null ? "" : String(value);
     } else {
-      delete nextPersistedInputs[id];
+      delete persistedInputs[id];
     }
   }
-
-  persistedInputs = nextPersistedInputs;
 
   savePersistedInputs();
 }
@@ -1835,16 +1840,22 @@ function collectScenarioData() {
 
 /**
  * @param {ScenarioPayload | Record<string, unknown>} payload
- * @param {{calculate?: boolean}} [options]
+ * @param {{calculate?: boolean, replacePersistedInputs?: boolean}} [options]
  * @returns {{loadedCount:number,pensionCount:number,withdrawalLimitCount:number}}
  */
 function applyScenarioData(payload, options = {}) {
-  const { calculate = true } = options;
+  const { calculate = true, replacePersistedInputs = false } = options;
   const scenario = /** @type {ScenarioPayload} */ (payload || {});
   const inputValues =
     scenario.inputs && typeof scenario.inputs === "object"
       ? scenario.inputs
       : /** @type {Record<string, unknown>} */ (payload || {});
+
+  if (replacePersistedInputs) {
+    Object.keys(persistedInputs).forEach((key) => {
+      delete persistedInputs[key];
+    });
+  }
 
   const loadedCountFirstPass = applyInputValues(inputValues);
 
@@ -1889,7 +1900,18 @@ function applyScenarioData(payload, options = {}) {
   renderPensionList();
   renderWithdrawalLimitList();
 
+  if (replacePersistedInputs) {
+    Object.keys(persistedInputs).forEach((key) => {
+      delete persistedInputs[key];
+    });
+  }
+
   persistAppliedInputs(inputValues);
+
+  persistedInputs.pensionAnnuities = pensionList;
+  persistedInputs.withdrawalLimits = withdrawalLimitList;
+  savePersistedInputs();
+
   if (calculate) {
     doCalculations();
   }
@@ -2590,7 +2612,6 @@ function initUI() {
   loadColumnLayout();
   buildColumnMenu();
   initializeHelpIcons();
-  loadExample({ calculate: false });
   renderSpendingOverrideFields();
   renderTaxableIncomeFields();
   renderTaxFreeIncomeFields();
