@@ -2061,11 +2061,29 @@ details[open] .content {
     hamburgerMenu.classList.toggle('open');
   });
 
+  hamburgerMenu.addEventListener('click', (e) => {
+    const target = e.target;
+    if (!(target instanceof HTMLElement)) return;
+
+    if (target.closest('button')) {
+      hamburgerMenu.classList.remove('open');
+    }
+  });
+
   // Click outside to close
   document.addEventListener('click', (e) => {
     if (!hamburgerMenu.contains(e.target) && !hamburgerBtn.contains(e.target)) {
       hamburgerMenu.classList.remove('open');
     }
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    if (!hamburgerMenu.classList.contains('open')) return;
+
+    e.preventDefault();
+    hamburgerMenu.classList.remove('open');
+    hamburgerBtn.focus();
   });
 </script>
 
