@@ -333,11 +333,6 @@ export function exportJSON() {
   // URL.revokeObjectURL(url);
 }
 
-export function importJSON() {
-  throw new Error("JSON import is currently disabled.");
-  // const fileInput = $("jsonFileInputFile");
-  // fileInput.click();
-}
 
 export function handleJSONFile() {
   throw new Error("JSON import is currently disabled.");

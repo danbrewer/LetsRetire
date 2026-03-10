@@ -13,8 +13,6 @@ import {
   generatePDFReport,
   genSummaryDumpPopup,
   handleImportScenario,
-  handleJSONFile,
-  importJSON,
   openReportsPopup,
   saveScenario,
 } from "./import-export.js";
@@ -796,7 +794,6 @@ function setupEventListeners() {
   $("saveScenario")?.addEventListener("click", saveScenario);
 
   $("exportJsonBtn")?.addEventListener("click", exportJSON);
-  $("importJsonBtn")?.addEventListener("click", importJSON);
   $("jsonFileInput")?.addEventListener("change", handleImportScenario);
   $("clearBtn")?.addEventListener("click", resetAll);
   $("useCurrentYearValues")?.addEventListener("change", function () {
