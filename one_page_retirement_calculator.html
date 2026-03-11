@@ -1949,13 +1949,42 @@ details[open] .content {
 
   const showInputsSwitch = document.getElementById('showInputsSwitch');
   const wrapElement = document.querySelector('.wrap');
+  const balancesChartElement = document.getElementById('balancesChart');
   let postLayoutChartRefreshTimeout;
+  let lastChartRefreshWidth = null;
+  let lastChartRefreshHeight = null;
+
+  function shouldSkipChartRedraw(minDeltaPx = CHART_REDRAW_MIN_DELTA_PX) {
+    if (!(balancesChartElement instanceof HTMLElement)) return false;
+
+    const currentWidth = balancesChartElement.clientWidth;
+    const currentHeight = balancesChartElement.clientHeight;
+
+    if (lastChartRefreshWidth === null || lastChartRefreshHeight === null) {
+      lastChartRefreshWidth = currentWidth;
+      lastChartRefreshHeight = currentHeight;
+      return false;
+    }
+
+    const widthDelta = Math.abs(currentWidth - lastChartRefreshWidth);
+    const heightDelta = Math.abs(currentHeight - lastChartRefreshHeight);
+    const shouldSkip = widthDelta < minDeltaPx && heightDelta < minDeltaPx;
+
+    if (!shouldSkip) {
+      lastChartRefreshWidth = currentWidth;
+      lastChartRefreshHeight = currentHeight;
+    }
+
+    return shouldSkip;
+  }
 
   function queuePostLayoutChartRefresh(delayMs = 260) {
     clearTimeout(postLayoutChartRefreshTimeout);
     postLayoutChartRefreshTimeout = setTimeout(() => {
       window.resyncAllOpenDetails?.();
-      regenerateTable();
+      if (!shouldSkipChartRedraw()) {
+        regenerateTable();
+      }
     }, delayMs);
   }
 
@@ -2040,6 +2069,7 @@ details[open] .content {
 <script>
   const STORAGE_KEY = 'inputsWidth';
   const DEFAULT_LEFT_WIDTH = 360;
+  const CHART_REDRAW_MIN_DELTA_PX = 6;
 
   const wrap = document.querySelector('.wrap');
   const splitter = document.getElementById('splitter');
