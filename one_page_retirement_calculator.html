@@ -2220,6 +2220,7 @@ details[open] .content {
     });
 
     document.addEventListener('mouseup', () => {
+      if (!isDragging) return;
       isDragging = false;
       wrap.classList.remove('is-dragging');
       document.body.style.cursor = '';
