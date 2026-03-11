@@ -963,6 +963,15 @@
       opacity: 1;
     }
 
+    #balancesChart {
+      transition: opacity 120ms ease;
+    }
+
+    #balancesChart.chart-hidden-during-layout {
+      opacity: 0;
+      pointer-events: none;
+    }
+
     .wrap.inputs-hidden {
       grid-template-columns: 0px 0px 1fr;
     }
@@ -1951,8 +1960,46 @@ details[open] .content {
   const wrapElement = document.querySelector('.wrap');
   const balancesChartElement = document.getElementById('balancesChart');
   let postLayoutChartRefreshTimeout;
+  let showHideAnimationFallbackTimeout;
   let lastChartRefreshWidth = null;
   let lastChartRefreshHeight = null;
+
+  function setChartHiddenDuringLayout(hidden) {
+    if (!(balancesChartElement instanceof HTMLElement)) return;
+
+    balancesChartElement.classList.toggle('chart-hidden-during-layout', hidden);
+    balancesChartElement.setAttribute('aria-hidden', hidden ? 'true' : 'false');
+  }
+
+  function getWrapTransitionDurationMs() {
+    if (!(wrapElement instanceof HTMLElement)) return 0;
+
+    const styles = getComputedStyle(wrapElement);
+    const durations = styles.transitionDuration.split(',');
+    const delays = styles.transitionDelay.split(',');
+    const properties = styles.transitionProperty.split(',');
+
+    const parseTime = (value) => {
+      const trimmed = value.trim();
+      if (!trimmed) return 0;
+      if (trimmed.endsWith('ms')) return Number.parseFloat(trimmed);
+      if (trimmed.endsWith('s')) return Number.parseFloat(trimmed) * 1000;
+      return Number.parseFloat(trimmed) || 0;
+    };
+
+    for (let index = 0; index < properties.length; index += 1) {
+      const property = properties[index].trim();
+      if (property !== 'grid-template-columns' && property !== 'all') {
+        continue;
+      }
+
+      const duration = parseTime(durations[index] || durations[durations.length - 1] || '0s');
+      const delay = parseTime(delays[index] || delays[delays.length - 1] || '0s');
+      return duration + delay;
+    }
+
+    return 0;
+  }
 
   function shouldSkipChartRedraw(minDeltaPx = CHART_REDRAW_MIN_DELTA_PX) {
     if (!(balancesChartElement instanceof HTMLElement)) return false;
@@ -1985,6 +2032,10 @@ details[open] .content {
       if (!shouldSkipChartRedraw()) {
         regenerateTable();
       }
+
+      requestAnimationFrame(() => {
+        setChartHiddenDuringLayout(false);
+      });
     }, delayMs);
   }
 
@@ -1993,18 +2044,33 @@ details[open] .content {
       if (event.target !== wrapElement) return;
       if (event.propertyName !== 'grid-template-columns') return;
 
+      clearTimeout(showHideAnimationFallbackTimeout);
+
       queuePostLayoutChartRefresh(0);
     });
   }
 
   if (showInputsSwitch instanceof HTMLInputElement && wrapElement instanceof HTMLElement) {
     showInputsSwitch.addEventListener('change', function() {
+      clearTimeout(showHideAnimationFallbackTimeout);
+      clearTimeout(postLayoutChartRefreshTimeout);
+      setChartHiddenDuringLayout(true);
+
       wrapElement.classList.toggle('inputs-hidden', !showInputsSwitch.checked);
 
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
           window.resyncAllOpenDetails?.();
-          queuePostLayoutChartRefresh();
+
+          const transitionDurationMs = getWrapTransitionDurationMs();
+          if (transitionDurationMs <= 0) {
+            queuePostLayoutChartRefresh(0);
+            return;
+          }
+
+          showHideAnimationFallbackTimeout = setTimeout(() => {
+            queuePostLayoutChartRefresh(0);
+          }, transitionDurationMs + 32);
         });
       });
     });
