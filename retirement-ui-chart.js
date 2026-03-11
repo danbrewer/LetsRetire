@@ -93,15 +93,19 @@ export function drawChart(series) {
   // Ensure canvas has proper dimensions before drawing
   const dpr = window.devicePixelRatio || 1;
   const rect = c.getBoundingClientRect();
+  const cssWidth = rect.width;
+  const cssHeight = rect.height;
   const width = rect.width * dpr;
   const height = rect.height * dpr;
+
+  if (cssWidth <= 0 || cssHeight <= 0) {
+    return;
+  }
 
   // Force canvas to correct size if needed
   if (c.width !== width || c.height !== height) {
     c.width = width;
     c.height = height;
-    c.style.width = rect.width + "px";
-    c.style.height = rect.height + "px";
   }
 
   // Check if we should animate (has existing content)
@@ -119,8 +123,8 @@ export function drawChart(series) {
     tempCanvas.style.position = "absolute";
     tempCanvas.style.top = c.offsetTop + "px";
     tempCanvas.style.left = c.offsetLeft + "px";
-    tempCanvas.style.width = c.style.width;
-    tempCanvas.style.height = c.style.height;
+    tempCanvas.style.width = cssWidth + "px";
+    tempCanvas.style.height = cssHeight + "px";
     tempCanvas.style.pointerEvents = "none";
     tempCanvas.style.zIndex = "1000";
 
@@ -203,7 +207,6 @@ function drawAnimatedChart(ctx, series, width, height, dpr, c) {
     height -
     pad.b -
     ((y - niceMin) / (niceMax - niceMin)) * (height - pad.t - pad.b);
-
 
   const xTo = (/** @type {number} */ x) =>
     pad.l + ((x - xmin) / (xmax - xmin)) * (width - pad.l - pad.r);
@@ -355,23 +358,23 @@ function drawStaticChartElements(
   ctx.font = `${12 * dpr}px system-ui`;
   ctx.textAlign = "right";
   const steps = 4;
-for (let v = 0; v <= niceMax; v += increment) {
-  const y = yTo(v);
+  for (let v = 0; v <= niceMax; v += increment) {
+    const y = yTo(v);
 
-  ctx.strokeStyle = "rgba(34,48,77,.4)";
-  ctx.beginPath();
-  ctx.moveTo(pad.l, y);
-  ctx.lineTo(width - pad.r, y);
-  ctx.stroke();
+    ctx.strokeStyle = "rgba(34,48,77,.4)";
+    ctx.beginPath();
+    ctx.moveTo(pad.l, y);
+    ctx.lineTo(width - pad.r, y);
+    ctx.stroke();
 
-  if (v === 0) continue;
+    if (v === 0) continue;
 
-  ctx.fillStyle = "#7c8db5";
-  ctx.font = `${12 * dpr}px system-ui`;
-  ctx.textAlign = "right";
+    ctx.fillStyle = "#7c8db5";
+    ctx.font = `${12 * dpr}px system-ui`;
+    ctx.textAlign = "right";
 
-  ctx.fillText(v.asWholeDollars(), pad.l - 8 * dpr, y + 4 * dpr);
-}
+    ctx.fillText(v.asWholeDollars(), pad.l - 8 * dpr, y + 4 * dpr);
+  }
 
   drawXAxisLabels(ctx, series, xTo, width, height, dpr, pad, 8);
 

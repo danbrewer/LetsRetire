@@ -1734,15 +1734,14 @@ details[open] .content {
     <button id="pdfBtn">Print Scenario Report</button>
   
     <input type="file" id="jsonFileInput" accept=".json" style="display:none;">
-<hr style="border-color: var(--border); width:100%;">
+    <hr style="border-color: var(--border); width:100%;">
 
-<div style="font-size:12px;color:var(--muted);padding:4px 8px;">
-  Visible Columns
-</div>
+    <div style="font-size:12px;color:var(--muted);padding:4px 8px;">
+      Visible Columns
+    </div>
 
-<div id="columnVisibilityContainer"></div>
+    <div id="columnVisibilityContainer"></div>
 
-<!-- <input type="file" id="jsonFileInputFile" accept=".json" style="display:none;"> -->
   </div>
 
 
@@ -1758,6 +1757,7 @@ details[open] .content {
 
 <script type="module">
   import { loadPartial, initUI } from './retirement-ui.js';
+  import { regenerateTable } from './retirement-summaryrenderer.js';
   import {showHelpToast} from './retirement-ui-toast.js';
 
  window.resyncAllOpenDetails = () => {
@@ -1862,6 +1862,23 @@ details[open] .content {
   );
 
   initUI();
+  window.regenerateTable = regenerateTable;
+
+  const balancesChart = document.getElementById('balancesChart');
+  if (balancesChart instanceof HTMLElement && typeof ResizeObserver !== 'undefined') {
+    let chartResizeQueued = false;
+    const observer = new ResizeObserver(() => {
+      if (chartResizeQueued) return;
+      chartResizeQueued = true;
+
+      requestAnimationFrame(() => {
+        chartResizeQueued = false;
+        window.regenerateTable?.();
+      });
+    });
+
+    observer.observe(balancesChart);
+  }
 
    document.querySelectorAll("labeled-input").forEach((el) => {
       el.onHelp = (event, helpKey) => {
@@ -1878,24 +1895,22 @@ details[open] .content {
   // Bind animations
   animateDetails(document);
 
-</script>
+  const hideInputsCheckbox = document.getElementById('hideInputsCheckbox');
+  const wrapElement = document.querySelector('.wrap');
 
-<script>
-  // Handle inputs panel toggle
-  document.addEventListener('DOMContentLoaded', function() {
-    // debugger;
-    const hideInputsCheckbox = document.getElementById('hideInputsCheckbox');
-    const wrap = document.querySelector('.wrap');
+  if (hideInputsCheckbox instanceof HTMLInputElement && wrapElement instanceof HTMLElement) {
+    hideInputsCheckbox.addEventListener('change', function() {
+      wrapElement.classList.toggle('inputs-hidden', hideInputsCheckbox.checked);
 
-    if (hideInputsCheckbox && wrap) {
-      hideInputsCheckbox.addEventListener('change', function() {
-        wrap.classList.toggle('inputs-hidden', hideInputsCheckbox.checked);
+      requestAnimationFrame(() => {
         requestAnimationFrame(() => {
-          window.resyncAllOpenDetails?.(); 
+          window.resyncAllOpenDetails?.();
+          regenerateTable();
         });
       });
-    }
-  });
+    });
+  }
+
 </script>
 
 <!-- Module Imports -->
@@ -1964,6 +1979,18 @@ details[open] .content {
     let isDragging = false;
     let startX = 0;
     let startLeftWidth = 0;
+    let layoutRefreshQueued = false;
+
+    function scheduleLayoutRefresh() {
+      if (layoutRefreshQueued) return;
+      layoutRefreshQueued = true;
+
+      requestAnimationFrame(() => {
+        layoutRefreshQueued = false;
+        window.resyncAllOpenDetails?.();
+        window.regenerateTable?.();
+      });
+    }
 
     function setInputsWidth(px) {
       window.layoutState.currentLeftWidth = px;
@@ -2015,8 +2042,8 @@ details[open] .content {
       // wrap.style.gridTemplateColumns = `${newLeft}px 6px 1fr`;
       window.layoutState.currentLeftWidth = newLeft;
       setInputsWidth(newLeft);
-      
-      window.resyncAllOpenDetails?.();
+
+      scheduleLayoutRefresh();
     });
 
     document.addEventListener('mouseup', () => {
@@ -2024,12 +2051,14 @@ details[open] .content {
       wrap.classList.remove('is-dragging');
       document.body.style.cursor = '';
       document.body.style.userSelect = '';
+      window.regenerateTable?.();
     });
 
     splitter.addEventListener('dblclick', (e) => {
       e.preventDefault();
 
       setInputsWidth(DEFAULT_LEFT_WIDTH);
+      window.regenerateTable?.();
     });
   });
 
@@ -2056,11 +2085,11 @@ details[open] .content {
       const max = wrapRect.width - 400;
 
       setInputsWidth(Math.min(Math.max(width, min), max));
-      window.resyncAllOpenDetails?.();
+      scheduleLayoutRefresh();
     });
 
   window.addEventListener("resize", () => {
-      window.resyncAllOpenDetails?.();
+      scheduleLayoutRefresh();
     });
 </script>
 <script type="module">
