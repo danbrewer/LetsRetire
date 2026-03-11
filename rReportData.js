@@ -15,8 +15,8 @@ class ReportData extends BaseReports {
     "projectedSpend",
     "takeHome",
     "actualSpend",
-    "spending_shortfall",
-    "spending_surplus",
+    "spending_assetFunding",
+    "income_surplus",
     "spending_basis",
     "spending_taper_rate",
 
@@ -470,11 +470,11 @@ class ReportData extends BaseReports {
     ).asCurrency();
   }
 
-  get spending_surplus(){
+  get income_surplus() {
     return this.transfer_cashToSavings;
   }
 
-  get spending_shortfall(){
+  get spending_assetFunding() {
     return this.transfer_savingsToCash;
   }
 
