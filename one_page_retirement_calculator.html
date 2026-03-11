@@ -1864,22 +1864,6 @@ details[open] .content {
   initUI();
   window.regenerateTable = regenerateTable;
 
-  const balancesChart = document.getElementById('balancesChart');
-  if (balancesChart instanceof HTMLElement && typeof ResizeObserver !== 'undefined') {
-    let chartResizeQueued = false;
-    const observer = new ResizeObserver(() => {
-      if (chartResizeQueued) return;
-      chartResizeQueued = true;
-
-      requestAnimationFrame(() => {
-        chartResizeQueued = false;
-        window.regenerateTable?.();
-      });
-    });
-
-    observer.observe(balancesChart);
-  }
-
    document.querySelectorAll("labeled-input").forEach((el) => {
       el.onHelp = (event, helpKey) => {
         showHelpToast(event, helpKey);
@@ -1980,6 +1964,7 @@ details[open] .content {
     let startX = 0;
     let startLeftWidth = 0;
     let layoutRefreshQueued = false;
+    let chartRefreshTimeout;
 
     function scheduleLayoutRefresh() {
       if (layoutRefreshQueued) return;
@@ -1988,8 +1973,14 @@ details[open] .content {
       requestAnimationFrame(() => {
         layoutRefreshQueued = false;
         window.resyncAllOpenDetails?.();
-        window.regenerateTable?.();
       });
+    }
+
+    function scheduleChartRefresh(delayMs = 120) {
+      clearTimeout(chartRefreshTimeout);
+      chartRefreshTimeout = setTimeout(() => {
+        window.regenerateTable?.();
+      }, delayMs);
     }
 
     function setInputsWidth(px) {
@@ -2090,6 +2081,7 @@ details[open] .content {
 
   window.addEventListener("resize", () => {
       scheduleLayoutRefresh();
+      scheduleChartRefresh(140);
     });
 </script>
 <script type="module">
