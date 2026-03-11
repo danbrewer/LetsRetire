@@ -485,7 +485,6 @@ class ReportData extends BaseReports {
       this.income_combined401kTakehome +
       this.income_combinedPensionTakehome +
       this.income_combinedSsTakehome +
-      this.transfer_savingsToCash +
       this.income_combinedRothTakehome +
       this.income_miscTaxFreeIncome
     ).asCurrency();

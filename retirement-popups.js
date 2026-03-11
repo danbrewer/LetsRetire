@@ -1113,6 +1113,7 @@ function showCashFlowDiagram(data) {
 
     // debugger;
     const netIncome = data.income_total_takehome;
+    const cash = data.cash_total_inflows;
 
     const INCOME_NET = "Income (net)";
     const PENSION = "Pension";
