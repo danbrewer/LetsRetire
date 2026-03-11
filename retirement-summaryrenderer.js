@@ -649,7 +649,7 @@ const columnGroups = [
             );
           }
 
-          return money("income", calc.reportData.income_total_takehome, {
+          return money("income", calc.reportData.cash_total_inflows, {
             index,
             action: "showTotalCashBreakdown",
             badge:
@@ -1134,10 +1134,10 @@ function generateOutputAndSummary(inputs, calculations) {
   let fullyFunded = true;
 
   for (const calc of allCalcs) {
-    const totalNet = calc.reportData.income_total_takehome;
+    const totalCash = calc.reportData.cash_total_inflows;
     const ask = calc.reportData.projectedSpend;
 
-    if (totalNet < ask) {
+    if (totalCash < ask) {
       // debugger;
       fullyFunded = false;
       break; // stop immediately

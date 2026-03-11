@@ -115,7 +115,7 @@ class Calculation {
   } // TODO: add tradRothNet to RetirementYearData
 
   get totalNetIncome() {
-    return this.#yearData.reportData.income_total_takehome; // TODO: add totalNetIncome to RetirementYearData and WorkingYearDat
+    return this.#yearData.reportData.cash_total_inflows; // TODO: add totalNetIncome to RetirementYearData and WorkingYearDat
     // return (
     //   this.salaryNet +
     //   this.totalSsNet +

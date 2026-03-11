@@ -49,10 +49,14 @@ class ReportData extends BaseReports {
     "income_subject401kGross",
     "withholdings_subject401k",
     "income_subject401kTakehome",
+    "income_subjectRMD",
+    "income_subjectUsingRMD",
 
     "income_partner401kGross",
     "withholdings_partner401k",
     "income_partner401kTakehome",
+    "income_partnerRMD",
+    "income_partnerUsingRMD",
 
     "income_combined401kGross",
     "income_combined401kTakehome",
@@ -61,10 +65,7 @@ class ReportData extends BaseReports {
     "income_miscTaxableIncomeGross",
     "withholdings_miscTaxableIncome",
     "income_miscTaxableIncomeTakehome",
-
-    // INTEREST INCOME
-    "income_savingsInterest",
-
+    "income_taxableInterest",
     // PENSIONS
     "income_subjectPensionGross",
     "withholdings_subjectPension",
@@ -79,6 +80,7 @@ class ReportData extends BaseReports {
 
     "income_total_gross",
     "income_total_takehome",
+    "cash_total_inflows",
 
     // TAXES
     "taxes_grossIncome",
@@ -462,23 +464,29 @@ class ReportData extends BaseReports {
   //   return this.ss_partnerSsTakehome1;
   // }
 
+  get cash_total_inflows() {
+    return (
+      this.transfer_savingsToCash + this.income_total_takehome
+    ).asCurrency();
+  }
+
+  get spending_surplus(){
+    return this.transfer_cashToSavings;
+  }
+
+  get spending_shortfall(){
+    return this.transfer_savingsToCash;
+  }
+
   get income_total_takehome() {
     return (
       this.income_combinedTakehomeWages +
-      // this.income_subjectTakehomeWages +
-      // this.income_partnerTakehomeWages +
       this.income_miscTaxableIncomeTakehome +
       this.income_combined401kTakehome +
-      // this.income_subject401kTakehome +
-      // this.income_partner401kTakehome +
       this.income_combinedPensionTakehome +
-      // this.income_subjectPensionTakehome +
-      // this.income_partnerPensionTakehome +
       this.income_combinedSsTakehome +
       this.transfer_savingsToCash +
       this.income_combinedRothTakehome +
-      // this.account_partnerRothWithdrawals +
-      // this.account_subjectRothWithdrawals +
       this.income_miscTaxFreeIncome
     ).asCurrency();
   }
@@ -496,6 +504,10 @@ class ReportData extends BaseReports {
       this.account_savingsInterest;
 
     return result.asCurrency();
+  }
+
+  get income_taxableInterest() {
+    return this.account_savingsInterest;
   }
 
   // get total_withholdings() {

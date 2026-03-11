@@ -1009,7 +1009,7 @@ function showTotalCashBreakdown(data) {
   breakdownHtml += `    
     <div class="ss-breakdown-item breakdown-accent">
         <span class="ss-breakdown-label">Total:</span>
-        <span class="ss-breakdown-value">${data.income_total_takehome.asWholeDollars()}</span>
+        <span class="ss-breakdown-value">${data.cash_total_inflows.asWholeDollars()}</span>
     </div>`;
 
   popup.setContent(breakdownHtml);
@@ -1112,10 +1112,7 @@ function showCashFlowDiagram(data) {
     };
 
     // debugger;
-    const netIncome =
-      data.income_total_takehome -
-      // c.account_savingsInterest -
-      data.transfer_savingsToCash;
+    const netIncome = data.income_total_takehome;
 
     const INCOME_NET = "Income (net)";
     const PENSION = "Pension";
