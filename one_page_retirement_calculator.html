@@ -1949,6 +1949,24 @@ details[open] .content {
 
   const showInputsSwitch = document.getElementById('showInputsSwitch');
   const wrapElement = document.querySelector('.wrap');
+  let postLayoutChartRefreshTimeout;
+
+  function queuePostLayoutChartRefresh(delayMs = 260) {
+    clearTimeout(postLayoutChartRefreshTimeout);
+    postLayoutChartRefreshTimeout = setTimeout(() => {
+      window.resyncAllOpenDetails?.();
+      regenerateTable();
+    }, delayMs);
+  }
+
+  if (wrapElement instanceof HTMLElement) {
+    wrapElement.addEventListener('transitionend', (event) => {
+      if (event.target !== wrapElement) return;
+      if (event.propertyName !== 'grid-template-columns') return;
+
+      queuePostLayoutChartRefresh(0);
+    });
+  }
 
   if (showInputsSwitch instanceof HTMLInputElement && wrapElement instanceof HTMLElement) {
     showInputsSwitch.addEventListener('change', function() {
@@ -1957,7 +1975,7 @@ details[open] .content {
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
           window.resyncAllOpenDetails?.();
-          regenerateTable();
+          queuePostLayoutChartRefresh();
         });
       });
     });
