@@ -2,7 +2,6 @@ import { ReportTableBuilder } from "./cReportTableBuilder.js";
 import { Transaction, TransactionType } from "./cTransaction.js";
 import { ensurePopup } from "./popup-engine.js";
 import { ReportData } from "./rReportData.js";
-import { StringFunctions } from "./utils.js";
 
 // Global declaration for ECharts (loaded via script tag in HTML)
 /** @type {any} */
@@ -1061,7 +1060,7 @@ function showCashFlowDiagram(data) {
 
     // --- helpers: include only positive-value links; nodes auto-derived from links ---
     /**
-     * @type {{ source: string; target: string; value: number; }[]}
+     * @type {{ source: string; target: string; value: number; description?: string; }[]}
      */
     const links = [];
     const nodes = new Map(); // name -> { name, depth }
