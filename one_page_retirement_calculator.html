@@ -79,11 +79,8 @@
       overflow: hidden;
       display: grid;
       grid-template-columns: var(--inputs-width) 6px 1fr;
+      transition: grid-template-columns 220ms ease;
         }
-
-    .wrap.inputs-hidden .card:first-of-type {
-      display: none;
-    }
 
     .wrap.is-dragging {
       transition: none;
@@ -967,15 +964,32 @@
     }
 
     .wrap.inputs-hidden {
-      grid-template-columns: 1fr;
+      grid-template-columns: 0px 0px 1fr;
+    }
+
+    .inputs-panel {
+      transition: opacity 200ms ease, transform 220ms ease;
+      transform-origin: left center;
     }
 
     .wrap.inputs-hidden #splitter {
-      display: none;
+      opacity: 0;
+      pointer-events: none;
     }
 
-    .wrap.inputs-hidden .card:first-of-type {
-      display: none;
+    .wrap.inputs-hidden .inputs-panel {
+      opacity: 0;
+      transform: translateX(-10px);
+      pointer-events: none;
+      border-width: 0;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .wrap,
+      .inputs-panel,
+      #splitter {
+        transition: none;
+      }
     }
 
     /* ---------- Animated details ---------- */
